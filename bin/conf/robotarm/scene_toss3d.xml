@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<namespace name="workspace">
+  <import name="robot0" filename="pa10.xml" trn="0.0 0.0 0.0"/>
+  <import name="robot1" filename="pa10.xml" trn="0.0 0.0 3.0" rot="180deg@y"/>
+
+  <vmat name="mat_target" colorname="blue"/>
+  <sphere name="sphere_target" radius="0.05"/>
+  
+  <body name="body_target0" mass="0.1">
+    <connector name="0"/>
+  </body>
+  <attach connector="body_target0/0" shape="sphere_target" vmat="mat_target"/>
+
+  <gravity accel="0.0 -5.0 0.0"/>
+
+  <ticks time_begin="0.0" time_step="0.25" time_end="5.0"/>
+  <timeslot name="timeslot0" time_begin="4.5-0.01" time_end="5.0" locked="true"/>
+  <timeslot name="timeslot1" time_begin="0.0" time_end="3.0+0.01" locked="true"/>
+  <connector name="con_hand0"  obj="workspace/robot0/body_link6"/>
+  <connector name="con_hand1"  obj="workspace/robot1/body_link6"/>
+  <connector name="con_target" obj="workspace/target0"/>
+  <joint name="fix1" type="fix" socket="con_hand0" plug="con_target" time="timeslot0"/>
+  <joint name="fix2" type="fix" socket="con_hand1" plug="con_target" time="timeslot1"/>
+  <scaling T="0.5" L="0.5" M="1.0"/>
+  <enable   id="object_c1t"    enable="true" />
+  <enable   id="object_c1r"    enable="false"/>
+  <enable   id="joint_c1"      enable="false"/>
+  <enable   id="joint_range_v" enable="false"/>
+  <priority id="joint_range_v" level="1"/>
+  <iteration level="0" num="20"/>
+  <iteration level="1" num="5" />
+  <correction rate="0.5" limit="1.0"/>
+  <correction id="avoid_p" rate="0.5"  limit="1.0" />
+  
+</namespace>

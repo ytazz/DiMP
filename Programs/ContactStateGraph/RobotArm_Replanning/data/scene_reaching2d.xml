@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<namespace name="workspace">
+  <namespace name="robot0">
+
+    <attr mass="1.0" inertia="1.0"/>
+    <gravity dir="0 0 0"/>
+
+    <vmat name="vmat_box"    colorname="red"  solid="false" wireframe="true"/>
+    <vmat name="vmat_sphere" colorname="blue" solid="false" wireframe="true"/>
+
+    <box    name="box_link"    size="0.1 1.0 0.1"/>
+    <box    name="box_base"    size="0.5 0.5 0.5"/>
+    <sphere name="sphere_hand" radius="0.1"/>
+    
+    <body name="body_link0" dynamical="false">
+      <connector name="0"/>
+      <connector name="1" trn="0 0.25 0"/>
+    </body>
+    <body name="body_link1">
+      <connector name="0"/>
+      <connector name="1" trn="0 -0.5 0"/>
+      <connector name="2" trn="0  0.5 0"/>
+    </body>
+    <body name="body_link2">
+      <connector name="0"/>
+      <connector name="1" trn="0 -0.5 0"/>
+      <connector name="2" trn="0  0.5 0"/>
+    </body>
+    <body name="body_link3">
+      <connector name="0"/>
+      <connector name="1" trn="0 -0.5 0"/>
+      <connector name="2" trn="0  0.5 0"/>
+    </body>
+    <body name="body_link4">
+      <connector name="0"/>
+    </body>
+
+    <attach connector="body_link0/0" shape="box_base"    vmat="vmat_box"   />
+    <attach connector="body_link1/0" shape="box_link"    vmat="vmat_box"   />
+    <attach connector="body_link2/0" shape="box_link"    vmat="vmat_box"   />
+    <attach connector="body_link3/0" shape="box_link"    vmat="vmat_box"   />
+    <attach connector="body_link4/0" shape="sphere_hand" vmat="vmat_sphere"/>
+    
+    <hinge name="joint0" pos="0.0deg" range="-180deg 180deg" vrange="-20deg 20deg" sock="body_link0/1" plug="body_link1/1"/>
+    <hinge name="joint1" pos="0.0deg" range="-180deg 180deg" vrange="-20deg 20deg" sock="body_link1/2" plug="body_link2/1"/>
+    <hinge name="joint2" pos="0.0deg" range="-180deg 180deg" vrange="-20deg 20deg" sock="body_link2/2" plug="body_link3/1"/>
+    <hinge name="joint3" pos="0.0deg" range=" 0      0     "                       sock="body_link3/2" plug="body_link4/0"/>
+
+  </namespace>
+
+  <sphere name="sphere_target" radius="0.1"/>
+  <vmat name="vmat_sphere" colorname="gray" solid="false" wireframe="true"/>
+  <body name="body_target0" dynamical="false" trn="2.8 2.3 0">
+    <connector name="0"/>
+  </body>
+  <body name="body_target1" dynamical="false" trn=".4 2.3 0">
+    <connector name="0"/>
+  </body>
+  <attach connector="body_target0/0" shape="sphere_target" vmat="vmat_sphere"/>
+  <attach connector="body_target1/0" shape="sphere_target" vmat="vmat_sphere"/>
+  
+</namespace>

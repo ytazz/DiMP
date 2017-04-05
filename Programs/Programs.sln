@@ -1,0 +1,59 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DiMP2", "..\DiMP2\DiMP2_10.vcxproj", "{38264F03-3A18-45A9-9DEE-5A258DCF221A}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RobotArm", "RobotArm\RobotArm10.vcxproj", "{4424B4A3-7781-4246-8B81-3427C1AD2C34}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Biped", "Biped\Biped.vcxproj", "{3E966585-6433-499A-9533-4A9174DBB3CF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Programs", "Programs", "{97B41CE4-C147-4211-8FE4-3801F1DE974A}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Pendulum", "Pendulum\Pendulum.vcxproj", "{903F96B0-87A8-41AF-9F0B-AD46174D3457}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "conf", "conf", "{E0AE1065-2B7E-4F0D-B1D9-869C96208BD5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "robotarm", "robotarm", "{F6401D22-DDB9-4B43-B2BE-18159BC24314}"
+	ProjectSection(SolutionItems) = preProject
+		..\bin\conf\robotarm\pa10.xml = ..\bin\conf\robotarm\pa10.xml
+		..\bin\conf\robotarm\robotarm.xml = ..\bin\conf\robotarm\robotarm.xml
+		..\bin\conf\robotarm\robotarm2.xml = ..\bin\conf\robotarm\robotarm2.xml
+		..\bin\conf\robotarm\scene_reaching2d.xml = ..\bin\conf\robotarm\scene_reaching2d.xml
+		..\bin\conf\robotarm\scene_reaching3d.xml = ..\bin\conf\robotarm\scene_reaching3d.xml
+		..\bin\conf\robotarm\scene_toss3d.xml = ..\bin\conf\robotarm\scene_toss3d.xml
+		..\bin\conf\robotarm\setting.xml = ..\bin\conf\robotarm\setting.xml
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{38264F03-3A18-45A9-9DEE-5A258DCF221A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{38264F03-3A18-45A9-9DEE-5A258DCF221A}.Debug|Win32.Build.0 = Debug|Win32
+		{38264F03-3A18-45A9-9DEE-5A258DCF221A}.Release|Win32.ActiveCfg = Release|Win32
+		{38264F03-3A18-45A9-9DEE-5A258DCF221A}.Release|Win32.Build.0 = Release|Win32
+		{4424B4A3-7781-4246-8B81-3427C1AD2C34}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4424B4A3-7781-4246-8B81-3427C1AD2C34}.Debug|Win32.Build.0 = Debug|Win32
+		{4424B4A3-7781-4246-8B81-3427C1AD2C34}.Release|Win32.ActiveCfg = Release|Win32
+		{4424B4A3-7781-4246-8B81-3427C1AD2C34}.Release|Win32.Build.0 = Release|Win32
+		{3E966585-6433-499A-9533-4A9174DBB3CF}.Debug|Win32.ActiveCfg = Debug|Win32
+		{3E966585-6433-499A-9533-4A9174DBB3CF}.Debug|Win32.Build.0 = Debug|Win32
+		{3E966585-6433-499A-9533-4A9174DBB3CF}.Release|Win32.ActiveCfg = Release|Win32
+		{3E966585-6433-499A-9533-4A9174DBB3CF}.Release|Win32.Build.0 = Release|Win32
+		{903F96B0-87A8-41AF-9F0B-AD46174D3457}.Debug|Win32.ActiveCfg = Debug|Win32
+		{903F96B0-87A8-41AF-9F0B-AD46174D3457}.Debug|Win32.Build.0 = Debug|Win32
+		{903F96B0-87A8-41AF-9F0B-AD46174D3457}.Release|Win32.ActiveCfg = Release|Win32
+		{903F96B0-87A8-41AF-9F0B-AD46174D3457}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{3E966585-6433-499A-9533-4A9174DBB3CF} = {97B41CE4-C147-4211-8FE4-3801F1DE974A}
+		{4424B4A3-7781-4246-8B81-3427C1AD2C34} = {97B41CE4-C147-4211-8FE4-3801F1DE974A}
+		{903F96B0-87A8-41AF-9F0B-AD46174D3457} = {97B41CE4-C147-4211-8FE4-3801F1DE974A}
+		{F6401D22-DDB9-4B43-B2BE-18159BC24314} = {E0AE1065-2B7E-4F0D-B1D9-869C96208BD5}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,39 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ContactStateGraph", "ContactStateGraph\ContactStateGraph.vcxproj", "{88E08160-16A1-48B0-9D5C-4EBB8E80AF70}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RobotArm_Replanning", "RobotArm_Replanning\RobotArm_Replanning.vcxproj", "{6EAD4DA6-208E-4961-B854-0DF133729C7F}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DiMP2", "..\..\DiMP2\DiMP2_10.vcxproj", "{38264F03-3A18-45A9-9DEE-5A258DCF221A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{AAA118A5-BE98-4AB6-8022-032C9623AEE7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{2E1FF9EA-6A26-4ADA-B66E-6787D5E4F722}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\Readme.txt = ..\..\Readme.txt
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{88E08160-16A1-48B0-9D5C-4EBB8E80AF70}.Debug|Win32.ActiveCfg = Debug|Win32
+		{88E08160-16A1-48B0-9D5C-4EBB8E80AF70}.Debug|Win32.Build.0 = Debug|Win32
+		{88E08160-16A1-48B0-9D5C-4EBB8E80AF70}.Release|Win32.ActiveCfg = Release|Win32
+		{88E08160-16A1-48B0-9D5C-4EBB8E80AF70}.Release|Win32.Build.0 = Release|Win32
+		{6EAD4DA6-208E-4961-B854-0DF133729C7F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6EAD4DA6-208E-4961-B854-0DF133729C7F}.Debug|Win32.Build.0 = Debug|Win32
+		{6EAD4DA6-208E-4961-B854-0DF133729C7F}.Release|Win32.ActiveCfg = Release|Win32
+		{6EAD4DA6-208E-4961-B854-0DF133729C7F}.Release|Win32.Build.0 = Release|Win32
+		{38264F03-3A18-45A9-9DEE-5A258DCF221A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{38264F03-3A18-45A9-9DEE-5A258DCF221A}.Debug|Win32.Build.0 = Debug|Win32
+		{38264F03-3A18-45A9-9DEE-5A258DCF221A}.Release|Win32.ActiveCfg = Release|Win32
+		{38264F03-3A18-45A9-9DEE-5A258DCF221A}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

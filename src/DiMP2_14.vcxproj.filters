@@ -1,0 +1,172 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="App.cpp">
+      <Filter>App</Filter>
+    </ClCompile>
+    <ClCompile Include="Avoid.cpp">
+      <Filter>Graph</Filter>
+    </ClCompile>
+    <ClCompile Include="Biped.cpp">
+      <Filter>Graph</Filter>
+    </ClCompile>
+    <ClCompile Include="Constraint.cpp">
+      <Filter>Solver</Filter>
+    </ClCompile>
+    <ClCompile Include="Contact.cpp">
+      <Filter>Graph</Filter>
+    </ClCompile>
+    <ClCompile Include="DrawCanvas.cpp">
+      <Filter>Render</Filter>
+    </ClCompile>
+    <ClCompile Include="DrawConfig.cpp">
+      <Filter>Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Geometry.cpp">
+      <Filter>Graph</Filter>
+    </ClCompile>
+    <ClCompile Include="Graph.cpp">
+      <Filter>Graph</Filter>
+    </ClCompile>
+    <ClCompile Include="Joint.cpp">
+      <Filter>Graph</Filter>
+    </ClCompile>
+    <ClCompile Include="Link.cpp">
+      <Filter>Solver</Filter>
+    </ClCompile>
+    <ClCompile Include="Loader.cpp">
+      <Filter>Load</Filter>
+    </ClCompile>
+    <ClCompile Include="Match.cpp">
+      <Filter>Graph</Filter>
+    </ClCompile>
+    <ClCompile Include="Node.cpp">
+      <Filter>Graph</Filter>
+    </ClCompile>
+    <ClCompile Include="Object.cpp">
+      <Filter>Graph</Filter>
+    </ClCompile>
+    <ClCompile Include="Range.cpp">
+      <Filter>Solver</Filter>
+    </ClCompile>
+    <ClCompile Include="Solver.cpp">
+      <Filter>Solver</Filter>
+    </ClCompile>
+    <ClCompile Include="SolverPareto.cpp">
+      <Filter>Solver</Filter>
+    </ClCompile>
+    <ClCompile Include="Task.cpp">
+      <Filter>Graph</Filter>
+    </ClCompile>
+    <ClCompile Include="Timing.cpp">
+      <Filter>Graph</Filter>
+    </ClCompile>
+    <ClCompile Include="Tree.cpp">
+      <Filter>Graph</Filter>
+    </ClCompile>
+    <ClCompile Include="Variable.cpp">
+      <Filter>Solver</Filter>
+    </ClCompile>
+    <ClCompile Include="Vehicle.cpp">
+      <Filter>Graph</Filter>
+    </ClCompile>
+    <ClCompile Include="Connector.cpp">
+      <Filter>Graph</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="DiMP.h" />
+    <ClInclude Include="App.h">
+      <Filter>App</Filter>
+    </ClInclude>
+    <ClInclude Include="Avoid.h">
+      <Filter>Graph</Filter>
+    </ClInclude>
+    <ClInclude Include="Biped.h">
+      <Filter>Graph</Filter>
+    </ClInclude>
+    <ClInclude Include="Constraint.h">
+      <Filter>Solver</Filter>
+    </ClInclude>
+    <ClInclude Include="Contact.h">
+      <Filter>Graph</Filter>
+    </ClInclude>
+    <ClInclude Include="DrawCanvas.h">
+      <Filter>Render</Filter>
+    </ClInclude>
+    <ClInclude Include="DrawConfig.h">
+      <Filter>Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Geometry.h">
+      <Filter>Graph</Filter>
+    </ClInclude>
+    <ClInclude Include="Graph.h">
+      <Filter>Graph</Filter>
+    </ClInclude>
+    <ClInclude Include="ID.h">
+      <Filter>Solver</Filter>
+    </ClInclude>
+    <ClInclude Include="Joint.h">
+      <Filter>Graph</Filter>
+    </ClInclude>
+    <ClInclude Include="Link.h">
+      <Filter>Solver</Filter>
+    </ClInclude>
+    <ClInclude Include="Loader.h">
+      <Filter>Load</Filter>
+    </ClInclude>
+    <ClInclude Include="Match.h">
+      <Filter>Graph</Filter>
+    </ClInclude>
+    <ClInclude Include="Node.h">
+      <Filter>Graph</Filter>
+    </ClInclude>
+    <ClInclude Include="Object.h">
+      <Filter>Graph</Filter>
+    </ClInclude>
+    <ClInclude Include="Range.h">
+      <Filter>Solver</Filter>
+    </ClInclude>
+    <ClInclude Include="Solver.h">
+      <Filter>Solver</Filter>
+    </ClInclude>
+    <ClInclude Include="Task.h">
+      <Filter>Graph</Filter>
+    </ClInclude>
+    <ClInclude Include="Timing.h">
+      <Filter>Graph</Filter>
+    </ClInclude>
+    <ClInclude Include="Tree.h">
+      <Filter>Graph</Filter>
+    </ClInclude>
+    <ClInclude Include="Types.h">
+      <Filter>Solver</Filter>
+    </ClInclude>
+    <ClInclude Include="Variable.h">
+      <Filter>Solver</Filter>
+    </ClInclude>
+    <ClInclude Include="Vehicle.h">
+      <Filter>Graph</Filter>
+    </ClInclude>
+    <ClInclude Include="Connector.h">
+      <Filter>Graph</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="App">
+      <UniqueIdentifier>{7a0f650b-2ed0-41c3-9ae9-c4914bd64c36}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Graph">
+      <UniqueIdentifier>{42504b18-0337-4bac-9f97-96efc872ed70}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Load">
+      <UniqueIdentifier>{0a2ca7b4-47c4-45c7-ba89-33767517c1e3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render">
+      <UniqueIdentifier>{d5afc780-d83e-4fcd-8e4e-ffdc13031f2d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Solver">
+      <UniqueIdentifier>{553e9b01-6ecf-47ea-896c-ab775d6ec2a8}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

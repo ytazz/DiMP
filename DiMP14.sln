@@ -1,0 +1,66 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25123.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{AAA118A5-BE98-4AB6-8022-032C9623AEE7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{2E1FF9EA-6A26-4ADA-B66E-6787D5E4F722}"
+	ProjectSection(SolutionItems) = preProject
+		Readme.txt = Readme.txt
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DiMP2", "DiMP2\DiMP2_14.vcxproj", "{38264F03-3A18-45A9-9DEE-5A258DCF221A}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Balljoint14", "Examples\Balljoint\Balljoint14.vcxproj", "{41E0386F-C41B-47E8-854C-13971764EAE4}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Contact14", "Examples\Contact\Contact14.vcxproj", "{33DCBAE5-64A0-4F96-9824-EBEBFD1C13B9}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Hinge14", "Examples\Hinge\Hinge14.vcxproj", "{BD48BC5A-64F2-4CE4-8DEF-29AE196DACE2}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Planejoint14", "Examples\Planejoint\Planejoint14.vcxproj", "{6BF5911F-12B2-4FA3-AB51-F2ABD6E25510}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Slider14", "Examples\Slider\Slider14.vcxproj", "{69F1C73E-5F45-4D92-A626-8097DC3DCE1D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{38264F03-3A18-45A9-9DEE-5A258DCF221A}.Debug|x86.ActiveCfg = Debug|Win32
+		{38264F03-3A18-45A9-9DEE-5A258DCF221A}.Debug|x86.Build.0 = Debug|Win32
+		{38264F03-3A18-45A9-9DEE-5A258DCF221A}.Release|x86.ActiveCfg = Release|Win32
+		{38264F03-3A18-45A9-9DEE-5A258DCF221A}.Release|x86.Build.0 = Release|Win32
+		{41E0386F-C41B-47E8-854C-13971764EAE4}.Debug|x86.ActiveCfg = Debug|Win32
+		{41E0386F-C41B-47E8-854C-13971764EAE4}.Debug|x86.Build.0 = Debug|Win32
+		{41E0386F-C41B-47E8-854C-13971764EAE4}.Release|x86.ActiveCfg = Release|Win32
+		{41E0386F-C41B-47E8-854C-13971764EAE4}.Release|x86.Build.0 = Release|Win32
+		{33DCBAE5-64A0-4F96-9824-EBEBFD1C13B9}.Debug|x86.ActiveCfg = Debug|Win32
+		{33DCBAE5-64A0-4F96-9824-EBEBFD1C13B9}.Debug|x86.Build.0 = Debug|Win32
+		{33DCBAE5-64A0-4F96-9824-EBEBFD1C13B9}.Release|x86.ActiveCfg = Release|Win32
+		{33DCBAE5-64A0-4F96-9824-EBEBFD1C13B9}.Release|x86.Build.0 = Release|Win32
+		{BD48BC5A-64F2-4CE4-8DEF-29AE196DACE2}.Debug|x86.ActiveCfg = Debug|Win32
+		{BD48BC5A-64F2-4CE4-8DEF-29AE196DACE2}.Debug|x86.Build.0 = Debug|Win32
+		{BD48BC5A-64F2-4CE4-8DEF-29AE196DACE2}.Release|x86.ActiveCfg = Release|Win32
+		{BD48BC5A-64F2-4CE4-8DEF-29AE196DACE2}.Release|x86.Build.0 = Release|Win32
+		{6BF5911F-12B2-4FA3-AB51-F2ABD6E25510}.Debug|x86.ActiveCfg = Debug|Win32
+		{6BF5911F-12B2-4FA3-AB51-F2ABD6E25510}.Debug|x86.Build.0 = Debug|Win32
+		{6BF5911F-12B2-4FA3-AB51-F2ABD6E25510}.Release|x86.ActiveCfg = Release|Win32
+		{6BF5911F-12B2-4FA3-AB51-F2ABD6E25510}.Release|x86.Build.0 = Release|Win32
+		{69F1C73E-5F45-4D92-A626-8097DC3DCE1D}.Debug|x86.ActiveCfg = Debug|Win32
+		{69F1C73E-5F45-4D92-A626-8097DC3DCE1D}.Debug|x86.Build.0 = Debug|Win32
+		{69F1C73E-5F45-4D92-A626-8097DC3DCE1D}.Release|x86.ActiveCfg = Release|Win32
+		{69F1C73E-5F45-4D92-A626-8097DC3DCE1D}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{41E0386F-C41B-47E8-854C-13971764EAE4} = {AAA118A5-BE98-4AB6-8022-032C9623AEE7}
+		{33DCBAE5-64A0-4F96-9824-EBEBFD1C13B9} = {AAA118A5-BE98-4AB6-8022-032C9623AEE7}
+		{BD48BC5A-64F2-4CE4-8DEF-29AE196DACE2} = {AAA118A5-BE98-4AB6-8022-032C9623AEE7}
+		{6BF5911F-12B2-4FA3-AB51-F2ABD6E25510} = {AAA118A5-BE98-4AB6-8022-032C9623AEE7}
+		{69F1C73E-5F45-4D92-A626-8097DC3DCE1D} = {AAA118A5-BE98-4AB6-8022-032C9623AEE7}
+	EndGlobalSection
+EndGlobal

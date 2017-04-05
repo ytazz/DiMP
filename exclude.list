@@ -1,0 +1,8 @@
+.obj
+.exp
+.pdb
+.ilk
+.vcxproj.user
+\Debug\
+\Release\
+\noport\
