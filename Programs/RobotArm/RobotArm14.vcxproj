@@ -105,11 +105,6 @@
     <ClInclude Include="RobotArm.h" />
     <ClInclude Include="Workspace.h" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\DiMP2\DiMP2_14.vcxproj">
-      <Project>{38264f03-3a18-45a9-9dee-5a258dcf221a}</Project>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
