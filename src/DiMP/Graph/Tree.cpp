@@ -13,9 +13,9 @@ namespace DiMP{;
 void TreeKey::AddVar(Solver* solver){
 	Tree* tree = (Tree*)node;
 
-	uint nobj = tree->objects  .size();
-	uint njnt = tree->joints   .size();
-	uint nadj = tree->adjacents.size();
+	uint nobj = (uint)tree->objects  .size();
+	uint njnt = (uint)tree->joints   .size();
+	uint nadj = (uint)tree->adjacents.size();
 
 	objects.resize(nobj);
 	for(uint i = 0; i < nobj; i++)
@@ -72,8 +72,8 @@ int TreeKey::GetIndex(ObjectKey* obj){
 void TreeKey::Prepare(){
 	Tree* tree = (Tree*)node;
 
-	uint nobj = objects.size();
-	uint njnt = joints .size();
+	uint nobj = (uint)objects.size();
+	uint njnt = (uint)joints .size();
 
 	// ヤコビアン
 	for(uint i = 0; i < nobj; i++){
@@ -169,7 +169,7 @@ void Tree::Extract(){
 						break;
 				}
 				parObject.push_back(isock);
-				parJoint .push_back(joints.size()-1);
+				parJoint .push_back((int)joints.size() - 1);
 				updated = true;
 			}
 		}
@@ -177,8 +177,8 @@ void Tree::Extract(){
 	while(updated);
 
 	// 依存関係
-	uint nobj = objects.size();
-	uint njnt = joints .size();
+	uint nobj = (uint)objects.size();
+	uint njnt = (uint)joints .size();
 	dependent.resize(nobj);
 	for(uint i = 0; i < nobj; i++){
 		dependent[i].resize(njnt);
@@ -240,8 +240,8 @@ EomCon::EomCon(Solver* solver, string _name, TreeKey* _tree, uint _idx, real_t _
 	tree[1] = (TreeKey*)_tree->next;
 	idx     = _idx;
 	
-	uint njnt = tree[0]->joints   .size();
-	uint nadj = tree[0]->adjacents.size();
+	uint njnt = (uint)tree[0]->joints   .size();
+	uint nadj = (uint)tree[0]->adjacents.size();
 
 	// joint vel
 	for(uint i = 0; i < njnt; i++)
@@ -262,8 +262,8 @@ EomCon::EomCon(Solver* solver, string _name, TreeKey* _tree, uint _idx, real_t _
 }
 
 void EomCon::CalcCoef(){
-	uint njnt = tree[0]->joints   .size();
-	uint nadj = tree[0]->adjacents.size();
+	uint njnt = (uint)tree[0]->joints   .size();
+	uint nadj = (uint)tree[0]->adjacents.size();
 
 	real_t h   = tree[0]->hnext;
 
@@ -295,7 +295,7 @@ void EomCon::CalcCoef(){
 void EomCon::CalcDeviation(){
 	Constraint::CalcDeviation();
 	
-	uint nobj = tree[0]->objects.size();
+	uint nobj = (uint)tree[0]->objects.size();
 
 	/*
 	// 外力による項

@@ -508,7 +508,7 @@ void App::Keyboard(int key, int x, int y) {
 					}
 					else{
 						focusMenu--;
-						focusAction = menus[focusMenu].actions.size()-1;
+						focusAction = (int)menus[focusMenu].actions.size() - 1;
 					}
 				}
 				else focusAction--;

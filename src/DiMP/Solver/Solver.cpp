@@ -116,7 +116,7 @@ void Solver::Init(){
 	e_type .resize(ConTag::NumTypes);
 
 	// レベル数とmaxIterのサイズが合わせてデフォルト値をセット
-	uint sz = maxIter.size();
+	uint sz = (uint)maxIter.size();
 	uint sznew = maxLevel+1;
 	if(sz < sznew){
 		maxIter.resize(sznew);
