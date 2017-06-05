@@ -371,7 +371,7 @@ namespace DiMP2 {
 			real_t vx0_dsp = 2 * l / tau_ssp + (x0_ssp - px + l) / T*sinh(tau_ssp / T) + (vx0_ssp - (2 * l / tau_ssp))*cosh(tau_ssp / T);
 			real_t vy0_dsp = (y0_ssp - py) / T*sinh(tau_ssp / T) + vy0_ssp*cosh(tau_ssp / T);
 
-			real_t dx = key->next->cop_pos_t[0]->val - key->cop_pos_t[0]->val;
+			real_t dx = key->next->cop_pos_t[0]->val - key->cop_pos_t[0]->val - 2 * l;
 			real_t dy = key->next->cop_pos_t[1]->val - key->cop_pos_t[1]->val;
 
 			if (t0<t && t<(t0 + tau_ssp)) {
@@ -418,7 +418,7 @@ namespace DiMP2 {
 			real_t vx0_dsp = 2 * l / tau_ssp + (x0_ssp - px + l) / T*sinh(tau_ssp / T) + (vx0_ssp - (2 * l / tau_ssp))*cosh(tau_ssp / T);
 			real_t vy0_dsp = (y0_ssp - py) / T*sinh(tau_ssp / T) + vy0_ssp*cosh(tau_ssp / T);
 
-			real_t dx = key->next->cop_pos_t[0]->val - key->cop_pos_t[0]->val;
+			real_t dx = key->next->cop_pos_t[0]->val - key->cop_pos_t[0]->val - 2 * l;
 			real_t dy = key->next->cop_pos_t[1]->val - key->cop_pos_t[1]->val;
 
 			if (t0<t && t<(t0 + tau_ssp)) {
@@ -485,7 +485,7 @@ namespace DiMP2 {
 				real_t vx0_dsp = 2 * l / tau_ssp + (x0_ssp - px + l) / T*sinh(tau_ssp / T) + (vx0_ssp - (2 * l / tau_ssp))*cosh(tau_ssp / T);
 				real_t vy0_dsp = (y0_ssp - py) / T*sinh(tau_ssp / T) + vy0_ssp*cosh(tau_ssp / T);
 
-				real_t dx = key->next->cop_pos_t[0]->val - key->cop_pos_t[0]->val;
+				real_t dx = key->next->cop_pos_t[0]->val - key->cop_pos_t[0]->val -2*l;
 				real_t dy = key->next->cop_pos_t[1]->val - key->cop_pos_t[1]->val;
 
 				if (t0<t && t<(t0 + tau_ssp)) {
