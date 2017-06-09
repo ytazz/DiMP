@@ -349,45 +349,49 @@ namespace DiMP2 {
 
 	//重心位置
 	vec3_t BipedLIP::CoMPos(real_t t) {
-		BipedLIPKey* key = (BipedLIPKey*)traj.GetSegment(t).first;
+		BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;//k歩目のキーポイント
+		BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;//k+1歩目のキーポイント
 
 		vec3_t p;
-		if (key->next) {
+		if (key0) {
 			real_t l = 0.1;//足の中心から踵・つま先までの距離
-			real_t tau_ssp = (key->period->val)*0.9;//歩行周期(SSP)
-			real_t tau_dsp = (key->period->val)*0.1;//歩行周期(DSP)
+			real_t tau = key1->tick->time - key0->tick->time;
+			real_t tau_ssp = tau*0.9;//歩行周期(SSP)
+			real_t tau_dsp = tau*0.1;//歩行周期(DSP)
 
 			real_t T = param.T;
-			real_t t0 = key->tick->time;
-			real_t x0_ssp = key->com_pos_t[0]->val;
-			real_t y0_ssp = key->com_pos_t[1]->val;
-			real_t vx0_ssp = key->com_vel_t[0]->val;
-			real_t vy0_ssp = key->com_vel_t[1]->val;
-			real_t px = key->cop_pos_t[0]->val;
-			real_t py = key->cop_pos_t[1]->val;
+			real_t t0 = key0->tick->time;
+			real_t x0_ssp = key0->com_pos_t[0]->val;
+			real_t y0_ssp = key0->com_pos_t[1]->val;
+			real_t vx0_ssp = key0->com_vel_t[0]->val;
+			real_t vy0_ssp = key0->com_vel_t[1]->val;
+			real_t px = key0->cop_pos_t[0]->val;
+			real_t py = key0->cop_pos_t[1]->val;
 
-			real_t x0_dsp = px + l + (x0_ssp - px + l)*cosh(+tau_ssp / T) + T*(vx0_ssp);
+			real_t x0_dsp = px + l + (x0_ssp - px + l)*cosh(tau_ssp / T) + T*(vx0_ssp - (2 * l / tau_ssp));
 			real_t y0_dsp = py + (y0_ssp - py)*cosh(tau_ssp / T) + T*vy0_ssp*sinh(tau_ssp / T);
 			real_t vx0_dsp = 2 * l / tau_ssp + (x0_ssp - px + l) / T*sinh(tau_ssp / T) + (vx0_ssp - (2 * l / tau_ssp))*cosh(tau_ssp / T);
 			real_t vy0_dsp = (y0_ssp - py) / T*sinh(tau_ssp / T) + vy0_ssp*cosh(tau_ssp / T);
 
-			real_t dx = key->next->cop_pos_t[0]->val - key->cop_pos_t[0]->val - 2 * l;
-			real_t dy = key->next->cop_pos_t[1]->val - key->cop_pos_t[1]->val;
+			real_t dx = key1->cop_pos_t[0]->val - key0->cop_pos_t[0]->val - 2 * l;
+			real_t dy = key1->cop_pos_t[1]->val - key0->cop_pos_t[1]->val;
 
 			if (t0<t && t<(t0 + tau_ssp)) {
 				p.x = (2 * l / tau_ssp)*(t - t0) + (px - l) + (x0_ssp - px + l)*cosh((t - t0) / T) + T*(vx0_ssp - (2 * l / tau_ssp))*sinh((t - t0) / T);
-				p.y = py + (y0_ssp - py) * cosh((t - t0) / T) + (vy0_ssp*T) * sinh((t - t0) / T);
+				p.y = py + (y0_ssp - py) * cosh((t - t0) / T) + T*vy0_ssp* sinh((t - t0) / T);
 				p.z = param.heightCoM;
 			}
 			else {
-				p.x = (dx / tau_dsp)*(t - (t0 + tau_ssp)) + (px + l) + (x0_dsp - px - l)*cosh((t - (t0 + tau_ssp)) / T) + T*(vx0_dsp - (dx / tau_dsp))*sinh((t - (t0 + tau_ssp)) / T);
-				p.y = (dy / tau_dsp)*(t - (t0 + tau_ssp)) + py + (y0_dsp - py)*cosh((t - (t0 + tau_ssp)) / T) + T*(vy0_dsp - (dy / tau_dsp))*sinh((t - (t0 + tau_ssp)) / T);
+				p.x = (dx / tau_dsp)*(t - (t0 + tau_ssp)) + (px + l) + (x0_dsp - px - l)*cosh((t - (t0 + tau_ssp)) / T)
+					+ T*(vx0_dsp - (dx / tau_dsp))*sinh((t - (t0 + tau_ssp)) / T);
+				p.y = (dy / tau_dsp)*(t - (t0 + tau_ssp)) + py + (y0_dsp - py)*cosh((t - (t0 + tau_ssp)) / T)
+					+ T*(vy0_dsp - (dy / tau_dsp))*sinh((t - (t0 + tau_ssp)) / T);
 				p.z = param.heightCoM;
 			}
 		}
 		else {
-			p.x = key->com_pos_t[0]->val;
-			p.y = key->com_pos_t[1]->val;
+			p.x = key0->com_pos_t[0]->val;
+			p.y = key0->com_pos_t[1]->val;
 			p.z = param.heightCoM;
 		}
 
@@ -396,34 +400,36 @@ namespace DiMP2 {
 
 	//重心速度
 	vec3_t BipedLIP::CoMVel(real_t t) {
-		BipedLIPKey* key = (BipedLIPKey*)traj.GetSegment(t).first;
+		BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;
+		BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;
 
 		vec3_t v;
-		if (key->next) {
+		if (key0) {
 			real_t l = 0.1;//足の中心から踵・つま先までの距離
-			real_t tau_ssp = (key->period->val)*0.9;//歩行周期(SSP)
-			real_t tau_dsp = (key->period->val)*0.1;//歩行周期(DSP)
+			real_t tau = key1->tick->time - key0->tick->time;
+			real_t tau_ssp = tau*0.9;//歩行周期(SSP)
+			real_t tau_dsp = tau*0.1;//歩行周期(DSP)
 
 			real_t T = param.T;
-			real_t t0 = key->tick->time;
-			real_t x0_ssp = key->com_pos_t[0]->val;
-			real_t y0_ssp = key->com_pos_t[1]->val;
-			real_t vx0_ssp = key->com_vel_t[0]->val;
-			real_t vy0_ssp = key->com_vel_t[1]->val;
-			real_t px = key->cop_pos_t[0]->val;
-			real_t py = key->cop_pos_t[1]->val;
+			real_t t0 = key0->tick->time;
+			real_t x0_ssp = key0->com_pos_t[0]->val;
+			real_t y0_ssp = key0->com_pos_t[1]->val;
+			real_t vx0_ssp = key0->com_vel_t[0]->val;
+			real_t vy0_ssp = key0->com_vel_t[1]->val;
+			real_t px = key0->cop_pos_t[0]->val;
+			real_t py = key0->cop_pos_t[1]->val;
 
-			real_t x0_dsp = px + l + (x0_ssp - px + l)*cosh(+tau_ssp / T) + T*(vx0_ssp);
+			real_t x0_dsp = px + l + (x0_ssp - px + l)*cosh(tau_ssp / T) + T*(vx0_ssp - (2 * l / tau_ssp));
 			real_t y0_dsp = py + (y0_ssp - py)*cosh(tau_ssp / T) + T*vy0_ssp*sinh(tau_ssp / T);
 			real_t vx0_dsp = 2 * l / tau_ssp + (x0_ssp - px + l) / T*sinh(tau_ssp / T) + (vx0_ssp - (2 * l / tau_ssp))*cosh(tau_ssp / T);
 			real_t vy0_dsp = (y0_ssp - py) / T*sinh(tau_ssp / T) + vy0_ssp*cosh(tau_ssp / T);
 
-			real_t dx = key->next->cop_pos_t[0]->val - key->cop_pos_t[0]->val - 2 * l;
-			real_t dy = key->next->cop_pos_t[1]->val - key->cop_pos_t[1]->val;
+			real_t dx = key1->cop_pos_t[0]->val - key0->cop_pos_t[0]->val - 2 * l;
+			real_t dy = key1->cop_pos_t[1]->val - key0->cop_pos_t[1]->val;
 
-			if (t0<t && t<(t0 + tau_ssp)) {
+			if (t0 < t && t < (t0 + tau_ssp)) {
 				v.x = (2 * l / tau_ssp) + (x0_ssp - px + l) / T*sinh((t - t0) / T) + (vx0_ssp - (2 * l / tau_ssp))*cosh((t - t0) / T);
-				v.y = ((y0_ssp - py) / T) * sinh((t - t0) / T) + vy0_ssp* cosh((t - t0) / T);
+				v.y = (y0_ssp - py) / T* sinh((t - t0) / T) + vy0_ssp* cosh((t - t0) / T);
 				v.z = 0.0;
 			}
 			else {
@@ -431,739 +437,826 @@ namespace DiMP2 {
 				v.y = (dy / tau_dsp) + (y0_dsp - py) / T*sinh((t - (t0 + tau_ssp)) / T) + (vy0_dsp - (dy / tau_dsp))*cosh((t - (t0 + tau_ssp)) / T);
 				v.z = 0.0;
 			}
+		}
 		else {
-			v.x = key->com_vel_t[0]->val;
-			v.y = key->com_vel_t[1]->val;
+			v.x = key0->com_vel_t[0]->val;
+			v.y = key0->com_vel_t[1]->val;
 			v.z = 0.0;
 		}
 
+
 		return v;
-		}
+	}
 
-		/*	void BipedLIP::Save() {
-		FILE* file = fopen("CoMVel.csv", "w");
-		fprintf(file, " time, vel_com_x\n");
+	/*	void BipedLIP::Save() {
+	FILE* file = fopen("CoMVel.csv", "w");
+	fprintf(file, " time, vel_com_x\n");
 
 
-		real_t t = 0.0;
-		for (uint k = 0; k < graph->ticks.size(); k++) {//graph->ticks.sizeが歩数に相当
-		BipedLIPKey* key = (BipedLIPKey*)traj.GetSegment(t).first;
+	real_t t = 0.0;
+	for (uint k = 0; k < graph->ticks.size(); k++) {//graph->ticks.sizeが歩数に相当
+	BipedLIPKey* key = (BipedLIPKey*)traj.GetSegment(t).first;
 
 
 
-		fprintf(file, " %3.3lf, %3.3lf\n",t,key->period->val);
-		t += key->period->val;
+	fprintf(file, " %3.3lf, %3.3lf\n",t,key->period->val);
+	t += key->period->val;
 
 
-
-		}
-
-		fclose(file);
-		}*/
-
-		//重心加速度
-		vec3_t BipedLIP::CoMAcc(real_t t) {
-			BipedLIPKey* key = (BipedLIPKey*)traj.GetSegment(t).first;
-
-			vec3_t a;
-			if (key->next) {
-				real_t l = 0.1;//足の中心から踵・つま先までの距離
-				real_t tau_ssp = (key->period->val)*0.9;//歩行周期(SSP)
-				real_t tau_dsp = (key->period->val)*0.1;//歩行周期(DSP)
-
-				real_t T = param.T;
-				real_t t0 = key->tick->time;
-				real_t x0_ssp = key->com_pos_t[0]->val;
-				real_t y0_ssp = key->com_pos_t[1]->val;
-				real_t vx0_ssp = key->com_vel_t[0]->val;
-				real_t vy0_ssp = key->com_vel_t[1]->val;
-				real_t px = key->cop_pos_t[0]->val;
-				real_t py = key->cop_pos_t[1]->val;
-
-				real_t x0_dsp = px + l + (x0_ssp - px + l)*cosh(+tau_ssp / T) + T*(vx0_ssp);
-				real_t y0_dsp = py + (y0_ssp - py)*cosh(tau_ssp / T) + T*vy0_ssp*sinh(tau_ssp / T);
-				real_t vx0_dsp = 2 * l / tau_ssp + (x0_ssp - px + l) / T*sinh(tau_ssp / T) + (vx0_ssp - (2 * l / tau_ssp))*cosh(tau_ssp / T);
-				real_t vy0_dsp = (y0_ssp - py) / T*sinh(tau_ssp / T) + vy0_ssp*cosh(tau_ssp / T);
-
-				real_t dx = key->next->cop_pos_t[0]->val - key->cop_pos_t[0]->val -2*l;
-				real_t dy = key->next->cop_pos_t[1]->val - key->cop_pos_t[1]->val;
-
-				if (t0<t && t<(t0 + tau_ssp)) {
-					a.x = (x0_ssp - px + l) / (T*T)*cosh((t - t0) / T) + (vx0_ssp - (2 * l / tau_ssp)) / T*sinh((t - t0) / T);
-					a.y = (y0_ssp - py) / (T*T)*cosh((t - t0) / T) + vy0_ssp / T*sinh((t - t0) / T);
-					a.z = 0.0;
-				}
-				else {
-					a.x = (x0_dsp - px - l) / (T*T)*cosh((t - (t0 + tau_ssp)) / T) + (vx0_dsp - (dx / tau_dsp)) / T*sinh((t - (t0 + tau_ssp)) / T);
-					a.y = (y0_dsp - py) / (T*T)*cosh((t - (t0 + tau_ssp)) / T) + (vy0_dsp - (dy / tau_dsp)) / T*sinh((t - (t0 + tau_ssp)) / T);
-					a.z = 0.0;
-				}
-			}
-			else {
-				a.clear();
-			}
-
-			return a;
-		}
-
-		real_t BipedLIP::CoMOri(real_t t) {
-			KeyPair      kp = traj.GetSegment(t);
-			BipedLIPKey* cur = (BipedLIPKey*)kp.first;
-			BipedLIPKey* next = (BipedLIPKey*)kp.second;
-
-			real_t o;
-			if (next) {
-				real_t T = param.T;
-				real_t t0 = cur->tick->time;
-				real_t t1 = next->tick->time;
-				real_t o0 = cur->com_pos_r->val;
-				real_t o1 = next->com_pos_r->val;
-				real_t r0 = cur->com_vel_r->val;
-				real_t r1 = next->com_vel_r->val;
-
-				o = InterpolatePos(t, t0, o0, r0, t1, o1, r1, Interpolate::Cubic);
-			}
-			else {
-				o = cur->com_pos_r->val;
-			}
-
-			return o;
-		}
-
-		real_t BipedLIP::CoMAngVel(real_t t) {
-			KeyPair      kp = traj.GetSegment(t);
-			BipedLIPKey* cur = (BipedLIPKey*)kp.first;
-			BipedLIPKey* next = (BipedLIPKey*)kp.second;
-
-			real_t r;
-			if (next) {
-				real_t T = param.T;
-				real_t t0 = cur->tick->time;
-				real_t t1 = next->tick->time;
-				real_t o0 = cur->com_pos_r->val;
-				real_t o1 = next->com_pos_r->val;
-				real_t r0 = cur->com_vel_r->val;
-				real_t r1 = next->com_vel_r->val;
-
-				r = InterpolateVel(t, t0, o0, r0, t1, o1, r1, Interpolate::Cubic);
-			}
-			else {
-				r = cur->com_vel_r->val;
-			}
-
-			return r;
-		}
-
-		real_t BipedLIP::CoMAngAcc(real_t t) {
-			KeyPair      kp = traj.GetSegment(t);
-			BipedLIPKey* cur = (BipedLIPKey*)kp.first;
-			BipedLIPKey* next = (BipedLIPKey*)kp.second;
-
-			real_t a;
-			if (next) {
-				real_t T = param.T;
-				real_t t0 = cur->tick->time;
-				real_t t1 = next->tick->time;
-				real_t o0 = cur->com_pos_r->val;
-				real_t o1 = next->com_pos_r->val;
-				real_t r0 = cur->com_vel_r->val;
-				real_t r1 = next->com_vel_r->val;
-
-				a = InterpolateAcc(t, t0, o0, r0, t1, o1, r1, Interpolate::Cubic);
-			}
-			else {
-				a = 0.0;
-			}
-
-			return a;
-		}
-
-		vec3_t BipedLIP::SupFootPos(real_t t) {
-			BipedLIPKey* key = (BipedLIPKey*)traj.GetSegment(t).first;
-
-			return vec3_t(key->cop_pos_t[0]->val, key->cop_pos_t[1]->val, 0.0);
-		}
-
-		real_t BipedLIP::SupFootOri(real_t t) {
-			BipedLIPKey* key = (BipedLIPKey*)traj.GetSegment(t).first;
-
-			return key->cop_pos_r->val;
-		}
-
-		vec3_t BipedLIP::SwgFootPos(real_t t) {
-			KeyPair      kp = traj.GetSegment(t);
-			BipedLIPKey* cur = (BipedLIPKey*)kp.first;
-			BipedLIPKey* next = (BipedLIPKey*)kp.second;
-			BipedLIPKey* prev = (BipedLIPKey*)cur->prev;
-			real_t       t0 = cur->tick->time;
-			real_t       t1 = next->tick->time;
-			real_t       h = t1 - t0;
-			real_t       hhalf = h / 2.0;
-
-
-			real_t		 ta = t0 + 0.05*h;//踵が上がりきる時刻
-			real_t		 tb = t0 + 0.95*h;//踵が接地する時刻
-
-			real_t _2pi = 2.0 * M_PI;//2π
-			real_t tau = (t - t0) / (ta - t0);//phase1
-			real_t tau2 = (t - ta) / (tb - ta);//phase2
-			real_t tau3 = (t1 - t) / (t1 - tb);//phase3
-
-			real_t		 theta = (M_PI) / 12;//接地・離地時の角度
-			real_t		 l = 0.1;//足の中心から踵・つま先までの距離
-			real_t		 pa = l*(1 - cos(theta));//t0<t<taのx方向の距離
-			real_t		 pb = l*(1 - cos(theta));//tb<t<t1のx方向の距離
-
-
-												 // 遊脚の始点と終点は前後の接地点
-												 // 0歩目の始点は0歩目の支持足の反対側に設定
-												 // N-1歩目の終点はN-1歩目の支持足の反対側に設定
-			vec2_t p0, p1;
-			// 1～N-1歩目
-			if (prev) {
-				p0[0] = prev->cop_pos_t[0]->val;//遊脚の始点の位置x
-				p0[1] = prev->cop_pos_t[1]->val;//				　y
-			}
-			// 0歩目
-			else {
-				p0[0] = cur->swg_pos_t[0]->val;
-				p0[1] = cur->swg_pos_t[1]->val;
-			}
-
-			if (next) {
-				p1[0] = next->cop_pos_t[0]->val;//遊脚の終点の位置x
-				p1[1] = next->cop_pos_t[1]->val;//				　y
-			}
-			else {
-				p1[0] = prev->cop_pos_t[0]->val;
-				p1[1] = prev->cop_pos_t[1]->val;
-			}
-
-			real_t s;
-			real_t z;
-			if (h == 0.0) {//境目
-				s = 0.0;
-				z = 0.0;
-			}
-			else {
-				if (param.swingProfile == SwingProfile::Wedge) {
-					if (t < t0 + hhalf) {
-						z = param.swingHeight[0];
-					}
-					else {
-						real_t a = (t - (t0 + hhalf)) / hhalf;
-						z = (1 - a)*param.swingHeight[0] + a*param.swingHeight[1];
-					}
-
-					s = (t - t0) / h;//周期における時刻tの割合
-				}
-
-				if (param.swingProfile == SwingProfile::Cycloid) {//踵・つま先の遊脚軌道
-					if (t < ta) {
-						z = l*sin(theta*tau);
-					}
-					else if (ta <= t && t <= tb) {
-						s = (tau2 - sin(_2pi*tau2) / _2pi);
-						z = l*sin(theta) + (param.swingHeight[0] / 2.0) * (1 - cos(_2pi*tau2));
-					}
-					else {
-						z = l*sin(theta*tau3);
-					}
-
-				}
-			}
-
-			vec3_t p;
-			if (t < ta) {
-				p[0] = p0[0] + l*(1 - cos(theta*tau));
-				p[1] = p0[1];
-			}
-			else if (ta <= t && t <= tb) {
-				p[0] = (1 - s) * (p0[0] + pa) + s * (p1[0] - pb);
-				p[1] = (1 - s) * p0[1] + s * p1[1];
-			}
-			else {
-				p[0] = p1[0] - l*(1 - cos(theta*tau3));
-				p[1] = p1[1];
-			}
-			p[2] = z;
-
-			return p;
-		}
-
-		real_t BipedLIP::SwgFootOri(real_t t) {
-			KeyPair      kp = traj.GetSegment(t);
-			BipedLIPKey* cur = (BipedLIPKey*)kp.first;
-			BipedLIPKey* next = (BipedLIPKey*)kp.second;
-			BipedLIPKey* prev = (BipedLIPKey*)cur->prev;
-			real_t       t0 = cur->tick->time;
-			real_t       t1 = next->tick->time;
-			real_t       h = t1 - t0;
-
-			real_t  q0, q1;
-			if (prev)
-				q0 = prev->cop_pos_r->val;
-			else q0 = cur->swg_pos_r->val;
-
-			if (next)
-				q1 = next->cop_pos_r->val;
-			else q1 = prev->cop_pos_r->val;
-
-			real_t s;
-			if (h == 0.0)
-				s = 0.0;
-			else s = (t - t0) / h;
-
-			real_t q = (1 - s) * q0 + s * q1;
-
-			return q;
-		}
-
-
-		vec3_t BipedLIP::TorsoPos(const vec3_t& pcom, const vec3_t& psup, const vec3_t& pswg) {
-			// コンパスモデルより胴体の位置を求める
-			real_t a = param.torsoMassRatio;
-			real_t b = param.legMassRatio;
-			vec3_t p = (pcom - ((1 - a)*(1 - b) / 2)*(psup + pswg)) / (a + (1 - a)*b);
-			return p;
-		}
-
-		//------------------------------------------------------------------------------------------------
-
-		void BipedLIP::CalcTrajectory() {
-			real_t tf = traj.back()->tick->time;
-			real_t dt = 0.01;
-
-			trajectory.clear();
-			for (real_t t = 0.0; t < tf; t += dt) {
-				TrajPoint tp;
-				tp.t = t;
-				tp.pos_com = CoMPos(t);
-				tp.ori_com = CoMOri(t);
-				tp.pos_sup = SupFootPos(t);
-				tp.ori_sup = SupFootOri(t);
-				tp.pos_swg = SwgFootPos(t);
-				tp.ori_swg = SwgFootOri(t);
-				tp.pos_torso = TorsoPos(tp.pos_com, tp.pos_sup, tp.pos_swg);
-
-				trajectory.push_back(tp);
-			}
-
-			trajReady = true;
-		}
-
-		//------------------------------------------------------------------------------------------------
-
-		void BipedLIP::Draw(DrawCanvas* canvas, DrawConfig* conf) {
-			TrajectoryNode::Draw(canvas, conf);
-
-			if (!trajReady)
-				CalcTrajectory();
-
-			if (trajectory.empty())
-				return;
-
-			// com
-			if (conf->Set(canvas, DrawItem::BipedCoM, this)) {
-				canvas->BeginLayer("biped_com", true);
-				canvas->SetLineWidth(6.0f);
-				canvas->BeginPath();
-				canvas->MoveTo(trajectory[0].pos_com);
-				for (uint i = 1; i < trajectory.size(); i++) {
-					canvas->LineTo(trajectory[i].pos_com);
-				}
-				canvas->EndPath();
-				canvas->EndLayer();
-			}
-
-			// torso
-			if (conf->Set(canvas, DrawItem::BipedTorso, this)) {
-				canvas->BeginLayer("biped_torso", true);
-				canvas->SetLineWidth(3.0f);
-				canvas->BeginPath();
-				canvas->MoveTo(trajectory[0].pos_torso);
-				for (uint i = 1; i < trajectory.size(); i++) {
-					canvas->LineTo(trajectory[i].pos_torso);
-				}
-				canvas->EndPath();
-				canvas->EndLayer();
-			}
-
-
-			// swing foot
-			if (conf->Set(canvas, DrawItem::BipedSwing, this)) {
-				canvas->BeginLayer("biped_swing", true);
-				canvas->SetLineWidth(3.0f);
-				canvas->BeginPath();
-				canvas->MoveTo(trajectory[0].pos_swg);
-				for (uint i = 1; i < trajectory.size(); i++) {
-					if (trajectory[i - 1].pos_sup == trajectory[i].pos_sup) {
-						canvas->LineTo(trajectory[i].pos_swg);
-					}
-					else {
-						canvas->EndPath();
-						canvas->BeginPath();
-						canvas->MoveTo(trajectory[i].pos_swg);
-					}
-				}
-				canvas->EndPath();
-				canvas->EndLayer();
-			}
-
-			// double support snapshot
-			/*		if (conf->Set(canvas, DrawItem::BipedDouble, this)) {
-			canvas->BeginLayer("biped_double", true);
-			canvas->SetLineWidth(1.0f);
-			Vec3f p0, p1;
-			for (uint i = 1; i < trajectory.size(); i++) {
-			if (trajectory[i - 1].pos_sup != trajectory[i].pos_sup) {
-			p0 = trajectory[i].pos_torso;
-			p1 = trajectory[i].pos_sup;
-			canvas->Line(p0, p1);
-
-			p0 = trajectory[i].pos_torso;
-			p1 = trajectory[i - 1].pos_sup;
-			canvas->Line(p0, p1);
-			}
-			}
-			canvas->EndLayer();
-			}*/
-
-		}
-
-		void BipedLIP::DrawSnapshot(real_t time, DrawCanvas* canvas, DrawConfig* conf) {
-			canvas->SetLineWidth(2.0f);
-			canvas->BeginPath();
-			canvas->MoveTo(CoMPos(time));
-			canvas->LineTo(SupFootPos(time));
-			canvas->MoveTo(CoMPos(time));
-			canvas->LineTo(SwgFootPos(time));
-			canvas->EndPath();
-		}
-
-		void BipedLIP::Save() {
-			FILE* file1 = fopen("plan_step_case1(t_dt).csv", "w");
-			fprintf(file1, "time, pos_com_x, pos_com_y, vel_com_x, vel_com_y,acc_com_x,acc_com_y\n");
-
-			real_t dt = 0.01;
-			real_t tf = traj.back()->tick->time;
-
-			vec3_t pf = CoMPos(tf);
-			vec3_t vf = CoMVel(tf);
-			vec3_t af = CoMAcc(tf);
-
-			for (real_t t = 0.0; t < tf; t += dt) {
-
-				vec3_t p = CoMPos(t);
-				vec3_t v = CoMVel(t);
-				vec3_t a = CoMAcc(t);
-
-				fprintf(file1, "%3.3lf, %3.3lf, %3.3lf,%3.3lf,%3.3lf,%3.3lf, %3.3lf\n", t, p.x, p.y, v.x, v.y, a.x, a.y);
-			}
-			fprintf(file1, "%3.3lf, %3.3lf, %3.3lf,%3.3lf,%3.3lf,%3.3lf, %3.3lf\n", tf, pf.x, pf.y, vf.x, vf.y, af.x, af.y);
-
-			fclose(file1);
-
-
-
-
-			FILE* file2 = fopen("plan_step_case1(t_k).csv", "w");
-			fprintf(file2, "step, time, period, pos_com_x, pos_com_y, vel_com_x, vel_com_y, pos_cop_x, pos_cop_y\n");
-
-			real_t t = 0.0;
-			for (uint k = 0; k < graph->ticks.size(); k++) {
-				BipedLIPKey* key = (BipedLIPKey*)traj.GetKeypoint(graph->ticks[k]);
-
-				if (k != (graph->ticks.size()) - 1) {
-					fprintf(file2, "%d, %3.3lf, %3.3lf, %3.3lf, %3.3lf, %3.3lf, %3.3lf, %3.3lf, %3.3lf\n",
-						k, t,
-						key->period->val,
-						key->com_pos_t[0]->val, key->com_pos_t[1]->val,
-						key->com_vel_t[0]->val, key->com_vel_t[1]->val,
-						key->cop_pos_t[0]->val, key->cop_pos_t[1]->val);
-					t += key->period->val;
-				}
-				else {
-					fprintf(file2, "%d, %3.3lf, 0, %3.3lf, %3.3lf, %3.3lf, %3.3lf, %3.3lf, %3.3lf\n",
-						k, t,
-						key->com_pos_t[0]->val, key->com_pos_t[1]->val,
-						key->com_vel_t[0]->val, key->com_vel_t[1]->val,
-						key->cop_pos_t[0]->val, key->cop_pos_t[1]->val);
-				}
-			}
-
-			fclose(file2);
-		}
-
-		//-------------------------------------------------------------------------------------------------
-
-		// Constructors(コンストラクタ⇒クラスからオブジェクトが作成されるときに，自動的に呼び出される)
-		CoMCon::CoMCon(Solver* solver, int _tag, string _name, BipedLIPKey* _obj, uint _dir, real_t _scale) :
-			Constraint(solver, 1, ID(_tag, _obj->node, _obj->tick, _name), _scale) {
-			obj[0] = _obj;
-			obj[1] = (BipedLIPKey*)_obj->next;
-			dir = _dir;
-		}
-
-		CoMConTP::CoMConTP(Solver* solver, string _name, BipedLIPKey* _obj, uint _dir, real_t _scale) :
-			CoMCon(solver, ConTag::BipedCoMTP, _name, _obj, _dir, _scale) {
-
-			AddSLink(obj[0]->com_pos_t[dir]);
-			AddSLink(obj[0]->com_vel_t[dir]);
-			AddSLink(obj[0]->cop_pos_t[dir]);
-			AddSLink(obj[0]->period);
-			AddSLink(obj[1]->com_pos_t[dir]);
-		}
-
-		CoMConTV::CoMConTV(Solver* solver, string _name, BipedLIPKey* _obj, uint _dir, real_t _scale) :
-			CoMCon(solver, ConTag::BipedCoMTV, _name, _obj, _dir, _scale) {
-
-			AddSLink(obj[0]->com_pos_t[dir]);
-			AddSLink(obj[0]->com_vel_t[dir]);
-			AddSLink(obj[0]->cop_pos_t[dir]);
-			AddSLink(obj[0]->period);
-			AddSLink(obj[1]->com_vel_t[dir]);
-		}
-
-		CoMConR::CoMConR(Solver* solver, string _name, BipedLIPKey* _obj, uint _idx, real_t _scale) :
-			Constraint(solver, 1, ID(ConTag::BipedCoMR, _obj->node, _obj->tick, _name), _scale) {
-			obj[0] = _obj;
-			obj[1] = (BipedLIPKey*)_obj->next;
-			idx = _idx;
-
-			AddSLink(obj[0]->com_pos_r);
-			AddSLink(obj[0]->com_vel_r);
-			AddSLink(obj[0]->period);
-			AddSLink(obj[1]->com_pos_r);
-			AddSLink(obj[1]->com_vel_r);
-		}
-
-		CoPConT::CoPConT(Solver* solver, string _name, BipedLIPKey* _obj, uint _idx, uint _dir, real_t _scale) :
-			Constraint(solver, 1, ID(ConTag::BipedCoPT, _obj->node, _obj->tick, _name), _scale) {
-
-			obj[0] = _obj;
-			obj[1] = (BipedLIPKey*)_obj->next;
-			idx = _idx;
-			dir = _dir;
-
-			AddSLink(obj[idx]->com_pos_t[0]);
-			AddSLink(obj[idx]->com_pos_t[1]);
-			AddSLink(obj[idx]->com_pos_r);
-			AddSLink(obj[0]->cop_pos_t[0]);
-			AddSLink(obj[0]->cop_pos_t[1]);
-		}
-
-		CoPConR::CoPConR(Solver* solver, string _name, BipedLIPKey* _obj, uint _idx, real_t _scale) :
-			Constraint(solver, 1, ID(ConTag::BipedCoPR, _obj->node, _obj->tick, _name), _scale) {
-
-			obj[0] = _obj;
-			obj[1] = (BipedLIPKey*)_obj->next;
-			idx = _idx;
-
-			AddSLink(obj[idx]->com_pos_r);
-			AddSLink(obj[0]->cop_pos_r);
-		}
-
-		//-------------------------------------------------------------------------------------------------
-
-		void CoMCon::Prepare() {
-			BipedLIP::Param& param = ((BipedLIP*)obj[0]->node)->param;
-			l = 0.1;
-			tau = obj[0]->period->val;
-			T = param.T;
-			t = obj[0]->period->val / T;
-			ch = cosh(t);
-			sh = sinh(t);
-			p0 = obj[0]->com_pos_t[dir]->val;
-			v0 = obj[0]->com_vel_t[dir]->val;
-			c = obj[0]->cop_pos_t[dir]->val;
-			p1 = obj[1]->com_pos_t[dir]->val;
-			v1 = obj[1]->com_vel_t[dir]->val;
-		}
-
-		void CoMConTP::CalcCoef() {//重心位置(左辺-右辺)を偏微分
-			Prepare();
-			if (dir == 0) {//x方向
-				((SLink*)links[0])->SetCoef(-ch);//xk-1
-				((SLink*)links[1])->SetCoef(-T * sh);//vk-1
-				((SLink*)links[2])->SetCoef(ch - 1.0);//pk
-				((SLink*)links[3])->SetCoef(-((p0 - c + l) / T)*sh - 2 * l*T / (tau*tau)*sh - (v0 - (2 * l / tau))*ch);//tauk
-				((SLink*)links[4])->SetCoef(1.0);//xk
-			}
-			else {//y方向
-				((SLink*)links[0])->SetCoef(-ch);
-				((SLink*)links[1])->SetCoef(-T * sh);
-				((SLink*)links[2])->SetCoef(ch - 1.0);
-				((SLink*)links[3])->SetCoef(-((p0 - c) / T)*sh - v0*ch);
-				((SLink*)links[4])->SetCoef(1.0);
-			}
-		}
-
-
-		void CoMConTV::CalcCoef() {//重心速度(左辺-右辺)を偏微分
-			Prepare();
-			if (dir == 0) {//x方向
-				((SLink*)links[0])->SetCoef(-(1 / T)*sh);//xk-1
-				((SLink*)links[1])->SetCoef(-ch);//vk-1
-				((SLink*)links[2])->SetCoef((1 / T)*sh);//pk
-				((SLink*)links[3])->SetCoef(2 * l / (tau*tau) - (p0 - c + l) / (T*T)*ch - 2 * l / (tau*tau)*ch - (v0 - (2 * l / tau)) / T*sh);//tauk
-				((SLink*)links[4])->SetCoef(1.0);//vk
-			}
-			else {//y方向
-				((SLink*)links[0])->SetCoef(-(1 / T)*sh);
-				((SLink*)links[1])->SetCoef(-ch);
-				((SLink*)links[2])->SetCoef((1 / T)*sh);
-				((SLink*)links[3])->SetCoef(-((p0 - c) / (T*T))*ch - (v0 / T)*sh);
-				((SLink*)links[4])->SetCoef(1.0);
-			}
-		}
-
-
-		void CoMConR::CalcCoef() {
-			q0 = obj[0]->com_pos_r->val;
-			w0 = obj[0]->com_vel_r->val;
-			q1 = obj[1]->com_pos_r->val;
-			w1 = obj[1]->com_vel_r->val;
-			tau = obj[0]->period->val;
-			tau2 = tau*tau;
-			tau3 = tau*tau2;
-
-			if (idx == 0) {
-				((SLink*)links[0])->SetCoef(-6.0 / tau2);
-				((SLink*)links[1])->SetCoef(-4.0 / tau);
-				((SLink*)links[2])->SetCoef(-12.0*(q1 - q0) / tau3 + (4.0*w0 + 2.0*w1) / tau2);
-				((SLink*)links[3])->SetCoef(6.0 / tau2);
-				((SLink*)links[4])->SetCoef(-2.0 / tau);
-			}
-			else {
-				((SLink*)links[0])->SetCoef(6.0 / tau2);
-				((SLink*)links[1])->SetCoef(2.0 / tau);
-				((SLink*)links[2])->SetCoef(12.0*(q1 - q0) / tau3 - (2.0*w0 + 4.0*w1) / tau2);
-				((SLink*)links[3])->SetCoef(-6.0 / tau2);
-				((SLink*)links[4])->SetCoef(4.0 / tau);
-			}
-		}
-
-
-
-		void CoPConT::CalcCoef() {
-			cx = obj[idx]->com_pos_t[0]->val;
-			cy = obj[idx]->com_pos_t[1]->val;
-			cr = obj[idx]->com_pos_r->val;
-			px = obj[0]->cop_pos_t[0]->val;
-			py = obj[0]->cop_pos_t[1]->val;
-			_cos = cos(cr);
-			_sin = sin(cr);
-
-			if (dir == 0) {
-				((SLink*)links[0])->SetCoef(-_cos);
-				((SLink*)links[1])->SetCoef(-_sin);
-				((SLink*)links[2])->SetCoef(-_sin*(px - cx) + _cos*(py - cy));
-				((SLink*)links[3])->SetCoef(_cos);
-				((SLink*)links[4])->SetCoef(_sin);
-			}
-			else {
-				((SLink*)links[0])->SetCoef(_sin);
-				((SLink*)links[1])->SetCoef(-_cos);
-				((SLink*)links[2])->SetCoef(-_cos*(px - cx) - _sin*(py - cy));
-				((SLink*)links[3])->SetCoef(-_sin);
-				((SLink*)links[4])->SetCoef(_cos);
-			}
-		}
-
-
-
-		void CoPConR::CalcCoef() {
-			cr = obj[idx]->com_pos_r->val;
-			pr = obj[0]->cop_pos_r->val;
-
-			((SLink*)links[0])->SetCoef(-1.0);
-			((SLink*)links[1])->SetCoef(1.0);
-		}
-
-
-		//-------------------------------------------------------------------------------------------------
-
-		void CoMConTP::CalcDeviation() {//重心位置(左辺-右辺)
-			if (dir == 0) {//x方向
-				y[0] = p1 - 2 * l - (c - l) - (p0 - c + l)*ch - T*(v0 - (2 * l / tau))*sh;
-			}
-			else {//y方向
-				y[0] = p1 - c - (p0 - c)*ch - (v0*T)*sh;
-			}
-		}
-
-		void CoMConTV::CalcDeviation() {//重心速度(左辺-右辺)
-			if (dir == 0) {
-				y[0] = v1 - 2 * l / tau - ((p0 - c + l) / T)*sh - (v0 - (2 * l / tau))*ch;
-			}
-			else {
-				y[0] = v1 - ((p0 - c) / T)*sh - v0*ch;
-			}
-		}
-
-
-		void CoMConR::CalcDeviation() {
-			real_t s;
-			if (idx == 0)
-				s = 6.0*(q1 - q0) / tau2 - (4.0*w0 + 2.0*w1) / tau;
-			else s = -6.0*(q1 - q0) / tau2 + (2.0*w0 + 4.0*w1) / tau;
-			on_lower = (s < _min);
-			on_upper = (s > _max);
-			active = on_lower | on_upper;
-			if (on_lower) y[0] = (s - _min);
-			if (on_upper) y[0] = (s - _max);
-		}
-
-
-
-		void CoPConT::CalcDeviation() {
-			real_t s;
-			if (dir == 0)
-				s = _cos*(px - cx) + _sin*(py - cy);
-			else s = -_sin*(px - cx) + _cos*(py - cy);
-			on_lower = (s < _min);
-			on_upper = (s > _max);
-			active = on_lower | on_upper;
-			if (on_lower) y[0] = (s - _min);
-			if (on_upper) y[0] = (s - _max);
-		}
-
-
-
-		void CoPConR::CalcDeviation() {
-			real_t s = pr - cr;
-			on_lower = (s < _min);
-			on_upper = (s > _max);
-			active = on_lower | on_upper;
-			if (on_lower) y[0] = (s - _min);
-			if (on_upper) y[0] = (s - _max);
-		}
-
-
-		//-------------------------------------------------------------------------------------------------
-
-
-		void CoMConR::Project(real_t& l, uint k) {
-			if (on_upper &&  l > 0.0) l = 0.0;
-			if (on_lower &&  l < 0.0) l = 0.0;
-			if (!on_upper && !on_lower) l = 0.0;
-		}
-
-
-
-		void CoPConT::Project(real_t& l, uint k) {
-			if (on_upper &&  l > 0.0) l = 0.0;
-			if (on_lower &&  l < 0.0) l = 0.0;
-			if (!on_upper && !on_lower) l = 0.0;
-		}
-
-
-
-		void CoPConR::Project(real_t& l, uint k) {
-			if (on_upper &&  l > 0.0) l = 0.0;
-			if (on_lower &&  l < 0.0) l = 0.0;
-			if (!on_upper && !on_lower) l = 0.0;
-		}
 
 	}
+
+	fclose(file);
+	}*/
+
+	//重心加速度
+	vec3_t BipedLIP::CoMAcc(real_t t) {
+		BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;
+		BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;
+
+		vec3_t a;
+		if (key0) {
+			real_t l = 0.1;//足の中心から踵・つま先までの距離
+			real_t tau = key1->tick->time - key0->tick->time;
+			real_t tau_ssp = tau*0.9;//歩行周期(SSP)
+			real_t tau_dsp = tau*0.1;//歩行周期(DSP)
+
+			real_t T = param.T;
+			real_t t0 = key0->tick->time;
+			real_t x0_ssp = key0->com_pos_t[0]->val;
+			real_t y0_ssp = key0->com_pos_t[1]->val;
+			real_t vx0_ssp = key0->com_vel_t[0]->val;
+			real_t vy0_ssp = key0->com_vel_t[1]->val;
+			real_t px = key0->cop_pos_t[0]->val;
+			real_t py = key0->cop_pos_t[1]->val;
+
+			real_t x0_dsp = px + l + (x0_ssp - px + l)*cosh(tau_ssp / T) + T*(vx0_ssp - (2 * l / tau_ssp));
+			real_t y0_dsp = py + (y0_ssp - py)*cosh(tau_ssp / T) + T*vy0_ssp*sinh(tau_ssp / T);
+			real_t vx0_dsp = 2 * l / tau_ssp + (x0_ssp - px + l) / T*sinh(tau_ssp / T) + (vx0_ssp - (2 * l / tau_ssp))*cosh(tau_ssp / T);
+			real_t vy0_dsp = (y0_ssp - py) / T*sinh(tau_ssp / T) + vy0_ssp*cosh(tau_ssp / T);
+
+			real_t dx = key1->cop_pos_t[0]->val - key0->cop_pos_t[0]->val - 2 * l;
+			real_t dy = key1->cop_pos_t[1]->val - key0->cop_pos_t[1]->val;
+
+			if (t0<t && t<(t0 + tau_ssp)) {
+				a.x = (x0_ssp - px + l) / (T*T)*cosh((t - t0) / T) + (vx0_ssp - (2 * l / tau_ssp)) / T*sinh((t - t0) / T);
+				a.y = (y0_ssp - py) / (T*T)*cosh((t - t0) / T) + vy0_ssp / T*sinh((t - t0) / T);
+				a.z = 0.0;
+			}
+			else {
+				a.x = (x0_dsp - px - l) / (T*T)*cosh((t - (t0 + tau_ssp)) / T) + (vx0_dsp - (dx / tau_dsp)) / T*sinh((t - (t0 + tau_ssp)) / T);
+				a.y = (y0_dsp - py) / (T*T)*cosh((t - (t0 + tau_ssp)) / T) + (vy0_dsp - (dy / tau_dsp)) / T*sinh((t - (t0 + tau_ssp)) / T);
+				a.z = 0.0;
+			}
+		}
+		else {
+			a.clear();
+		}
+
+		return a;
+	}
+
+	real_t BipedLIP::CoMOri(real_t t) {
+		KeyPair      kp = traj.GetSegment(t);
+		BipedLIPKey* cur = (BipedLIPKey*)kp.first;
+		BipedLIPKey* next = (BipedLIPKey*)kp.second;
+
+		real_t o;
+		if (next) {
+			real_t T = param.T;
+			real_t t0 = cur->tick->time;
+			real_t t1 = next->tick->time;
+			real_t o0 = cur->com_pos_r->val;
+			real_t o1 = next->com_pos_r->val;
+			real_t r0 = cur->com_vel_r->val;
+			real_t r1 = next->com_vel_r->val;
+
+			o = InterpolatePos(t, t0, o0, r0, t1, o1, r1, Interpolate::Cubic);
+		}
+		else {
+			o = cur->com_pos_r->val;
+		}
+
+		return o;
+	}
+
+	real_t BipedLIP::CoMAngVel(real_t t) {
+		KeyPair      kp = traj.GetSegment(t);
+		BipedLIPKey* cur = (BipedLIPKey*)kp.first;
+		BipedLIPKey* next = (BipedLIPKey*)kp.second;
+
+		real_t r;
+		if (next) {
+			real_t T = param.T;
+			real_t t0 = cur->tick->time;
+			real_t t1 = next->tick->time;
+			real_t o0 = cur->com_pos_r->val;
+			real_t o1 = next->com_pos_r->val;
+			real_t r0 = cur->com_vel_r->val;
+			real_t r1 = next->com_vel_r->val;
+
+			r = InterpolateVel(t, t0, o0, r0, t1, o1, r1, Interpolate::Cubic);
+		}
+		else {
+			r = cur->com_vel_r->val;
+		}
+
+		return r;
+	}
+
+	real_t BipedLIP::CoMAngAcc(real_t t) {
+		KeyPair      kp = traj.GetSegment(t);
+		BipedLIPKey* cur = (BipedLIPKey*)kp.first;
+		BipedLIPKey* next = (BipedLIPKey*)kp.second;
+
+		real_t a;
+		if (next) {
+			real_t T = param.T;
+			real_t t0 = cur->tick->time;
+			real_t t1 = next->tick->time;
+			real_t o0 = cur->com_pos_r->val;
+			real_t o1 = next->com_pos_r->val;
+			real_t r0 = cur->com_vel_r->val;
+			real_t r1 = next->com_vel_r->val;
+
+			a = InterpolateAcc(t, t0, o0, r0, t1, o1, r1, Interpolate::Cubic);
+		}
+		else {
+			a = 0.0;
+		}
+
+		return a;
+	}
+
+	vec3_t BipedLIP::SupFootPos(real_t t) {
+		BipedLIPKey* key = (BipedLIPKey*)traj.GetSegment(t).first;
+
+		return vec3_t(key->cop_pos_t[0]->val, key->cop_pos_t[1]->val, 0.0);
+	}
+
+	real_t BipedLIP::SupFootOri(real_t t) {
+		BipedLIPKey* key = (BipedLIPKey*)traj.GetSegment(t).first;
+
+		return key->cop_pos_r->val;
+	}
+
+	vec3_t BipedLIP::SwgFootPos(real_t t) {
+		KeyPair      kp = traj.GetSegment(t);
+		BipedLIPKey* cur = (BipedLIPKey*)kp.first;
+		BipedLIPKey* next = (BipedLIPKey*)kp.second;
+		BipedLIPKey* prev = (BipedLIPKey*)cur->prev;
+		real_t       t0 = cur->tick->time;
+		real_t       t1 = next->tick->time;
+		real_t       h = t1 - t0;
+		real_t       hhalf = h / 2.0;
+
+
+		real_t		 ta = t0 + 0.05*h;//踵が上がりきる時刻
+		real_t		 tb = t0 + 0.95*h;//踵が接地する時刻
+
+		real_t _2pi = 2.0 * M_PI;//2π
+		real_t tau = (t - t0) / (ta - t0);//phase1
+		real_t tau2 = (t - ta) / (tb - ta);//phase2
+		real_t tau3 = (t1 - t) / (t1 - tb);//phase3
+
+		real_t		 theta = (M_PI) / 12;//接地・離地時の角度
+		real_t		 l = 0.1;//足の中心から踵・つま先までの距離
+		real_t		 pa = l*(1 - cos(theta));//t0<t<taのx方向の距離
+		real_t		 pb = l*(1 - cos(theta));//tb<t<t1のx方向の距離
+
+
+											 // 遊脚の始点と終点は前後の接地点
+											 // 0歩目の始点は0歩目の支持足の反対側に設定
+											 // N-1歩目の終点はN-1歩目の支持足の反対側に設定
+		vec2_t p0, p1;
+		// 1～N-1歩目
+		if (prev) {
+			p0[0] = prev->cop_pos_t[0]->val;//遊脚の始点の位置x
+			p0[1] = prev->cop_pos_t[1]->val;//				　y
+		}
+		// 0歩目
+		else {
+			p0[0] = cur->swg_pos_t[0]->val;
+			p0[1] = cur->swg_pos_t[1]->val;
+		}
+
+		if (next) {
+			p1[0] = next->cop_pos_t[0]->val;//遊脚の終点の位置x
+			p1[1] = next->cop_pos_t[1]->val;//				　y
+		}
+		else {
+			p1[0] = prev->cop_pos_t[0]->val;
+			p1[1] = prev->cop_pos_t[1]->val;
+		}
+
+		real_t s;
+		real_t z;
+		if (h == 0.0) {//境目
+			s = 0.0;
+			z = 0.0;
+		}
+		else {
+			if (param.swingProfile == SwingProfile::Wedge) {
+				if (t < t0 + hhalf) {
+					z = param.swingHeight[0];
+				}
+				else {
+					real_t a = (t - (t0 + hhalf)) / hhalf;
+					z = (1 - a)*param.swingHeight[0] + a*param.swingHeight[1];
+				}
+
+				s = (t - t0) / h;//周期における時刻tの割合
+			}
+
+			if (param.swingProfile == SwingProfile::Cycloid) {//踵・つま先の遊脚軌道
+				if (t < ta) {
+					z = l*sin(theta*tau);
+				}
+				else if (ta <= t && t <= tb) {
+					s = (tau2 - sin(_2pi*tau2) / _2pi);
+					z = l*sin(theta) + (param.swingHeight[0] / 2.0) * (1 - cos(_2pi*tau2));
+				}
+				else {
+					z = l*sin(theta*tau3);
+				}
+
+			}
+		}
+
+		vec3_t p;
+		if (t < ta) {
+			p[0] = p0[0] + l*(1 - cos(theta*tau));
+			p[1] = p0[1];
+		}
+		else if (ta <= t && t <= tb) {
+			p[0] = (1 - s) * (p0[0] + pa) + s * (p1[0] - pb);
+			p[1] = (1 - s) * p0[1] + s * p1[1];
+		}
+		else {
+			p[0] = p1[0] - l*(1 - cos(theta*tau3));
+			p[1] = p1[1];
+		}
+		p[2] = z;
+
+		return p;
+	}
+
+	real_t BipedLIP::SwgFootOri(real_t t) {
+		KeyPair      kp = traj.GetSegment(t);
+		BipedLIPKey* cur = (BipedLIPKey*)kp.first;
+		BipedLIPKey* next = (BipedLIPKey*)kp.second;
+		BipedLIPKey* prev = (BipedLIPKey*)cur->prev;
+		real_t       t0 = cur->tick->time;
+		real_t       t1 = next->tick->time;
+		real_t       h = t1 - t0;
+
+		real_t  q0, q1;
+		if (prev)
+			q0 = prev->cop_pos_r->val;
+		else q0 = cur->swg_pos_r->val;
+
+		if (next)
+			q1 = next->cop_pos_r->val;
+		else q1 = prev->cop_pos_r->val;
+
+		real_t s;
+		if (h == 0.0)
+			s = 0.0;
+		else s = (t - t0) / h;
+
+		real_t q = (1 - s) * q0 + s * q1;
+
+		return q;
+	}
+
+
+	vec3_t BipedLIP::TorsoPos(const vec3_t& pcom, const vec3_t& psup, const vec3_t& pswg) {
+		// コンパスモデルより胴体の位置を求める
+		real_t a = param.torsoMassRatio;
+		real_t b = param.legMassRatio;
+		vec3_t p = (pcom - ((1 - a)*(1 - b) / 2)*(psup + pswg)) / (a + (1 - a)*b);
+		return p;
+	}
+
+	//------------------------------------------------------------------------------------------------
+
+	void BipedLIP::CalcTrajectory() {
+		real_t tf = traj.back()->tick->time;
+		real_t dt = 0.01;
+
+		trajectory.clear();
+		for (real_t t = 0.0; t < tf; t += dt) {
+			TrajPoint tp;
+			tp.t = t;
+			tp.pos_com = CoMPos(t);
+			tp.ori_com = CoMOri(t);
+			tp.pos_sup = SupFootPos(t);
+			tp.ori_sup = SupFootOri(t);
+			tp.pos_swg = SwgFootPos(t);
+			tp.ori_swg = SwgFootOri(t);
+			tp.pos_torso = TorsoPos(tp.pos_com, tp.pos_sup, tp.pos_swg);
+
+			trajectory.push_back(tp);
+		}
+
+		trajReady = true;
+	}
+
+	//------------------------------------------------------------------------------------------------
+
+	void BipedLIP::Draw(DrawCanvas* canvas, DrawConfig* conf) {
+		TrajectoryNode::Draw(canvas, conf);
+
+		if (!trajReady)
+			CalcTrajectory();
+
+		if (trajectory.empty())
+			return;
+
+		// com
+		if (conf->Set(canvas, DrawItem::BipedCoM, this)) {
+			canvas->BeginLayer("biped_com", true);
+			canvas->SetLineWidth(6.0f);
+			canvas->BeginPath();
+			canvas->MoveTo(trajectory[0].pos_com);
+			for (uint i = 1; i < trajectory.size(); i++) {
+				canvas->LineTo(trajectory[i].pos_com);
+			}
+			canvas->EndPath();
+			canvas->EndLayer();
+		}
+
+		// torso
+		if (conf->Set(canvas, DrawItem::BipedTorso, this)) {
+			canvas->BeginLayer("biped_torso", true);
+			canvas->SetLineWidth(3.0f);
+			canvas->BeginPath();
+			canvas->MoveTo(trajectory[0].pos_torso);
+			for (uint i = 1; i < trajectory.size(); i++) {
+				canvas->LineTo(trajectory[i].pos_torso);
+			}
+			canvas->EndPath();
+			canvas->EndLayer();
+		}
+
+
+		// swing foot
+		if (conf->Set(canvas, DrawItem::BipedSwing, this)) {
+			canvas->BeginLayer("biped_swing", true);
+			canvas->SetLineWidth(3.0f);
+			canvas->BeginPath();
+			canvas->MoveTo(trajectory[0].pos_swg);
+			for (uint i = 1; i < trajectory.size(); i++) {
+				if (trajectory[i - 1].pos_sup == trajectory[i].pos_sup) {
+					canvas->LineTo(trajectory[i].pos_swg);
+				}
+				else {
+					canvas->EndPath();
+					canvas->BeginPath();
+					canvas->MoveTo(trajectory[i].pos_swg);
+				}
+			}
+			canvas->EndPath();
+			canvas->EndLayer();
+		}
+
+		// double support snapshot
+		/*		if (conf->Set(canvas, DrawItem::BipedDouble, this)) {
+		canvas->BeginLayer("biped_double", true);
+		canvas->SetLineWidth(1.0f);
+		Vec3f p0, p1;
+		for (uint i = 1; i < trajectory.size(); i++) {
+		if (trajectory[i - 1].pos_sup != trajectory[i].pos_sup) {
+		p0 = trajectory[i].pos_torso;
+		p1 = trajectory[i].pos_sup;
+		canvas->Line(p0, p1);
+
+		p0 = trajectory[i].pos_torso;
+		p1 = trajectory[i - 1].pos_sup;
+		canvas->Line(p0, p1);
+		}
+		}
+		canvas->EndLayer();
+		}*/
+
+	}
+
+	void BipedLIP::DrawSnapshot(real_t time, DrawCanvas* canvas, DrawConfig* conf) {
+		canvas->SetLineWidth(2.0f);
+		canvas->BeginPath();
+		canvas->MoveTo(CoMPos(time));
+		canvas->LineTo(SupFootPos(time));
+		canvas->MoveTo(CoMPos(time));
+		canvas->LineTo(SwgFootPos(time));
+		canvas->EndPath();
+	}
+
+	void BipedLIP::Save() {
+		FILE* file1 = fopen("plan_step_case1(t_dt).csv", "w");
+		fprintf(file1, "time, pos_com_x, pos_com_y, vel_com_x, vel_com_y,acc_com_x,acc_com_y\n");
+
+		real_t dt = 0.01;
+		real_t tf = traj.back()->tick->time;
+
+		vec3_t pf = CoMPos(tf);
+		vec3_t vf = CoMVel(tf);
+		vec3_t af = CoMAcc(tf);
+
+		for (real_t t = 0.0; t < tf; t += dt) {
+
+			vec3_t p = CoMPos(t);
+			vec3_t v = CoMVel(t);
+			vec3_t a = CoMAcc(t);
+
+			fprintf(file1, "%3.3lf, %3.3lf, %3.3lf,%3.3lf,%3.3lf,%3.3lf, %3.3lf\n", t, p.x, p.y, v.x, v.y, a.x, a.y);
+		}
+		fprintf(file1, "%3.3lf, %3.3lf, %3.3lf,%3.3lf,%3.3lf,%3.3lf, %3.3lf\n", tf, pf.x, pf.y, vf.x, vf.y, af.x, af.y);
+
+		fclose(file1);
+
+
+
+
+		FILE* file2 = fopen("plan_step_case1(t_k).csv", "w");
+		fprintf(file2, "step, time, period, pos_com_x, pos_com_y, vel_com_x, vel_com_y, pos_cop_x, pos_cop_y\n");
+
+		real_t t = 0.0;
+		for (uint k = 0; k < graph->ticks.size(); k++) {
+			BipedLIPKey* key = (BipedLIPKey*)traj.GetKeypoint(graph->ticks[k]);
+
+			if (k != (graph->ticks.size()) - 1) {
+				fprintf(file2, "%d, %3.3lf, %3.3lf, %3.3lf, %3.3lf, %3.3lf, %3.3lf, %3.3lf, %3.3lf\n",
+					k, t,
+					key->period->val,
+					key->com_pos_t[0]->val, key->com_pos_t[1]->val,
+					key->com_vel_t[0]->val, key->com_vel_t[1]->val,
+					key->cop_pos_t[0]->val, key->cop_pos_t[1]->val);
+				t += key->period->val;
+			}
+			else {
+				fprintf(file2, "%d, %3.3lf, 0, %3.3lf, %3.3lf, %3.3lf, %3.3lf, %3.3lf, %3.3lf\n",
+					k, t,
+					key->com_pos_t[0]->val, key->com_pos_t[1]->val,
+					key->com_vel_t[0]->val, key->com_vel_t[1]->val,
+					key->cop_pos_t[0]->val, key->cop_pos_t[1]->val);
+			}
+		}
+
+		fclose(file2);
+	}
+
+	//-------------------------------------------------------------------------------------------------
+
+	// Constructors
+	CoMCon::CoMCon(Solver* solver, int _tag, string _name, BipedLIPKey* _obj, uint _dir, real_t _scale) :
+		Constraint(solver, 1, ID(_tag, _obj->node, _obj->tick, _name), _scale) {
+		obj[0] = _obj;//(k-1)のキーポイント
+		obj[1] = (BipedLIPKey*)_obj->next;//kのキーポイント
+		dir = _dir;
+	}
+
+	CoMConTP::CoMConTP(Solver* solver, string _name, BipedLIPKey* _obj, uint _dir, real_t _scale) :
+		CoMCon(solver, ConTag::BipedCoMTP, _name, _obj, _dir, _scale) {
+
+		AddSLink(obj[0]->com_pos_t[dir]);//xk-1
+		AddSLink(obj[0]->com_vel_t[dir]);//vk-1
+		AddSLink(obj[0]->cop_pos_t[dir]);//pk
+		AddSLink(obj[0]->period);//tauk
+		AddSLink(obj[1]->com_pos_t[dir]);//xk
+	}
+
+	CoMConTV::CoMConTV(Solver* solver, string _name, BipedLIPKey* _obj, uint _dir, real_t _scale) :
+		CoMCon(solver, ConTag::BipedCoMTV, _name, _obj, _dir, _scale) {
+
+		AddSLink(obj[0]->com_pos_t[dir]);//xk-1
+		AddSLink(obj[0]->com_vel_t[dir]);//vk-1
+		AddSLink(obj[0]->cop_pos_t[dir]);//pkx
+		AddSLink(obj[0]->period);//tauk
+		AddSLink(obj[1]->com_vel_t[dir]);//xk
+		AddSLink(obj[1]->cop_pos_t[dir]);//pk+1
+	}
+
+	CoMConR::CoMConR(Solver* solver, string _name, BipedLIPKey* _obj, uint _idx, real_t _scale) :
+		Constraint(solver, 1, ID(ConTag::BipedCoMR, _obj->node, _obj->tick, _name), _scale) {
+		obj[0] = _obj;
+		obj[1] = (BipedLIPKey*)_obj->next;
+		idx = _idx;
+
+		AddSLink(obj[0]->com_pos_r);
+		AddSLink(obj[0]->com_vel_r);
+		AddSLink(obj[0]->period);
+		AddSLink(obj[1]->com_pos_r);
+		AddSLink(obj[1]->com_vel_r);
+	}
+
+	CoPConT::CoPConT(Solver* solver, string _name, BipedLIPKey* _obj, uint _idx, uint _dir, real_t _scale) :
+		Constraint(solver, 1, ID(ConTag::BipedCoPT, _obj->node, _obj->tick, _name), _scale) {
+
+		obj[0] = _obj;
+		obj[1] = (BipedLIPKey*)_obj->next;
+		idx = _idx;
+		dir = _dir;
+
+		AddSLink(obj[idx]->com_pos_t[0]);
+		AddSLink(obj[idx]->com_pos_t[1]);
+		AddSLink(obj[idx]->com_pos_r);
+		AddSLink(obj[0]->cop_pos_t[0]);
+		AddSLink(obj[0]->cop_pos_t[1]);
+	}
+
+	CoPConR::CoPConR(Solver* solver, string _name, BipedLIPKey* _obj, uint _idx, real_t _scale) :
+		Constraint(solver, 1, ID(ConTag::BipedCoPR, _obj->node, _obj->tick, _name), _scale) {
+
+		obj[0] = _obj;
+		obj[1] = (BipedLIPKey*)_obj->next;
+		idx = _idx;
+
+		AddSLink(obj[idx]->com_pos_r);
+		AddSLink(obj[0]->cop_pos_r);
+	}
+
+	//-------------------------------------------------------------------------------------------------
+
+	void CoMCon::Prepare() {
+		BipedLIP::Param& param = ((BipedLIP*)obj[0]->node)->param;
+		l = 0.1;
+		tau = obj[0]->period->val;
+		T = param.T;
+		p0 = obj[0]->cop_pos_t[dir]->val;
+		p1 = obj[1]->cop_pos_t[dir]->val;
+		t0 = obj[0]->tick->time;
+
+		//SSPの変数
+		tau_ssp = 0.9*tau;
+		t_ssp = tau_ssp / T;
+		ch_ssp = cosh(t_ssp);
+		sh_ssp = sinh(t_ssp);
+		if (dir == 0) {
+			x1_ssp = (p0 + l) + (x0_dsp - p0 + l)*ch_ssp + T*(v0_dsp - (2 * l / tau_ssp))*sh_ssp;
+			v1_ssp = (2 * l / tau_ssp) + (x0_dsp - p0 + l) / T*sh_ssp + (v0_dsp - (2 * l / tau_ssp))*ch_ssp;
+		}
+		else {
+			x1_ssp = p0 + (x0_dsp - p0)*ch_ssp + T*v0_dsp*sh_ssp;
+			v1_ssp = (x0_dsp - p0) / T*sh_ssp + v0_dsp*ch_ssp;
+		}
+
+		//DSPの変数
+		tau_dsp = 0.1*tau;
+		x0_dsp = obj[0]->com_pos_t[dir]->val;
+		v0_dsp = obj[0]->com_vel_t[dir]->val;
+		x1_dsp = obj[1]->com_pos_t[dir]->val;
+		v1_dsp = obj[1]->com_vel_t[dir]->val;
+		t_dsp = tau_dsp / T;
+		ch_dsp = cosh(t_dsp);
+		sh_dsp = sinh(t_dsp);
+	}
+
+	void CoMConTP::CalcCoef(real_t t) {//重心位置(左辺-右辺)を偏微分
+		Prepare();
+		if (t0 <= t && t <= (t0 + tau_ssp)) {//SSP
+			if (dir == 0) {//x方向
+				((SLink*)links[0])->SetCoef(-ch_ssp);//xk-1_dsp
+				((SLink*)links[1])->SetCoef(-T * sh_ssp);//vxk-1_dsp
+				((SLink*)links[2])->SetCoef(ch_ssp - 1.0);//pxk
+				((SLink*)links[3])->SetCoef(-(x0_dsp - p0 + l) / T*sh_ssp - 2 * l*T / (tau_ssp*tau_ssp)*sh_ssp - (v0_dsp - (2 * l / tau_dsp))*ch_ssp);//tauk_ssp
+				((SLink*)links[4])->SetCoef(1.0);//xk_ssp
+			}
+			else {//y方向
+				((SLink*)links[0])->SetCoef(-ch_ssp);//yk-1_dsp
+				((SLink*)links[1])->SetCoef(-T * sh_ssp);//vyk-1_dsp
+				((SLink*)links[2])->SetCoef(ch_ssp - 1.0);//pyk
+				((SLink*)links[3])->SetCoef(-(x0_dsp - p0) / T*sh_ssp - v0_dsp*ch_ssp);//tauk_ssp
+				((SLink*)links[4])->SetCoef(1.0);//yk_ssp
+			}
+		}
+		else {//DSP
+			if (dir == 0) {//x方向
+				((SLink*)links[0])->SetCoef(-ch_dsp);//xk_ssp
+				((SLink*)links[1])->SetCoef(-T * sh_dsp);//vk_ssp
+				((SLink*)links[2])->SetCoef(ch_dsp - T / tau_dsp*sh_dsp);//pxk
+				((SLink*)links[3])->SetCoef(-(x1_ssp - p0 + l) / T*sh_dsp - T*(p1 - p0 - 2 * l) / (tau_dsp*tau_dsp)*ch_dsp - (v1_ssp - (p1 - p0 - 2 * l) / tau_dsp)*ch_dsp);//tauk_dsp
+				((SLink*)links[4])->SetCoef(1.0);//xk_dsp
+				((SLink*)links[5])->SetCoef(-1.0 + T / tau_dsp*sh_dsp);//pxk+1
+			}
+			else {//y方向
+				((SLink*)links[0])->SetCoef(-ch_dsp);//yk-1_ssp
+				((SLink*)links[1])->SetCoef(-T * sh_dsp);//vyk-1_ssp
+				((SLink*)links[2])->SetCoef(ch_dsp - T / tau_dsp*sh_dsp);//pyk
+				((SLink*)links[3])->SetCoef(-(x1_ssp - p0) / T*sh_dsp - T*(p1 - p0) / (tau_dsp*tau_dsp)*sh_dsp - (v1_ssp - (p1 - p0) / tau_dsp));//tauk_dsp
+				((SLink*)links[4])->SetCoef(1.0);//yk_dsp
+				((SLink*)links[5])->SetCoef(-1.0 + T / tau_dsp*sh_dsp);//pyk+1
+			}
+		}
+	}
+
+
+	void CoMConTV::CalcCoef(real_t t) {//重心速度(左辺-右辺)を偏微分
+		Prepare();
+		if (t0 <= t && t <= (t0 + tau_ssp)) {//SSP
+			if (dir == 0) {//x方向
+				((SLink*)links[0])->SetCoef(-(1 / T)*sh_ssp);//xk-1_dsp
+				((SLink*)links[1])->SetCoef(-ch_ssp);//vxk-1_dsp
+				((SLink*)links[2])->SetCoef((1 / T)*sh_ssp);//pxk
+				((SLink*)links[3])->SetCoef(2 * l / (tau_ssp*tau_ssp) - (x0_dsp - p0 + l) / (T*T)*ch_ssp
+					- 2 * l / (tau_ssp*tau_ssp)*ch_ssp - (v0_dsp - (2 * l / tau_ssp)) / T*sh_ssp);//tauk_ssp
+				((SLink*)links[4])->SetCoef(1.0);//vxk_ssp
+			}
+			else {//y方向
+				((SLink*)links[0])->SetCoef(-(1 / T)*sh_ssp);//yk-1_dsp
+				((SLink*)links[1])->SetCoef(-ch_ssp);//vyk-1_dsp
+				((SLink*)links[2])->SetCoef((1 / T)*sh_ssp);//pxk
+				((SLink*)links[3])->SetCoef(-(x0_dsp - p0) / (T*T)*ch_ssp - (v0_dsp / T)*sh_ssp);//tauk_ssp
+				((SLink*)links[4])->SetCoef(1.0);//vyk_ssp
+			}
+		}
+		else {//DSP
+			if (dir == 0) {//x方向
+				((SLink*)links[0])->SetCoef(-(1 / T)*sh_dsp);//xk_ssp
+				((SLink*)links[1])->SetCoef(-ch_dsp);//vxk_ssp
+				((SLink*)links[2])->SetCoef((1 / tau_dsp) + (1 / T)*sh_dsp - (1 / tau_dsp)*ch_dsp);//pxk
+				((SLink*)links[3])->SetCoef((p1 - p0 - 2 * l) / (tau_dsp*tau_dsp) - (x1_ssp - p0 - l) / (T*T)*ch_dsp
+					- (p1 - p0 - 2 * l) / (tau_dsp*tau_dsp)*ch_dsp - (v1_ssp - (p1 - p0 - 2 * l) / tau_dsp) / T*sh_dsp);//tauk_dsp
+				((SLink*)links[4])->SetCoef(1.0);//vxk_dsp
+				((SLink*)links[5])->SetCoef(-(1 / tau_dsp) + (1 / tau_dsp)*ch_dsp);//pxk+1
+			}
+			else {//y方向
+				((SLink*)links[0])->SetCoef(-(1 / T)*sh_dsp);//yk_ssp
+				((SLink*)links[1])->SetCoef(-ch_dsp);//vyk_ssp
+				((SLink*)links[2])->SetCoef((1 / tau_dsp) - (1 / T)*sh_dsp - (1 / tau_dsp)*ch_dsp);//pyk
+				((SLink*)links[3])->SetCoef((p1 - p0) / (tau_dsp*tau_dsp) - (x1_ssp - p0) / (T*T)*ch_dsp
+					- (p1 - p0) / (tau_dsp*tau_dsp)*ch_dsp - (v1_ssp - (p1 - p0) / tau_dsp) / T*sh_dsp);//tauk_dsp
+				((SLink*)links[4])->SetCoef(1.0);//vyk_dsp
+				((SLink*)links[5])->SetCoef(-(1 / tau_dsp) + (1 / tau_dsp)*ch_dsp);//pyk+1
+			}
+		}
+	}
+
+
+	void CoMConR::CalcCoef(real_t t) {
+		q0 = obj[0]->com_pos_r->val;
+		w0 = obj[0]->com_vel_r->val;
+		q1 = obj[1]->com_pos_r->val;
+		w1 = obj[1]->com_vel_r->val;
+		tau = obj[0]->period->val;
+		tau2 = tau*tau;
+		tau3 = tau*tau2;
+
+		if (idx == 0) {
+			((SLink*)links[0])->SetCoef(-6.0 / tau2);
+			((SLink*)links[1])->SetCoef(-4.0 / tau);
+			((SLink*)links[2])->SetCoef(-12.0*(q1 - q0) / tau3 + (4.0*w0 + 2.0*w1) / tau2);
+			((SLink*)links[3])->SetCoef(6.0 / tau2);
+			((SLink*)links[4])->SetCoef(-2.0 / tau);
+		}
+		else {
+			((SLink*)links[0])->SetCoef(6.0 / tau2);
+			((SLink*)links[1])->SetCoef(2.0 / tau);
+			((SLink*)links[2])->SetCoef(12.0*(q1 - q0) / tau3 - (2.0*w0 + 4.0*w1) / tau2);
+			((SLink*)links[3])->SetCoef(-6.0 / tau2);
+			((SLink*)links[4])->SetCoef(4.0 / tau);
+		}
+	}
+
+
+
+	void CoPConT::CalcCoef(real_t t) {
+		cx = obj[idx]->com_pos_t[0]->val;
+		cy = obj[idx]->com_pos_t[1]->val;
+		cr = obj[idx]->com_pos_r->val;
+		px = obj[0]->cop_pos_t[0]->val;
+		py = obj[0]->cop_pos_t[1]->val;
+		_cos = cos(cr);
+		_sin = sin(cr);
+
+		if (dir == 0) {
+			((SLink*)links[0])->SetCoef(-_cos);
+			((SLink*)links[1])->SetCoef(-_sin);
+			((SLink*)links[2])->SetCoef(-_sin*(px - cx) + _cos*(py - cy));
+			((SLink*)links[3])->SetCoef(_cos);
+			((SLink*)links[4])->SetCoef(_sin);
+		}
+		else {
+			((SLink*)links[0])->SetCoef(_sin);
+			((SLink*)links[1])->SetCoef(-_cos);
+			((SLink*)links[2])->SetCoef(-_cos*(px - cx) - _sin*(py - cy));
+			((SLink*)links[3])->SetCoef(-_sin);
+			((SLink*)links[4])->SetCoef(_cos);
+		}
+	}
+
+
+
+	void CoPConR::CalcCoef(real_t t) {
+		cr = obj[idx]->com_pos_r->val;
+		pr = obj[0]->cop_pos_r->val;
+
+		((SLink*)links[0])->SetCoef(-1.0);
+		((SLink*)links[1])->SetCoef(1.0);
+	}
+
+
+	//-------------------------------------------------------------------------------------------------
+
+	void CoMConTP::CalcDeviation(real_t t) {//重心位置(左辺-右辺)
+		if (t0 <= t && t <= (t0 + tau_ssp)) {//SSP
+			if (dir == 0) {//x方向
+				y[0] = x1_ssp - p0 - l - (x0_dsp - p0 + l)*ch_ssp - T*(v0_dsp - (2 * l / tau_ssp))*sh_ssp;
+			}
+			else {//y方向
+				y[0] = x1_ssp - p0 - (x0_dsp - p0)*ch_ssp - T*v0_dsp*sh_ssp;
+			}
+		}
+		else {//DSP
+			if (dir == 0) {//x方向
+				y[0] = x1_dsp - (p1 - l) - (x1_ssp - p0 - l)*ch_dsp - T*(v1_ssp - (p1 - p0 - 2 * l) / tau_dsp)*sh_dsp;
+			}
+			else {//y方向
+				y[0] = x1_dsp - p1 - (x1_ssp - p0)*ch_dsp - T*(v1_ssp - (p1 - p0) / tau_dsp)*sh_dsp;
+			}
+		}
+	}
+
+	void CoMConTV::CalcDeviation(real_t t) {//重心速度(左辺-右辺)
+		if (t0 <= t && t <= (t0 + tau_ssp)) {//SSP
+			if (dir == 0) {
+				y[0] = v1_ssp - (2 * l / tau_ssp) - ((x0_dsp - p0 + l) / T)*sh_ssp - (v0_dsp - (2 * l / tau_ssp))*ch_ssp;
+			}
+			else {
+				y[0] = v1_ssp - ((x0_dsp - p0) / T)*sh_ssp - v0_dsp*ch_ssp;
+			}
+		}
+		else {//dsp
+			if (dir == 0) {
+				y[0] = v1_dsp - ((p1 - p0 - 2 * l) / tau_dsp) - ((x1_ssp - p0 - l) / T)*sh_dsp - (v1_ssp - ((p1 - p0 - 2 * l) / tau_dsp))*ch_dsp;
+			}
+			else {
+				y[0] = v1_dsp - ((p1 - p0) / tau_dsp) - ((x1_ssp - p0) / T)*sh_dsp - (v1_ssp - ((p1 - p0) / tau_dsp))*ch_dsp;
+			}
+		}
+	}
+
+
+	void CoMConR::CalcDeviation(real_t t) {
+		real_t s;
+		if (idx == 0)
+			s = 6.0*(q1 - q0) / tau2 - (4.0*w0 + 2.0*w1) / tau;
+		else s = -6.0*(q1 - q0) / tau2 + (2.0*w0 + 4.0*w1) / tau;
+		on_lower = (s < _min);
+		on_upper = (s > _max);
+		active = on_lower | on_upper;
+		if (on_lower) y[0] = (s - _min);
+		if (on_upper) y[0] = (s - _max);
+	}
+
+
+
+	void CoPConT::CalcDeviation(real_t t) {
+		real_t s;
+		if (dir == 0)
+			s = _cos*(px - cx) + _sin*(py - cy);
+		else s = -_sin*(px - cx) + _cos*(py - cy);
+		on_lower = (s < _min);
+		on_upper = (s > _max);
+		active = on_lower | on_upper;
+		if (on_lower) y[0] = (s - _min);
+		if (on_upper) y[0] = (s - _max);
+	}
+
+
+
+	void CoPConR::CalcDeviation(real_t t) {
+		real_t s = pr - cr;
+		on_lower = (s < _min);
+		on_upper = (s > _max);
+		active = on_lower | on_upper;
+		if (on_lower) y[0] = (s - _min);
+		if (on_upper) y[0] = (s - _max);
+	}
+
+
+	//-------------------------------------------------------------------------------------------------
+
+
+	void CoMConR::Project(real_t& l, uint k) {
+		if (on_upper &&  l > 0.0) l = 0.0;
+		if (on_lower &&  l < 0.0) l = 0.0;
+		if (!on_upper && !on_lower) l = 0.0;
+	}
+
+
+
+	void CoPConT::Project(real_t& l, uint k) {
+		if (on_upper &&  l > 0.0) l = 0.0;
+		if (on_lower &&  l < 0.0) l = 0.0;
+		if (!on_upper && !on_lower) l = 0.0;
+	}
+
+
+
+	void CoPConR::Project(real_t& l, uint k) {
+		if (on_upper &&  l > 0.0) l = 0.0;
+		if (on_lower &&  l < 0.0) l = 0.0;
+		if (!on_upper && !on_lower) l = 0.0;
+	}
+
+}
