@@ -20,28 +20,35 @@ namespace DiMP2 {
 	void BipedLIPKey::AddVar(Solver* solver) {
 		BipedLIP* obj = (BipedLIP*)node;
 
-		com_pos_t[0] = new SVar(solver, ID(VarTag::BipedCoMTP, node, tick, name + "_com_tp0"), node->graph->scale.pos_t);//x方向のCoM位置
-		com_pos_t[1] = new SVar(solver, ID(VarTag::BipedCoMTP, node, tick, name + "_com_tp1"), node->graph->scale.pos_t);//y方向のCoM位置
-		com_vel_t[0] = new SVar(solver, ID(VarTag::BipedCoMTV, node, tick, name + "_com_tv0"), node->graph->scale.vel_t);//x方向のCoM速度
-		com_vel_t[1] = new SVar(solver, ID(VarTag::BipedCoMTV, node, tick, name + "_com_tv1"), node->graph->scale.vel_t);//y方向のCoM速度
+		//SSPの変数
+		com_pos_t_ssp[0] = new SVar(solver, ID(VarTag::BipedCoMTP1, node, tick, name + "_com_tp0_ssp"), true, node->graph->scale.pos_t);//x方向のCoM位置
+		com_pos_t_ssp[1] = new SVar(solver, ID(VarTag::BipedCoMTP1, node, tick, name + "_com_tp1_ssp"), true, node->graph->scale.pos_t);//y方向のCoM位置
+		com_vel_t_ssp[0] = new SVar(solver, ID(VarTag::BipedCoMTV1, node, tick, name + "_com_tv0_ssp"), true, node->graph->scale.vel_t);//x方向のCoM速度
+		com_vel_t_ssp[1] = new SVar(solver, ID(VarTag::BipedCoMTV1, node, tick, name + "_com_tv1_ssp"), true, node->graph->scale.vel_t);//y方向のCoM速度
 
-		com_pos_r = new SVar(solver, ID(VarTag::BipedCoMRP, node, tick, name + "_com_rp"), node->graph->scale.pos_r);
-		com_vel_r = new SVar(solver, ID(VarTag::BipedCoMRV, node, tick, name + "_com_rv"), node->graph->scale.vel_r);
+																																		//DSPの変数																												 
+		com_pos_t_dsp[0] = new SVar(solver, ID(VarTag::BipedCoMTP2, node, tick, name + "_com_tp0_dsp"), false, node->graph->scale.pos_t);//x方向のCoM位置
+		com_pos_t_dsp[1] = new SVar(solver, ID(VarTag::BipedCoMTP2, node, tick, name + "_com_tp1_dsp"), false, node->graph->scale.pos_t);//y方向のCoM位置
+		com_vel_t_dsp[0] = new SVar(solver, ID(VarTag::BipedCoMTV2, node, tick, name + "_com_tv0_dsp"), false, node->graph->scale.vel_t);//x方向のCoM速度
+		com_vel_t_dsp[1] = new SVar(solver, ID(VarTag::BipedCoMTV2, node, tick, name + "_com_tv1_dsp"), false, node->graph->scale.vel_t);//y方向のCoM速度
+
+		com_pos_r = new SVar(solver, ID(VarTag::BipedCoMRP, node, tick, name + "_com_rp"), true, node->graph->scale.pos_r);
+		com_vel_r = new SVar(solver, ID(VarTag::BipedCoMRV, node, tick, name + "_com_rv"), true, node->graph->scale.vel_r);
 
 		// k歩目のcopは遊脚軌道の終点として必要
-		cop_pos_t[0] = new SVar(solver, ID(VarTag::BipedCoPT, node, tick, name + "_cop_t0"), node->graph->scale.pos_t);
-		cop_pos_t[1] = new SVar(solver, ID(VarTag::BipedCoPT, node, tick, name + "_cop_t1"), node->graph->scale.pos_t);
-		cop_pos_r = new SVar(solver, ID(VarTag::BipedCoPR, node, tick, name + "_cop_r"), node->graph->scale.pos_r);
+		cop_pos_t[0] = new SVar(solver, ID(VarTag::BipedCoPT, node, tick, name + "_cop_t0"), true, node->graph->scale.pos_t);
+		cop_pos_t[1] = new SVar(solver, ID(VarTag::BipedCoPT, node, tick, name + "_cop_t1"), true, node->graph->scale.pos_t);
+		cop_pos_r = new SVar(solver, ID(VarTag::BipedCoPR, node, tick, name + "_cop_r"), true, node->graph->scale.pos_r);
 
 		// k歩目の遊脚始点
 		if (!prev) {
-			swg_pos_t[0] = new SVar(solver, ID(VarTag::BipedCoPT, node, tick, name + "_swg_t0"), node->graph->scale.pos_t);
-			swg_pos_t[1] = new SVar(solver, ID(VarTag::BipedCoPT, node, tick, name + "_swg_t1"), node->graph->scale.pos_t);
-			swg_pos_r = new SVar(solver, ID(VarTag::BipedCoPR, node, tick, name + "_swg_r"), node->graph->scale.pos_r);
+			swg_pos_t[0] = new SVar(solver, ID(VarTag::BipedCoPT, node, tick, name + "_swg_t0"), true, node->graph->scale.pos_t);
+			swg_pos_t[1] = new SVar(solver, ID(VarTag::BipedCoPT, node, tick, name + "_swg_t1"), true, node->graph->scale.pos_t);
+			swg_pos_r = new SVar(solver, ID(VarTag::BipedCoPR, node, tick, name + "_swg_r"), true, node->graph->scale.pos_r);
 		}
 		//接地期間
 		if (next) {
-			period = new SVar(solver, ID(VarTag::BipedPeriod, node, tick, name + "_period"), node->graph->scale.time);
+			period = new SVar(solver, ID(VarTag::BipedPeriod, node, tick, name + "_period"), true, node->graph->scale.time);
 		}
 	}
 
@@ -50,10 +57,17 @@ namespace DiMP2 {
 		BipedLIPKey* nextObj = (BipedLIPKey*)next;
 
 		if (next) {
-			con_com_tp[0] = new CoMConTP(solver, name + "_com_tpx", this, 0, node->graph->scale.pos_t);//x方向のCoM位置
-			con_com_tp[1] = new CoMConTP(solver, name + "_com_tpy", this, 1, node->graph->scale.pos_t);//y方向のCoM位置
-			con_com_tv[0] = new CoMConTV(solver, name + "_com_tvx", this, 0, node->graph->scale.vel_t);//x方向のCoM速度
-			con_com_tv[1] = new CoMConTV(solver, name + "_com_tvy", this, 1, node->graph->scale.vel_t);//y方向のCoM速度
+			//SSP
+			con_com_tp_ssp[0] = new CoMConTP1(solver, name + "_com_tpx_ssp", this, 0, true, node->graph->scale.pos_t);//x方向のCoM位置
+			con_com_tp_ssp[1] = new CoMConTP1(solver, name + "_com_tpy_ssp", this, 1, true, node->graph->scale.pos_t);//y方向のCoM位置
+			con_com_tv_ssp[0] = new CoMConTV1(solver, name + "_com_tvx_ssp", this, 0, true, node->graph->scale.vel_t);//x方向のCoM速度
+			con_com_tv_ssp[1] = new CoMConTV1(solver, name + "_com_tvy_ssp", this, 1, true, node->graph->scale.vel_t);//y方向のCoM速度
+
+																													  //DSP
+			con_com_tp_dsp[0] = new CoMConTP2(solver, name + "_com_tpx_dsp", this, 0, false, node->graph->scale.pos_t);//x方向のCoM位置
+			con_com_tp_dsp[1] = new CoMConTP2(solver, name + "_com_tpy_dsp", this, 1, false, node->graph->scale.pos_t);//y方向のCoM位置
+			con_com_tv_dsp[0] = new CoMConTV2(solver, name + "_com_tvx_dsp", this, 0, false, node->graph->scale.vel_t);//x方向のCoM速度
+			con_com_tv_dsp[1] = new CoMConTV2(solver, name + "_com_tvy_dsp", this, 1, false, node->graph->scale.vel_t);//y方向のCoM速度
 
 			con_com_r[0] = new CoMConR(solver, name + "_com_r0", this, 0, node->graph->scale.acc_r);
 			con_com_r[1] = new CoMConR(solver, name + "_com_r1", this, 1, node->graph->scale.acc_r);
@@ -91,7 +105,7 @@ namespace DiMP2 {
 		canvas->SetLineWidth(1.0f);
 
 		// com
-		p = Vec3f((float)com_pos_t[0]->val, (float)com_pos_t[1]->val, (float)((BipedLIP*)node)->param.heightCoM);
+		p = Vec3f((float)com_pos_t_ssp[0]->val, (float)com_pos_t_ssp[1]->val, (float)((BipedLIP*)node)->param.heightCoM);
 		theta = (float)com_pos_r->val;
 		canvas->Point(p);
 		//		canvas->Line(p, p + Vec3f(l*cos(theta), l*sin(theta), 0.0f));
@@ -143,8 +157,11 @@ namespace DiMP2 {
 		cop_pos_r = 0.0;
 		swg_pos_r = 0.0;
 
-		fix_com_pos_t = false;
-		fix_com_vel_t = false;
+		fix_com_pos_t_ssp = false;
+		fix_com_vel_t_ssp = false;
+
+		fix_com_pos_t_dsp = false;
+		fix_com_vel_t_dsp = false;
 
 		fix_com_pos_r = false;
 		fix_com_vel_r = false;
@@ -249,12 +266,12 @@ namespace DiMP2 {
 		uint idx = 0;
 		for (uint i = 0; i < waypoints.size(); i++) {
 			Waypoint& wp = waypoints[i];
-			if (!wp.fix_com_pos_t) continue;//continue文⇒ブロック内の処理を飛ばし，ブロックの先頭位置に戻って次の処理を続ける
+			if (!wp.fix_com_pos_t_ssp) continue;//continue文⇒ブロック内の処理を飛ばし，ブロックの先頭位置に戻って次の処理を続ける
 			curve_pos.AddPoint(wp.k * periodAve);
 			curve_ori.AddPoint(wp.k * periodAve);
 
-			curve_pos.SetPos(idx, wp.com_pos_t);
-			curve_pos.SetVel(idx, wp.com_vel_t);
+			curve_pos.SetPos(idx, wp.com_pos_t_ssp);
+			curve_pos.SetVel(idx, wp.com_vel_t_ssp);
 
 			curve_ori.SetPos(idx, wp.com_pos_r);
 			curve_ori.SetVel(idx, wp.com_vel_r);
@@ -263,16 +280,23 @@ namespace DiMP2 {
 		for (uint k = 0; k < graph->ticks.size(); k++) {
 			BipedLIPKey* key = (BipedLIPKey*)traj.GetKeypoint(graph->ticks[k]);
 
-			vec2_t p = curve_pos.CalcPos(k * periodAve);//CalPos⇒位置を計算する関数
-			vec2_t v = curve_pos.CalcVel(k * periodAve);//CalVel⇒速度を計算する関数
+			vec2_t p = curve_pos.CalcPos(k * periodAve);//CalcPos⇒位置を計算する関数
+			vec2_t v = curve_pos.CalcVel(k * periodAve);//CalcVel⇒速度を計算する関数
 
 			real_t a = curve_ori.CalcPos(k * periodAve);
 			real_t r = curve_ori.CalcVel(k * periodAve);
 
-			key->com_pos_t[0]->val = p[0];//t0のCoM位置
-			key->com_pos_t[1]->val = p[1];//t1のCoM位置
-			key->com_vel_t[0]->val = v[0];//t0のCoM速度
-			key->com_vel_t[1]->val = v[1];//t1のCoM速度
+			//SSP
+			key->com_pos_t_ssp[0]->val = p[0];//t0のCoM位置
+			key->com_pos_t_ssp[1]->val = p[1];//t1のCoM位置
+			key->com_vel_t_ssp[0]->val = v[0];//t0のCoM速度
+			key->com_vel_t_ssp[1]->val = v[1];//t1のCoM速度
+
+											  //DSP
+			key->com_pos_t_dsp[0]->val = p[0];//t0のCoM位置
+			key->com_pos_t_dsp[1]->val = p[1];//t1のCoM位置
+			key->com_vel_t_dsp[0]->val = v[0];//t0のCoM速度
+			key->com_vel_t_dsp[1]->val = v[1];//t1のCoM速度
 
 			key->com_pos_r->val = a;
 			key->com_vel_r->val = r;
@@ -288,18 +312,30 @@ namespace DiMP2 {
 			Waypoint& wp = waypoints[i];
 			BipedLIPKey* key = (BipedLIPKey*)traj.GetKeypoint(graph->ticks[wp.k]);
 
-			if (wp.fix_com_pos_t) {
-				key->com_pos_t[0]->val = wp.com_pos_t[0];
-				key->com_pos_t[1]->val = wp.com_pos_t[1];
-				key->com_pos_t[0]->locked = true;
-				key->com_pos_t[1]->locked = true;
+			if (wp.fix_com_pos_t_ssp) {
+				key->com_pos_t_ssp[0]->val = wp.com_pos_t_ssp[0];
+				key->com_pos_t_ssp[1]->val = wp.com_pos_t_ssp[1];
+				key->com_pos_t_ssp[0]->locked = true;
+				key->com_pos_t_ssp[1]->locked = true;
+			}
+			if (wp.fix_com_pos_t_dsp) {
+				key->com_pos_t_dsp[0]->val = wp.com_pos_t_dsp[0];
+				key->com_pos_t_dsp[1]->val = wp.com_pos_t_dsp[1];
+				key->com_pos_t_dsp[0]->locked = true;
+				key->com_pos_t_dsp[1]->locked = true;
 			}
 
-			if (wp.fix_com_vel_t) {
-				key->com_vel_t[0]->val = wp.com_vel_t[0];
-				key->com_vel_t[1]->val = wp.com_vel_t[1];
-				key->com_vel_t[0]->locked = true;
-				key->com_vel_t[1]->locked = true;
+			if (wp.fix_com_vel_t_ssp) {
+				key->com_vel_t_ssp[0]->val = wp.com_vel_t_ssp[0];
+				key->com_vel_t_ssp[1]->val = wp.com_vel_t_ssp[1];
+				key->com_vel_t_ssp[0]->locked = true;
+				key->com_vel_t_ssp[1]->locked = true;
+			}
+			if (wp.fix_com_pos_t_dsp) {
+				key->com_pos_t_dsp[0]->val = wp.com_pos_t_dsp[0];
+				key->com_pos_t_dsp[1]->val = wp.com_pos_t_dsp[1];
+				key->com_pos_t_dsp[0]->locked = true;
+				key->com_pos_t_dsp[1]->locked = true;
 			}
 
 			if (wp.fix_com_pos_r) {
@@ -361,10 +397,10 @@ namespace DiMP2 {
 
 			real_t T = param.T;
 			real_t t0 = key0->tick->time;
-			real_t x0_ssp = key0->com_pos_t[0]->val;
-			real_t y0_ssp = key0->com_pos_t[1]->val;
-			real_t vx0_ssp = key0->com_vel_t[0]->val;
-			real_t vy0_ssp = key0->com_vel_t[1]->val;
+			real_t x0_ssp = key0->com_pos_t_ssp[0]->val;
+			real_t y0_ssp = key0->com_pos_t_ssp[1]->val;
+			real_t vx0_ssp = key0->com_vel_t_ssp[0]->val;
+			real_t vy0_ssp = key0->com_vel_t_ssp[1]->val;
 			real_t px = key0->cop_pos_t[0]->val;
 			real_t py = key0->cop_pos_t[1]->val;
 
@@ -390,8 +426,8 @@ namespace DiMP2 {
 			}
 		}
 		else {
-			p.x = key0->com_pos_t[0]->val;
-			p.y = key0->com_pos_t[1]->val;
+			p.x = key0->com_pos_t_ssp[0]->val;
+			p.y = key0->com_pos_t_ssp[1]->val;
 			p.z = param.heightCoM;
 		}
 
@@ -412,10 +448,10 @@ namespace DiMP2 {
 
 			real_t T = param.T;
 			real_t t0 = key0->tick->time;
-			real_t x0_ssp = key0->com_pos_t[0]->val;
-			real_t y0_ssp = key0->com_pos_t[1]->val;
-			real_t vx0_ssp = key0->com_vel_t[0]->val;
-			real_t vy0_ssp = key0->com_vel_t[1]->val;
+			real_t x0_ssp = key0->com_pos_t_ssp[0]->val;
+			real_t y0_ssp = key0->com_pos_t_ssp[1]->val;
+			real_t vx0_ssp = key0->com_vel_t_ssp[0]->val;
+			real_t vy0_ssp = key0->com_vel_t_ssp[1]->val;
 			real_t px = key0->cop_pos_t[0]->val;
 			real_t py = key0->cop_pos_t[1]->val;
 
@@ -439,8 +475,8 @@ namespace DiMP2 {
 			}
 		}
 		else {
-			v.x = key0->com_vel_t[0]->val;
-			v.y = key0->com_vel_t[1]->val;
+			v.x = key0->com_vel_t_ssp[0]->val;
+			v.y = key0->com_vel_t_ssp[1]->val;
 			v.z = 0.0;
 		}
 
@@ -483,10 +519,10 @@ namespace DiMP2 {
 
 			real_t T = param.T;
 			real_t t0 = key0->tick->time;
-			real_t x0_ssp = key0->com_pos_t[0]->val;
-			real_t y0_ssp = key0->com_pos_t[1]->val;
-			real_t vx0_ssp = key0->com_vel_t[0]->val;
-			real_t vy0_ssp = key0->com_vel_t[1]->val;
+			real_t x0_ssp = key0->com_pos_t_ssp[0]->val;
+			real_t y0_ssp = key0->com_pos_t_ssp[1]->val;
+			real_t vx0_ssp = key0->com_vel_t_ssp[0]->val;
+			real_t vy0_ssp = key0->com_vel_t_ssp[1]->val;
 			real_t px = key0->cop_pos_t[0]->val;
 			real_t py = key0->cop_pos_t[1]->val;
 
@@ -888,16 +924,16 @@ namespace DiMP2 {
 				fprintf(file2, "%d, %3.3lf, %3.3lf, %3.3lf, %3.3lf, %3.3lf, %3.3lf, %3.3lf, %3.3lf\n",
 					k, t,
 					key->period->val,
-					key->com_pos_t[0]->val, key->com_pos_t[1]->val,
-					key->com_vel_t[0]->val, key->com_vel_t[1]->val,
+					key->com_pos_t_ssp[0]->val, key->com_pos_t_ssp[1]->val,
+					key->com_vel_t_ssp[0]->val, key->com_vel_t_ssp[1]->val,
 					key->cop_pos_t[0]->val, key->cop_pos_t[1]->val);
 				t += key->period->val;
 			}
 			else {
 				fprintf(file2, "%d, %3.3lf, 0, %3.3lf, %3.3lf, %3.3lf, %3.3lf, %3.3lf, %3.3lf\n",
 					k, t,
-					key->com_pos_t[0]->val, key->com_pos_t[1]->val,
-					key->com_vel_t[0]->val, key->com_vel_t[1]->val,
+					key->com_pos_t_ssp[0]->val, key->com_pos_t_ssp[1]->val,
+					key->com_vel_t_ssp[0]->val, key->com_vel_t_ssp[1]->val,
 					key->cop_pos_t[0]->val, key->cop_pos_t[1]->val);
 			}
 		}
@@ -908,31 +944,54 @@ namespace DiMP2 {
 	//-------------------------------------------------------------------------------------------------
 
 	// Constructors
-	CoMCon::CoMCon(Solver* solver, int _tag, string _name, BipedLIPKey* _obj, uint _dir, real_t _scale) :
+	CoMCon::CoMCon(Solver* solver, int _tag, string _name, BipedLIPKey* _obj, uint _dir, bool _sp, real_t _scale) :
 		Constraint(solver, 1, ID(_tag, _obj->node, _obj->tick, _name), _scale) {
 		obj[0] = _obj;//(k-1)のキーポイント
 		obj[1] = (BipedLIPKey*)_obj->next;//kのキーポイント
 		dir = _dir;
+		sp = _sp;
 	}
 
-	CoMConTP::CoMConTP(Solver* solver, string _name, BipedLIPKey* _obj, uint _dir, real_t _scale) :
-		CoMCon(solver, ConTag::BipedCoMTP, _name, _obj, _dir, _scale) {
+	CoMConTP1::CoMConTP1(Solver* solver, string _name, BipedLIPKey* _obj, uint _dir, bool _sp, real_t _scale) :
+		CoMCon(solver, ConTag::BipedCoMTP1, _name, _obj, _dir, true, _scale) {
 
-		AddSLink(obj[0]->com_pos_t[dir]);//xk-1
-		AddSLink(obj[0]->com_vel_t[dir]);//vk-1
+
+		AddSLink(obj[0]->com_pos_t_dsp[dir]);//xk-1_dsp
+		AddSLink(obj[0]->com_vel_t_dsp[dir]);//vk-1_dsp
 		AddSLink(obj[0]->cop_pos_t[dir]);//pk
-		AddSLink(obj[0]->period);//tauk
-		AddSLink(obj[1]->com_pos_t[dir]);//xk
+		AddSLink(obj[0]->period);//tauk_ssp
+		AddSLink(obj[1]->com_pos_t_ssp[dir]);//xk_ssp
 	}
 
-	CoMConTV::CoMConTV(Solver* solver, string _name, BipedLIPKey* _obj, uint _dir, real_t _scale) :
-		CoMCon(solver, ConTag::BipedCoMTV, _name, _obj, _dir, _scale) {
+	CoMConTP2::CoMConTP2(Solver* solver, string _name, BipedLIPKey* _obj, uint _dir, bool _sp, real_t _scale) :
+		CoMCon(solver, ConTag::BipedCoMTP2, _name, _obj, _dir, false, _scale) {
 
-		AddSLink(obj[0]->com_pos_t[dir]);//xk-1
-		AddSLink(obj[0]->com_vel_t[dir]);//vk-1
-		AddSLink(obj[0]->cop_pos_t[dir]);//pkx
-		AddSLink(obj[0]->period);//tauk
-		AddSLink(obj[1]->com_vel_t[dir]);//xk
+		AddSLink(obj[1]->com_pos_t_dsp[dir]);//xk_ssp
+		AddSLink(obj[1]->com_vel_t_dsp[dir]);//vk_ssp
+		AddSLink(obj[0]->cop_pos_t[dir]);//pk
+		AddSLink(obj[0]->period);//tauk_dsp
+		AddSLink(obj[1]->com_pos_t_dsp[dir]);//xk_dsp
+		AddSLink(obj[1]->cop_pos_t[dir]);//pk+1
+	}
+
+	CoMConTV1::CoMConTV1(Solver* solver, string _name, BipedLIPKey* _obj, uint _dir, bool _sp, real_t _scale) :
+		CoMCon(solver, ConTag::BipedCoMTV1, _name, _obj, _dir, true, _scale) {
+
+		AddSLink(obj[0]->com_pos_t_dsp[dir]);//xk-1_dsp
+		AddSLink(obj[0]->com_vel_t_dsp[dir]);//vk-1_dsp
+		AddSLink(obj[0]->cop_pos_t[dir]);//pk
+		AddSLink(obj[0]->period);//tauk_ssp
+		AddSLink(obj[1]->com_vel_t_ssp[dir]);//vk_ssp
+	}
+
+	CoMConTV2::CoMConTV2(Solver* solver, string _name, BipedLIPKey* _obj, uint _dir, bool _sp, real_t _scale) :
+		CoMCon(solver, ConTag::BipedCoMTV2, _name, _obj, _dir, false, _scale) {
+
+		AddSLink(obj[1]->com_pos_t_dsp[dir]);//xk_ssp
+		AddSLink(obj[1]->com_vel_t_dsp[dir]);//vk_ssp
+		AddSLink(obj[0]->cop_pos_t[dir]);//pk
+		AddSLink(obj[0]->period);//tauk_dsp
+		AddSLink(obj[1]->com_vel_t_dsp[dir]);//vk_dsp
 		AddSLink(obj[1]->cop_pos_t[dir]);//pk+1
 	}
 
@@ -957,8 +1016,8 @@ namespace DiMP2 {
 		idx = _idx;
 		dir = _dir;
 
-		AddSLink(obj[idx]->com_pos_t[0]);
-		AddSLink(obj[idx]->com_pos_t[1]);
+		AddSLink(obj[idx]->com_pos_t_ssp[0]);
+		AddSLink(obj[idx]->com_pos_t_ssp[1]);
 		AddSLink(obj[idx]->com_pos_r);
 		AddSLink(obj[0]->cop_pos_t[0]);
 		AddSLink(obj[0]->cop_pos_t[1]);
@@ -1002,92 +1061,93 @@ namespace DiMP2 {
 
 		//DSPの変数
 		tau_dsp = 0.1*tau;
-		x0_dsp = obj[0]->com_pos_t[dir]->val;
-		v0_dsp = obj[0]->com_vel_t[dir]->val;
-		x1_dsp = obj[1]->com_pos_t[dir]->val;
-		v1_dsp = obj[1]->com_vel_t[dir]->val;
+		x0_dsp = obj[0]->com_pos_t_dsp[dir]->val;
+		v0_dsp = obj[0]->com_vel_t_dsp[dir]->val;
+		x1_dsp = obj[1]->com_pos_t_dsp[dir]->val;
+		v1_dsp = obj[1]->com_vel_t_dsp[dir]->val;
 		t_dsp = tau_dsp / T;
 		ch_dsp = cosh(t_dsp);
 		sh_dsp = sinh(t_dsp);
 	}
 
-	void CoMConTP::CalcCoef(real_t t) {//重心位置(左辺-右辺)を偏微分
+	void CoMConTP1::CalcCoef(real_t t) {//重心位置(左辺-右辺)を偏微分
 		Prepare();
-		if (t0 <= t && t <= (t0 + tau_ssp)) {//SSP
-			if (dir == 0) {//x方向
-				((SLink*)links[0])->SetCoef(-ch_ssp);//xk-1_dsp
-				((SLink*)links[1])->SetCoef(-T * sh_ssp);//vxk-1_dsp
-				((SLink*)links[2])->SetCoef(ch_ssp - 1.0);//pxk
-				((SLink*)links[3])->SetCoef(-(x0_dsp - p0 + l) / T*sh_ssp - 2 * l*T / (tau_ssp*tau_ssp)*sh_ssp - (v0_dsp - (2 * l / tau_dsp))*ch_ssp);//tauk_ssp
-				((SLink*)links[4])->SetCoef(1.0);//xk_ssp
-			}
-			else {//y方向
-				((SLink*)links[0])->SetCoef(-ch_ssp);//yk-1_dsp
-				((SLink*)links[1])->SetCoef(-T * sh_ssp);//vyk-1_dsp
-				((SLink*)links[2])->SetCoef(ch_ssp - 1.0);//pyk
-				((SLink*)links[3])->SetCoef(-(x0_dsp - p0) / T*sh_ssp - v0_dsp*ch_ssp);//tauk_ssp
-				((SLink*)links[4])->SetCoef(1.0);//yk_ssp
-			}
+		if (dir == 0) {//x方向
+			((SLink*)links[0])->SetCoef(-ch_ssp);//xk-1_dsp
+			((SLink*)links[1])->SetCoef(-T * sh_ssp);//vxk-1_dsp
+			((SLink*)links[2])->SetCoef(ch_ssp - 1.0);//pxk
+			((SLink*)links[3])->SetCoef(-(x0_dsp - p0 + l) / T*sh_ssp - 2 * l*T / (tau_ssp*tau_ssp)*sh_ssp - (v0_dsp - (2 * l / tau_dsp))*ch_ssp);//tauk_ssp
+			((SLink*)links[4])->SetCoef(1.0);//xk_ssp
 		}
-		else {//DSP
-			if (dir == 0) {//x方向
-				((SLink*)links[0])->SetCoef(-ch_dsp);//xk_ssp
-				((SLink*)links[1])->SetCoef(-T * sh_dsp);//vk_ssp
-				((SLink*)links[2])->SetCoef(ch_dsp - T / tau_dsp*sh_dsp);//pxk
-				((SLink*)links[3])->SetCoef(-(x1_ssp - p0 + l) / T*sh_dsp - T*(p1 - p0 - 2 * l) / (tau_dsp*tau_dsp)*ch_dsp - (v1_ssp - (p1 - p0 - 2 * l) / tau_dsp)*ch_dsp);//tauk_dsp
-				((SLink*)links[4])->SetCoef(1.0);//xk_dsp
-				((SLink*)links[5])->SetCoef(-1.0 + T / tau_dsp*sh_dsp);//pxk+1
-			}
-			else {//y方向
-				((SLink*)links[0])->SetCoef(-ch_dsp);//yk-1_ssp
-				((SLink*)links[1])->SetCoef(-T * sh_dsp);//vyk-1_ssp
-				((SLink*)links[2])->SetCoef(ch_dsp - T / tau_dsp*sh_dsp);//pyk
-				((SLink*)links[3])->SetCoef(-(x1_ssp - p0) / T*sh_dsp - T*(p1 - p0) / (tau_dsp*tau_dsp)*sh_dsp - (v1_ssp - (p1 - p0) / tau_dsp));//tauk_dsp
-				((SLink*)links[4])->SetCoef(1.0);//yk_dsp
-				((SLink*)links[5])->SetCoef(-1.0 + T / tau_dsp*sh_dsp);//pyk+1
-			}
+		else {//y方向
+			((SLink*)links[0])->SetCoef(-ch_ssp);//yk-1_dsp
+			((SLink*)links[1])->SetCoef(-T * sh_ssp);//vyk-1_dsp
+			((SLink*)links[2])->SetCoef(ch_ssp - 1.0);//pyk
+			((SLink*)links[3])->SetCoef(-(x0_dsp - p0) / T*sh_ssp - v0_dsp*ch_ssp);//tauk_ssp
+			((SLink*)links[4])->SetCoef(1.0);//yk_ssp
+		}
+	}
+
+	void CoMConTP2::CalcCoef(real_t t) {//重心位置(左辺-右辺)を偏微分
+		Prepare();
+		if (dir == 0) {//x方向
+			((SLink*)links[0])->SetCoef(-ch_dsp);//xk_ssp
+			((SLink*)links[1])->SetCoef(-T * sh_dsp);//vk_ssp
+			((SLink*)links[2])->SetCoef(ch_dsp - T / tau_dsp*sh_dsp);//pxk
+			((SLink*)links[3])->SetCoef(-(x1_ssp - p0 + l) / T*sh_dsp - T*(p1 - p0 - 2 * l) / (tau_dsp*tau_dsp)*ch_dsp
+				- (v1_ssp - (p1 - p0 - 2 * l) / tau_dsp)*ch_dsp);//tauk_dsp
+			((SLink*)links[4])->SetCoef(1.0);//xk_dsp
+			((SLink*)links[5])->SetCoef(-1.0 + T / tau_dsp*sh_dsp);//pxk+1
+		}
+		else {//y方向
+			((SLink*)links[0])->SetCoef(-ch_dsp);//yk-1_ssp
+			((SLink*)links[1])->SetCoef(-T * sh_dsp);//vyk-1_ssp
+			((SLink*)links[2])->SetCoef(ch_dsp - T / tau_dsp*sh_dsp);//pyk
+			((SLink*)links[3])->SetCoef(-(x1_ssp - p0) / T*sh_dsp - T*(p1 - p0) / (tau_dsp*tau_dsp)*sh_dsp - (v1_ssp - (p1 - p0) / tau_dsp));//tauk_dsp
+			((SLink*)links[4])->SetCoef(1.0);//yk_dsp
+			((SLink*)links[5])->SetCoef(-1.0 + T / tau_dsp*sh_dsp);//pyk+1
 		}
 	}
 
 
-	void CoMConTV::CalcCoef(real_t t) {//重心速度(左辺-右辺)を偏微分
+	void CoMConTV1::CalcCoef(real_t t) {//重心速度(左辺-右辺)を偏微分
 		Prepare();
-		if (t0 <= t && t <= (t0 + tau_ssp)) {//SSP
-			if (dir == 0) {//x方向
-				((SLink*)links[0])->SetCoef(-(1 / T)*sh_ssp);//xk-1_dsp
-				((SLink*)links[1])->SetCoef(-ch_ssp);//vxk-1_dsp
-				((SLink*)links[2])->SetCoef((1 / T)*sh_ssp);//pxk
-				((SLink*)links[3])->SetCoef(2 * l / (tau_ssp*tau_ssp) - (x0_dsp - p0 + l) / (T*T)*ch_ssp
-					- 2 * l / (tau_ssp*tau_ssp)*ch_ssp - (v0_dsp - (2 * l / tau_ssp)) / T*sh_ssp);//tauk_ssp
-				((SLink*)links[4])->SetCoef(1.0);//vxk_ssp
-			}
-			else {//y方向
-				((SLink*)links[0])->SetCoef(-(1 / T)*sh_ssp);//yk-1_dsp
-				((SLink*)links[1])->SetCoef(-ch_ssp);//vyk-1_dsp
-				((SLink*)links[2])->SetCoef((1 / T)*sh_ssp);//pxk
-				((SLink*)links[3])->SetCoef(-(x0_dsp - p0) / (T*T)*ch_ssp - (v0_dsp / T)*sh_ssp);//tauk_ssp
-				((SLink*)links[4])->SetCoef(1.0);//vyk_ssp
-			}
+		if (dir == 0) {//x方向
+			((SLink*)links[0])->SetCoef(-(1 / T)*sh_ssp);//xk-1_dsp
+			((SLink*)links[1])->SetCoef(-ch_ssp);//vxk-1_dsp
+			((SLink*)links[2])->SetCoef((1 / T)*sh_ssp);//pxk
+			((SLink*)links[3])->SetCoef(2 * l / (tau_ssp*tau_ssp) - (x0_dsp - p0 + l) / (T*T)*ch_ssp
+				- 2 * l / (tau_ssp*tau_ssp)*ch_ssp - (v0_dsp - (2 * l / tau_ssp)) / T*sh_ssp);//tauk_ssp
+			((SLink*)links[4])->SetCoef(1.0);//vxk_ssp
 		}
-		else {//DSP
-			if (dir == 0) {//x方向
-				((SLink*)links[0])->SetCoef(-(1 / T)*sh_dsp);//xk_ssp
-				((SLink*)links[1])->SetCoef(-ch_dsp);//vxk_ssp
-				((SLink*)links[2])->SetCoef((1 / tau_dsp) + (1 / T)*sh_dsp - (1 / tau_dsp)*ch_dsp);//pxk
-				((SLink*)links[3])->SetCoef((p1 - p0 - 2 * l) / (tau_dsp*tau_dsp) - (x1_ssp - p0 - l) / (T*T)*ch_dsp
-					- (p1 - p0 - 2 * l) / (tau_dsp*tau_dsp)*ch_dsp - (v1_ssp - (p1 - p0 - 2 * l) / tau_dsp) / T*sh_dsp);//tauk_dsp
-				((SLink*)links[4])->SetCoef(1.0);//vxk_dsp
-				((SLink*)links[5])->SetCoef(-(1 / tau_dsp) + (1 / tau_dsp)*ch_dsp);//pxk+1
-			}
-			else {//y方向
-				((SLink*)links[0])->SetCoef(-(1 / T)*sh_dsp);//yk_ssp
-				((SLink*)links[1])->SetCoef(-ch_dsp);//vyk_ssp
-				((SLink*)links[2])->SetCoef((1 / tau_dsp) - (1 / T)*sh_dsp - (1 / tau_dsp)*ch_dsp);//pyk
-				((SLink*)links[3])->SetCoef((p1 - p0) / (tau_dsp*tau_dsp) - (x1_ssp - p0) / (T*T)*ch_dsp
-					- (p1 - p0) / (tau_dsp*tau_dsp)*ch_dsp - (v1_ssp - (p1 - p0) / tau_dsp) / T*sh_dsp);//tauk_dsp
-				((SLink*)links[4])->SetCoef(1.0);//vyk_dsp
-				((SLink*)links[5])->SetCoef(-(1 / tau_dsp) + (1 / tau_dsp)*ch_dsp);//pyk+1
-			}
+		else {//y方向
+			((SLink*)links[0])->SetCoef(-(1 / T)*sh_ssp);//yk-1_dsp
+			((SLink*)links[1])->SetCoef(-ch_ssp);//vyk-1_dsp
+			((SLink*)links[2])->SetCoef((1 / T)*sh_ssp);//pxk
+			((SLink*)links[3])->SetCoef(-(x0_dsp - p0) / (T*T)*ch_ssp - (v0_dsp / T)*sh_ssp);//tauk_ssp
+			((SLink*)links[4])->SetCoef(1.0);//vyk_ssp
+		}
+	}
+
+	void CoMConTV2::CalcCoef(real_t t) {//重心速度(左辺-右辺)を偏微分
+		Prepare();
+		if (dir == 0) {//x方向
+			((SLink*)links[0])->SetCoef(-(1 / T)*sh_dsp);//xk_ssp
+			((SLink*)links[1])->SetCoef(-ch_dsp);//vxk_ssp
+			((SLink*)links[2])->SetCoef((1 / tau_dsp) + (1 / T)*sh_dsp - (1 / tau_dsp)*ch_dsp);//pxk
+			((SLink*)links[3])->SetCoef((p1 - p0 - 2 * l) / (tau_dsp*tau_dsp) - (x1_ssp - p0 - l) / (T*T)*ch_dsp
+				- (p1 - p0 - 2 * l) / (tau_dsp*tau_dsp)*ch_dsp - (v1_ssp - (p1 - p0 - 2 * l) / tau_dsp) / T*sh_dsp);//tauk_dsp
+			((SLink*)links[4])->SetCoef(1.0);//vxk_dsp
+			((SLink*)links[5])->SetCoef(-(1 / tau_dsp) + (1 / tau_dsp)*ch_dsp);//pxk+1
+		}
+		else {//y方向
+			((SLink*)links[0])->SetCoef(-(1 / T)*sh_dsp);//yk_ssp
+			((SLink*)links[1])->SetCoef(-ch_dsp);//vyk_ssp
+			((SLink*)links[2])->SetCoef((1 / tau_dsp) - (1 / T)*sh_dsp - (1 / tau_dsp)*ch_dsp);//pyk
+			((SLink*)links[3])->SetCoef((p1 - p0) / (tau_dsp*tau_dsp) - (x1_ssp - p0) / (T*T)*ch_dsp
+				- (p1 - p0) / (tau_dsp*tau_dsp)*ch_dsp - (v1_ssp - (p1 - p0) / tau_dsp) / T*sh_dsp);//tauk_dsp
+			((SLink*)links[4])->SetCoef(1.0);//vyk_dsp
+			((SLink*)links[5])->SetCoef(-(1 / tau_dsp) + (1 / tau_dsp)*ch_dsp);//pyk+1
 		}
 	}
 
@@ -1120,8 +1180,8 @@ namespace DiMP2 {
 
 
 	void CoPConT::CalcCoef(real_t t) {
-		cx = obj[idx]->com_pos_t[0]->val;
-		cy = obj[idx]->com_pos_t[1]->val;
+		cx = obj[idx]->com_pos_t_ssp[0]->val;
+		cy = obj[idx]->com_pos_t_ssp[1]->val;
 		cr = obj[idx]->com_pos_r->val;
 		px = obj[0]->cop_pos_t[0]->val;
 		py = obj[0]->cop_pos_t[1]->val;
@@ -1157,41 +1217,39 @@ namespace DiMP2 {
 
 	//-------------------------------------------------------------------------------------------------
 
-	void CoMConTP::CalcDeviation(real_t t) {//重心位置(左辺-右辺)
-		if (t0 <= t && t <= (t0 + tau_ssp)) {//SSP
-			if (dir == 0) {//x方向
-				y[0] = x1_ssp - p0 - l - (x0_dsp - p0 + l)*ch_ssp - T*(v0_dsp - (2 * l / tau_ssp))*sh_ssp;
-			}
-			else {//y方向
-				y[0] = x1_ssp - p0 - (x0_dsp - p0)*ch_ssp - T*v0_dsp*sh_ssp;
-			}
+	void CoMConTP1::CalcDeviation(real_t t) {//重心位置(左辺-右辺)
+		if (dir == 0) {//x方向
+			y[0] = x1_ssp - p0 - l - (x0_dsp - p0 + l)*ch_ssp - T*(v0_dsp - (2 * l / tau_ssp))*sh_ssp;
 		}
-		else {//DSP
-			if (dir == 0) {//x方向
-				y[0] = x1_dsp - (p1 - l) - (x1_ssp - p0 - l)*ch_dsp - T*(v1_ssp - (p1 - p0 - 2 * l) / tau_dsp)*sh_dsp;
-			}
-			else {//y方向
-				y[0] = x1_dsp - p1 - (x1_ssp - p0)*ch_dsp - T*(v1_ssp - (p1 - p0) / tau_dsp)*sh_dsp;
-			}
+		else {//y方向
+			y[0] = x1_ssp - p0 - (x0_dsp - p0)*ch_ssp - T*v0_dsp*sh_ssp;
 		}
 	}
 
-	void CoMConTV::CalcDeviation(real_t t) {//重心速度(左辺-右辺)
-		if (t0 <= t && t <= (t0 + tau_ssp)) {//SSP
-			if (dir == 0) {
-				y[0] = v1_ssp - (2 * l / tau_ssp) - ((x0_dsp - p0 + l) / T)*sh_ssp - (v0_dsp - (2 * l / tau_ssp))*ch_ssp;
-			}
-			else {
-				y[0] = v1_ssp - ((x0_dsp - p0) / T)*sh_ssp - v0_dsp*ch_ssp;
-			}
+	void CoMConTP2::CalcDeviation(real_t t) {//重心位置(左辺-右辺)
+		if (dir == 0) {//x方向
+			y[0] = x1_dsp - (p1 - l) - (x1_ssp - p0 - l)*ch_dsp - T*(v1_ssp - (p1 - p0 - 2 * l) / tau_dsp)*sh_dsp;
 		}
-		else {//dsp
-			if (dir == 0) {
-				y[0] = v1_dsp - ((p1 - p0 - 2 * l) / tau_dsp) - ((x1_ssp - p0 - l) / T)*sh_dsp - (v1_ssp - ((p1 - p0 - 2 * l) / tau_dsp))*ch_dsp;
-			}
-			else {
-				y[0] = v1_dsp - ((p1 - p0) / tau_dsp) - ((x1_ssp - p0) / T)*sh_dsp - (v1_ssp - ((p1 - p0) / tau_dsp))*ch_dsp;
-			}
+		else {//y方向
+			y[0] = x1_dsp - p1 - (x1_ssp - p0)*ch_dsp - T*(v1_ssp - (p1 - p0) / tau_dsp)*sh_dsp;
+		}
+	}
+
+	void CoMConTV1::CalcDeviation(real_t t) {//重心速度(左辺-右辺)
+		if (dir == 0) {
+			y[0] = v1_ssp - (2 * l / tau_ssp) - ((x0_dsp - p0 + l) / T)*sh_ssp - (v0_dsp - (2 * l / tau_ssp))*ch_ssp;
+		}
+		else {
+			y[0] = v1_ssp - ((x0_dsp - p0) / T)*sh_ssp - v0_dsp*ch_ssp;
+		}
+	}
+
+	void CoMConTV2::CalcDeviation(real_t t) {//重心速度(左辺-右辺)
+		if (dir == 0) {
+			y[0] = v1_dsp - ((p1 - p0 - 2 * l) / tau_dsp) - ((x1_ssp - p0 - l) / T)*sh_dsp - (v1_ssp - ((p1 - p0 - 2 * l) / tau_dsp))*ch_dsp;
+		}
+		else {
+			y[0] = v1_dsp - ((p1 - p0) / tau_dsp) - ((x1_ssp - p0) / T)*sh_dsp - (v1_ssp - ((p1 - p0) / tau_dsp))*ch_dsp;
 		}
 	}
 

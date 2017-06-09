@@ -7,8 +7,13 @@ namespace DiMP2 {
 	;
 
 	class  BipedLIP;
-	struct CoMConTP;
-	struct CoMConTV;
+
+	struct CoMConTP1;
+	struct CoMConTV1;
+
+	struct CoMConTP2;
+	struct CoMConTV2;
+
 	struct CoMConR;
 	struct CoPConT;
 	struct CoPConR;
@@ -20,18 +25,28 @@ namespace DiMP2 {
 	public:
 		int			phase;			  ///< walking phase (right support or left support)
 
-		SVar*		com_pos_t[2];     ///< position of CoM
-		SVar*		com_vel_t[2];     ///< velocity of CoM
+									  //SSP‚Ì•Ï”
+		SVar*		com_pos_t_ssp[2];     ///< position of CoM
+		SVar*		com_vel_t_ssp[2];     ///< velocity of CoM
+										  //DSP‚Ì•Ï”
+		SVar*		com_pos_t_dsp[2];     ///< position of CoM
+		SVar*		com_vel_t_dsp[2];     ///< velocity of CoM
+
 		SVar*       com_pos_r;        ///< orientation of CoM
 		SVar*       com_vel_r;        ///< angular velocity of CoM
 		SVar*		cop_pos_t[2];     ///< position of CoP
 		SVar*       cop_pos_r;        ///< orienation of CoP (foot)
 		SVar*       swg_pos_t[2];     ///< 0•à–Ú‚Ì—V‹rŽn“_@dS‹O“¹‚É‚Í‰e‹¿‚µ‚È‚¢‚ª—V‹r‹O“¹‚ÌŒˆ’è‚Ì‚½‚ß‚ÉŽg—p
 		SVar*       swg_pos_r;        ///<
+
 		SVar*		period;           ///< stepping period ˆê•à‚ ‚½‚è‚ÌŽžŠÔ
 
-		CoMConTP *  con_com_tp[2];   ///< LIP(Linear Inverted Pendulum) dynamics
-		CoMConTV *  con_com_tv[2];
+		CoMConTP1 *  con_com_tp_ssp[2];   ///< LIP(Linear Inverted Pendulum) dynamics
+		CoMConTV1 *  con_com_tv_ssp[2];
+
+		CoMConTP2 *  con_com_tp_dsp[2];   ///< LIP(Linear Inverted Pendulum) dynamics
+		CoMConTV2 *  con_com_tv_dsp[2];
+
 		CoMConR  *  con_com_r[2];   ///< range constraint on angular acceleration at beginning and end of step
 		CoPConT  *  con_cop_t[2][2];   ///< range constraint on relative position between CoM and support point
 		CoPConR  *  con_cop_r[2];   ///< range constraint on turning angle of CoM
@@ -87,16 +102,26 @@ namespace DiMP2 {
 		/// Œo—R“_
 		struct Waypoint {
 			int     k;
-			vec2_t  com_pos_t;
-			vec2_t  com_vel_t;
+
+			vec2_t  com_pos_t_ssp;
+			vec2_t  com_vel_t_ssp;
+
+			vec2_t  com_pos_t_dsp;
+			vec2_t  com_vel_t_dsp;
+
 			real_t  com_pos_r;
 			real_t  com_vel_r;
 			vec2_t  cop_pos_t;
 			real_t  cop_pos_r;
 			vec2_t  swg_pos_t;
 			real_t  swg_pos_r;
-			bool    fix_com_pos_t;
-			bool    fix_com_vel_t;
+
+			bool    fix_com_pos_t_ssp;
+			bool    fix_com_vel_t_ssp;
+
+			bool    fix_com_pos_t_dsp;
+			bool    fix_com_vel_t_dsp;
+
 			bool	fix_com_pos_r;
 			bool	fix_com_vel_r;
 			bool    fix_cop_pos_t;
@@ -158,6 +183,7 @@ namespace DiMP2 {
 	struct CoMCon : Constraint {
 		BipedLIPKey* obj[2];
 		uint         dir;
+		bool		 sp;
 
 		real_t l, tau, T, p0, p1, t0;
 		real_t  tau_ssp, x1_ssp, v1_ssp, t_ssp, ch_ssp, sh_ssp;
@@ -165,23 +191,39 @@ namespace DiMP2 {
 
 		void Prepare();
 
-		CoMCon(Solver* solver, int _tag, string _name, BipedLIPKey* _obj, uint _dir, real_t _scale);
+		CoMCon(Solver* solver, int _tag, string _name, BipedLIPKey* _obj, uint _dir, bool _sp, real_t _scale);
 	};
 
 	/// CoM position constraint based on LIP model
-	struct CoMConTP : CoMCon {
+	struct CoMConTP1 : CoMCon {
 		virtual void CalcCoef(real_t t);
 		virtual void CalcDeviation(real_t t);
 
-		CoMConTP(Solver* solver, string _name, BipedLIPKey* _obj, uint _dir, real_t _scale);
+		CoMConTP1(Solver* solver, string _name, BipedLIPKey* _obj, uint _dir, bool _sp, real_t _scale);
+	};
+
+	/// CoM position constraint based on LIP model
+	struct CoMConTP2 : CoMCon {
+		virtual void CalcCoef(real_t t);
+		virtual void CalcDeviation(real_t t);
+
+		CoMConTP2(Solver* solver, string _name, BipedLIPKey* _obj, uint _dir, bool _sp, real_t _scale);
 	};
 
 	/// CoM velocity constraint based on LIP model
-	struct CoMConTV : CoMCon {
+	struct CoMConTV1 : CoMCon {
 		virtual void CalcCoef(real_t t);
 		virtual void CalcDeviation(real_t t);
 
-		CoMConTV(Solver* solver, string _name, BipedLIPKey* _obj, uint _dir, real_t _scale);
+		CoMConTV1(Solver* solver, string _name, BipedLIPKey* _obj, uint _dir, bool _sp, real_t _scale);
+	};
+
+	/// CoM velocity constraint based on LIP model
+	struct CoMConTV2 : CoMCon {
+		virtual void CalcCoef(real_t t);
+		virtual void CalcDeviation(real_t t);
+
+		CoMConTV2(Solver* solver, string _name, BipedLIPKey* _obj, uint _dir, bool _sp, real_t _scale);
 	};
 
 	/// angular acceleration limit
