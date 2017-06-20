@@ -1,9 +1,9 @@
 #pragma once
 
-#include <DiMP2/Node.h>
-#include <DiMP2/Range.h>
+#include <DiMP/Graph/Node.h>
+#include <DiMP/Solver/Range.h>
 
-namespace DiMP2 {
+namespace DiMP {
 	;
 
 	class  BipedLIP;
@@ -56,7 +56,7 @@ namespace DiMP2 {
 		virtual void AddVar(Solver* solver);
 		virtual void AddCon(Solver* solver);
 		virtual void Prepare();
-		virtual void Draw(DrawCanvas* canvas, DrawConfig* conf);
+		virtual void Draw(Render::Canvas* canvas, Render::Config* conf);
 
 		BipedLIPKey();
 	};
@@ -171,8 +171,8 @@ namespace DiMP2 {
 
 		void CalcSimple();
 		void CalcTrajectory();
-		void Draw(DrawCanvas* canvas, DrawConfig* conf);
-		void DrawSnapshot(real_t time, DrawCanvas* canvas, DrawConfig* conf);
+		void Draw(Render::Canvas* canvas, Render::Config* conf);
+		void DrawSnapshot(real_t time, Render::Canvas* canvas, Render::Config* conf);
 		void Save();
 
 	public:

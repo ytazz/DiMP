@@ -1,12 +1,12 @@
-#include <DiMP2/Biped.h>
-#include <DiMP2/Graph.h>
-#include <DiMP2/Solver.h>
-#include <DiMP2/DrawConfig.h>
-#include <DiMP2/DrawCanvas.h>
+#include <DiMP/Graph/Biped.h>
+#include <DiMP/Graph/Graph.h>
+#include <DiMP/Solver/Solver.h>
+#include <DiMP/Render/Config.h>
+#include <DiMP/Render/Canvas.h>
+
 #include<stdio.h>
 
-
-namespace DiMP2 {
+namespace DiMP {
 	;
 
 	//-------------------------------------------------------------------------------------------------
@@ -21,34 +21,34 @@ namespace DiMP2 {
 		BipedLIP* obj = (BipedLIP*)node;
 
 		//SSPの変数
-		com_pos_t_ssp[0] = new SVar(solver, ID(VarTag::BipedCoMTP1, node, tick, name + "_com_tp0_ssp"), true, node->graph->scale.pos_t);//x方向のCoM位置
-		com_pos_t_ssp[1] = new SVar(solver, ID(VarTag::BipedCoMTP1, node, tick, name + "_com_tp1_ssp"), true, node->graph->scale.pos_t);//y方向のCoM位置
-		com_vel_t_ssp[0] = new SVar(solver, ID(VarTag::BipedCoMTV1, node, tick, name + "_com_tv0_ssp"), true, node->graph->scale.vel_t);//x方向のCoM速度
-		com_vel_t_ssp[1] = new SVar(solver, ID(VarTag::BipedCoMTV1, node, tick, name + "_com_tv1_ssp"), true, node->graph->scale.vel_t);//y方向のCoM速度
+		com_pos_t_ssp[0] = new SVar(solver, ID(VarTag::BipedCoMTP, node, tick, name + "_com_tp0_ssp"), node->graph->scale.pos_t);//x方向のCoM位置
+		com_pos_t_ssp[1] = new SVar(solver, ID(VarTag::BipedCoMTP, node, tick, name + "_com_tp1_ssp"), node->graph->scale.pos_t);//y方向のCoM位置
+		com_vel_t_ssp[0] = new SVar(solver, ID(VarTag::BipedCoMTV, node, tick, name + "_com_tv0_ssp"), node->graph->scale.vel_t);//x方向のCoM速度
+		com_vel_t_ssp[1] = new SVar(solver, ID(VarTag::BipedCoMTV, node, tick, name + "_com_tv1_ssp"), node->graph->scale.vel_t);//y方向のCoM速度
 
 																																		//DSPの変数																												 
-		com_pos_t_dsp[0] = new SVar(solver, ID(VarTag::BipedCoMTP2, node, tick, name + "_com_tp0_dsp"), false, node->graph->scale.pos_t);//x方向のCoM位置
-		com_pos_t_dsp[1] = new SVar(solver, ID(VarTag::BipedCoMTP2, node, tick, name + "_com_tp1_dsp"), false, node->graph->scale.pos_t);//y方向のCoM位置
-		com_vel_t_dsp[0] = new SVar(solver, ID(VarTag::BipedCoMTV2, node, tick, name + "_com_tv0_dsp"), false, node->graph->scale.vel_t);//x方向のCoM速度
-		com_vel_t_dsp[1] = new SVar(solver, ID(VarTag::BipedCoMTV2, node, tick, name + "_com_tv1_dsp"), false, node->graph->scale.vel_t);//y方向のCoM速度
+		com_pos_t_dsp[0] = new SVar(solver, ID(VarTag::BipedCoMTP, node, tick, name + "_com_tp0_dsp"), node->graph->scale.pos_t);//x方向のCoM位置
+		com_pos_t_dsp[1] = new SVar(solver, ID(VarTag::BipedCoMTP, node, tick, name + "_com_tp1_dsp"), node->graph->scale.pos_t);//y方向のCoM位置
+		com_vel_t_dsp[0] = new SVar(solver, ID(VarTag::BipedCoMTV, node, tick, name + "_com_tv0_dsp"), node->graph->scale.vel_t);//x方向のCoM速度
+		com_vel_t_dsp[1] = new SVar(solver, ID(VarTag::BipedCoMTV, node, tick, name + "_com_tv1_dsp"), node->graph->scale.vel_t);//y方向のCoM速度
 
-		com_pos_r = new SVar(solver, ID(VarTag::BipedCoMRP, node, tick, name + "_com_rp"), true, node->graph->scale.pos_r);
-		com_vel_r = new SVar(solver, ID(VarTag::BipedCoMRV, node, tick, name + "_com_rv"), true, node->graph->scale.vel_r);
+		com_pos_r = new SVar(solver, ID(VarTag::BipedCoMRP, node, tick, name + "_com_rp"), node->graph->scale.pos_r);
+		com_vel_r = new SVar(solver, ID(VarTag::BipedCoMRV, node, tick, name + "_com_rv"), node->graph->scale.vel_r);
 
 		// k歩目のcopは遊脚軌道の終点として必要
-		cop_pos_t[0] = new SVar(solver, ID(VarTag::BipedCoPT, node, tick, name + "_cop_t0"), true, node->graph->scale.pos_t);
-		cop_pos_t[1] = new SVar(solver, ID(VarTag::BipedCoPT, node, tick, name + "_cop_t1"), true, node->graph->scale.pos_t);
-		cop_pos_r = new SVar(solver, ID(VarTag::BipedCoPR, node, tick, name + "_cop_r"), true, node->graph->scale.pos_r);
+		cop_pos_t[0] = new SVar(solver, ID(VarTag::BipedCoPT, node, tick, name + "_cop_t0"), node->graph->scale.pos_t);
+		cop_pos_t[1] = new SVar(solver, ID(VarTag::BipedCoPT, node, tick, name + "_cop_t1"), node->graph->scale.pos_t);
+		cop_pos_r    = new SVar(solver, ID(VarTag::BipedCoPR, node, tick, name + "_cop_r" ), node->graph->scale.pos_r);
 
 		// k歩目の遊脚始点
 		if (!prev) {
-			swg_pos_t[0] = new SVar(solver, ID(VarTag::BipedCoPT, node, tick, name + "_swg_t0"), true, node->graph->scale.pos_t);
-			swg_pos_t[1] = new SVar(solver, ID(VarTag::BipedCoPT, node, tick, name + "_swg_t1"), true, node->graph->scale.pos_t);
-			swg_pos_r = new SVar(solver, ID(VarTag::BipedCoPR, node, tick, name + "_swg_r"), true, node->graph->scale.pos_r);
+			swg_pos_t[0] = new SVar(solver, ID(VarTag::BipedCoPT, node, tick, name + "_swg_t0"), node->graph->scale.pos_t);
+			swg_pos_t[1] = new SVar(solver, ID(VarTag::BipedCoPT, node, tick, name + "_swg_t1"), node->graph->scale.pos_t);
+			swg_pos_r    = new SVar(solver, ID(VarTag::BipedCoPR, node, tick, name + "_swg_r" ), node->graph->scale.pos_r);
 		}
 		//接地期間
 		if (next) {
-			period = new SVar(solver, ID(VarTag::BipedPeriod, node, tick, name + "_period"), true, node->graph->scale.time);
+			period = new SVar(solver, ID(VarTag::BipedPeriod, node, tick, name + "_period"), node->graph->scale.time);
 		}
 	}
 
@@ -95,7 +95,7 @@ namespace DiMP2 {
 		}
 	}
 
-	void BipedLIPKey::Draw(DrawCanvas* canvas, DrawConfig* conf) {
+	void BipedLIPKey::Draw(Render::Canvas* canvas, Render::Config* conf) {
 		const float l = 0.1f;
 
 		Vec3f p;
@@ -800,7 +800,7 @@ namespace DiMP2 {
 
 	//------------------------------------------------------------------------------------------------
 
-	void BipedLIP::Draw(DrawCanvas* canvas, DrawConfig* conf) {
+	void BipedLIP::Draw(Render::Canvas* canvas, Render::Config* conf) {
 		TrajectoryNode::Draw(canvas, conf);
 
 		if (!trajReady)
@@ -810,7 +810,7 @@ namespace DiMP2 {
 			return;
 
 		// com
-		if (conf->Set(canvas, DrawItem::BipedCoM, this)) {
+		if (conf->Set(canvas, Render::Item::BipedCoM, this)) {
 			canvas->BeginLayer("biped_com", true);
 			canvas->SetLineWidth(6.0f);
 			canvas->BeginPath();
@@ -823,7 +823,7 @@ namespace DiMP2 {
 		}
 
 		// torso
-		if (conf->Set(canvas, DrawItem::BipedTorso, this)) {
+		if (conf->Set(canvas, Render::Item::BipedTorso, this)) {
 			canvas->BeginLayer("biped_torso", true);
 			canvas->SetLineWidth(3.0f);
 			canvas->BeginPath();
@@ -837,7 +837,7 @@ namespace DiMP2 {
 
 
 		// swing foot
-		if (conf->Set(canvas, DrawItem::BipedSwing, this)) {
+		if (conf->Set(canvas, Render::Item::BipedSwing, this)) {
 			canvas->BeginLayer("biped_swing", true);
 			canvas->SetLineWidth(3.0f);
 			canvas->BeginPath();
@@ -857,7 +857,7 @@ namespace DiMP2 {
 		}
 
 		// double support snapshot
-		/*		if (conf->Set(canvas, DrawItem::BipedDouble, this)) {
+		/*		if (conf->Set(canvas, Render::Item::BipedDouble, this)) {
 		canvas->BeginLayer("biped_double", true);
 		canvas->SetLineWidth(1.0f);
 		Vec3f p0, p1;
@@ -877,7 +877,7 @@ namespace DiMP2 {
 
 	}
 
-	void BipedLIP::DrawSnapshot(real_t time, DrawCanvas* canvas, DrawConfig* conf) {
+	void BipedLIP::DrawSnapshot(real_t time, Render::Canvas* canvas, Render::Config* conf) {
 		canvas->SetLineWidth(2.0f);
 		canvas->BeginPath();
 		canvas->MoveTo(CoMPos(time));
@@ -953,7 +953,7 @@ namespace DiMP2 {
 	}
 
 	CoMConTP1::CoMConTP1(Solver* solver, string _name, BipedLIPKey* _obj, uint _dir, bool _sp, real_t _scale) :
-		CoMCon(solver, ConTag::BipedCoMTP1, _name, _obj, _dir, true, _scale) {
+		CoMCon(solver, ConTag::BipedCoMTP, _name, _obj, _dir, true, _scale) {
 
 
 		AddSLink(obj[0]->com_pos_t_dsp[dir]);//xk-1_dsp
@@ -964,7 +964,7 @@ namespace DiMP2 {
 	}
 
 	CoMConTP2::CoMConTP2(Solver* solver, string _name, BipedLIPKey* _obj, uint _dir, bool _sp, real_t _scale) :
-		CoMCon(solver, ConTag::BipedCoMTP2, _name, _obj, _dir, false, _scale) {
+		CoMCon(solver, ConTag::BipedCoMTP, _name, _obj, _dir, false, _scale) {
 
 		AddSLink(obj[1]->com_pos_t_dsp[dir]);//xk_ssp
 		AddSLink(obj[1]->com_vel_t_dsp[dir]);//vk_ssp
@@ -975,7 +975,7 @@ namespace DiMP2 {
 	}
 
 	CoMConTV1::CoMConTV1(Solver* solver, string _name, BipedLIPKey* _obj, uint _dir, bool _sp, real_t _scale) :
-		CoMCon(solver, ConTag::BipedCoMTV1, _name, _obj, _dir, true, _scale) {
+		CoMCon(solver, ConTag::BipedCoMTV, _name, _obj, _dir, true, _scale) {
 
 		AddSLink(obj[0]->com_pos_t_dsp[dir]);//xk-1_dsp
 		AddSLink(obj[0]->com_vel_t_dsp[dir]);//vk-1_dsp
@@ -985,7 +985,7 @@ namespace DiMP2 {
 	}
 
 	CoMConTV2::CoMConTV2(Solver* solver, string _name, BipedLIPKey* _obj, uint _dir, bool _sp, real_t _scale) :
-		CoMCon(solver, ConTag::BipedCoMTV2, _name, _obj, _dir, false, _scale) {
+		CoMCon(solver, ConTag::BipedCoMTV, _name, _obj, _dir, false, _scale) {
 
 		AddSLink(obj[1]->com_pos_t_dsp[dir]);//xk_ssp
 		AddSLink(obj[1]->com_vel_t_dsp[dir]);//vk_ssp
