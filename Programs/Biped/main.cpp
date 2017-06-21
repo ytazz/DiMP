@@ -1,9 +1,9 @@
-#include <DiMP2/DiMP.h>
+#include <DiMP/DiMP.h>
 
 /** 2足ロボットのバランス制御
  */
 
-class MyApp : public DiMP2::App, public DiMP2::DrawConfig{
+class MyApp : public DiMP::App, public DiMP::Render::Config{
 public:
 	enum{
 		MENU_MAIN = MENU_USER, 
@@ -17,7 +17,7 @@ public:
 		ID_SAVE,
 	};
 
-	DiMP2::BipedLIP*	biped;
+	DiMP::BipedLIP*	biped;
 
 	vec3_t  targetPos;
 	uint    curIdx;		
@@ -39,7 +39,7 @@ public:
 	virtual ~MyApp(){}
 
 	virtual void BuildScene(){
-		biped = new DiMP2::BipedLIP(graph, "biped");
+		biped = new DiMP::BipedLIP(graph, "biped");
 		biped->param.gravity          = 9.8;
 		biped->param.heightCoM        = 0.55;
 		biped->param.stepPeriodMin    = 0.1;	
@@ -56,10 +56,10 @@ public:
 		// 歩数設定．tickの時刻は使われない
 		const uint N = 10;
 		for(uint i = 0; i <= N; i++) 
-			new DiMP2::Tick(graph, 0.0, "");
+			new DiMP::Tick(graph, 0.0, "");
 		biped->phase.resize(N+1);
 		for(uint i = 0; i < N; i++)
-			biped->phase[i] = (i % 2 == 0) ? DiMP2::BipedLIP::Phase::Right : DiMP2::BipedLIP::Phase::Left;
+			biped->phase[i] = (i % 2 == 0) ? DiMP::BipedLIP::Phase::Right : DiMP::BipedLIP::Phase::Left;
 	
 		vec2_t goalPos(0.3, 0.3);
 		real_t goalOri = Rad(90.0);
@@ -90,7 +90,7 @@ public:
 		graph->scale.Set(1.0, 1.0, 1.0);
 		graph->Init();
 
-		graph->SetCorrectionRate(DiMP2::ID(), 0.5);
+		graph->SetCorrectionRate(DiMP::ID(), 0.5);
 		graph->solver->SetNumIteration(20, 0);
 		
 		targetPos = vec3_t(0.0, 0.6, -0.2);
@@ -118,16 +118,16 @@ public:
 		App::OnAction(menu, id);
 	}
 	
-	virtual bool Set(GRRenderIf* render, int attr, DiMP2::Node* node){
+	virtual bool Set(GRRenderIf* render, int attr, DiMP::Node* node){
 		return true;
 	}
 	
-	virtual float Scale(int attr, DiMP2::Node* node){
+	virtual float Scale(int attr, DiMP::Node* node){
 		return 0.1f;
 	}
 } app;
 
-DiMP2::Graph graph;
+DiMP::Graph graph;
 
 int main(int argc, char* argv[]){
 	app.graph = &graph;

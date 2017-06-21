@@ -26,20 +26,34 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DiMP2", "..\src\DiMP2_14.vc
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3E966585-6433-499A-9533-4A9174DBB3CF}.Debug|x64.ActiveCfg = Debug|x64
+		{3E966585-6433-499A-9533-4A9174DBB3CF}.Debug|x64.Build.0 = Debug|x64
 		{3E966585-6433-499A-9533-4A9174DBB3CF}.Debug|x86.ActiveCfg = Debug|Win32
 		{3E966585-6433-499A-9533-4A9174DBB3CF}.Debug|x86.Build.0 = Debug|Win32
+		{3E966585-6433-499A-9533-4A9174DBB3CF}.Release|x64.ActiveCfg = Release|x64
+		{3E966585-6433-499A-9533-4A9174DBB3CF}.Release|x64.Build.0 = Release|x64
 		{3E966585-6433-499A-9533-4A9174DBB3CF}.Release|x86.ActiveCfg = Release|Win32
 		{3E966585-6433-499A-9533-4A9174DBB3CF}.Release|x86.Build.0 = Release|Win32
+		{4424B4A3-7781-4246-8B81-3427C1AD2C34}.Debug|x64.ActiveCfg = Debug|x64
+		{4424B4A3-7781-4246-8B81-3427C1AD2C34}.Debug|x64.Build.0 = Debug|x64
 		{4424B4A3-7781-4246-8B81-3427C1AD2C34}.Debug|x86.ActiveCfg = Debug|Win32
 		{4424B4A3-7781-4246-8B81-3427C1AD2C34}.Debug|x86.Build.0 = Debug|Win32
+		{4424B4A3-7781-4246-8B81-3427C1AD2C34}.Release|x64.ActiveCfg = Release|x64
+		{4424B4A3-7781-4246-8B81-3427C1AD2C34}.Release|x64.Build.0 = Release|x64
 		{4424B4A3-7781-4246-8B81-3427C1AD2C34}.Release|x86.ActiveCfg = Release|Win32
 		{4424B4A3-7781-4246-8B81-3427C1AD2C34}.Release|x86.Build.0 = Release|Win32
+		{38264F03-3A18-45A9-9DEE-5A258DCF221A}.Debug|x64.ActiveCfg = Debug|x64
+		{38264F03-3A18-45A9-9DEE-5A258DCF221A}.Debug|x64.Build.0 = Debug|x64
 		{38264F03-3A18-45A9-9DEE-5A258DCF221A}.Debug|x86.ActiveCfg = Debug|Win32
 		{38264F03-3A18-45A9-9DEE-5A258DCF221A}.Debug|x86.Build.0 = Debug|Win32
+		{38264F03-3A18-45A9-9DEE-5A258DCF221A}.Release|x64.ActiveCfg = Release|x64
+		{38264F03-3A18-45A9-9DEE-5A258DCF221A}.Release|x64.Build.0 = Release|x64
 		{38264F03-3A18-45A9-9DEE-5A258DCF221A}.Release|x86.ActiveCfg = Release|Win32
 		{38264F03-3A18-45A9-9DEE-5A258DCF221A}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
