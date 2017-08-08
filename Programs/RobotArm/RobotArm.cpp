@@ -10,11 +10,15 @@ RobotArm::RobotArm(){
 
 }
 
+RobotArm::~RobotArm(){
+
+}
+
 bool RobotArm::Build(int idx, AdaptorDiMP* adaptor){
 	string strIdx = lexical_cast<string>(idx);
 
 	for(int i = 0; ; i++) try{
-		DiMP2::Object* obj = adaptor->GetObject("workspace/robot" + strIdx + "/body_link" + lexical_cast<string>(i));
+		DiMP::Object* obj = adaptor->GetObject("workspace/robot" + strIdx + "/body_link" + lexical_cast<string>(i));
 		link.push_back(obj);
 	} catch(...){ break; }
 
@@ -24,7 +28,7 @@ bool RobotArm::Build(int idx, AdaptorDiMP* adaptor){
 	hand = link.back();
 
 	for(int i = 0; ; i++) try{
-		DiMP2::Joint* jnt = adaptor->GetJoint("workspace/robot" + strIdx + "/joint" + lexical_cast<string>(i));
+		DiMP::Joint* jnt = adaptor->GetJoint("workspace/robot" + strIdx + "/joint" + lexical_cast<string>(i));
 		joint.push_back(jnt);
 	} catch(...){ break; }
 

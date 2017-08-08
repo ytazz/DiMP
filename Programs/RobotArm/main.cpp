@@ -5,7 +5,7 @@
 
 #include <sbscenelocal.h>
 
-class MyApp : public DiMP2::App, public DiMP2::DrawConfig{
+class MyApp : public DiMP::App, public DiMP::Render::Config{
 public:
 	SceneLocal		scene;
 	TypeDB			typedb;
@@ -24,7 +24,7 @@ public:
 public:
 	MyApp(){
 		workspace.graph = graph;
-		drawConf        = this;
+		conf            = this;
 		appName		    = "RobotArm";
 
 		AddAction(MENU_USER, ID_COLLISION      , "collision check" )->AddHotKey('c');
@@ -105,7 +105,7 @@ public:
 		else{
 			DrawSnapshot(render, 0.0);
 			for(uint i = 0; i < workspace.task.size(); i++){
-				DiMP2::Task* task = workspace.task[i];
+				DiMP::Task* task = workspace.task[i];
 				DrawSnapshot(render, task->time->time_s->val);
 				DrawSnapshot(render, task->time->time_e->val);
 			}
@@ -113,12 +113,12 @@ public:
 		
 		// ƒ‰ƒCƒeƒBƒ“ƒO‚ðOFF‚É‚µ‚Ä‹O“¹‚ð•`‰æ
 		render->SetLighting(false);
-		graph->Draw(drawCanvasGL, this);
+		graph->Draw(canvasGL, this);
 		render->SetLighting(true);
 	}
 
-	virtual bool Set(GRRenderIf* render, int attr, DiMP2::Node* node){
-		if(attr == DiMP2::DrawItem::ObjectPos){
+	virtual bool Set(GRRenderIf* render, int attr, DiMP::Node* node){
+		if(attr == DiMP::Render::Item::ObjectPos){
 			for(int i = 0; i < (int)workspace.robot.size(); i++){
 				RobotArm* r = workspace.robot[i];
 				if(node == r->hand){
@@ -127,19 +127,19 @@ public:
 				}
 			}
 		}
-		if(attr == DiMP2::DrawItem::ObjectTrajectory){
+		if(attr == DiMP::Render::Item::ObjectTrajectory){
 			for(uint i = 0; i < workspace.robot.size(); i++){
 				RobotArm* r = workspace.robot[i];
 				if(node == r->hand){
-					DiMP2::DrawConfig::Set(drawCanvasGL, attr, node);
+					DiMP::Render::Config::Set(canvasGL, attr, node);
 					render->SetLineWidth(4);
 					return true;
 				}
 			}
 			for(uint i = 0; i < workspace.target.size(); i++){
-				DiMP2::Object* t = workspace.target[i];
+				DiMP::Object* t = workspace.target[i];
 				if(node == t){
-					DiMP2::DrawConfig::Set(drawCanvasGL, attr, node);
+					DiMP::Render::Config::Set(canvasGL, attr, node);
 					render->SetLineWidth(4);
 					return true;
 				}
@@ -148,7 +148,7 @@ public:
 		return false;
 	}
 
-	virtual float Scale(int attr, DiMP2::Node* node){
+	virtual float Scale(int attr, DiMP::Node* node){
 		return 0.1f;
 	}
 

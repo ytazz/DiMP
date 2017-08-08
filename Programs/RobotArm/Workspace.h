@@ -21,12 +21,12 @@ public:
 		Reaching2D,		//< 平面上のロボットアームのリーチング
 		Reaching3D,		//< 3D上のロボットアームのリーチング＋障害物回避
 		Toss3D,			//< 3D上の複数のロボットアームの物体搬送
-		Welding,
 	};
 	
 	int sceneSelect;
 	
-	DiMP2::Graph*			graph;
+	DiMP::Graph*			graph;
+	//DiMP2::IpoptAdaptor		adaptorIpopt;
 	AdaptorDiMP				adaptorDiMP;
 	AdaptorSprGR			adaptorSprGR;
 	AdaptorSprPH			adaptorSprPH;
@@ -35,11 +35,11 @@ public:
 	double			samplePeriod;		///< time resolution
 
 	typedef vector< UTRef<RobotArm> >	Robots;
-	Robots                       robot;			///< robotic arms;
-	vector<DiMP2::Object*>       target;		///< target objects
-	vector<DiMP2::Object*>       obstacle;		///< obstacles
-	vector<DiMP2::TimeSlot*>     timeslot;		///< time slots
-	vector<DiMP2::MatchTask*>    task;			///< tasks
+	Robots                      robot;			///< robotic arms;
+	vector<DiMP::Object*>       target;		///< target objects
+	vector<DiMP::Object*>       obstacle;		///< obstacles
+	vector<DiMP::TimeSlot*>     timeslot;		///< time slots
+	vector<DiMP::MatchTask*>    task;			///< tasks
 
 public:
 	void Build(FWSdkIf* sdk);
@@ -49,6 +49,6 @@ public:
 	void CheckJointError   ();
 	void WriteHandAndTarget();
 
-	Workspace();
-
+	 Workspace();
+    ~Workspace();
 };

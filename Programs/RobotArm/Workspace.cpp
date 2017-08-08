@@ -1,6 +1,6 @@
 #include "Workspace.h"
 #include "RobotArm.h"
-#include <DiMP2/Loader.h>
+#include <DiMP/Load/Loader.h>
 
 #include <boost/lexical_cast.hpp>
 using namespace boost;
@@ -13,6 +13,10 @@ Workspace::Workspace(){
 
 	numTimeSteps = 5;
 	samplePeriod = 0.5;
+}
+
+Workspace::~Workspace(){
+
 }
 
 void Workspace::Build(FWSdkIf* sdk){
@@ -52,7 +56,7 @@ void Workspace::Build(FWSdkIf* sdk){
 	adaptorSprGR.ShowWireframe(false);
 
 	// DiMP2依存設定項目をLoaderで処理
-	DiMP2::Loader loader;
+	DiMP::Loader loader;
 	xml.Load(filename);
 	loader.Load(xml, graph);
 
@@ -66,13 +70,13 @@ void Workspace::Build(FWSdkIf* sdk){
 
 	// 目標物体を抽出
 	for(int i = 0; ; i++) try{
-		DiMP2::Object* obj = adaptorDiMP.GetObject("workspace/body_target" + lexical_cast<string>(i));
+		DiMP::Object* obj = adaptorDiMP.GetObject("workspace/body_target" + lexical_cast<string>(i));
 		target.push_back(obj);
 	} catch(...){ break; }
 
 	// 障害物を抽出
 	for(int i = 0; ; i++) try{
-		DiMP2::Object* obj = adaptorDiMP.GetObject("workspace/body_obstacle" + lexical_cast<string>(i));
+		DiMP::Object* obj = adaptorDiMP.GetObject("workspace/body_obstacle" + lexical_cast<string>(i));
 		obstacle.push_back(obj);
 	} catch(...){ break; }
 
@@ -103,14 +107,14 @@ void Workspace::Build(FWSdkIf* sdk){
 	}
 
 	// ソルバオプションの設定
-	graph->solver->SetAlgorithm(DiMP2::Algorithm::Pareto);
+	graph->solver->SetAlgorithm(DiMP::Algorithm::Pareto);
 	//graph.solver.SetAlgorithm(DiMP2::Algorithm::Steepest);
 	graph->solver->weights.resize(4);
 	graph->solver->weights[0] = 10.0;
 	graph->solver->weights[1] = 1.0;
 	graph->solver->weights[2] = 5.0;
 	graph->solver->weights[3] = 0.5;
-	graph->solver->SetIterationOrder(DiMP2::Iteration::Sequential);
+	graph->solver->SetIterationOrder(DiMP::Iteration::Sequential);
 
 	for(uint i = 0; i < robot.size(); i++){
 		RobotArm* r = robot[i];
@@ -119,7 +123,7 @@ void Workspace::Build(FWSdkIf* sdk){
 	}
 
 	// ログ有効化
-	graph->solver->EnableLogging(DiMP2::Logging::MajorLoop, true);
+	graph->solver->EnableLogging(DiMP::Logging::MajorLoop, true);
 }
 
 void Workspace::CheckCollision(){

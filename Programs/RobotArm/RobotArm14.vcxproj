@@ -118,7 +118,7 @@
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
-      <AdditionalDependencies>libexpat.lib;Springhead14.0DWin32.lib;Scenebuilder14D.lib;sbdimp14D.lib;sbsprgraphics14D.lib;sbsprphysics14D.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>expatd.lib;Springhead14.0Dx64.lib;Scenebuilder14D.lib;sbdimp14D.lib;sbsprgraphics14D.lib;sbsprphysics14D.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>libcmt.lib</IgnoreSpecificDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
@@ -165,7 +165,7 @@
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
-      <AdditionalDependencies>libexpat.lib;Springhead14.0Win32.lib;Scenebuilder14.lib;sbdimp14.lib;sbsprgraphics14.lib;sbsprphysics14.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>expat.lib;Springhead14.0x64.lib;Scenebuilder14.lib;sbdimp14.lib;sbsprgraphics14.lib;sbsprphysics14.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>libcmt.lib</IgnoreSpecificDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
@@ -177,6 +177,11 @@
   <ItemGroup>
     <ClInclude Include="RobotArm.h" />
     <ClInclude Include="Workspace.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DiMP2_14.vcxproj">
+      <Project>{38264f03-3a18-45a9-9dee-5a258dcf221a}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
