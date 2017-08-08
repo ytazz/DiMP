@@ -10,14 +10,15 @@ using namespace Scenebuilder;
 
 class RobotArm : public UTRefCount{
 public:
-	vector<DiMP2::Object*>	link;			///< link objects
-	DiMP2::Object*			hand;			///< hand object
-	vector<DiMP2::Joint*>	joint;			///< joints
+	vector<DiMP::Object*>	link;			///< link objects
+	DiMP::Object*			hand;			///< hand object
+	vector<DiMP::Joint*>	joint;			///< joints
 	
 public:
 	bool Build(int idx, AdaptorDiMP* adaptor);
 	void Clear();
 	void Step();
 
-	RobotArm();
+	 RobotArm();
+	~RobotArm();
 };
