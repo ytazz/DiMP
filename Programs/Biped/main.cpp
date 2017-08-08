@@ -61,33 +61,32 @@ public:
 		for(uint i = 0; i < N; i++)
 			biped->phase[i] = (i % 2 == 0) ? DiMP::BipedLIP::Phase::Right : DiMP::BipedLIP::Phase::Left;
 	
-		/*
 		vec2_t goalPos(0.3, 0.3);
 		real_t goalOri = Rad(90.0);
 		real_t spacing = 0.1;
 		biped->waypoints.resize(3);
 		biped->waypoints[0].k = 0;
-		biped->waypoints[0].com_pos_t     = vec2_t(0.0,  0.0);
-		biped->waypoints[0].com_vel_t     = vec2_t(0.0,  0.0);
-		biped->waypoints[0].cop_pos_t     = vec2_t(0.0, -spacing);
-		biped->waypoints[0].swg_pos_t     = vec2_t(0.0,  spacing);
-		biped->waypoints[0].fix_com_pos_t = true;
-		biped->waypoints[0].fix_com_vel_t = true;
-		biped->waypoints[0].fix_cop_pos_t = true;
-		biped->waypoints[0].fix_swg_pos_t = true;
+		biped->waypoints[0].com_pos_t_ssp     = vec2_t(0.0,  0.0);
+		biped->waypoints[0].com_vel_t_ssp     = vec2_t(0.0,  0.0);
+		biped->waypoints[0].cop_pos_t         = vec2_t(0.0, -spacing);
+		biped->waypoints[0].swg_pos_t         = vec2_t(0.0,  spacing);
+		biped->waypoints[0].fix_com_pos_t_ssp = true;
+		biped->waypoints[0].fix_com_vel_t_ssp = true;
+		biped->waypoints[0].fix_cop_pos_t     = true;
+		biped->waypoints[0].fix_swg_pos_t     = true;
 		biped->waypoints[1].k = N-1;
-		biped->waypoints[1].cop_pos_t     = goalPos + mat2_t::Rot(goalOri) * vec2_t(0.0,  spacing);
-		biped->waypoints[1].fix_cop_pos_t = true;
+		biped->waypoints[1].cop_pos_t         = goalPos + mat2_t::Rot(goalOri) * vec2_t(0.0,  spacing);
+		biped->waypoints[1].fix_cop_pos_t     = true;
 		biped->waypoints[2].k = N;
-		biped->waypoints[2].com_pos_t     = goalPos;
-		biped->waypoints[2].com_pos_r     = goalOri;
-		biped->waypoints[2].com_vel_t     = vec2_t(0.0, 0.0);
-		biped->waypoints[2].cop_pos_t     = goalPos + mat2_t::Rot(goalOri) * vec2_t(0.0, -spacing);
-		biped->waypoints[2].fix_com_pos_t = true;
-		biped->waypoints[2].fix_com_pos_r = true;
-		biped->waypoints[2].fix_com_vel_r = true;
-		biped->waypoints[2].fix_cop_pos_t = true;
-		*/
+		biped->waypoints[2].com_pos_t_ssp     = goalPos;
+		biped->waypoints[2].com_pos_r         = goalOri;
+		biped->waypoints[2].com_vel_t_ssp     = vec2_t(0.0, 0.0);
+		biped->waypoints[2].cop_pos_t         = goalPos + mat2_t::Rot(goalOri) * vec2_t(0.0, -spacing);
+		biped->waypoints[2].fix_com_pos_t_ssp = true;
+		biped->waypoints[2].fix_com_pos_r     = true;
+		biped->waypoints[2].fix_com_vel_r     = true;
+		biped->waypoints[2].fix_cop_pos_t     = true;
+		
 		graph->scale.Set(1.0, 1.0, 1.0);
 		graph->Init();
 
