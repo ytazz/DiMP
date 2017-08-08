@@ -125,7 +125,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>libexpat.lib;Springhead14.0Dx64.lib;Scenebuilder14D.lib;sbdimp14D.lib;sbsprgraphics14D.lib;sbsprphysics14D.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>expatd.lib;Springhead14.0Dx64.lib;Scenebuilder14D.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>libcmt.lib</IgnoreSpecificDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
@@ -165,7 +165,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>libexpat.lib;Springhead14.0x64.lib;Scenebuilder14.lib;sbdimp14.lib;sbsprgraphics14.lib;sbsprphysics14.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>expat.lib;Springhead14.0x64.lib;Scenebuilder14.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>libcmt.lib</IgnoreSpecificDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>

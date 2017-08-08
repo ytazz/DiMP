@@ -61,6 +61,7 @@ public:
 		for(uint i = 0; i < N; i++)
 			biped->phase[i] = (i % 2 == 0) ? DiMP::BipedLIP::Phase::Right : DiMP::BipedLIP::Phase::Left;
 	
+		/*
 		vec2_t goalPos(0.3, 0.3);
 		real_t goalOri = Rad(90.0);
 		real_t spacing = 0.1;
@@ -86,7 +87,7 @@ public:
 		biped->waypoints[2].fix_com_pos_r = true;
 		biped->waypoints[2].fix_com_vel_r = true;
 		biped->waypoints[2].fix_cop_pos_t = true;
-		
+		*/
 		graph->scale.Set(1.0, 1.0, 1.0);
 		graph->Init();
 
