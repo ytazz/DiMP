@@ -10,6 +10,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "robotarm", "robotarm", "{F6401D22-DDB9-4B43-B2BE-18159BC24314}"
 	ProjectSection(SolutionItems) = preProject
 		..\bin\conf\robotarm\pa10.xml = ..\bin\conf\robotarm\pa10.xml
+		..\bin\conf\robotarm\pa10welding.xml = ..\bin\conf\robotarm\pa10welding.xml
 		..\bin\conf\robotarm\robotarm.xml = ..\bin\conf\robotarm\robotarm.xml
 		..\bin\conf\robotarm\robotarm2.xml = ..\bin\conf\robotarm\robotarm2.xml
 		..\bin\conf\robotarm\scene_reaching2d.xml = ..\bin\conf\robotarm\scene_reaching2d.xml

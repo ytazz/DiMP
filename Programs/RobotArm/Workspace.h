@@ -21,12 +21,13 @@ public:
 		Reaching2D,		//< 平面上のロボットアームのリーチング
 		Reaching3D,		//< 3D上のロボットアームのリーチング＋障害物回避
 		Toss3D,			//< 3D上の複数のロボットアームの物体搬送
+		Welding,
 	};
 	
 	int sceneSelect;
 	
 	DiMP::Graph*			graph;
-	//DiMP2::IpoptAdaptor		adaptorIpopt;
+	
 	AdaptorDiMP				adaptorDiMP;
 	AdaptorSprGR			adaptorSprGR;
 	AdaptorSprPH			adaptorSprPH;

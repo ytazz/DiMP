@@ -36,6 +36,7 @@ void Workspace::Build(FWSdkIf* sdk){
 	case Reaching2D: filename = "conf/robotarm/scene_reaching2d.xml"; break;
 	case Reaching3D: filename = "conf/robotarm/scene_reaching3d.xml"; break;
 	case Toss3D    : filename = "conf/robotarm/scene_toss3d.xml"    ; break;
+	case Welding   : filename = "conf/robotarm/scene_welding.xml"   ; break;
 	}
 
 	// Scenebuiler::BuilderÇ≈ÉpÅ[ÉX

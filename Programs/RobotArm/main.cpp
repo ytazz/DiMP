@@ -45,12 +45,6 @@ public:
 		DSTR << "iter: " << iterCount << "  time: " << compTime << "  delta: " << deltaNorm << endl;
 	}
 
-	void CompIpopt(int prob){
-		//workspace.adaptorIpopt.SetProblem(prob);
-		//workspace.adaptorIpopt.Init(&workspace.graph);
-		//workspace.adaptorIpopt.Solve();
-	}
-
 	virtual void BuildScene(){
 		// 
 		typedb   .Register();
