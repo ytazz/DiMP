@@ -29,6 +29,7 @@ void Workspace::Build(FWSdkIf* sdk){
 	if(str == "reaching2d") sceneSelect = Reaching2D;
 	if(str == "reaching3d") sceneSelect = Reaching3D;
 	if(str == "toss3d"    ) sceneSelect = Toss3D;
+	if(str == "welding"   ) sceneSelect = Welding;
 
 	// シーン別設定ファイル
 	string filename;
