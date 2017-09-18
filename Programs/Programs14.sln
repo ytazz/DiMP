@@ -6,6 +6,11 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Programs", "Programs", "{97B41CE4-C147-4211-8FE4-3801F1DE974A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "conf", "conf", "{E0AE1065-2B7E-4F0D-B1D9-869C96208BD5}"
+	ProjectSection(SolutionItems) = preProject
+		..\bin\conf\console.xml = ..\bin\conf\console.xml
+		..\bin\conf\panel.xml = ..\bin\conf\panel.xml
+		..\bin\conf\viewer.xml = ..\bin\conf\viewer.xml
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "robotarm", "robotarm", "{F6401D22-DDB9-4B43-B2BE-18159BC24314}"
 	ProjectSection(SolutionItems) = preProject
@@ -33,6 +38,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "pa10welding", "pa10welding"
 	ProjectSection(SolutionItems) = preProject
 		..\bin\conf\robotarm\pa10welding\pa10welding.xml = ..\bin\conf\robotarm\pa10welding\pa10welding.xml
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Console", "..\src\Console\Console.vcxproj", "{D623B383-725B-4AB9-9005-E26D987899BF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -66,6 +73,14 @@ Global
 		{38264F03-3A18-45A9-9DEE-5A258DCF221A}.Release|x64.Build.0 = Release|x64
 		{38264F03-3A18-45A9-9DEE-5A258DCF221A}.Release|x86.ActiveCfg = Release|Win32
 		{38264F03-3A18-45A9-9DEE-5A258DCF221A}.Release|x86.Build.0 = Release|Win32
+		{D623B383-725B-4AB9-9005-E26D987899BF}.Debug|x64.ActiveCfg = Debug|x64
+		{D623B383-725B-4AB9-9005-E26D987899BF}.Debug|x64.Build.0 = Debug|x64
+		{D623B383-725B-4AB9-9005-E26D987899BF}.Debug|x86.ActiveCfg = Debug|Win32
+		{D623B383-725B-4AB9-9005-E26D987899BF}.Debug|x86.Build.0 = Debug|Win32
+		{D623B383-725B-4AB9-9005-E26D987899BF}.Release|x64.ActiveCfg = Release|x64
+		{D623B383-725B-4AB9-9005-E26D987899BF}.Release|x64.Build.0 = Release|x64
+		{D623B383-725B-4AB9-9005-E26D987899BF}.Release|x86.ActiveCfg = Release|Win32
+		{D623B383-725B-4AB9-9005-E26D987899BF}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

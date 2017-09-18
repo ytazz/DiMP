@@ -7,7 +7,6 @@
 #include <DiMP/Graph/Joint.h>
 #include <DiMP/Graph/Avoid.h>
 #include <DiMP/Graph/Match.h>
-#include <DiMP/Solver/Solver.h>
 #include <DiMP/Render/Config.h>
 
 namespace DiMP{;
@@ -200,10 +199,10 @@ void Loader::LoadEnable(XMLNode* node, Graph* graph){
 	node->Get(enable    , ".enable");
 
 	ID id;
-	id.tag  = StrToTag(idstr);
-	id.node = graph->nodes.Find(targetName);
+	id.type  = StrToTag(idstr);
+	id.owner = graph->nodes.Find(targetName);
 
-	graph->Enable(id, enable);
+	graph->solver->Enable(id, enable);
 }
 
 void Loader::LoadPriority(XMLNode* node, Graph* graph){
@@ -216,10 +215,10 @@ void Loader::LoadPriority(XMLNode* node, Graph* graph){
 	node->Get(level     , ".level" );
 
 	ID id;
-	id.tag  = StrToTag(idstr);
-	id.node = graph->nodes.Find(targetName);
+	id.type  = StrToTag(idstr);
+	id.owner = graph->nodes.Find(targetName);
 
-	graph->SetPriority(id, level);
+	graph->solver->SetPriority(id, level);
 }
 
 void Loader::LoadIteration(XMLNode* node, Graph* graph){
@@ -229,7 +228,7 @@ void Loader::LoadIteration(XMLNode* node, Graph* graph){
 	node->Get(level, ".level");
 	node->Get(num  , ".num"  );
 
-	graph->solver->SetNumIteration(num, level);
+	graph->solver->param.numIter[level] = num;
 }
 
 void Loader::LoadCorrection(XMLNode* node, Graph* graph){
@@ -244,10 +243,10 @@ void Loader::LoadCorrection(XMLNode* node, Graph* graph){
 	node->Get(limit     , ".limit" );
 
 	ID id;
-	id.tag  = StrToTag(idstr);
-	id.node = graph->nodes.Find(targetName);
+	id.type  = StrToTag(idstr);
+	id.owner = graph->nodes.Find(targetName);
 
-	graph->SetCorrectionRate(id, rate, limit);
+	graph->solver->SetCorrectionRate(id, rate, limit);
 }
 
 }

@@ -1,7 +1,7 @@
 #pragma
 
 #include <DiMP/Graph/Task.h>
-#include <DiMP/Solver/Constraint.h>
+//#include <DiMP/Solver/Constraint.h>
 
 /** Collision avoidance
 	- 2‚Â‚Ì„‘ÌŠÔ‚Ì‹——£‚ªˆê’è’lˆÈ‰º‚É‚È‚ç‚È‚¢‚æ‚¤‚É‚·‚é

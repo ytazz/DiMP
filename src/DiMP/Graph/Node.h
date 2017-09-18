@@ -6,8 +6,6 @@
 
 namespace DiMP{;
 
-class SVar;
-class Solver;
 class Graph;
 
 /**
@@ -66,7 +64,7 @@ public:
 	}
 };
 
-class NodeArray : public ArrayBase< UTRef<Node> >{
+class NodeArray : public ArrayBase< Node* >{
 public:
 	void AddVar (){ for(uint i = 0; i < size(); i++) at(i)->AddVar (); }
 	void AddCon (){ for(uint i = 0; i < size(); i++) at(i)->AddCon (); }

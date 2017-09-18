@@ -1,6 +1,16 @@
-#include "Workspace.h"
 #include "RobotArm.h"
+#include "mymodule.h"
 
+int main(int argc, char* argv[]){
+	MyModule mod;
+	if(!mod.Init(argc, argv))
+		return -1;
+
+	mod.MainLoop();
+	return 0;
+}
+
+/*
 #include <DiMP/DiMP.h>
 
 #include <sbscenelocal.h>
@@ -148,6 +158,7 @@ public:
 
 
 } app;
+*/
 
 /**
  brief		メイン関数
@@ -155,7 +166,9 @@ public:
  param		<in/--> argv　　コマンドライン入力
  return		0 (正常終了)
  */
+/*
 int main(int argc, char* argv[]){
 	app.Init(argc, argv);
 	app.StartMainLoop();
 }
+*/

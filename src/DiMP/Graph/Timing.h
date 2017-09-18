@@ -7,9 +7,6 @@ namespace DiMP{;
 class Graph;
 class Object;
 
-class RangeConS;
-class DiffConS;
-
 class TimeSlot : public Node{
 public:
 	struct Param{

@@ -109,7 +109,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>../..;../../../Springhead2/src;../../../Ipopt/include/coin</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\src\Console;</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -125,7 +125,7 @@
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
-      <AdditionalDependencies>expatd.lib;Springhead14.0Dx64.lib;Scenebuilder14D.lib;sbdimp14D.lib;sbsprgraphics14D.lib;sbsprphysics14D.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>mkl_core.lib;mkl_intel_lp64.lib;mkl_sequential.lib;sdl2.lib;sdl2_ttf.lib;expatd.lib;libpng16_staticd.lib;zlibstatic.lib;Springhead14.0Dx64.lib;Scenebuilder14D.lib;sbdimp14D.lib;sbsprgraphics14D.lib;glwin14D.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>libcmt.lib</IgnoreSpecificDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
@@ -155,7 +155,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>../..;../../../Springhead2/src;../../../Ipopt/include/coin</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\src\Console;</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>
@@ -165,27 +165,30 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>../../lib;../../../Ipopt/lib/Win32/ReleaseMKL;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
-      <AdditionalDependencies>expat.lib;Springhead14.0x64.lib;Scenebuilder14.lib;sbdimp14.lib;sbsprgraphics14.lib;sbsprphysics14.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>mkl_core.lib;mkl_intel_lp64.lib;mkl_sequential.lib;sdl2.lib;sdl2_ttf.lib;expat.lib;libpng16_static.lib;zlibstatic.lib;Springhead14.0x64.lib;Scenebuilder14.lib;sbdimp14.lib;sbsprgraphics14.lib;glwin14.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>libcmt.lib</IgnoreSpecificDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="mymodule.cpp" />
     <ClCompile Include="RobotArm.cpp" />
-    <ClCompile Include="Workspace.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="mymodule.h" />
     <ClInclude Include="RobotArm.h" />
-    <ClInclude Include="Workspace.h" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Console\Console.vcxproj">
+      <Project>{d623b383-725b-4ab9-9005-e26d987899bf}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\src\DiMP2_14.vcxproj">
       <Project>{38264f03-3a18-45a9-9dee-5a258dcf221a}</Project>
     </ProjectReference>

@@ -88,48 +88,6 @@ public:
 public:
 	/// set scaling factor;
 	void	SetScaling(real_t T, real_t L, real_t M);
-	
-	/** @brief	enable or disable constraints
-		@param	mask	constraint id mask
-		@param	enable	enable or disable
-		@return	number of matches
-	 */
-	int Enable(ID mask, bool enable = true);
-
-	/** @brief  lock or unlock variables
-		@param	mask	variable id mask
-		@param	lock	lock or unlock
-		@return	number of matches
-	 */
-	int Lock(ID mask, bool lock = true);
-
-	/** @brief	set priority level
-		@param	mask	constraint id mask
-		@param	level	priority level
-		@return	number of matches
-
-		level 0 has the largest priority
-	 */
-	int SetPriority(ID mask, uint level);
-
-	/** @brief	set correction rate
-	 */
-	int SetCorrectionRate(ID mask, real_t rate, real_t lim = FLT_MAX);
-	
-	/** @brief calculate constraint error
-		@param mask			constraint id mask
-		@param sum_or_max	if true, sum of constraint errors is returned. otherwise the maximum is returned.
-		@param abs_or_rel	if true, absolute error is calculated. otherwise relative error is calculated.
-
-		id‚É‡’v‚·‚éS‘©‚É‚Â‚¢‚ÄCabs_or_rel‚É‚µ‚½‚ª‚Á‚Äâ‘ÎŒë·‚ ‚é‚¢‚Í‘Š‘ÎŒë·‚ğŒvZ‚µC
-		sum_or_max‚É‚µ‚½‚ª‚Á‚Ä‚»‚ê‚ç‚Ì‘˜a‚ ‚é‚¢‚ÍÅ‘å’l‚ğ•Ô‚·D
-
-		‚½‚¾‚µâ‘ÎŒë·‚Æ‚ÍŒë·ƒxƒNƒgƒ‹‚Ìƒmƒ‹ƒ€C‘Š‘ÎŒë·‚Æ‚ÍŒë·ƒxƒNƒgƒ‹‚Ìƒmƒ‹ƒ€‚ğCS‘©‚³‚ê‚é•Ï”‚Ìƒmƒ‹ƒ€‚Ì˜a‚ÅŠ„‚Á‚½‚à‚ÌD
-	 */
-	real_t CalcError(ID mask, bool sum_or_max);
-
-	/// calculate average or max of variables
-	real_t CalcVariable(ID mask, bool ave_or_max);
 
 	/// does initialization
 	virtual void Init();

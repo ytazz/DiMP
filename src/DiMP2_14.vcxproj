@@ -185,12 +185,6 @@
     <ClCompile Include="DiMP\Load\Loader.cpp" />
     <ClCompile Include="DiMP\Render\Canvas.cpp" />
     <ClCompile Include="DiMP\Render\Config.cpp" />
-    <ClCompile Include="DiMP\Solver\Constraint.cpp" />
-    <ClCompile Include="DiMP\Solver\Link.cpp" />
-    <ClCompile Include="DiMP\Solver\Range.cpp" />
-    <ClCompile Include="DiMP\Solver\Solver.cpp" />
-    <ClCompile Include="DiMP\Solver\SolverPareto.cpp" />
-    <ClCompile Include="DiMP\Solver\Variable.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DiMP\App\App.h" />
@@ -213,11 +207,6 @@
     <ClInclude Include="DiMP\Load\Loader.h" />
     <ClInclude Include="DiMP\Render\Canvas.h" />
     <ClInclude Include="DiMP\Render\Config.h" />
-    <ClInclude Include="DiMP\Solver\Constraint.h" />
-    <ClInclude Include="DiMP\Solver\Link.h" />
-    <ClInclude Include="DiMP\Solver\Range.h" />
-    <ClInclude Include="DiMP\Solver\Solver.h" />
-    <ClInclude Include="DiMP\Solver\Variable.h" />
     <ClInclude Include="DiMP\Types.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

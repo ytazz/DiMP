@@ -1,7 +1,7 @@
 #pragma once
 
 #include <DiMP/Graph/Node.h>
-#include <DiMP/Solver/Constraint.h>
+//#include <DiMP/Solver/Constraint.h>
 
 namespace DiMP{;
 

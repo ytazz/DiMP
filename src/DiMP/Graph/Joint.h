@@ -1,7 +1,7 @@
 #pragma once
 
 #include <DiMP/Graph/Node.h>
-#include <DiMP/Solver/Constraint.h>
+//#include <DiMP/Solver/Constraint.h>
 
 namespace DiMP{;
 
@@ -19,13 +19,7 @@ class Planejoint;
 class Fixjoint;
 class Genericjoint;
 class TimeSlot;
-class Solver;
 
-class V3Var;
-
-class RangeConS;
-class DiffConS;
-class C1ConS;
 class JointConF;
 
 class JointConTP;

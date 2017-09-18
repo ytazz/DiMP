@@ -1,7 +1,5 @@
 #include <DiMP/Graph/Graph.h>
 #include <DiMP/Graph/Object.h>
-#include <DiMP/Solver/Range.h>
-#include <DiMP/Solver/Solver.h>
 #include <DiMP/Render/Config.h>
 #include <DiMP/Render/Canvas.h>
 
@@ -96,7 +94,7 @@ void Graph::Scale::Set(real_t T, real_t L, real_t M){
 
 Graph::Graph(){
 	solver = new Solver();
-	solver->graph = this;
+	//solver->graph = this;
 
 	conf = new Render::Config();
 }
@@ -104,89 +102,6 @@ Graph::Graph(){
 void Graph::SetScaling(real_t T, real_t L, real_t M){
 	scale.Set(T, L, M);
 	ready = false;
-}
-
-int Graph::SetPriority(ID mask, uint level){
-	int match = 0;
-	for(uint i = 0; i < solver->cons.size(); i++){
-		Constraint* con = solver->cons[i];
-		if(mask.Match(con)){
-			con->SetPriority(level);
-			match++;
-		}
-	}
-	if(match)
-		solver->ready = false;
-	return match;
-}
-
-int Graph::Enable(ID mask, bool enable){
-	int match = 0;
-	for(uint i = 0; i < solver->cons.size(); i++){
-		Constraint* con = solver->cons[i];
-		if(mask.Match(con)){
-			con->enabled = enable;
-			match++;
-		}
-	}
-	return match;
-}
-
-int Graph::Lock(ID mask, bool lock){
-	int match = 0;
-	for(uint i = 0; i < solver->vars.size(); i++){
-		Variable* var = solver->vars[i];
-		if(mask.Match(var)){
-			var->Lock(lock);
-			match++;
-		}
-	}
-	return match;
-}
-
-int Graph::SetCorrectionRate(ID mask, real_t rate, real_t lim){
-	int match = 0;
-	for(uint i = 0; i < solver->cons.size(); i++){
-		Constraint* con = solver->cons[i];
-		if(mask.Match(con)){
-			con->corrRate = rate;
-			con->corrMax  = lim;
-			match++;
-		}
-	}
-	return match;
-}
-
-real_t Graph::CalcError(ID mask, bool sum_or_max){
-	real_t E = 0.0;
-	for(uint i = 0; i < solver->cons.size(); i++){
-		Constraint* con = solver->cons[i];
-		if(mask.Match(con) && con->enabled && con->active){
-			for(uint k = 0; k < (uint)con->nelem; k++){
-				if(sum_or_max)
-					 E += con->e[k];
-				else E = std::max(E, con->e[k]);
-			}
-		}
-	}
-	return E;
-}
-
-real_t Graph::CalcVariable(ID mask, bool ave_or_max){
-	real_t v = 0.0;
-	uint match = 0;
-	for(uint i = 0; i < solver->vars.size(); i++){
-		Variable* var = solver->vars[i];
-		if(mask.Match(var)){
-			if(ave_or_max)
-				v += var->Norm();
-			else v = std::max(v, var->Norm());
-			match++;
-		}
-	}
-	if(ave_or_max && match != 0)
-		v /= (real_t)match;
-	return v;
 }
 
 void Graph::Init(){

@@ -2,7 +2,7 @@
 
 <namespace name="workspace">
   
-  <import name="robot0" filename="pa10.xml"/>
+  <import name="robot0" filename="pa10/pa10.xml"/>
  
   <vmat name="mat_target" colorname="blue"/>
   <sphere   name="sphere_target"   radius="0.05"/>

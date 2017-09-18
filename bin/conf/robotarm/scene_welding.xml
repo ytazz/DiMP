@@ -2,6 +2,26 @@
 
 <namespace name="workspace">
   
-  <import name="robot0" filename="p10welding/pa10welding.xml"/>
- 
+  <import name="robot0" filename="pa10welding/pa10welding.xml"/>
+
+  <ticks time_begin="0.0" time_step="0.25" time_end="0.5"/>
+  <scaling T="1.0" L="1.0" M="1.0"/>
+  <enable  id="object_c1t"    enable="false"/>
+  <enable  id="object_c1r"    enable="false"/>
+  <enable  id="joint_c1"      enable="false"/>
+  <enable  id="joint_c2"      enable="false"/>
+  <enable  id="joint_f"       enable="false"/>
+  <enable  id="joint_range_p" enable="false"/>
+  <enable  id="joint_range_v" enable="false"/>
+  <enable  id="joint_range_f" enable="false"/>
+  <enable  id="joint_tp"      enable="true"/>
+  <enable  id="joint_rp"      enable="true"/>
+  <enable  id="joint_tv"      enable="false"/>
+  <enable  id="joint_rv"      enable="false"/>
+  <enable  id="force_t"       enable="false"/>
+  <enable  id="force_r"       enable="false"/>
+
+  <iteration level="0" num="30"/>
+  <correction rate="0.5" limit="1.0"/>
+  
 </namespace>

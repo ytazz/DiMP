@@ -1,6 +1,5 @@
 #include <DiMP/App/App.h>
 #include <DiMP/Graph/Graph.h>
-#include <DiMP/Solver/Solver.h>
 #include <DiMP/Render/Config.h>
 #include <DiMP/Render/Canvas.h>
 
@@ -167,22 +166,21 @@ void App::DrawState(GRRenderIf* render, Vec2f& offset){
 	DrawValue(render, offset, "iter. count:", iterCount      );
 	DrawValue(render, offset, "comp. time:" , compTime        );
 	DrawValue(render, offset, "delta. norm:", deltaNorm       );
-	DrawValue(render, offset, "total error:", graph->solver->e);
 		
 	// S‘©Ží•Ê‚ÌŒë·
-	if(!graph->solver->e_type.empty()){
-		for(int i = 0; i < DiMP::ConTag::NumTypes; i++)
-			DrawValue(render, offset, DiMP::ConNames[i], graph->solver->e_type[i]);
+	if(!graph->solver->infoType.empty()){
+		for(int i = 0; i < (int)graph->solver->infoType.size(); i++)
+			DrawValue(render, offset, DiMP::ConNames[i], graph->solver->infoType[i].error);
 	}
 
 	offset.y += (float)Metric::LineY;
 
 	// S‘©Ží•Ê‚ÌŒë·
-	if(!graph->solver->e_level.empty()){
-		for(int i = 0; i <= (int)graph->solver->maxLevel; i++){
+	if(!graph->solver->infoLevel.empty()){
+		for(int i = 0; i < (int)graph->solver->infoLevel.size(); i++){
 			ss.str("");
 			ss << "level" << i;
-			DrawValue(render, offset, ss.str(), graph->solver->e_level[i]);
+			DrawValue(render, offset, ss.str(), graph->solver->infoLevel[i].error);
 		}
 	}
 }
@@ -319,7 +317,7 @@ void App::OnStep(){
 	deltaNorm = 0.0;
 	int nvar = (int)graph->solver->vars.size();
 	for(int i = 0; i < nvar; i++)
-		deltaNorm += graph->solver->vars[i]->d.square();
+		deltaNorm += graph->solver->vars[i]->dx.square();
 	deltaNorm = sqrt(deltaNorm);
 }
 
@@ -358,7 +356,7 @@ void App::OnAction(int menu, int id){
 				playTime = 0.0;
 		}
 		if(id == ID_LOG){
-			graph->solver->EnableLogging(DiMP::Logging::MajorLoop, act->GetBool());
+			//graph->solver->EnableLogging(DiMP::Logging::MajorLoop, act->GetBool());
 		}
 		if(id == ID_SVG){
 			SaveSVG();

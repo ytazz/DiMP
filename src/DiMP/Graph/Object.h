@@ -2,7 +2,7 @@
 
 #include <DiMP/Graph/Node.h>
 #include <DiMP/Graph/Connector.h>
-#include <DiMP/Solver/Constraint.h>
+//#include <DiMP/Solver/Constraint.h>
 #include <DiMP/Render/Canvas.h>
 #include <DiMP/Render/Config.h>
 
@@ -16,12 +16,9 @@ class  Joint;
 class  JointKey;
 class  Geometry;
 
-class  V3Var;
-class  QVar;
-
 class  ForceConT;
 class  ForceConR;
-class  C1ConV3;
+//class  C1ConV3;
 class  ObjectConC1R;
 
 /**

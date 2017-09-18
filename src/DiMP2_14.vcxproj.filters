@@ -49,24 +49,6 @@
     <ClCompile Include="DiMP\Load\Loader.cpp">
       <Filter>Load</Filter>
     </ClCompile>
-    <ClCompile Include="DiMP\Solver\Constraint.cpp">
-      <Filter>Solver</Filter>
-    </ClCompile>
-    <ClCompile Include="DiMP\Solver\Link.cpp">
-      <Filter>Solver</Filter>
-    </ClCompile>
-    <ClCompile Include="DiMP\Solver\Range.cpp">
-      <Filter>Solver</Filter>
-    </ClCompile>
-    <ClCompile Include="DiMP\Solver\Solver.cpp">
-      <Filter>Solver</Filter>
-    </ClCompile>
-    <ClCompile Include="DiMP\Solver\SolverPareto.cpp">
-      <Filter>Solver</Filter>
-    </ClCompile>
-    <ClCompile Include="DiMP\Solver\Variable.cpp">
-      <Filter>Solver</Filter>
-    </ClCompile>
     <ClCompile Include="DiMP\Render\Canvas.cpp">
       <Filter>Render</Filter>
     </ClCompile>
@@ -126,21 +108,6 @@
     <ClInclude Include="DiMP\Load\Loader.h">
       <Filter>Load</Filter>
     </ClInclude>
-    <ClInclude Include="DiMP\Solver\Constraint.h">
-      <Filter>Solver</Filter>
-    </ClInclude>
-    <ClInclude Include="DiMP\Solver\Link.h">
-      <Filter>Solver</Filter>
-    </ClInclude>
-    <ClInclude Include="DiMP\Solver\Range.h">
-      <Filter>Solver</Filter>
-    </ClInclude>
-    <ClInclude Include="DiMP\Solver\Solver.h">
-      <Filter>Solver</Filter>
-    </ClInclude>
-    <ClInclude Include="DiMP\Solver\Variable.h">
-      <Filter>Solver</Filter>
-    </ClInclude>
     <ClInclude Include="DiMP\DiMP.h" />
     <ClInclude Include="DiMP\Types.h" />
     <ClInclude Include="DiMP\Render\Canvas.h">
@@ -162,9 +129,6 @@
     </Filter>
     <Filter Include="Render">
       <UniqueIdentifier>{d5afc780-d83e-4fcd-8e4e-ffdc13031f2d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Solver">
-      <UniqueIdentifier>{553e9b01-6ecf-47ea-896c-ab775d6ec2a8}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

@@ -11,7 +11,6 @@
 #include <DiMP/Graph/Timing.h>
 #include <DiMP/Graph/Avoid.h>
 #include <DiMP/Graph/Match.h>
-#include <DiMP/Solver/Solver.h>
 #include <DiMP/App/App.h>
 #include <DiMP/Render/Config.h>
 #include <DiMP/Render/Canvas.h>

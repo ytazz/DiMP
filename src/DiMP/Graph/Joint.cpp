@@ -1,8 +1,6 @@
 #include <DiMP/Graph/Joint.h>
 #include <DiMP/Graph/Object.h>
 #include <DiMP/Graph/Graph.h>
-#include <DiMP/Solver/Solver.h>
-#include <DiMP/Solver/Range.h>
 #include <DiMP/Render/Config.h>
 #include <DiMP/Render/Canvas.h>
 

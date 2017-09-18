@@ -1,7 +1,6 @@
 #include <DiMP/Graph/Avoid.h>
 #include <DiMP/Graph/Object.h>
 #include <DiMP/Graph/Graph.h>
-#include <DiMP/Solver/Solver.h>
 #include <DiMP/Render/Config.h>
 
 namespace DiMP{;
@@ -66,7 +65,7 @@ AvoidConV::AvoidConV(Solver* solver, const string& _name, AvoidKey* _key, real_t
 // CalcCoef
 
 void AvoidCon::CalcCoef(){
-	AvoidTask* task = (AvoidTask*)node;
+	AvoidTask* task = (AvoidTask*)owner;
 	
 	// 位置偏差を正規化したベクトル
 	vec3_t d = key->obj1->pos_t->val - key->obj0->pos_t->val;

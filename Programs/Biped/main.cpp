@@ -90,8 +90,8 @@ public:
 		graph->scale.Set(1.0, 1.0, 1.0);
 		graph->Init();
 
-		graph->SetCorrectionRate(DiMP::ID(), 0.5);
-		graph->solver->SetNumIteration(20, 0);
+		graph->solver->SetCorrectionRate(ID(), 0.5);
+		graph->solver->param.numIter[0] = 20;
 		
 		targetPos = vec3_t(0.0, 0.6, -0.2);
 	}

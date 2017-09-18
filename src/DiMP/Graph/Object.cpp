@@ -2,8 +2,6 @@
 #include <DiMP/Graph/Geometry.h>
 #include <DiMP/Graph/Joint.h>
 #include <DiMP/Graph/Graph.h>
-#include <DiMP/Solver/Solver.h>
-#include <DiMP/Solver/Range.h>
 #include <DiMP/Render/Config.h>
 #include <DiMP/Render/Canvas.h>
 
@@ -214,6 +212,9 @@ void Object::CalcBSphere(){
 }
 
 vec3_t Object::Pos(real_t time, int type){
+	if(traj.empty())
+		return vec3_t();
+
 	KeyPair    kp = traj.GetSegment(time);
 	ObjectKey* k0 = (ObjectKey*)kp.first ;
 	ObjectKey* k1 = (ObjectKey*)kp.second;
@@ -225,6 +226,9 @@ vec3_t Object::Pos(real_t time, int type){
 }
 
 vec3_t Object::Vel(real_t time, int type){
+	if(traj.empty())
+		return vec3_t();
+
 	KeyPair    kp = traj.GetSegment(time);
 	ObjectKey* k0 = (ObjectKey*)kp.first ;
 	ObjectKey* k1 = (ObjectKey*)kp.second;
@@ -236,6 +240,9 @@ vec3_t Object::Vel(real_t time, int type){
 }
 
 vec3_t Object::Acc(real_t time, int type){
+	if(traj.empty())
+		return vec3_t();
+
 	KeyPair    kp = traj.GetSegment(time);
 	ObjectKey* k0 = (ObjectKey*)kp.first ;
 	ObjectKey* k1 = (ObjectKey*)kp.second;
@@ -247,6 +254,9 @@ vec3_t Object::Acc(real_t time, int type){
 }
 
 quat_t Object::Ori(real_t time, int type){
+	if(traj.empty())
+		return quat_t();
+
 	KeyPair    kp = traj.GetSegment(time);
 	ObjectKey* k0 = (ObjectKey*)kp.first ;
 	ObjectKey* k1 = (ObjectKey*)kp.second;
@@ -258,6 +268,9 @@ quat_t Object::Ori(real_t time, int type){
 }
 
 vec3_t Object::Angvel(real_t time, int type){
+	if(traj.empty())
+		return vec3_t();
+
 	KeyPair    kp = traj.GetSegment(time);
 	ObjectKey* k0 = (ObjectKey*)kp.first ;
 	ObjectKey* k1 = (ObjectKey*)kp.second;
@@ -269,6 +282,9 @@ vec3_t Object::Angvel(real_t time, int type){
 }
 
 vec3_t Object::Angacc(real_t time, int type){
+	if(traj.empty())
+		return vec3_t();
+
 	KeyPair    kp = traj.GetSegment(time);
 	ObjectKey* k0 = (ObjectKey*)kp.first ;
 	ObjectKey* k1 = (ObjectKey*)kp.second;

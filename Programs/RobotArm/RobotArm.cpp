@@ -1,13 +1,10 @@
 #include "RobotArm.h"
 
-#include <boost/lexical_cast.hpp>
-using namespace boost;
-
 //------------------------------------------------------------------------------------------------
 // RobotArm
 
 RobotArm::RobotArm(){
-
+	hand = 0;
 }
 
 RobotArm::~RobotArm(){
@@ -15,22 +12,27 @@ RobotArm::~RobotArm(){
 }
 
 bool RobotArm::Build(int idx, AdaptorDiMP* adaptor){
-	string strIdx = lexical_cast<string>(idx);
+	stringstream ss;
 
 	for(int i = 0; ; i++) try{
-		DiMP::Object* obj = adaptor->GetObject("workspace/robot" + strIdx + "/body_link" + lexical_cast<string>(i));
+		ss.str("");
+		ss << "workspace/robot" << idx << "/body_link" << i;
+		DiMP::Object* obj = adaptor->GetObject(ss.str());
 		link.push_back(obj);
-	} catch(...){ break; }
+	} catch(Exception&){ break; }
 
 	if(link.empty())
 		return false;
 
-	hand = link.back();
+	// link.backとするとreleaseビルドで例外　原因不明
+	hand = link[link.size()-1];
 
 	for(int i = 0; ; i++) try{
-		DiMP::Joint* jnt = adaptor->GetJoint("workspace/robot" + strIdx + "/joint" + lexical_cast<string>(i));
+		ss.str("");
+		ss << "workspace/robot" << idx << "/joint" << i;
+		DiMP::Joint* jnt = adaptor->GetJoint(ss.str());
 		joint.push_back(jnt);
-	} catch(...){ break; }
+	} catch(Exception&){ break; }
 
 	return true;
 }

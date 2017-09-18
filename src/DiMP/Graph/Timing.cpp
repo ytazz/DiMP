@@ -1,7 +1,5 @@
 #include <DiMP/Graph/Timing.h>
 #include <DiMP/Graph/Graph.h>
-#include <DiMP/Solver/Solver.h>
-#include <DiMP/Solver/Range.h>
 #include <DiMP/Render/Config.h>
 
 namespace DiMP{;
