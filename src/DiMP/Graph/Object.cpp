@@ -60,8 +60,8 @@ void ObjectKey::AddLinks(Constraint* con, bool t_or_r, bool p_or_v, bool s_or_r)
 		for(uint j = 0; j < tree->joints.size(); j++){
 			Variable* var = (p_or_v ? tree->joints[j]->pos[0] : tree->joints[j]->vel[0]);
 			if(s_or_r)
-				 con->AddCLink(var);
-			else con->AddSLink(var);
+				 con->AddC3Link(var);
+			else con->AddSLink (var);
 		}
 	}
 	else{
@@ -77,8 +77,8 @@ void ObjectKey::AddLinks(Constraint* con, bool t_or_r, bool p_or_v, bool s_or_r)
 			else var = vel_r;
 		}
 		if(s_or_r)
-			 con->AddSLink(var);
-		else con->AddRLink(var);
+			 con->AddSLink (var);
+		else con->AddR3Link(var);
 	}
 }
 
@@ -87,7 +87,7 @@ void ObjectKey::CalcCoef(Constraint* con, bool t_or_r, real_t k, uint& i){
 		int idx = tree->GetIndex(this);
 		for(uint j = 0; j < tree->joints.size(); j++){
 			vec3_t J = (t_or_r ? tree->Jv[idx][j] : tree->Jw[idx][j]);
-			((CLink*)con->links[i++])->SetCoef(k * J);
+			((C3Link*)con->links[i++])->SetCoef(k * J);
 		}
 	}
 	else ((SLink*)con->links[i++])->SetCoef(k);
@@ -101,7 +101,7 @@ void ObjectKey::CalcCoef(Constraint* con, bool t_or_r, vec3_t k, uint& i){
 			((SLink*)con->links[i++])->SetCoef(k * J);
 		}
 	}
-	else ((RLink*)con->links[i++])->SetCoef(k);
+	else ((R3Link*)con->links[i++])->SetCoef(k);
 }
 
 void ObjectKey::Prepare(){
@@ -361,10 +361,10 @@ ObjectConC1R::ObjectConC1R(Solver* solver, const string& _name, ObjectKey* _obj,
 	obj[1] = (ObjectKey*)_obj->next;
 	idx	   = _idx;
 	
-	AddXLink(obj[0]->pos_r);
-	AddXLink(obj[0]->vel_r);
-	AddXLink(obj[1]->pos_r);
-	AddXLink(obj[1]->vel_r);
+	AddX3Link(obj[0]->pos_r);
+	AddX3Link(obj[0]->vel_r);
+	AddX3Link(obj[1]->pos_r);
+	AddX3Link(obj[1]->vel_r);
 }
 	
 void ObjectConC1R::CalcCoef(){
@@ -375,10 +375,10 @@ void ObjectConC1R::CalcCoef(){
 	r[1] = obj[1]->pos_r->val * base;
 
 	uint i = 0;
-	((XLink*)links[i++])->SetCoef( r[0]);
-	((XLink*)links[i++])->SetCoef((0.5*h)*r[0]);
-	((XLink*)links[i++])->SetCoef(-r[1]);
-	((XLink*)links[i++])->SetCoef((0.5*h)*r[1]);
+	((X3Link*)links[i++])->SetCoef( r[0]);
+	((X3Link*)links[i++])->SetCoef((0.5*h)*r[0]);
+	((X3Link*)links[i++])->SetCoef(-r[1]);
+	((X3Link*)links[i++])->SetCoef((0.5*h)*r[1]);
 }
 
 void ObjectConC1R::CalcDeviation(){
@@ -433,15 +433,15 @@ ForceConR::ForceConR(Solver* solver, const string& _name, ObjectKey* _obj, real_
 	JointKey* jnt;
 	bool sock;
 	
-	AddSLink(obj[0]->vel_r);
-	AddSLink(obj[1]->vel_r);
-	AddMLink(obj[0]->pos_r);
+	AddSLink (obj[0]->vel_r);
+	AddSLink (obj[1]->vel_r);
+	AddM3Link(obj[0]->pos_r);
 
 	for(uint i = 0; i < obj[0]->joints.size(); i++){
 		jnt  = obj[0]->joints[i].first;
 		sock = obj[0]->joints[i].second;
-		AddXLink(jnt->force_t);
-		AddSLink(jnt->force_r, sock ? 1.0 : -1.0);
+		AddX3Link(jnt->force_t);
+		AddSLink (jnt->force_r, sock ? 1.0 : -1.0);
 	}
 }
 
@@ -455,7 +455,7 @@ void ForceConR::CalcCoef(){
 	((SLink*)links[0])->SetCoef(-I/h);
 	((SLink*)links[1])->SetCoef( I/h);
 
-	MLink* mlink = (MLink*)links[2];
+	M3Link* mlink = (M3Link*)links[2];
 	mat3_t m;
 	m.clear();
 	for(uint i = 0; i < obj[0]->joints.size(); i++){
@@ -472,7 +472,7 @@ void ForceConR::CalcCoef(){
 		jnt  = obj[0]->joints[i].first;
 		sock = obj[0]->joints[i].second;
 	
-		XLink* xlink = (XLink*)links[3+2*i];
+		X3Link* xlink = (X3Link*)links[3+2*i];
 		if(sock)
 			 xlink->SetCoef( jnt->r[0] + jnt->q[0] * jnt->rrel);
 		else xlink->SetCoef(-jnt->r[1]);

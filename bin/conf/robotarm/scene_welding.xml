@@ -4,7 +4,7 @@
   
   <import name="robot0" filename="pa10welding/pa10welding.xml"/>
 
-  <ticks time_begin="0.0" time_step="0.25" time_end="0.5"/>
+  <ticks time_begin="0.0" time_step="1.0" time_end="5.0"/>
   <scaling T="1.0" L="1.0" M="1.0"/>
   <enable  id="object_c1t"    enable="false"/>
   <enable  id="object_c1r"    enable="false"/>

@@ -22,13 +22,17 @@ struct VarTag{
 		ForceR,			///< joint force: rotational
 		TimeStart,		///< task starting time
 		TimeEnd,		///< task ending time
-		BipedCoMTP,
-		BipedCoMRP,
-		BipedCoMTV,
-		BipedCoMRV,
-		BipedCoPT,
-		BipedCoPR,
-		BipedPeriod,
+		BipedTorsoTP,
+		BipedTorsoRP,
+		BipedTorsoTV,
+		BipedTorsoRV,
+		BipedFootT,
+		BipedFootR,
+		BipedComP,
+		BipedComV,
+		BipedCop,
+		BipedDuration,
+		BipedTime,
 		NumTypes,
 	};
 };
@@ -67,12 +71,15 @@ struct ConTag{
 		AvoidP,
 		AvoidV,
 		Eom,				///< equation of motion in joint space
-		BipedCoMTP,
-		BipedCoMTV,
-		BipedCoMR,
-		BipedCoPT,
-		BipedCoPR,
-		BipedPeriod,
+		BipedLipP,
+		BipedLipV,
+		BipedFootT,
+		BipedFootR,
+		BipedComP,
+		BipedComV,
+		BipedCop,
+		BipedDuration,
+		BipedTime,
 		NumTypes,
 	};
 };

@@ -143,7 +143,7 @@ void MatchConT::AddLinks(bool pos_or_vel){
 		next->obj1->AddLinks(this, true, false, true);
 		
 		if(task->time)
-			AddCLink(task->time->time_s);
+			AddC3Link(task->time->time_s);
 	}
 	else if(mode == MatchTaskKey::End){
 		MatchTaskKey* prev = (MatchTaskKey*)key->prev;
@@ -157,7 +157,7 @@ void MatchConT::AddLinks(bool pos_or_vel){
 		key ->obj1->AddLinks(this, true, false, true);
 
 		if(task->time)
-			AddCLink(task->time->time_e);
+			AddC3Link(task->time->time_e);
 	}
 	else{
 		if(pos_or_vel){
@@ -261,7 +261,7 @@ void MatchConTP::CalcCoef(){
 		}
 
 		if(task->time)
-			((CLink*)links[i++])->SetCoef(v0 - v1);
+			((C3Link*)links[i++])->SetCoef(v0 - v1);
 	}
 	else{
 		uint i = 0;
@@ -339,7 +339,7 @@ void MatchConTV::CalcCoef(){
 		}
 	
 		if(task->time)
-			((CLink*)links[i++])->SetCoef(a0 - a1);
+			((C3Link*)links[i++])->SetCoef(a0 - a1);
 	}
 	else{
 		uint i = 0;

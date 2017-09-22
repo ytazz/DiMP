@@ -40,58 +40,89 @@ public:
 
 	virtual void BuildScene(){
 		biped = new DiMP::BipedLIP(graph, "biped");
-		biped->param.gravity          = 9.8;
-		biped->param.heightCoM        = 0.55;
-		biped->param.stepPeriodMin    = 0.1;	
-		biped->param.stepPeriodMax    = 0.5;
-		biped->param.supportPosMin[0] = vec2_t(-0.10, -0.15);
-		biped->param.supportPosMax[0] = vec2_t( 0.10, -0.05);
-		biped->param.supportPosMin[1] = vec2_t(-0.10,  0.05);
-		biped->param.supportPosMax[1] = vec2_t( 0.10,  0.15);
-		biped->param.supportOriMin[0] = Rad(-15.0);
-		biped->param.supportOriMax[0] = Rad( 15.0);
-		biped->param.supportOriMin[1] = Rad(-15.0);
-		biped->param.supportOriMax[1] = Rad( 15.0);
+		biped->param.gravity       = 9.8;
+		biped->param.heightCoM     = 0.55;
+		biped->param.durationMin[DiMP::BipedLIP::Phase::R ] = 0.1;	
+		biped->param.durationMax[DiMP::BipedLIP::Phase::R ] = 0.5;
+		biped->param.durationMin[DiMP::BipedLIP::Phase::L ] = 0.1;	
+		biped->param.durationMax[DiMP::BipedLIP::Phase::L ] = 0.5;
+		biped->param.durationMin[DiMP::BipedLIP::Phase::RL] = 0.1;	
+		biped->param.durationMax[DiMP::BipedLIP::Phase::RL] = 0.5;
+		biped->param.durationMin[DiMP::BipedLIP::Phase::LR] = 0.1;	
+		biped->param.durationMax[DiMP::BipedLIP::Phase::LR] = 0.5;
+		biped->param.footPosMin[0] = vec2_t(-0.10, -0.15);
+		biped->param.footPosMax[0] = vec2_t( 0.10, -0.05);
+		biped->param.footPosMin[1] = vec2_t(-0.10,  0.05);
+		biped->param.footPosMax[1] = vec2_t( 0.10,  0.15);
+		biped->param.footOriMin[0] = Rad(-15.0);
+		biped->param.footOriMax[0] = Rad( 15.0);
+		biped->param.footOriMin[1] = Rad(-15.0);
+		biped->param.footOriMax[1] = Rad( 15.0);
 
 		// •à”İ’èDtick‚Ì‚Íg‚í‚ê‚È‚¢
-		const uint N = 10;
-		for(uint i = 0; i <= N; i++) 
+		const uint nstep  = 1;
+		const uint nphase = 2*nstep + 1;
+
+		for(uint i = 0; i <= nphase; i++) 
 			new DiMP::Tick(graph, 0.0, "");
-		biped->phase.resize(N+1);
-		for(uint i = 0; i < N; i++)
-			biped->phase[i] = (i % 2 == 0) ? DiMP::BipedLIP::Phase::Right : DiMP::BipedLIP::Phase::Left;
+
+		biped->phase.resize(nphase);
+		for(uint i = 0; i < nphase; i++){
+			switch(i % 4){
+			case 0: biped->phase[i] = DiMP::BipedLIP::Phase::LR; break;
+			case 1: biped->phase[i] = DiMP::BipedLIP::Phase::R ; break;
+			case 2: biped->phase[i] = DiMP::BipedLIP::Phase::RL; break;
+			case 3: biped->phase[i] = DiMP::BipedLIP::Phase::L ; break;
+			}
+		}
 	
-		vec2_t goalPos(0.3, 0.3);
-		real_t goalOri = Rad(90.0);
+		vec2_t goalPos(0.1, 0.0);
+		real_t goalOri = Rad(0.0);
 		real_t spacing = 0.1;
-		biped->waypoints.resize(3);
-		biped->waypoints[0].k = 0;
-		biped->waypoints[0].com_pos_t_ssp     = vec2_t(0.0,  0.0);
-		biped->waypoints[0].com_vel_t_ssp     = vec2_t(0.0,  0.0);
-		biped->waypoints[0].cop_pos_t         = vec2_t(0.0, -spacing);
-		biped->waypoints[0].swg_pos_t         = vec2_t(0.0,  spacing);
-		biped->waypoints[0].fix_com_pos_t_ssp = true;
-		biped->waypoints[0].fix_com_vel_t_ssp = true;
-		biped->waypoints[0].fix_cop_pos_t     = true;
-		biped->waypoints[0].fix_swg_pos_t     = true;
-		biped->waypoints[1].k = N-1;
-		biped->waypoints[1].cop_pos_t         = goalPos + mat2_t::Rot(goalOri) * vec2_t(0.0,  spacing);
-		biped->waypoints[1].fix_cop_pos_t     = true;
-		biped->waypoints[2].k = N;
-		biped->waypoints[2].com_pos_t_ssp     = goalPos;
-		biped->waypoints[2].com_pos_r         = goalOri;
-		biped->waypoints[2].com_vel_t_ssp     = vec2_t(0.0, 0.0);
-		biped->waypoints[2].cop_pos_t         = goalPos + mat2_t::Rot(goalOri) * vec2_t(0.0, -spacing);
-		biped->waypoints[2].fix_com_pos_t_ssp = true;
-		biped->waypoints[2].fix_com_pos_r     = true;
-		biped->waypoints[2].fix_com_vel_r     = true;
-		biped->waypoints[2].fix_cop_pos_t     = true;
+
+		biped->waypoints.resize(2);
+		biped->waypoints[0].k                 = 0;
+		biped->waypoints[0].torso_pos_t       = vec2_t(0.0,  0.0);
+		biped->waypoints[0].torso_pos_r       = 0.0;
+		biped->waypoints[0].torso_vel_t       = vec2_t(0.0,  0.0);
+		biped->waypoints[0].torso_vel_r       = 0.0;
+		biped->waypoints[0].foot_pos_t[0]     = vec2_t(0.0, -spacing);
+		biped->waypoints[0].foot_pos_r[0]     = 0.0;
+		biped->waypoints[0].foot_pos_t[1]     = vec2_t(0.0,  spacing);
+		biped->waypoints[0].foot_pos_r[1]     = 0.0;
+		biped->waypoints[0].fix_torso_pos_t   = true;
+		biped->waypoints[0].fix_torso_pos_r   = true;
+		biped->waypoints[0].fix_torso_vel_t   = true;
+		biped->waypoints[0].fix_torso_vel_r   = true;
+		biped->waypoints[0].fix_foot_pos_t[0] = true;
+		biped->waypoints[0].fix_foot_pos_r[0] = true;
+		biped->waypoints[0].fix_foot_pos_t[1] = true;
+		biped->waypoints[0].fix_foot_pos_r[1] = true;
+
+		biped->waypoints[1].k = nphase-1;
+		biped->waypoints[1].torso_pos_t       = goalPos;
+		biped->waypoints[1].torso_pos_r       = goalOri;
+		biped->waypoints[1].torso_vel_t       = vec2_t(0.0, 0.0);
+		biped->waypoints[1].torso_vel_r       = 0.0;
+		biped->waypoints[1].foot_pos_t[0]     = goalPos + mat2_t::Rot(goalOri) * vec2_t(0.0, -spacing);
+		biped->waypoints[1].foot_pos_r[0]     = goalOri;
+		biped->waypoints[1].foot_pos_t[1]     = goalPos + mat2_t::Rot(goalOri) * vec2_t(0.0,  spacing);
+		biped->waypoints[1].foot_pos_r[1]     = goalOri;
+		biped->waypoints[1].fix_torso_pos_t   = true;
+		biped->waypoints[1].fix_torso_pos_r   = true;
+		biped->waypoints[1].fix_torso_vel_t   = true;
+		biped->waypoints[1].fix_torso_vel_r   = true;
+		biped->waypoints[1].fix_foot_pos_t[0] = true;
+		biped->waypoints[1].fix_foot_pos_r[0] = true;
+		biped->waypoints[1].fix_foot_pos_t[1] = true;
+		biped->waypoints[1].fix_foot_pos_r[1] = true;
 		
 		graph->scale.Set(1.0, 1.0, 1.0);
 		graph->Init();
 
 		graph->solver->SetCorrectionRate(ID(), 0.5);
-		graph->solver->param.numIter[0] = 20;
+		graph->solver->param.numIter[0]  = 20;
+		graph->solver->param.methodMajor = Solver::Method::Major::Prioritized;
 		
 		targetPos = vec3_t(0.0, 0.6, -0.2);
 	}

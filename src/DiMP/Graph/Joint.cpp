@@ -597,36 +597,36 @@ JointCon::JointCon(Solver* solver, uint n, ID id, JointKey* _jnt, real_t _scale)
 JointConF::JointConF(Solver* solver, const string& _name, JointKey* _jnt, uint i, real_t _scale):
 	JointCon(solver, 1, ID(ConTag::JointF, _jnt->node, _jnt->tick, _name), _jnt, _scale){
 	idx = i;
-	AddSLink(jnt->torque[i]);
-	AddRLink(jnt->force_t);
-	AddRLink(jnt->force_t);
+	AddSLink (jnt->torque[i]);
+	AddR3Link(jnt->force_t);
+	AddR3Link(jnt->force_t);
 }
 
 JointConTP::JointConTP(Solver* solver, const string& _name, JointKey* _jnt, real_t _scale):
 	JointCon(solver, 3, ID(ConTag::JointTP, _jnt->node, _jnt->tick, _name), _jnt, _scale){
 
-	AddSLink(jnt->sockObj->pos_t,  1.0);
-	AddSLink(jnt->plugObj->pos_t, -1.0);
-	AddXLink(jnt->sockObj->pos_r);
-	AddXLink(jnt->plugObj->pos_r);
+	AddSLink (jnt->sockObj->pos_t,  1.0);
+	AddSLink (jnt->plugObj->pos_t, -1.0);
+	AddX3Link(jnt->sockObj->pos_r);
+	AddX3Link(jnt->plugObj->pos_r);
 	
 	uint dof = ((Joint*)jnt->node)->dof;
 	for(uint i = 0; i < dof; i++)
-		AddCLink(jnt->pos[i]);
+		AddC3Link(jnt->pos[i]);
 }
 JointConTV::JointConTV(Solver* solver, const string& _name, JointKey* _jnt, real_t _scale):
 	JointCon(solver, 3, ID(ConTag::JointTV, _jnt->node, _jnt->tick, _name), _jnt, _scale){
-	AddMLink(jnt->sockObj->pos_r);
-	AddMLink(jnt->plugObj->pos_r);
-	AddSLink(jnt->sockObj->vel_t,  1.0);
-	AddSLink(jnt->plugObj->vel_t, -1.0);
-	AddXLink(jnt->sockObj->vel_r);
-	AddXLink(jnt->plugObj->vel_r);
+	AddM3Link(jnt->sockObj->pos_r);
+	AddM3Link(jnt->plugObj->pos_r);
+	AddSLink (jnt->sockObj->vel_t,  1.0);
+	AddSLink (jnt->plugObj->vel_t, -1.0);
+	AddX3Link(jnt->sockObj->vel_r);
+	AddX3Link(jnt->plugObj->vel_r);
 	
 	uint dof = ((Joint*)jnt->node)->dof;
 	for(uint i = 0; i < dof; i++){
-		AddCLink(jnt->pos[i]);
-		AddCLink(jnt->vel[i]);
+		AddC3Link(jnt->pos[i]);
+		AddC3Link(jnt->vel[i]);
 	}
 
 	//transformable = true;
@@ -638,19 +638,19 @@ JointConRP::JointConRP(Solver* solver, const string& _name, JointKey* _jnt, real
 	
 	uint dof = ((Joint*)jnt->node)->dof;
 	for(uint i = 0; i < dof; i++)
-		AddCLink(jnt->pos[i]);
+		AddC3Link(jnt->pos[i]);
 
 	//transformable = true;
 }
 JointConRV::JointConRV(Solver* solver, const string& _name, JointKey* _jnt, real_t _scale):
 	JointCon(solver, 3, ID(ConTag::JointRV, _jnt->node, _jnt->tick, _name), _jnt, _scale){	
-	AddXLink(jnt->sockObj->pos_r);
-	AddSLink(jnt->sockObj->vel_r,  1.0);
-	AddSLink(jnt->plugObj->vel_r, -1.0);
+	AddX3Link(jnt->sockObj->pos_r);
+	AddSLink (jnt->sockObj->vel_r,  1.0);
+	AddSLink (jnt->plugObj->vel_r, -1.0);
 	
 	uint dof = ((Joint*)jnt->node)->dof;
 	for(uint i = 0; i < dof; i++)
-		AddCLink(jnt->vel[i]);
+		AddC3Link(jnt->vel[i]);
 
 	//transformable = true;
 }
@@ -659,41 +659,41 @@ JointConRV::JointConRV(Solver* solver, const string& _name, JointKey* _jnt, real
 // CalcCoef
 
 void JointConF::CalcCoef(){
-	((RLink*)links[1])->SetCoef(-jnt->Jv[idx]);
-	((RLink*)links[2])->SetCoef(-jnt->Jw[idx]);
+	((R3Link*)links[1])->SetCoef(-jnt->Jv[idx]);
+	((R3Link*)links[2])->SetCoef(-jnt->Jw[idx]);
 }
 
 void JointConTP::CalcCoef(){
-	((XLink*)links[2])->SetCoef(-(jnt->r[0] + jnt->q[0] * jnt->rrel));
-	((XLink*)links[3])->SetCoef(  jnt->r[1]);
+	((X3Link*)links[2])->SetCoef(-(jnt->r[0] + jnt->q[0] * jnt->rrel));
+	((X3Link*)links[3])->SetCoef(  jnt->r[1]);
 	
 	uint dof = ((Joint*)jnt->node)->dof;
 	for(uint i = 0; i < dof; i++)
-		((CLink*)links[4+i])->SetCoef(jnt->Jv[i]);
+		((C3Link*)links[4+i])->SetCoef(jnt->Jv[i]);
 }
 void JointConTV::CalcCoef(){
-	((MLink*)links[0])->SetCoef(- mat3_t::Cross(jnt->sockObj->vel_r->val) * mat3_t::Cross(jnt->r[0] + jnt->q[0] * jnt->rrel) - mat3_t::Cross(jnt->vrel));
-	((MLink*)links[1])->SetCoef(  mat3_t::Cross(jnt->plugObj->vel_r->val) * mat3_t::Cross(jnt->r[1]));
-	((XLink*)links[4])->SetCoef(-(jnt->r[0] + jnt->q[0] * jnt->rrel));
-	((XLink*)links[5])->SetCoef(  jnt->r[1]);
+	((M3Link*)links[0])->SetCoef(- mat3_t::Cross(jnt->sockObj->vel_r->val) * mat3_t::Cross(jnt->r[0] + jnt->q[0] * jnt->rrel) - mat3_t::Cross(jnt->vrel));
+	((M3Link*)links[1])->SetCoef(  mat3_t::Cross(jnt->plugObj->vel_r->val) * mat3_t::Cross(jnt->r[1]));
+	((X3Link*)links[4])->SetCoef(-(jnt->r[0] + jnt->q[0] * jnt->rrel));
+	((X3Link*)links[5])->SetCoef(  jnt->r[1]);
 	
 	uint dof = ((Joint*)jnt->node)->dof;
 	for(uint i = 0; i < dof; i++){
-		((CLink*)links[6+2*i+0])->SetCoef(jnt->sockObj->vel_r->val % jnt->Jv[i]);
-		((CLink*)links[6+2*i+1])->SetCoef(jnt->Jv[i]);
+		((C3Link*)links[6+2*i+0])->SetCoef(jnt->sockObj->vel_r->val % jnt->Jv[i]);
+		((C3Link*)links[6+2*i+1])->SetCoef(jnt->Jv[i]);
 	}
 }
 void JointConRP::CalcCoef(){
 	uint dof = ((Joint*)jnt->node)->dof;
 	for(uint i = 0; i < dof; i++)
-		((CLink*)links[2+i])->SetCoef(jnt->Jw[i]);
+		((C3Link*)links[2+i])->SetCoef(jnt->Jw[i]);
 }
 void JointConRV::CalcCoef(){
-	((XLink*)links[0])->SetCoef(- jnt->wrel);
+	((X3Link*)links[0])->SetCoef(- jnt->wrel);
 	
 	uint dof = ((Joint*)jnt->node)->dof;
 	for(uint i = 0; i < dof; i++)
-		((CLink*)links[3+i])->SetCoef(jnt->Jw[i]);
+		((C3Link*)links[3+i])->SetCoef(jnt->Jw[i]);
 }
 
 //-------------------------------------------------------------------------------------------------
