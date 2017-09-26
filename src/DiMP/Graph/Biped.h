@@ -58,7 +58,10 @@ namespace DiMP {
 		BipedCopCon*     con_cop;            ///< range constraint on CoP relative to support foot
 		
 		BipedTimeCon*    con_time;
-		RangeConS*       con_duration;       ///< range constraint on step period	
+		RangeConS*       con_duration;       ///< range constraint on step period
+
+		MatchConV2*      con_foot_match_t[2];
+		MatchConS *      con_foot_match_r[2];
 
 		//CoMConR  *  con_com_r[2];      ///< range constraint on angular acceleration at beginning and end of step
 		//CoPConR  *  con_cop_r[2];      ///< range constraint on turning angle of CoM
@@ -174,7 +177,7 @@ namespace DiMP {
 		void CalcTrajectory();
 		void Draw          (Render::Canvas* canvas, Render::Config* conf);
 		void DrawSnapshot  (real_t time, Render::Canvas* canvas, Render::Config* conf);
-		void Save          ();
+		//void Save          ();
 
 	public:
 		BipedLIP(Graph* g, string n);
@@ -214,16 +217,18 @@ namespace DiMP {
 
 	/// CoM position constraint
 	struct BipedComConP : Constraint {
-		virtual void CalcCoef     ();
-		virtual void CalcDeviation();
+		BipedLIPKey* obj;
+		
+		virtual void CalcCoef();
 
 		BipedComConP(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale);
 	};
 
 	/// CoM velocity constraint
 	struct BipedComConV : Constraint {
-		virtual void CalcCoef     ();
-		virtual void CalcDeviation();
+		BipedLIPKey* obj;
+		
+		virtual void CalcCoef();
 
 		BipedComConV(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale);
 	};
@@ -263,20 +268,24 @@ namespace DiMP {
 	struct BipedCopCon : Constraint {
 		BipedLIPKey* obj;
 		uint         side;
-		vec2_t       pf, pt;
-		real_t       thetat;
+		vec2_t       pc, pf;
+		real_t       thetaf;
 		mat2_t       R, dR;
 		vec2_t       _min, _max;
 		bool         on_lower[2], on_upper[2];
 		
 		virtual void CalcCoef     ();
 		virtual void CalcDeviation();
+		virtual void Project      (real_t& l, uint k);
 
-		BipedCopCon(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale);
+		BipedCopCon(Solver* solver, string _name, BipedLIPKey* _obj, uint _side, real_t _scale);
 	};
 
 	struct BipedTimeCon : Constraint{
-
+		BipedLIPKey* obj[2];
+		
+		virtual void CalcCoef();
+		
 		BipedTimeCon(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale);
 	};
 

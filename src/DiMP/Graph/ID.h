@@ -73,8 +73,10 @@ struct ConTag{
 		Eom,				///< equation of motion in joint space
 		BipedLipP,
 		BipedLipV,
-		BipedFootT,
-		BipedFootR,
+		BipedFootRangeT,
+		BipedFootRangeR,
+		BipedFootMatchT,
+		BipedFootMatchR,
 		BipedComP,
 		BipedComV,
 		BipedCop,

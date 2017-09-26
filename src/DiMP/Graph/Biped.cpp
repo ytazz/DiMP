@@ -49,15 +49,28 @@ namespace DiMP {
 			con_lip_v = new BipedLipConV(solver, name + "_lip_v", this, node->graph->scale.vel_t);
 		}
 
-		con_foot_t[0] = new BipedFootConT(solver, name + "_foot_r_t", this, 0, node->graph->scale.pos_t);
-		con_foot_r[0] = new BipedFootConR(solver, name + "_foot_r_r", this, 0, node->graph->scale.pos_r);
-		con_foot_t[1] = new BipedFootConT(solver, name + "_foot_l_t", this, 1, node->graph->scale.pos_t);
-		con_foot_r[1] = new BipedFootConR(solver, name + "_foot_l_r", this, 1, node->graph->scale.pos_r);
+		con_foot_t[0] = new BipedFootConT(solver, name + "_foot_range_r_t", this, 0, node->graph->scale.pos_t);
+		con_foot_r[0] = new BipedFootConR(solver, name + "_foot_range_r_r", this, 0, node->graph->scale.pos_r);
+		con_foot_t[1] = new BipedFootConT(solver, name + "_foot_range_l_t", this, 1, node->graph->scale.pos_t);
+		con_foot_r[1] = new BipedFootConR(solver, name + "_foot_range_l_r", this, 1, node->graph->scale.pos_r);
 			
-		con_cop = new BipedCopCon(solver, name + "_cop", this, node->graph->scale.pos_t);
+		int side;
+		if(phase == BipedLIP::Phase::R || phase == BipedLIP::Phase::RL)
+			 side = 0;
+		else side = 1;
+		con_cop = new BipedCopCon(solver, name + "_cop", this, side, node->graph->scale.pos_t);
 			
-		con_duration = new RangeConS   (solver, ID(ConTag::BipedDuration, node, tick, name + "_duration"), var_duration, node->graph->scale.time);
-		con_time     = new BipedTimeCon(solver, name + "_time", this, node->graph->scale.time);
+		if(next){
+			con_duration = new RangeConS   (solver, ID(ConTag::BipedDuration, node, tick, name + "_duration"), var_duration, node->graph->scale.time);
+			con_time     = new BipedTimeCon(solver, name + "_time", this, node->graph->scale.time);
+		}
+
+		if(next){
+			con_foot_match_t[0] = new MatchConV2(solver, ID(ConTag::BipedFootMatchT, node, tick, name + "_foot_match_r_t"), var_foot_pos_t[0], nextObj->var_foot_pos_t[0], node->graph->scale.pos_t);
+			con_foot_match_r[0] = new MatchConS (solver, ID(ConTag::BipedFootMatchR, node, tick, name + "_foot_match_r_r"), var_foot_pos_r[0], nextObj->var_foot_pos_r[0], node->graph->scale.pos_r);
+			con_foot_match_t[1] = new MatchConV2(solver, ID(ConTag::BipedFootMatchT, node, tick, name + "_foot_match_l_t"), var_foot_pos_t[1], nextObj->var_foot_pos_t[1], node->graph->scale.pos_t);
+			con_foot_match_r[1] = new MatchConS (solver, ID(ConTag::BipedFootMatchR, node, tick, name + "_foot_match_l_r"), var_foot_pos_r[1], nextObj->var_foot_pos_r[1], node->graph->scale.pos_r);
+		}
 		
 		con_com_p = new BipedComConP(solver, name + "_com_p", this, node->graph->scale.pos_t);
 		con_com_v = new BipedComConV(solver, name + "_com_v", this, node->graph->scale.vel_t);
@@ -66,6 +79,13 @@ namespace DiMP {
 	void BipedLIPKey::Prepare() {
 		// 歩行周期変数の値を時刻に反映
 		tick->time = var_time->val;
+
+		if(next){
+			con_foot_match_t[0]->enabled = (phase != BipedLIP::Phase::L);
+			con_foot_match_r[0]->enabled = (phase != BipedLIP::Phase::L);
+			con_foot_match_t[1]->enabled = (phase != BipedLIP::Phase::R);
+			con_foot_match_r[1]->enabled = (phase != BipedLIP::Phase::R);
+		}
 	}
 
 	void BipedLIPKey::Draw(Render::Canvas* canvas, Render::Config* conf) {
@@ -200,9 +220,12 @@ namespace DiMP {
 			// 周期の初期値は下限と上限の中間値
 			key->phase              = phase[k];
 			key->var_time    ->val  = t;
-			key->var_duration->val  = durationAve[phase[k]];
-			key->con_duration->_min = param.durationMin[phase[k]];
-			key->con_duration->_max = param.durationMax[phase[k]];
+
+			if(key->next){
+				key->var_duration->val  = durationAve[phase[k]];
+				key->con_duration->_min = param.durationMin[phase[k]];
+				key->con_duration->_max = param.durationMax[phase[k]];
+			}
 
 			/*
 			//ステップ始点と終点の角加速度制限
@@ -253,9 +276,11 @@ namespace DiMP {
 			for(uint j = 0; j < 2; j++){
 				curve_foot_t[j].AddPoint(t);
 				curve_foot_t[j].SetPos(i, wp.foot_pos_t[j]);
+				curve_foot_t[j].SetVel(i, vec2_t());
 
 				curve_foot_r[j].AddPoint(t);
 				curve_foot_r[j].SetPos(i, wp.foot_pos_r[j]);
+				curve_foot_r[j].SetVel(i, 0.0);
 			}
 		}
 
@@ -846,8 +871,28 @@ namespace DiMP {
 	}
 	*/
 
+	BipedComConP::BipedComConP(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale) :
+		Constraint(solver, 2, ID(ConTag::BipedComP, _obj->node, _obj->tick, _name), _scale) {
+
+		obj  = _obj;
+		
+		AddSLink(obj->var_com_pos      );
+		AddSLink(obj->var_torso_pos_t  );
+		AddSLink(obj->var_foot_pos_t[0]);
+		AddSLink(obj->var_foot_pos_t[1]);		
+	}
+
+	BipedComConV::BipedComConV(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale) :
+		Constraint(solver, 2, ID(ConTag::BipedComV, _obj->node, _obj->tick, _name), _scale) {
+
+		obj  = _obj;
+		
+		AddSLink(obj->var_com_vel      );
+		AddSLink(obj->var_torso_vel_t  );
+	}
+
 	BipedFootConT::BipedFootConT(Solver* solver, string _name, BipedLIPKey* _obj, uint _side, real_t _scale) :
-		Constraint(solver, 2, ID(ConTag::BipedFootT, _obj->node, _obj->tick, _name), _scale) {
+		Constraint(solver, 2, ID(ConTag::BipedFootRangeT, _obj->node, _obj->tick, _name), _scale) {
 
 		obj  = _obj;
 		side = _side;
@@ -858,15 +903,37 @@ namespace DiMP {
 	}
 
 	BipedFootConR::BipedFootConR(Solver* solver, string _name, BipedLIPKey* _obj, uint _side, real_t _scale) :
-		Constraint(solver, 1, ID(ConTag::BipedFootR, _obj->node, _obj->tick, _name), _scale) {
+		Constraint(solver, 1, ID(ConTag::BipedFootRangeR, _obj->node, _obj->tick, _name), _scale) {
 
 		obj  = _obj ;
 		side = _side;
 
-		AddSLink(obj->var_torso_pos_r     );
 		AddSLink(obj->var_foot_pos_r[side]);
+		AddSLink(obj->var_torso_pos_r     );
 	}
 
+	BipedCopCon::BipedCopCon(Solver* solver, string _name, BipedLIPKey* _obj, uint _side, real_t _scale) :
+		Constraint(solver, 2, ID(ConTag::BipedCop, _obj->node, _obj->tick, _name), _scale) {
+
+		obj  = _obj;
+		side = _side;
+
+		AddM2Link(obj->var_cop_pos);
+		AddM2Link(obj->var_foot_pos_t[side]);
+		AddC2Link(obj->var_foot_pos_r[side]);
+	}
+	
+	BipedTimeCon::BipedTimeCon(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale) :
+		Constraint(solver, 1, ID(ConTag::BipedTime, _obj->node, _obj->tick, _name), _scale) {
+
+		obj[0] = _obj;
+		obj[1] = (BipedLIPKey*)_obj->next;
+
+		AddSLink(obj[1]->var_time);
+		AddSLink(obj[0]->var_time);
+		AddSLink(obj[0]->var_duration);
+	}
+	
 	//-------------------------------------------------------------------------------------------------
 
 	void BipedLipCon::Prepare() {
@@ -881,6 +948,8 @@ namespace DiMP {
 		p0   = obj[0]->var_com_pos->val;
 		v0   = obj[0]->var_com_vel->val;
 		c0   = obj[0]->var_cop_pos->val;
+		p1   = obj[1]->var_com_pos->val;
+		v1   = obj[1]->var_com_vel->val;
 		c1   = obj[1]->var_cop_pos->val;
 	}
 
@@ -933,12 +1002,35 @@ namespace DiMP {
 	}
 	*/
 
+	void BipedComConP::CalcCoef(){
+		BipedLIP::Param& param = ((BipedLIP*)obj->node)->param;
+		
+		real_t mt = param.torsoMass;
+		real_t mf = param.footMass;
+
+		((SLink*)links[0])->SetCoef(mt + 2.0*mf);
+		((SLink*)links[1])->SetCoef(-mt);
+		((SLink*)links[2])->SetCoef(-mf);
+		((SLink*)links[3])->SetCoef(-mf);
+
+	}
+
+	void BipedComConV::CalcCoef(){
+		BipedLIP::Param& param = ((BipedLIP*)obj->node)->param;
+		
+		real_t mt = param.torsoMass;
+		real_t mf = param.footMass;
+
+		((SLink*)links[0])->SetCoef(mt + 2.0*mf);
+		((SLink*)links[1])->SetCoef(-mt);
+	}
+
 	void BipedFootConT::CalcCoef() {
-		vec2_t pf     = obj->var_foot_pos_t[side]->val;
-		vec2_t pt     = obj->var_torso_pos_t->val;
-		real_t thetat = obj->var_torso_pos_r->val;
-		mat2_t  R = mat2_t::Rot(thetat);
-		mat2_t dR = mat2_t::Rot(thetat + pi/2);
+		pf     = obj->var_foot_pos_t[side]->val;
+		pt     = obj->var_torso_pos_t->val;
+		thetat = obj->var_torso_pos_r->val;
+		 R     = mat2_t::Rot(thetat);
+		dR     = mat2_t::Rot(thetat + pi/2);
 
 		((M2Link*)links[0])->SetCoef( R.trans());
 		((M2Link*)links[1])->SetCoef(-R.trans());
@@ -949,10 +1041,27 @@ namespace DiMP {
 		thetaf = obj->var_foot_pos_r[side]->val;
 		thetat = obj->var_torso_pos_r    ->val;
 
-		((SLink*)links[0])->SetCoef(-1.0);
-		((SLink*)links[1])->SetCoef( 1.0);
+		((SLink*)links[0])->SetCoef( 1.0);
+		((SLink*)links[1])->SetCoef(-1.0);
 	}
 
+	void BipedCopCon::CalcCoef() {
+		pc     = obj->var_cop_pos->val;
+		pf     = obj->var_foot_pos_t[side]->val;
+		thetaf = obj->var_foot_pos_r[side]->val;
+		 R = mat2_t::Rot(thetaf);
+		dR = mat2_t::Rot(thetaf + pi/2);
+
+		((M2Link*)links[0])->SetCoef( R.trans());
+		((M2Link*)links[1])->SetCoef(-R.trans());
+		((C2Link*)links[2])->SetCoef(dR.trans()*(pc - pf));
+	}
+
+	void BipedTimeCon::CalcCoef(){
+		((SLink*)links[0])->SetCoef( 1.0);
+		((SLink*)links[1])->SetCoef(-1.0);
+		((SLink*)links[2])->SetCoef(-1.0);
+	}
 
 	//-------------------------------------------------------------------------------------------------
 
@@ -1009,6 +1118,24 @@ namespace DiMP {
 		if (on_upper) y[0] = (s - _max);
 	}
 
+	void BipedCopCon::CalcDeviation() {
+		vec2_t s = R.trans() * (pc - pf);
+
+		active = false;
+		for(uint i = 0; i < 2; i++){
+			on_lower[i] = (s[i] < _min[i]);
+			on_upper[i] = (s[i] > _max[i]);
+			if(on_lower[i]){
+				y[i]   = (s[i] - _min[i]);
+				active = true;
+			}
+			if(on_upper[i]){
+				y[i]   = (s[i] - _max[i]);
+				active = true;
+			}
+		}
+	}
+
 	//-------------------------------------------------------------------------------------------------
 	
 	/*
@@ -1029,6 +1156,12 @@ namespace DiMP {
 		if (on_upper &&  l > 0.0) l = 0.0;
 		if (on_lower &&  l < 0.0) l = 0.0;
 		if (!on_upper && !on_lower) l = 0.0;
+	}
+
+	void BipedCopCon::Project(real_t& l, uint k) {
+		if (on_upper[k] &&  l > 0.0) l = 0.0;
+		if (on_lower[k] &&  l < 0.0) l = 0.0;
+		if (!on_upper[k] && !on_lower[k]) l = 0.0;
 	}
 
 }

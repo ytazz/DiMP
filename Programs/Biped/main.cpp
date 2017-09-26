@@ -42,6 +42,8 @@ public:
 		biped = new DiMP::BipedLIP(graph, "biped");
 		biped->param.gravity       = 9.8;
 		biped->param.heightCoM     = 0.55;
+		biped->param.torsoMass     = 1.0;
+		biped->param.footMass      = 1.0;
 		biped->param.durationMin[DiMP::BipedLIP::Phase::R ] = 0.1;	
 		biped->param.durationMax[DiMP::BipedLIP::Phase::R ] = 0.5;
 		biped->param.durationMin[DiMP::BipedLIP::Phase::L ] = 0.1;	
@@ -60,10 +62,10 @@ public:
 		biped->param.footOriMax[1] = Rad( 15.0);
 
 		// •à”İ’èDtick‚Ì‚Íg‚í‚ê‚È‚¢
-		const uint nstep  = 1;
+		const uint nstep  = 10;
 		const uint nphase = 2*nstep + 1;
 
-		for(uint i = 0; i <= nphase; i++) 
+		for(uint i = 0; i < nphase; i++) 
 			new DiMP::Tick(graph, 0.0, "");
 
 		biped->phase.resize(nphase);
@@ -76,8 +78,8 @@ public:
 			}
 		}
 	
-		vec2_t goalPos(0.1, 0.0);
-		real_t goalOri = Rad(0.0);
+		vec2_t goalPos(1.0, 0.0);
+		real_t goalOri = Rad(30.0);
 		real_t spacing = 0.1;
 
 		biped->waypoints.resize(2);
@@ -122,7 +124,10 @@ public:
 
 		graph->solver->SetCorrectionRate(ID(), 0.5);
 		graph->solver->param.numIter[0]  = 20;
+		graph->solver->param.minStepSize = 1.0;
+		graph->solver->param.maxStepSize = 1.0;
 		graph->solver->param.methodMajor = Solver::Method::Major::Prioritized;
+		graph->solver->param.verbose = true;
 		
 		targetPos = vec3_t(0.0, 0.6, -0.2);
 	}
@@ -143,7 +148,7 @@ public:
 			if(id == ID_DEC){
 			}
 			if(id == ID_SAVE){
-				biped->Save();
+//				biped->Save();
 			}
 		}
 		App::OnAction(menu, id);
