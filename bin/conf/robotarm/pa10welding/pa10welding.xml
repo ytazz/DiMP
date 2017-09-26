@@ -23,7 +23,7 @@
   <mesh name="mesh_yousetu03" scale="0.001" filename="yousetu03.stl" binary="true" collision="false" mass="false" visual="true"/>
   <mesh name="mesh_yousetu04" scale="0.001" filename="yousetu04.stl" binary="true" collision="false" mass="false" visual="true"/>
 
-  <body name="body_link0" dynamical="false">
+  <body name="body_link0" dynamical="false" trn="0 0 0" rot="90deg@y">
     <connector name="mesh"/>
     <connector name="sock" trn="0 0 340"/>
   </body>

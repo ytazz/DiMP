@@ -3,6 +3,7 @@
 <namespace name="workspace">
   
   <import name="robot0" filename="pa10welding/pa10welding.xml"/>
+  <import name="mockup" filename="pa10welding/mockup.xml"/>
 
   <ticks time_begin="0.0" time_step="1.0" time_end="5.0"/>
   <scaling T="1.0" L="1.0" M="1.0"/>

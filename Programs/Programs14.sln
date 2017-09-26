@@ -36,6 +36,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "pa10", "pa10", "{8FD5F8DA-2
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "pa10welding", "pa10welding", "{B70AE69B-410A-46BC-AC28-25B1951B6B6C}"
 	ProjectSection(SolutionItems) = preProject
+		..\bin\conf\robotarm\pa10welding\mockup.xml = ..\bin\conf\robotarm\pa10welding\mockup.xml
 		..\bin\conf\robotarm\pa10welding\pa10welding.xml = ..\bin\conf\robotarm\pa10welding\pa10welding.xml
 	EndProjectSection
 EndProject
