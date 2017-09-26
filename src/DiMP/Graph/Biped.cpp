@@ -14,7 +14,7 @@ namespace DiMP {
 	// BipedLIPKey
 
 	BipedLIPKey::BipedLIPKey() {
-		phase = BipedLIP::Phase::R;
+		
 	}
 
 	//変数を追加する関数
@@ -42,6 +42,7 @@ namespace DiMP {
 
 	//拘束条件を追加する関数
 	void BipedLIPKey::AddCon(Solver* solver) {
+		BipedLIP* obj = (BipedLIP*)node;
 		BipedLIPKey* nextObj = (BipedLIPKey*)next;
 
 		if (next) {
@@ -54,6 +55,7 @@ namespace DiMP {
 		con_foot_t[1] = new BipedFootConT(solver, name + "_foot_range_l_t", this, 1, node->graph->scale.pos_t);
 		con_foot_r[1] = new BipedFootConR(solver, name + "_foot_range_l_r", this, 1, node->graph->scale.pos_r);
 			
+		int phase = obj->phase[tick->idx];
 		int side;
 		if(phase == BipedLIP::Phase::R || phase == BipedLIP::Phase::RL)
 			 side = 0;
@@ -77,10 +79,13 @@ namespace DiMP {
 	}
 
 	void BipedLIPKey::Prepare() {
+		BipedLIP* obj = (BipedLIP*)node;
+
 		// 歩行周期変数の値を時刻に反映
 		tick->time = var_time->val;
 
 		if(next){
+			int phase = obj->phase[tick->idx];
 			con_foot_match_t[0]->enabled = (phase != BipedLIP::Phase::L);
 			con_foot_match_r[0]->enabled = (phase != BipedLIP::Phase::L);
 			con_foot_match_t[1]->enabled = (phase != BipedLIP::Phase::R);
@@ -89,33 +94,56 @@ namespace DiMP {
 	}
 
 	void BipedLIPKey::Draw(Render::Canvas* canvas, Render::Config* conf) {
-		const float l = 0.1f;
+		BipedLIP* obj = (BipedLIP*)node;
 
-		Vec3f p;
-		float theta;
+		Vec3f pcom, pcop, pf[2], pt;
+		float thetaf[2];
 
 		canvas->SetPointSize(5.0f);
 		canvas->SetLineWidth(1.0f);
 
 		// com
-		p.x   = (float)var_com_pos->val.x;
-		p.y   = (float)var_com_pos->val.y;
-		p.z   = (float)((BipedLIP*)node)->param.heightCoM;
-		canvas->Point(p);
-
-		// torso
-		//theta = (float)com_pos_r->val;
-		//		canvas->Line(p, p + Vec3f(l*cos(theta), l*sin(theta), 0.0f));
+		pcom.x   = (float)var_com_pos->val.x;
+		pcom.y   = (float)var_com_pos->val.y;
+		pcom.z   = (float)((BipedLIP*)node)->param.heightCoM;
+		canvas->Point(pcom);
 
 		// feet
-		for(uint i = 0; i < 2; i++){
-			p.x   = (float)var_foot_pos_t[i]->val.x;
-			p.y   = (float)var_foot_pos_t[i]->val.y;
-			p.z   = 0.0f;
-			theta = (float)var_foot_pos_r[i]->val;
+		Vec2f cmin = obj->param.copPosMin;
+		Vec2f cmax = obj->param.copPosMax;
 
-			canvas->Point(p);
+		for(uint i = 0; i < 2; i++){
+			pf[i].x   = (float)var_foot_pos_t[i]->val.x;
+			pf[i].y   = (float)var_foot_pos_t[i]->val.y;
+			pf[i].z   = 0.0f;
+			canvas->Point(pf[i]);
+
+			// foot print
+			canvas->Push();
+			thetaf[i] = (float)var_foot_pos_r[i]->val;
+			canvas->Translate(pf[i].x, pf[i].y, pf[i].z);
+			canvas->Rotate(thetaf[i], Vec3f(0.0f, 0.0f, 1.0f));
+			canvas->Line(Vec3f(cmax.x, cmax.y, 0.0f), Vec3f(cmin.x, cmax.y, 0.0f));
+			canvas->Line(Vec3f(cmin.x, cmax.y, 0.0f), Vec3f(cmin.x, cmin.y, 0.0f));
+			canvas->Line(Vec3f(cmin.x, cmin.y, 0.0f), Vec3f(cmax.x, cmin.y, 0.0f));
+			canvas->Line(Vec3f(cmax.x, cmin.y, 0.0f), Vec3f(cmax.x, cmax.y, 0.0f));
+			canvas->Pop();
 		}
+
+		// torso
+		pt = obj->TorsoPos(pcom, pf[0], pf[1]);
+		canvas->Point(pt);
+
+		// lines connecting torso and feet
+		canvas->Line(pt, pf[0]);
+		canvas->Line(pt, pf[1]);
+
+		// cop
+		pcop.x = (float)var_cop_pos->val.x;
+		pcop.y = (float)var_cop_pos->val.y;
+		pcop.z = 0.0f;
+		canvas->Point(pcop);
+		
 	}
 
 	//-------------------------------------------------------------------------------------------------
@@ -217,10 +245,9 @@ namespace DiMP {
 		for (uint k = 0; k < graph->ticks.size(); k++) {
 			BipedLIPKey* key = (BipedLIPKey*)traj.GetKeypoint(graph->ticks[k]);
 
-			// 周期の初期値は下限と上限の中間値
-			key->phase              = phase[k];
-			key->var_time    ->val  = t;
+			key->var_time->val = t;
 
+			// 周期の初期値は下限と上限の中間値
 			if(key->next){
 				key->var_duration->val  = durationAve[phase[k]];
 				key->con_duration->_min = param.durationMin[phase[k]];
@@ -332,11 +359,12 @@ namespace DiMP {
 	}
 
 	int BipedLIP::Phase(real_t t) {
-		return ((BipedLIPKey*)traj.GetSegment(t).first)->phase;
+		BipedLIPKey* key = (BipedLIPKey*)traj.GetSegment(t).first;
+		return phase[key->tick->idx];
 	}
 
 	//重心位置
-	vec3_t BipedLIP::CoMPos(real_t t) {
+	vec3_t BipedLIP::ComPos(real_t t) {
 		BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first ;
 		BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;
 
@@ -361,7 +389,7 @@ namespace DiMP {
 	}
 
 	//重心速度
-	vec3_t BipedLIP::CoMVel(real_t t) {
+	vec3_t BipedLIP::ComVel(real_t t) {
 		BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first ;
 		BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;
 
@@ -386,7 +414,7 @@ namespace DiMP {
 	}
 
 	//重心加速度
-	vec3_t BipedLIP::CoMAcc(real_t t) {
+	vec3_t BipedLIP::ComAcc(real_t t) {
 		BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;
 		BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;
 
@@ -493,28 +521,66 @@ namespace DiMP {
 	}
 
 	vec3_t BipedLIP::FootPos(real_t t, int side) {
-		BipedLIPKey* key = (BipedLIPKey*)traj.GetSegment(t).first;
+		BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;
+		BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;
 
-		int j;
-		if(phase[key->tick->idx] == Phase::R || phase[key->tick->idx] == Phase::RL)
-			 j = 0;
-		else j = 1;
+		vec2_t pt;
 
-		return vec3_t(
-			key->var_foot_pos_t[j]->val.x,
-			key->var_foot_pos_t[j]->val.y,
-			0.0);
+		if(key1){
+			real_t dt  = t - key0->var_time->val;
+			real_t tau = key0->var_duration->val;
+			vec2_t p0  = key0->var_foot_pos_t[side]->val;
+			vec2_t p1  = key1->var_foot_pos_t[side]->val;
+			
+			pt = p0 + (p1 - p0)*(dt/tau);
+		}
+		else{
+			pt = key0->var_foot_pos_t[side]->val;
+		}
+
+		return vec3_t(pt.x, pt.y, 0.0);
 	}
 
 	real_t BipedLIP::FootOri(real_t t, int side) {
-		BipedLIPKey* key = (BipedLIPKey*)traj.GetSegment(t).first;
+		BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;
+		BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;
 
-		int j;
-		if(phase[key->tick->idx] == Phase::R || phase[key->tick->idx] == Phase::RL)
-			 j = 0;
-		else j = 1;
+		real_t ot;
 
-		return key->var_foot_pos_r[j]->val;
+		if(key1){
+			real_t dt  = t - key0->var_time->val;
+			real_t tau = key0->var_duration->val;
+			real_t o0  = key0->var_foot_pos_r[side]->val;
+			real_t o1  = key1->var_foot_pos_r[side]->val;
+			
+			ot = o0 + (o1 - o0)*(dt/tau);
+		}
+		else{
+			ot = key0->var_foot_pos_r[side]->val;
+		}
+
+		return ot;
+	}
+
+	vec3_t BipedLIP::CopPos(real_t t) {
+		BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;
+		BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;
+
+		vec2_t ct;
+
+		if(key1){
+			real_t dt  = t - key0->var_time->val;
+			real_t tau = key0->var_duration->val;
+			vec2_t c0  = key0->var_cop_pos->val;
+			vec2_t c1  = key1->var_cop_pos->val;
+			
+			ct = c0 + (c1 - c0)*(dt/tau);
+		}
+		else{
+			ct = key0->var_cop_pos->val;
+		}
+
+		return vec3_t(ct.x, ct.y, 0.0);
 	}
 
 	/*
@@ -648,7 +714,7 @@ namespace DiMP {
 		// コンパスモデルより胴体の位置を求める
 		real_t mt = param.torsoMass;
 		real_t mf = param.footMass;
-		vec3_t pt = ((mt + 2.0*mf)*pcom + mf*(psup + pswg))/mt;
+		vec3_t pt = ((mt + 2.0*mf)*pcom - mf*(psup + pswg))/mt;
 		return pt;
 	}
 
@@ -662,13 +728,14 @@ namespace DiMP {
 		for (real_t t = 0.0; t < tf; t += dt) {
 			TrajPoint tp;
 			tp.t             = t;
-			tp.com_pos_t     = CoMPos  (t);
+			tp.com_pos       = ComPos  (t);
 			tp.foot_pos_t[0] = FootPos (t, 0);
 			tp.foot_pos_r[0] = FootOri (t, 0);
 			tp.foot_pos_t[1] = FootPos (t, 1);
 			tp.foot_pos_r[1] = FootOri (t, 1);
-			tp.torso_pos_t   = TorsoPos(tp.com_pos_t, tp.foot_pos_t[0], tp.foot_pos_t[1]);
+			tp.torso_pos_t   = TorsoPos(tp.com_pos, tp.foot_pos_t[0], tp.foot_pos_t[1]);
 			tp.torso_pos_r   = TorsoOri(t);
+			tp.cop_pos       = CopPos  (t);
 			
 			trajectory.push_back(tp);
 		}
@@ -681,7 +748,6 @@ namespace DiMP {
 	void BipedLIP::Draw(Render::Canvas* canvas, Render::Config* conf) {
 		TrajectoryNode::Draw(canvas, conf);
 
-		/*
 		if (!trajReady)
 			CalcTrajectory();
 
@@ -689,13 +755,28 @@ namespace DiMP {
 			return;
 
 		// com
-		if (conf->Set(canvas, Render::Item::BipedCoM, this)) {
+		if (conf->Set(canvas, Render::Item::BipedCom, this)) {
 			canvas->BeginLayer("biped_com", true);
 			canvas->SetLineWidth(3.0f);
+			canvas->SetLineColor("black");
 			canvas->BeginPath();
-			canvas->MoveTo(trajectory[0].pos_com);
+			canvas->MoveTo(trajectory[0].com_pos);
 			for (uint i = 1; i < trajectory.size(); i++) {
-				canvas->LineTo(trajectory[i].pos_com);
+				canvas->LineTo(trajectory[i].com_pos);
+			}
+			canvas->EndPath();
+			canvas->EndLayer();
+		}
+
+		// cop
+		if (conf->Set(canvas, Render::Item::BipedCop, this)) {
+			canvas->BeginLayer("biped_cop", true);
+			canvas->SetLineWidth(3.0f);
+			canvas->SetLineColor("magenta");
+			canvas->BeginPath();
+			canvas->MoveTo(trajectory[0].cop_pos);
+			for (uint i = 1; i < trajectory.size(); i++) {
+				canvas->LineTo(trajectory[i].cop_pos);
 			}
 			canvas->EndPath();
 			canvas->EndLayer();
@@ -705,37 +786,34 @@ namespace DiMP {
 		if (conf->Set(canvas, Render::Item::BipedTorso, this)) {
 			canvas->BeginLayer("biped_torso", true);
 			canvas->SetLineWidth(2.0f);
+			canvas->SetLineColor("blue");
 			canvas->BeginPath();
-			canvas->MoveTo(trajectory[0].pos_torso);
+			canvas->MoveTo(trajectory[0].torso_pos_t);
 			for (uint i = 1; i < trajectory.size(); i++) {
-				canvas->LineTo(trajectory[i].pos_torso);
+				canvas->LineTo(trajectory[i].torso_pos_t);
 			}
 			canvas->EndPath();
 			canvas->EndLayer();
 		}
 
-
+		/*
 		// swing foot
-		if (conf->Set(canvas, Render::Item::BipedSwing, this)) {
-			canvas->BeginLayer("biped_swing", true);
+		if (conf->Set(canvas, Render::Item::BipedFoot, this)) {
+			canvas->BeginLayer("biped_foot", true);
 			canvas->SetLineWidth(1.0f);
 			canvas->BeginPath();
-			canvas->MoveTo(trajectory[0].pos_swg);
+			canvas->MoveTo(trajectory[0].foot_pos_t[0]);
 			for (uint i = 1; i < trajectory.size(); i++) {
-				if (trajectory[i - 1].pos_sup == trajectory[i].pos_sup) {
-					canvas->LineTo(trajectory[i].pos_swg);
-				}
-				else {
-					canvas->EndPath();
-					canvas->BeginPath();
-					canvas->MoveTo(trajectory[i].pos_swg);
-				}
+				canvas->LineTo(trajectory[i].foot_pos_t[0]);
+			}
+			canvas->MoveTo(trajectory[0].foot_pos_t[1]);
+			for (uint i = 1; i < trajectory.size(); i++) {
+				canvas->LineTo(trajectory[i].foot_pos_t[1]);
 			}
 			canvas->EndPath();
 			canvas->EndLayer();
 		}
 		*/
-
 		// double support snapshot
 		/*		if (conf->Set(canvas, Render::Item::BipedDouble, this)) {
 		canvas->BeginLayer("biped_double", true);

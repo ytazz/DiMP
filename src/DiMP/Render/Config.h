@@ -22,10 +22,9 @@ struct Item{
 		JointForce,			///< force
 		JointMoment,		///< moment
 		Geometry,			///< geometry
-		BipedCoM,           ///< biped CoM trajectory
-		BipedCoP,           ///< biped CoP
-		BipedSwing,         ///< biped swing foot trajectory
-		BipedDouble,        ///< biped double support
+		BipedCom,           ///< biped CoM trajectory
+		BipedCop,           ///< biped CoP
+		BipedFoot,         ///< biped swing foot trajectory
 		BipedTorso,         ///< biped torso trajectory
 	};
 };

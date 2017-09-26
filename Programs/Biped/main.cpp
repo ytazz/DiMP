@@ -42,7 +42,7 @@ public:
 		biped = new DiMP::BipedLIP(graph, "biped");
 		biped->param.gravity       = 9.8;
 		biped->param.heightCoM     = 0.55;
-		biped->param.torsoMass     = 1.0;
+		biped->param.torsoMass     = 5.0;
 		biped->param.footMass      = 1.0;
 		biped->param.durationMin[DiMP::BipedLIP::Phase::R ] = 0.1;	
 		biped->param.durationMax[DiMP::BipedLIP::Phase::R ] = 0.5;
@@ -52,17 +52,17 @@ public:
 		biped->param.durationMax[DiMP::BipedLIP::Phase::RL] = 0.5;
 		biped->param.durationMin[DiMP::BipedLIP::Phase::LR] = 0.1;	
 		biped->param.durationMax[DiMP::BipedLIP::Phase::LR] = 0.5;
-		biped->param.footPosMin[0] = vec2_t(-0.10, -0.15);
-		biped->param.footPosMax[0] = vec2_t( 0.10, -0.05);
-		biped->param.footPosMin[1] = vec2_t(-0.10,  0.05);
-		biped->param.footPosMax[1] = vec2_t( 0.10,  0.15);
+		biped->param.footPosMin[0] = vec2_t(-0.30, -0.15);
+		biped->param.footPosMax[0] = vec2_t( 0.30, -0.05);
+		biped->param.footPosMin[1] = vec2_t(-0.30,  0.05);
+		biped->param.footPosMax[1] = vec2_t( 0.30,  0.15);
 		biped->param.footOriMin[0] = Rad(-15.0);
 		biped->param.footOriMax[0] = Rad( 15.0);
 		biped->param.footOriMin[1] = Rad(-15.0);
 		biped->param.footOriMax[1] = Rad( 15.0);
 
 		// •à”İ’èDtick‚Ì‚Íg‚í‚ê‚È‚¢
-		const uint nstep  = 10;
+		const uint nstep  = 4;
 		const uint nphase = 2*nstep + 1;
 
 		for(uint i = 0; i < nphase; i++) 

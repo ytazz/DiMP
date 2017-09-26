@@ -59,7 +59,7 @@ void CanvasGL::Translate(float tx, float ty, float tz){
 	glTranslatef(tx, ty, tz);
 }
 void CanvasGL::Rotate(float angle, const Vec3f& axis){
-	glRotatef(angle, axis.x, axis.y, axis.z);
+	glRotatef((float)Deg(angle), axis.x, axis.y, axis.z);
 }
 void CanvasGL::Scale(float sx, float sy, float sz){
 	glScalef(sx, sy, sz);
