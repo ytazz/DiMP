@@ -72,7 +72,7 @@ App::App(){
 	AddMenu(MENU_DRAW, "< drawing setting >");
 	AddAction(MENU_DRAW, ID_SOLID , "solid rendering"         )->SetType(Action::Boolean);
 	AddAction(MENU_DRAW, ID_WIRE  , "wireframe rendering"     )->SetType(Action::Boolean);
-	AddAction(MENU_DRAW, ID_CAMERA, "camera perspective|ortho")->SetType(Action::Boolean);
+	AddAction(MENU_DRAW, ID_CAMERA, "camera perspective|ortho")->SetType(Action::Boolean)->SetBool(false);
 
 	// ‰Šúó‘Ôİ’è
 	appName		= "DiMP sample application";

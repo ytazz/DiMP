@@ -84,6 +84,12 @@ namespace DiMP {
 		// 歩行周期変数の値を時刻に反映
 		tick->time = var_time->val;
 
+		if(!prev){
+			// 初期時刻を固定
+			var_time->val    = 0.0;
+			var_time->locked = true;
+		}
+
 		if(next){
 			int phase = obj->phase[tick->idx];
 			con_foot_match_t[0]->enabled = (phase != BipedLIP::Phase::L);
@@ -216,9 +222,9 @@ namespace DiMP {
 		torso_pos_t   = vec3_t();
 		torso_pos_r   = 0.0;
 		foot_pos_t[0] = vec3_t();
-		foot_pos_r[0] = 0.0;
+		foot_pos_r[0] = quat_t();
 		foot_pos_t[1] = vec3_t();
-		foot_pos_r[1] = 0.0;
+		foot_pos_r[1] = quat_t();
 	}
 
 	//-------------------------------------------------------------------------------------------------
@@ -525,6 +531,7 @@ namespace DiMP {
 		BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;
 
 		vec2_t pt;
+		real_t z = 0.0;
 
 		if(key1){
 			real_t dt  = t - key0->var_time->val;
@@ -533,54 +540,19 @@ namespace DiMP {
 			vec2_t p1  = key1->var_foot_pos_t[side]->val;
 			
 			pt = p0 + (p1 - p0)*(dt/tau);
+
+			// 単脚支持期の遊脚
+			int ph = phase[key0->tick->idx];
+			if( (ph == Phase::R && side == 1) ||
+				(ph == Phase::L && side == 0) ){
+
+			}
 		}
 		else{
 			pt = key0->var_foot_pos_t[side]->val;
 		}
 
-		return vec3_t(pt.x, pt.y, 0.0);
-	}
-
-	real_t BipedLIP::FootOri(real_t t, int side) {
-		BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;
-		BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;
-
-		real_t ot;
-
-		if(key1){
-			real_t dt  = t - key0->var_time->val;
-			real_t tau = key0->var_duration->val;
-			real_t o0  = key0->var_foot_pos_r[side]->val;
-			real_t o1  = key1->var_foot_pos_r[side]->val;
-			
-			ot = o0 + (o1 - o0)*(dt/tau);
-		}
-		else{
-			ot = key0->var_foot_pos_r[side]->val;
-		}
-
-		return ot;
-	}
-
-	vec3_t BipedLIP::CopPos(real_t t) {
-		BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;
-		BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;
-
-		vec2_t ct;
-
-		if(key1){
-			real_t dt  = t - key0->var_time->val;
-			real_t tau = key0->var_duration->val;
-			vec2_t c0  = key0->var_cop_pos->val;
-			vec2_t c1  = key1->var_cop_pos->val;
-			
-			ct = c0 + (c1 - c0)*(dt/tau);
-		}
-		else{
-			ct = key0->var_cop_pos->val;
-		}
-
-		return vec3_t(ct.x, ct.y, 0.0);
+		return vec3_t(pt.x, pt.y, z);
 	}
 
 	/*
@@ -710,6 +682,51 @@ namespace DiMP {
 	}
 	*/
 
+	quat_t BipedLIP::FootOri(real_t t, int side) {
+		BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;
+		BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;
+
+		real_t ot;
+		quat_t qt;
+
+		if(key1){
+			real_t dt  = t - key0->var_time->val;
+			real_t tau = key0->var_duration->val;
+			real_t o0  = key0->var_foot_pos_r[side]->val;
+			real_t o1  = key1->var_foot_pos_r[side]->val;
+			
+			ot = o0 + (o1 - o0)*(dt/tau);
+		}
+		else{
+			ot = key0->var_foot_pos_r[side]->val;
+		}
+
+		qt = quat_t::Rot(ot, 'z');
+
+		return qt;
+	}
+
+	vec3_t BipedLIP::CopPos(real_t t) {
+		BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;
+		BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;
+
+		vec2_t ct;
+
+		if(key1){
+			real_t dt  = t - key0->var_time->val;
+			real_t tau = key0->var_duration->val;
+			vec2_t c0  = key0->var_cop_pos->val;
+			vec2_t c1  = key1->var_cop_pos->val;
+			
+			ct = c0 + (c1 - c0)*(dt/tau);
+		}
+		else{
+			ct = key0->var_cop_pos->val;
+		}
+
+		return vec3_t(ct.x, ct.y, 0.0);
+	}
+
 	vec3_t BipedLIP::TorsoPos(const vec3_t& pcom, const vec3_t& psup, const vec3_t& pswg) {
 		// コンパスモデルより胴体の位置を求める
 		real_t mt = param.torsoMass;
@@ -725,7 +742,7 @@ namespace DiMP {
 		real_t dt = 0.01;
 
 		trajectory.clear();
-		for (real_t t = 0.0; t < tf; t += dt) {
+		for (real_t t = 0.0; t <= tf; t += dt) {
 			TrajPoint tp;
 			tp.t             = t;
 			tp.com_pos       = ComPos  (t);

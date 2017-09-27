@@ -145,7 +145,7 @@ namespace DiMP {
 			vec3_t  torso_pos_t;
 			real_t  torso_pos_r;
 			vec3_t  foot_pos_t[2];
-			real_t  foot_pos_r[2];
+			quat_t  foot_pos_r[2];
 			vec3_t  cop_pos;
 			
 			TrajPoint();
@@ -169,7 +169,7 @@ namespace DiMP {
 		real_t TorsoAngVel(real_t t);
 		real_t TorsoAngAcc(real_t t);
 		vec3_t FootPos    (real_t t, int side);
-		real_t FootOri    (real_t t, int side);
+		quat_t FootOri    (real_t t, int side);
 		vec3_t CopPos     (real_t t);
 		
 		vec3_t TorsoPos(const vec3_t& pcom, const vec3_t& psup, const vec3_t& pswg);
