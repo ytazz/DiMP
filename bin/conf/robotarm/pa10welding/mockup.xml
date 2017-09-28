@@ -9,13 +9,16 @@
 
   <mesh name="mesh_mockup" scale="0.001" filename="mockup.stl" binary="true" collision="false" mass="false" visual="true"/>
   <mesh name="mesh_gadai"  scale="0.001" filename="gadai.stl"  binary="true" collision="false" mass="false" visual="true"/>
-  
+
+  <vmat name="mat_mockup"  colorname="darkturquoise" alpha="0.3"/>
+  <vmat name="mat_gadai"   colorname="darkturquoise" alpha="1.0"/>
+
   <body name="body_mockup" dynamical="false">
     <connector name="c_mockup" trn="1240 489.5 0"/>
     <connector name="c_gadai" />
   </body>
    
-  <attach connector="body_mockup/c_mockup" shape="mesh_mockup" vmat="mat_body"/>
-  <attach connector="body_mockup/c_gadai"  shape="mesh_gadai"  vmat="mat_body"/>
+  <attach connector="body_mockup/c_mockup" shape="mesh_mockup" vmat="mat_mockup"/>
+  <attach connector="body_mockup/c_gadai"  shape="mesh_gadai"  vmat="mat_gadai"/>
 
 </namespace>
