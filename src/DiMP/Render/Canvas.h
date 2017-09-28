@@ -12,11 +12,10 @@ namespace Render{;
 
 class Canvas : public UTRefCount{
 public:
-	Vec4f	lineColor[2];		///< line color
-	Vec4f	fillColor;		    ///< fill color
-	string  lineColorName[2];	///< line color name
-	string  fillColorName;	    ///< fill color name
-
+	Color   pointColor;
+	Color   lineColor[2];		///< line color
+	Color   fillColor;		    ///< fill color
+	
 	float   pointSize;			///< point size
 	float   lineWidth;			///< line width
 	size_t	nCircleDiv;			///< number of corners for drawing circle
@@ -26,14 +25,15 @@ public:
 	bool	transparent;		///< enable transparent?
 	bool	gradation;			///< line gradation?
 
-	void SetLineColor(const string& c, uint idx = 0);
-	void SetFillColor(const string& c);
-	void Translate   (float tx, float ty);
-	void Rotate      (float r);
-	void Scale       (float sx, float sy);
+	void SetPointColor(const string& c);
+	void SetLineColor (const string& c, uint idx = 0);
+	void SetFillColor (const string& c);
+	void SetPointSize (float ps);
+	void SetLineWidth (float lw);
+	void Translate    (float tx, float ty);
+	void Rotate       (float r);
+	void Scale        (float sx, float sy);
 	
-	virtual void SetPointSize   (float ps){}
-	virtual void SetLineWidth   (float lw){}
 	virtual void Push           (){}
 	virtual void Pop            (){}
 	virtual void Translate      (float tx, float ty, float tz){}
@@ -64,8 +64,6 @@ public:
 
 class CanvasGL : public Canvas{
 public:
-	virtual void SetPointSize (float ps);
-	virtual void SetLineWidth (float lw);
 	virtual void Push         ();
 	virtual void Pop          ();
 	virtual void Translate    (float tx, float ty, float tz);
@@ -96,8 +94,6 @@ public:
 	SVG  svg;
 
 public:
-	virtual void SetPointSize (float ps);
-	virtual void SetLineWidth (float lw);
 	virtual void Push         ();
 	virtual void Pop          ();
 	virtual void Translate    (float tx, float ty, float tz);

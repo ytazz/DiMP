@@ -9,23 +9,34 @@ namespace Render{;
 // Canvas
 
 Canvas::Canvas(){
-	SetLineColor("black", 0);
-	SetLineColor("black", 1);
-	SetFillColor("white");
-	SetPointSize(3.0f);
-	SetLineWidth(1.0f);
+	SetPointColor("black");
+	SetLineColor ("black", 0);
+	SetLineColor ("black", 1);
+	SetFillColor ("white");
+	SetPointSize (3.0f);
+	SetLineWidth (1.0f);
 	nCircleDiv	= 18;
 	drawFill	= false;
 	drawLine	= true;
 	gradation	= false;
 }
+void Canvas::SetPointColor(const string& c){
+	pointColor.name = c;
+	pointColor.Init();
+}
 void Canvas::SetLineColor(const string& c, uint idx){
-	lineColorName[idx] = c;
-	Converter::ColorFromName(lineColorName[idx], lineColor[idx]);
+	lineColor[idx].name = c;
+	lineColor[idx].Init();
 }
 void Canvas::SetFillColor(const string& c){
-	fillColorName = c;
-	Converter::ColorFromName(fillColorName, fillColor);
+	fillColor.name = c;
+	fillColor.Init();
+}
+void Canvas::SetPointSize(float ps){
+	pointSize = ps;
+}
+void Canvas::SetLineWidth(float lw){
+	lineWidth = lw;
 }
 void Canvas::Translate(float tx, float ty){
 	Translate(tx, ty, 0.0f);
@@ -42,12 +53,6 @@ void Canvas::Scale(float sx, float sy){
 
 CanvasGL::CanvasGL(){
 
-}
-void CanvasGL::SetPointSize(float ps){
-	glPointSize(ps);
-}
-void CanvasGL::SetLineWidth(float lw){
-	glLineWidth(lw);
 }
 void CanvasGL::Push(){
 	glPushMatrix();
@@ -79,23 +84,23 @@ void CanvasGL::SetViewMatrix(const Affinef& aff){
 void CanvasGL::Line(const Vec2f& p0, const Vec2f& p1){
 	glLineWidth(lineWidth);
 	glBegin(GL_LINES);
-	glColor4fv(lineColor[0]);                            glVertex3f(p0.x, p0.y, 0.0);
-	glColor4fv(gradation ? lineColor[1] : lineColor[0]); glVertex3f(p1.x, p1.y, 0.0);
+	glColor4fv(lineColor[0].rgb);                                glVertex3f(p0.x, p0.y, 0.0);
+	glColor4fv(gradation ? lineColor[1].rgb : lineColor[0].rgb); glVertex3f(p1.x, p1.y, 0.0);
 	glEnd();
 }
 
 void CanvasGL::Line(const Vec3f& p0, const Vec3f& p1){
 	glLineWidth(lineWidth);
 	glBegin(GL_LINES);
-	glColor4fv(lineColor[0]);                            glVertex3f(p0.x, p0.y, p0.z);
-	glColor4fv(gradation ? lineColor[1] : lineColor[0]); glVertex3f(p1.x, p1.y, p1.z);
+	glColor4fv(lineColor[0].rgb);                                glVertex3f(p0.x, p0.y, p0.z);
+	glColor4fv(gradation ? lineColor[1].rgb : lineColor[0].rgb); glVertex3f(p1.x, p1.y, p1.z);
 	glEnd();
 }
 
 void CanvasGL::BeginPath(){
 	glLineWidth(lineWidth);
 	glBegin(GL_LINE_STRIP);
-	glColor4fv(lineColor[0]);
+	glColor4fv(lineColor[0].rgb);
 }
 
 void CanvasGL::EndPath(){
@@ -113,7 +118,7 @@ void CanvasGL::LineTo(const Vec3f& p){
 void CanvasGL::Point(const Vec2f& p){
 	glPointSize(pointSize);
 	glBegin(GL_POINTS);
-	glColor4fv(lineColor[0]);
+	glColor4fv(pointColor.rgb);
 	glVertex3f(p.x, p.y, 0.0);
 	glEnd();
 }
@@ -121,7 +126,7 @@ void CanvasGL::Point(const Vec2f& p){
 void CanvasGL::Point(const Vec3f& p){
 	glPointSize(pointSize);
 	glBegin(GL_POINTS);
-	glColor4fv(lineColor[0]);
+	glColor4fv(pointColor.rgb);
 	glVertex3f(p.x, p.y, p.z);
 	glEnd();
 }
@@ -136,14 +141,14 @@ inline void Rect(const Vec2f& rmin, const Vec2f& rmax){
 void CanvasGL::Rectangle(const Vec2f& rmin, const Vec2f& rmax){
 	if(drawFill){
 		glBegin(GL_TRIANGLE_FAN);
-		glColor4fv(fillColor);
+		glColor4fv(fillColor.rgb);
 		Rect(rmin, rmax);
 		glEnd();
 	}
 	if(drawLine){
 		glLineWidth(lineWidth);
 		glBegin(GL_LINE_LOOP);
-		glColor4fv(lineColor[0]);
+		glColor4fv(lineColor[0].rgb);
 		Rect(rmin, rmax);
 		glEnd();
 	}
@@ -161,7 +166,7 @@ void CanvasGL::Circle(const Vec2f& center, float r){
 	Matrix2d R = Matrix2d::Rot(2.0 * M_PI / (float)nCircleDiv);
 	if(drawFill){
 		glBegin(GL_TRIANGLE_FAN);
-		glColor4fv(fillColor);
+		glColor4fv(fillColor.rgb);
 		glVertex3f(center.x, center.y, 0.0);
 		Circ(center, r, R, nCircleDiv);
 		glEnd();
@@ -169,7 +174,7 @@ void CanvasGL::Circle(const Vec2f& center, float r){
 	if(drawLine){
 		glLineWidth(lineWidth);
 		glBegin(GL_LINE_STRIP);
-		glColor4fv(lineColor[0]);
+		glColor4fv(lineColor[0].rgb);
 		Circ(center, r, R, nCircleDiv);
 		glEnd();
 	}
@@ -177,7 +182,7 @@ void CanvasGL::Circle(const Vec2f& center, float r){
 
 void CanvasGL::Box(const Vec3f& rmin, const Vec3f& rmax){
 	if(drawFill){
-		glColor4fv(fillColor);
+		glColor4fv(fillColor.rgb);
 		glBegin(GL_TRIANGLE_FAN);
 		glVertex3f(rmin[0], rmin[1], rmin[2]);
 		glVertex3f(rmin[0], rmax[1], rmin[2]);
@@ -222,7 +227,7 @@ void CanvasGL::Box(const Vec3f& rmin, const Vec3f& rmax){
 	}
 	if(drawLine){
 		glLineWidth(lineWidth);
-		glColor4fv(lineColor[0]);
+		glColor4fv(lineColor[0].rgb);
 
 		glBegin(GL_LINE_LOOP);
 		glVertex3f(rmin[0], rmin[1], rmin[2]);
@@ -258,7 +263,7 @@ const double sin_array[] = {0.0, 0.5,  0.86, 1.0,  0.86,  0.5 ,  0.0, -0.5 , -0.
 
 void CanvasGL::Sphere(const Vec3f& center, float r){
 	glLineWidth(lineWidth);
-	glColor4fv(lineColor[0]);
+	glColor4fv(lineColor[0].rgb);
 
 	/// three orthogonal circles
 	glBegin(GL_LINE_LOOP);
@@ -281,7 +286,7 @@ void CanvasGL::Sphere(const Vec3f& center, float r){
 
 void CanvasGL::Cylinder(float r, float l){
 	glLineWidth(lineWidth);
-	glColor4fv(lineColor[0]);
+	glColor4fv(lineColor[0].rgb);
 
 	float l_half = 0.5 * l;
 	// caps
@@ -311,12 +316,6 @@ void CanvasGL::Cylinder(float r, float l){
 // CanvasSVG
 
 CanvasSVG::CanvasSVG(){
-}
-void CanvasSVG::SetPointSize(float ps){
-	
-}
-void CanvasSVG::SetLineWidth(float lw){
-	svg.SetStrokeWidth(lw);
 }
 void CanvasSVG::Push(){
 	svg.PushModelMatrix();
@@ -349,12 +348,15 @@ void CanvasSVG::Point(const Vec3f& p){
 	svg.DrawLine(p, p);
 }
 void CanvasSVG::Line(const Vec2f& p0, const Vec2f& p1){
+	svg.SetStrokeWidth(lineWidth);
 	svg.DrawLine(p0, p1);
 }
 void CanvasSVG::Line(const Vec3f& p0, const Vec3f& p1){
+	svg.SetStrokeWidth(lineWidth);
 	svg.DrawLine(p0, p1);
 }
 void CanvasSVG::BeginPath(){
+	svg.SetStrokeWidth(lineWidth);
 	svg.BeginPath();
 }
 void CanvasSVG::EndPath(){
