@@ -22,18 +22,17 @@ bool Loader::Load(XML& xml, Graph* graph){
 bool Loader::Load(XMLNode* node, Graph* graph){
 	//
 	string n = node->name;
-	if( n == "ticks"      ) LoadTicks     (node, graph);
-	if( n == "geometry"   ) LoadGeometry  (node, graph);
-	if( n == "object"     ) LoadObject    (node, graph);
-	if( n == "joint"      ) LoadJoint     (node, graph);
-	if( n == "timeslot"   ) LoadTimeSlot  (node, graph);
-	if( n == "task"       ) LoadTask      (node, graph);
-	if( n == "scaling"    ) LoadScaling   (node, graph);
-	if( n == "enable"     ) LoadEnable    (node, graph);
-	if( n == "priority"   ) LoadPriority  (node, graph);
-	if( n == "iteration"  ) LoadIteration (node, graph);
-	if( n == "correction" ) LoadCorrection(node, graph);
-
+	if( n == "ticks"      ) LoadTicks   (node, graph);
+	if( n == "geometry"   ) LoadGeometry(node, graph);
+	if( n == "object"     ) LoadObject  (node, graph);
+	if( n == "joint"      ) LoadJoint   (node, graph);
+	if( n == "timeslot"   ) LoadTimeSlot(node, graph);
+	if( n == "task"       ) LoadTask    (node, graph);
+	if( n == "scaling"    ) LoadScaling (node, graph);
+	if( n == "enable"     ) LoadEnable  (node, graph);
+	if( n == "priority"   ) LoadPriority(node, graph);
+	if( n == "param"      ) LoadParam   (node, graph);
+	
 	for(uint i = 0; ; i++) try{
 		XMLNode* child = node->GetNode(i);
 		Load(child, graph);
@@ -155,8 +154,16 @@ void Loader::LoadTask(XMLNode* node, Graph* graph){
 	TimeSlot* ts   = graph->timeslots.Find(tsName  );
 
 	if(obj0 && obj1 && ts){
-		if(type == "avoid") new AvoidTask(obj0, obj1, ts, name);
-		if(type == "match") new MatchTask(obj0, obj1, ts, name);
+		if(type == "avoid"){
+			new AvoidTask(obj0, obj1, ts, name);
+		}
+		if(type == "match"){
+			MatchTask* task = new MatchTask(obj0, obj1, ts, name);
+			node->Get(task->param.match_tp, ".match_tp");
+			node->Get(task->param.match_tv, ".match_tv");
+			node->Get(task->param.match_rp, ".match_rp");
+			node->Get(task->param.match_rv, ".match_rv");
+		}
 	}
 
 }
@@ -221,16 +228,6 @@ void Loader::LoadPriority(XMLNode* node, Graph* graph){
 	graph->solver->SetPriority(id, level);
 }
 
-void Loader::LoadIteration(XMLNode* node, Graph* graph){
-	uint level = 0;
-	uint num   = 0;
-
-	node->Get(level, ".level");
-	node->Get(num  , ".num"  );
-
-	graph->solver->param.numIter[level] = num;
-}
-
 void Loader::LoadCorrection(XMLNode* node, Graph* graph){
 	string idstr;
 	string targetName;
@@ -247,6 +244,46 @@ void Loader::LoadCorrection(XMLNode* node, Graph* graph){
 	id.owner = graph->nodes.Find(targetName);
 
 	graph->solver->SetCorrectionRate(id, rate, limit);
+}
+
+void Loader::LoadParam(XMLNode* node, Graph* graph){
+	string name, value;
+	node->Get(name , ".name" );
+	node->Get(value, ".value");
+	
+	string str;
+	if(name == "verbose"){
+		node->Get(graph->solver->param.verbose, ".value");
+	}
+	if(name == "method_major"){
+		node->Get(str, ".value");
+		if(str == "steepest_descent") graph->solver->param.methodMajor = Solver::Method::Major::SteepestDescent;
+		if(str == "gauss_newton1"   ) graph->solver->param.methodMajor = Solver::Method::Major::GaussNewton1;
+		if(str == "gauss_newton2"   ) graph->solver->param.methodMajor = Solver::Method::Major::GaussNewton2;
+		if(str == "prioritized"     ) graph->solver->param.methodMajor = Solver::Method::Major::Prioritized;
+	}
+	if(name == "method_minor"){
+		node->Get(str, ".value");
+		if(str == "direct"      ) graph->solver->param.methodMinor = Solver::Method::Minor::Direct;
+		if(str == "jacobi"      ) graph->solver->param.methodMinor = Solver::Method::Minor::Jacobi;
+		if(str == "gauss_seidel") graph->solver->param.methodMinor = Solver::Method::Minor::GaussSeidel;
+	}
+	if(name == "num_iter"){
+		vvec_t v;
+		node->Get(v, ".value");
+		graph->solver->param.numIter.resize(v.size());
+		for(int i = 0; i < (int)v.size(); i++)
+			graph->solver->param.numIter[i] = (int)v[i];
+	}
+	if(name == "min_step_size"){
+		node->Get(graph->solver->param.minStepSize, ".value");
+	}
+	if(name == "max_step_size"){
+		node->Get(graph->solver->param.maxStepSize, ".value");
+	}
+	if(name == "cutoff_step_size"){
+		node->Get(graph->solver->param.cutoffStepSize, ".value");
+	}
 }
 
 }

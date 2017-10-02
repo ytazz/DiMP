@@ -21,16 +21,22 @@ Canvas::Canvas(){
 	gradation	= false;
 }
 void Canvas::SetPointColor(const string& c){
-	pointColor.name = c;
-	pointColor.Init();
+	if(pointColor.name != c){
+		pointColor.name = c;
+		pointColor.Init();
+	}
 }
 void Canvas::SetLineColor(const string& c, uint idx){
-	lineColor[idx].name = c;
-	lineColor[idx].Init();
+	if(lineColor[idx].name != c){
+		lineColor[idx].name = c;
+		lineColor[idx].Init();
+	}
 }
 void Canvas::SetFillColor(const string& c){
-	fillColor.name = c;
-	fillColor.Init();
+	if(fillColor.name != c){
+		fillColor.name = c;
+		fillColor.Init();
+	}
 }
 void Canvas::SetPointSize(float ps){
 	pointSize = ps;

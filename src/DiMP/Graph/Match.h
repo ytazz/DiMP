@@ -20,8 +20,8 @@ public:
 		- Insideはこのキーポイントがタイミング区間に含まれるとき
 		に有効となる
 	 **/
-	MatchConTP*	con_tp[3];
-	MatchConTV*	con_tv[3];
+	MatchConTP*	 con_tp[3];
+	MatchConTV*	 con_tv[3];
 	MatchConRP*  con_rp[3];
 	MatchConRV*  con_rv[3];
 

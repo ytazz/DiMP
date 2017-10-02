@@ -23,9 +23,9 @@ public:
 	void LoadScaling     (XMLNode* node, Graph* graph);
 	void LoadEnable      (XMLNode* node, Graph* graph);
 	void LoadPriority    (XMLNode* node, Graph* graph);
-	void LoadIteration   (XMLNode* node, Graph* graph);
 	void LoadCorrection  (XMLNode* node, Graph* graph);
-
+	void LoadParam       (XMLNode* node, Graph* graph);
+	
 	Loader();
 };
 
