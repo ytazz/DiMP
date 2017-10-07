@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<welding
+  points_filename = "conf/robotarm/pa10welding/points.csv"
+  start_time      = "1.0"
+  end_time        = "10.0"
+  num_ticks       = "50"
+  mockup_offset   = "1.240 0.4895 0.0"
+  />
+
