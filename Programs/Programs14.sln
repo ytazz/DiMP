@@ -21,6 +21,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "robotarm", "robotarm", "{F6
 		..\bin\conf\robotarm\scene_toss3d.xml = ..\bin\conf\robotarm\scene_toss3d.xml
 		..\bin\conf\robotarm\scene_welding.xml = ..\bin\conf\robotarm\scene_welding.xml
 		..\bin\conf\robotarm\setting.xml = ..\bin\conf\robotarm\setting.xml
+		..\bin\conf\robotarm\welding.xml = ..\bin\conf\robotarm\welding.xml
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Biped14", "Biped\Biped14.vcxproj", "{3E966585-6433-499A-9533-4A9174DBB3CF}"

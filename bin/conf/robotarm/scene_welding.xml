@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 
 <namespace name="workspace">
-  
   <import name="robot0" filename="pa10welding/pa10welding.xml"/>
   <import name="mockup" filename="pa10welding/mockup.xml"/>
 
@@ -14,9 +13,21 @@
 
   <attach connector="body_target0/0" shape="sphere_target" vmat="mat_target"/>
 
-  <ticks time_begin="0.0" time_step="0.5" time_end="5.0"/>
-  <timeslot name="timeslot0" time_begin="4.0" time_end="5.0" locked="true"/>
-  <task name="task0"  type="match" obj0="workspace/robot0/body_link11" obj1="workspace/body_target0"   timeslot="timeslot0" match_tp="true" match_tv="false" match_rp="false" match_rv="false"/>
+  <!--
+  <ticks time_begin="0.0" time_step="0.5" time_end="30.0"/>
+  <timeslot name="timeslot0" time_begin="5.0" time_end="30.0" locked="true"/>
+  <task
+    name    ="task0"
+    type    ="match"
+    obj0    ="workspace/robot0/body_link11"
+    obj1    ="workspace/body_target0"
+    timeslot="timeslot0"
+    match_tp="true"
+    match_tv="true"
+    match_rp="false"
+    match_rv="false"
+  />
+  -->
   
   <scaling T="1.0" L="1.0" M="1.0"/>
   
@@ -30,8 +41,8 @@
   <enable  id="joint_range_f" enable="false"/>
   <enable  id="joint_tp"      enable="true"/>
   <enable  id="joint_rp"      enable="true"/>
-  <enable  id="joint_tv"      enable="false"/>
-  <enable  id="joint_rv"      enable="false"/>
+  <enable  id="joint_tv"      enable="true"/>
+  <enable  id="joint_rv"      enable="true"/>
   <enable  id="force_t"       enable="false"/>
   <enable  id="force_r"       enable="false"/>
 
