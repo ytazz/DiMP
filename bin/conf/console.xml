@@ -6,23 +6,25 @@
     console_font_size     = "12"
     console_pos_x         = "0"
     console_pos_y         = "0"
-    console_width         = "180"
-    console_height        = "100"
+    console_width         = "110"
+    console_height        = "55"
     console_message_row   = "0"
-    console_message_col   = "60"
+    console_message_col   = "55"
     console_message_depth = "50"
-    console_input_row     = "98"
+    console_input_row     = "53"
     >
   </rendering>
 
   <window_manager
-    window_width  = "1600"
-    window_height = "900"
+    window_pos_x  = "1400"
+    window_pos_y  = "60"
+    window_width  = "1100"
+    window_height = "1200"
     window_title  = "DiMP Console">
     <window
       split       = "1 2"
       row_ratio   = "100%"
-      col_ratio   = "100% 300"
+      col_ratio   = "100% 100"
       frame_color = "black"
       back_color  = "white"
       font_face   = "msgothic.ttc"

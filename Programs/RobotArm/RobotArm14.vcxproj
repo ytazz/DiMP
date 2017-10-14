@@ -80,6 +80,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)..\bin\x64\</OutDir>
+    <TargetName>$(ProjectName)D</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -128,6 +129,9 @@
       <AdditionalDependencies>mkl_core.lib;mkl_intel_lp64.lib;mkl_sequential.lib;sdl2.lib;sdl2_ttf.lib;expatd.lib;libpng16_staticd.lib;zlibstatic.lib;Springhead14.0Dx64.lib;Scenebuilder14D.lib;sbdimp14D.lib;sbsprgraphics14D.lib;glwin14D.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>libcmt.lib</IgnoreSpecificDefaultLibraries>
     </Link>
+    <Manifest>
+      <EnableDpiAwareness>true</EnableDpiAwareness>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -175,6 +179,9 @@
       <AdditionalDependencies>mkl_core.lib;mkl_intel_lp64.lib;mkl_sequential.lib;sdl2.lib;sdl2_ttf.lib;expat.lib;libpng16_static.lib;zlibstatic.lib;Springhead14.0x64.lib;Scenebuilder14.lib;sbdimp14.lib;sbsprgraphics14.lib;glwin14.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>libcmt.lib</IgnoreSpecificDefaultLibraries>
     </Link>
+    <Manifest>
+      <EnableDpiAwareness>true</EnableDpiAwareness>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />

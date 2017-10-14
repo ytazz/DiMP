@@ -40,21 +40,21 @@ public:
 
 	/// scaling factors
 	struct Scale{
-		real_t		time,		time_inv;
-		real_t		size,		size_inv;
-		real_t		mass,		mass_inv;
-		real_t		inertia,	inertia_inv;
+		real_t		time,    time_inv;
+		real_t		size,    size_inv;
+		real_t		mass,    mass_inv;
+		real_t		inertia, inertia_inv;
 
-		real_t		pos_t,	pos_t_inv;
-		real_t		vel_t,	vel_t_inv;
-		real_t		acc_t,	acc_t_inv;
+		real_t		pos_t,  pos_t_inv;
+		real_t		vel_t,  vel_t_inv;
+		real_t		acc_t,  acc_t_inv;
 	
-		real_t		pos_r,	pos_r_inv;
-		real_t		vel_r,	vel_r_inv;
-		real_t		acc_r,	acc_r_inv;
+		real_t		pos_r,  pos_r_inv;
+		real_t		vel_r,  vel_r_inv;
+		real_t		acc_r,  acc_r_inv;
 	
-		real_t		force_t, force_t_inv;
-		real_t		force_r, force_r_inv;
+		real_t		force_t,  force_t_inv;
+		real_t		force_r,  force_r_inv;
 
 		void Set(real_t T, real_t L, real_t M);
 
@@ -97,9 +97,6 @@ public:
 
 	/// resets all variables. objects are not deleted
 	virtual void Reset();
-
-	/// resets all variables. and do extra initialization
-	//virtual void Reset2();
 
 	/** 
 		computes one step of planning

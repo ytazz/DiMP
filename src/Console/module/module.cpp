@@ -29,12 +29,13 @@ Module::Module(){
 
 	Message::SetVerboseLevel(Message::Level::Normal);
 
-	graph     = new DiMP::Graph      ();
-	iterCount = 0;
-	compTime  = 0;
-	deltaNorm = 0.0;
-	isPlaying = true;
-	playTime  = 0.0;
+	graph         = new DiMP::Graph      ();
+	iterCount     = 0;
+	compTime      = 0;
+	compTimeTotal = 0;
+	deltaNorm     = 0.0;
+	isPlaying     = true;
+	playTime      = 0.0;
 	
 	renManager = new RenderingManager ();
 	reqManager = new RequestManager   ();
@@ -84,12 +85,12 @@ bool Module::Init(int argc, char* argv[]){
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE  , 24);	//< 16bitだと不足．24bitまでなら普通サポートされてると期待
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER,  1);
     renManager->sdlWindow = SDL_CreateWindow(
-		renManager->windowTitle.c_str(),
-		SDL_WINDOWPOS_UNDEFINED,
-		SDL_WINDOWPOS_UNDEFINED,
-		renManager->windowWidth,
-		renManager->windowHeight,
-		SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
+		 renManager->windowTitle.c_str(),
+		(renManager->windowPosX == -1 ? SDL_WINDOWPOS_UNDEFINED : renManager->windowPosX),
+		(renManager->windowPosY == -1 ? SDL_WINDOWPOS_UNDEFINED : renManager->windowPosY),
+		 renManager->windowWidth,
+		 renManager->windowHeight,
+		 SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
 
 	renManager->glContext = SDL_GL_CreateContext(renManager->sdlWindow);
 	SDL_StartTextInput();
@@ -192,7 +193,8 @@ bool Module::OnRequest(){
 void Module::OnStep(){
 	ptimer.CountUS();
 	graph->Step();
-	compTime += ptimer.CountUS();
+	compTime       = ptimer.CountUS();
+	compTimeTotal += compTime;
 		
 	iterCount++;
 		
@@ -222,37 +224,52 @@ void Module::OnPrint(deque<string>& lines){
 
 	sprintf(line, "iter. count: %6d"  , iterCount       ); lines.push_back(line);
 	sprintf(line, "comp. time : %6d"  , compTime        ); lines.push_back(line);
+	sprintf(line, "comp. total: %6d"  , compTimeTotal   ); lines.push_back(line);
 	sprintf(line, "delta. norm: %6.3f", deltaNorm       ); lines.push_back(line);
 	lines.push_back("");
 
-	if(!graph->solver->infoType.empty()){
-		sprintf(line, "               name : num    en     act    error");
+	if(!graph->solver->varInfoType.empty()){
+		sprintf(line, "               name : num  lock");
 		lines.push_back(line);
 
-		for(int i = 0; i < (int)graph->solver->infoType.size(); i++){
+		for(int i = 0; i < (int)graph->solver->varInfoType.size(); i++){
+			sprintf(line, "%20s: %4d %4d",
+				DiMP::VarNames[i],
+				graph->solver->varInfoType[i].num      ,
+				graph->solver->varInfoType[i].numLocked);
+			lines.push_back(line);
+		}
+	}
+	lines.push_back("");
+
+	if(!graph->solver->conInfoType.empty()){
+		sprintf(line, "               name : num  en   act  error");
+		lines.push_back(line);
+
+		for(int i = 0; i < (int)graph->solver->conInfoType.size(); i++){
 			sprintf(line, "%20s: %4d %4d %4d %6.3f",
 				DiMP::ConNames[i],
-				graph->solver->infoType[i].num       ,
-				graph->solver->infoType[i].numEnabled,
-				graph->solver->infoType[i].numActive ,
-				graph->solver->infoType[i].error     );
+				graph->solver->conInfoType[i].num       ,
+				graph->solver->conInfoType[i].numEnabled,
+				graph->solver->conInfoType[i].numActive ,
+				graph->solver->conInfoType[i].error     );
 			lines.push_back(line);
 		}
 	}
 	lines.push_back("");
 
 	// 拘束種別の誤差
-	if(!graph->solver->infoLevel.empty()){
+	if(!graph->solver->conInfoLevel.empty()){
 		sprintf(line, "              level : num    en     act    error");
 		lines.push_back(line);
 
-		for(int i = 0; i < (int)graph->solver->infoLevel.size(); i++){
+		for(int i = 0; i < (int)graph->solver->conInfoLevel.size(); i++){
 			sprintf(line, "%20d: %4d %4d %4d %6.3f",
 				i,
-				graph->solver->infoLevel[i].num       ,
-				graph->solver->infoLevel[i].numEnabled,
-				graph->solver->infoLevel[i].numActive ,
-				graph->solver->infoLevel[i].error     );
+				graph->solver->conInfoLevel[i].num       ,
+				graph->solver->conInfoLevel[i].numEnabled,
+				graph->solver->conInfoLevel[i].numActive ,
+				graph->solver->conInfoLevel[i].error     );
 			lines.push_back(line);
 		}
 	}

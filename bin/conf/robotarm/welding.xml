@@ -3,7 +3,7 @@
   points_filename = "conf/robotarm/pa10welding/points.csv"
   start_time      = "1.0"
   end_time        = "10.0"
-  num_ticks       = "50"
+  num_ticks       = "20"
   mockup_offset   = "1.240 0.4895 0.0"
   />
 

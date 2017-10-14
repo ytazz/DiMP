@@ -19,6 +19,7 @@ public:
 	
 	int     iterCount;
 	int     compTime;
+	int     compTimeTotal;
 	bool    isPlaying;
 	double  playTime;		///< play time
 	double  deltaNorm;

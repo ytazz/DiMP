@@ -5,5 +5,5 @@
   split      = "1 1"
   row_ratio  = "40"
   >
-  <button name="btn_plan" text="plan" latch="true" back_color="gray"/>
+  <button name="btn_plan" text="plan" font_size="24" latch="true" back_color="gray"/>
 </panel>

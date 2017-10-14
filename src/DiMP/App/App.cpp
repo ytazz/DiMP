@@ -168,19 +168,19 @@ void App::DrawState(GRRenderIf* render, Vec2f& offset){
 	DrawValue(render, offset, "delta. norm:", deltaNorm       );
 		
 	// S‘©Ží•Ê‚ÌŒë·
-	if(!graph->solver->infoType.empty()){
-		for(int i = 0; i < (int)graph->solver->infoType.size(); i++)
-			DrawValue(render, offset, DiMP::ConNames[i], graph->solver->infoType[i].error);
+	if(!graph->solver->conInfoType.empty()){
+		for(int i = 0; i < (int)graph->solver->conInfoType.size(); i++)
+			DrawValue(render, offset, DiMP::ConNames[i], graph->solver->conInfoType[i].error);
 	}
 
 	offset.y += (float)Metric::LineY;
 
 	// S‘©Ží•Ê‚ÌŒë·
-	if(!graph->solver->infoLevel.empty()){
-		for(int i = 0; i < (int)graph->solver->infoLevel.size(); i++){
+	if(!graph->solver->conInfoLevel.empty()){
+		for(int i = 0; i < (int)graph->solver->conInfoLevel.size(); i++){
 			ss.str("");
 			ss << "level" << i;
-			DrawValue(render, offset, ss.str(), graph->solver->infoLevel[i].error);
+			DrawValue(render, offset, ss.str(), graph->solver->conInfoLevel[i].error);
 		}
 	}
 }

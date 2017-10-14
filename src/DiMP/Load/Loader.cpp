@@ -206,7 +206,7 @@ void Loader::LoadEnable(XMLNode* node, Graph* graph){
 	node->Get(enable    , ".enable");
 
 	ID id;
-	id.type  = StrToTag(idstr);
+	id.tag   = StrToTag(idstr);
 	id.owner = graph->nodes.Find(targetName);
 
 	graph->solver->Enable(id, enable);
@@ -222,7 +222,7 @@ void Loader::LoadPriority(XMLNode* node, Graph* graph){
 	node->Get(level     , ".level" );
 
 	ID id;
-	id.type  = StrToTag(idstr);
+	id.tag   = StrToTag(idstr);
 	id.owner = graph->nodes.Find(targetName);
 
 	graph->solver->SetPriority(id, level);
@@ -240,7 +240,7 @@ void Loader::LoadCorrection(XMLNode* node, Graph* graph){
 	node->Get(limit     , ".limit" );
 
 	ID id;
-	id.type  = StrToTag(idstr);
+	id.tag   = StrToTag(idstr);
 	id.owner = graph->nodes.Find(targetName);
 
 	graph->solver->SetCorrectionRate(id, rate, limit);
