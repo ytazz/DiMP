@@ -146,7 +146,14 @@ bool MyModule::Build(){
 		DiMP::TimeSlot* timeSlot = new DiMP::TimeSlot(graph, conf.welding.startTime, conf.welding.endTime, true, "ts_welding");
 
 		// マッチングタスク生成
-		new DiMP::MatchTask(robot[0]->link.back(), target[0], timeSlot, "match_welding");
+		new DiMP::MatchTask(robot[0]->link.back()->cons[0], target[0]->cons[0], timeSlot, "match_welding");
+		// 回避タスク生成
+		stringstream ss;
+		for(int i = 0; i < (int)robot[0]->link.size(); i++){
+			ss.str("");
+			ss << "avoid" << i;
+			new DiMP::AvoidTask(robot[0]->link[i]->cons[0], obstacle[0]->cons[0], timeSlot, ss.str());
+		}
 	}
 
 	// 初期化

@@ -55,53 +55,88 @@ void ObjectKey::AddCon(Solver* solver){
 	}
 }
 
-void ObjectKey::AddLinks(Constraint* con, bool t_or_r, bool p_or_v, bool s_or_r){
+void ObjectKey::AddLinks(Constraint* con, const ObjectKey::OptionS& opt){
 	if(tree){
 		for(uint j = 0; j < tree->joints.size(); j++){
-			Variable* var = (p_or_v ? tree->joints[j]->pos[0] : tree->joints[j]->vel[0]);
-			if(s_or_r)
-				 con->AddC3Link(var);
-			else con->AddSLink (var);
+			if(opt.tp || opt.rp) con->AddSLink (tree->joints[j]->pos[0]);
+			if(opt.tv || opt.rv) con->AddSLink (tree->joints[j]->vel[0]);
 		}
 	}
 	else{
-		Variable* var;
-		if(t_or_r){
-			if(p_or_v)
-				 var = pos_t;
-			else var = vel_t;
-		}
-		else{
-			if(p_or_v)
-				 var = pos_r;
-			else var = vel_r;
-		}
-		if(s_or_r)
-			 con->AddSLink (var);
-		else con->AddR3Link(var);
+		if(opt.tp) con->AddR3Link(pos_t);
+		if(opt.rp) con->AddR3Link(pos_r);
+		if(opt.tv) con->AddR3Link(vel_t);
+		if(opt.rv) con->AddR3Link(vel_r);
 	}
 }
 
-void ObjectKey::CalcCoef(Constraint* con, bool t_or_r, real_t k, uint& i){
+void ObjectKey::AddLinks(Constraint* con, const ObjectKey::OptionV3& opt){
 	if(tree){
-		int idx = tree->GetIndex(this);
 		for(uint j = 0; j < tree->joints.size(); j++){
-			vec3_t J = (t_or_r ? tree->Jv[idx][j] : tree->Jw[idx][j]);
-			((C3Link*)con->links[i++])->SetCoef(k * J);
+			if(opt.tp || opt.rp) con->AddC3Link(tree->joints[j]->pos[0]);
+			if(opt.tv || opt.rv) con->AddC3Link(tree->joints[j]->vel[0]);
 		}
 	}
-	else ((SLink*)con->links[i++])->SetCoef(k);
+	else{
+		if(opt.tp) con->AddSLink (pos_t);
+		if(opt.rp) con->AddSLink (pos_r);
+		if(opt.tv) con->AddSLink (vel_t);
+		if(opt.rv) con->AddSLink (vel_r);
+	}
 }
 
-void ObjectKey::CalcCoef(Constraint* con, bool t_or_r, vec3_t k, uint& i){
+void ObjectKey::CalcCoef(Constraint* con, const ObjectKey::OptionS& opt, uint& i){
 	if(tree){
 		int idx = tree->GetIndex(this);
 		for(uint j = 0; j < tree->joints.size(); j++){
-			vec3_t J = (t_or_r ? tree->Jv[idx][j] : tree->Jw[idx][j]);
-			((SLink*)con->links[i++])->SetCoef(k * J);
+			real_t J;
+			if(opt.tp || opt.rp){
+				J = 0.0;
+				if(opt.tp) J += opt.k_tp * tree->Jv[idx][j];
+				if(opt.rp) J += opt.k_rp * tree->Jw[idx][j];
+				((SLink*)con->links[i++])->SetCoef(J);
+			}
+			if(opt.tv || opt.rv){
+				J = 0.0;
+				if(opt.tv) J += opt.k_tv * tree->Jv[idx][j];
+				if(opt.rv) J += opt.k_rv * tree->Jw[idx][j];
+				((SLink*)con->links[i++])->SetCoef(J);
+			}
 		}
 	}
-	else ((R3Link*)con->links[i++])->SetCoef(k);
+	else{
+		if(opt.tp) ((R3Link*)con->links[i++])->SetCoef(opt.k_tp);
+		if(opt.rp) ((R3Link*)con->links[i++])->SetCoef(opt.k_rp);
+		if(opt.tv) ((R3Link*)con->links[i++])->SetCoef(opt.k_tv);
+		if(opt.rv) ((R3Link*)con->links[i++])->SetCoef(opt.k_rv);
+	}
+}
+
+void ObjectKey::CalcCoef(Constraint* con, const ObjectKey::OptionV3& opt, uint& i){
+	if(tree){
+		int idx = tree->GetIndex(this);
+		for(uint j = 0; j < tree->joints.size(); j++){
+			vec3_t J;
+			if(opt.tp || opt.rp){
+				J.clear();
+				if(opt.tp) J += opt.k_tp * tree->Jv[idx][j];
+				if(opt.rp) J += opt.k_rp * tree->Jw[idx][j];
+				((C3Link*)con->links[i++])->SetCoef(J);
+			}
+			if(opt.tv || opt.rv){
+				J.clear();
+				if(opt.tv) J += opt.k_tv * tree->Jv[idx][j];
+				if(opt.rv) J += opt.k_rv * tree->Jw[idx][j];
+				((C3Link*)con->links[i++])->SetCoef(J);
+			}
+		}
+	}
+	else{
+		if(opt.tp) ((SLink*)con->links[i++])->SetCoef(opt.k_tp);
+		if(opt.rp) ((SLink*)con->links[i++])->SetCoef(opt.k_rp);
+		if(opt.tv) ((SLink*)con->links[i++])->SetCoef(opt.k_tv);
+		if(opt.rv) ((SLink*)con->links[i++])->SetCoef(opt.k_rv);
+	}
 }
 
 void ObjectKey::Prepare(){
@@ -205,8 +240,8 @@ void Object::CalcBSphere(){
 
 		for(uint j = 0; j < con->geos.size(); j++){
 			Geometry* geo = con->geos[j];
-
-			bsphere = std::max(bsphere, con->pose.Pos().norm() + geo->CalcBSphere());	
+			geo->CalcBSphere();
+			bsphere = std::max(bsphere, con->pose.Pos().norm() + geo->bsphereCenter.norm() + geo->bsphereRadius);
 		}
 	}
 }

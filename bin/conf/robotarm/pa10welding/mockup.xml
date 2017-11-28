@@ -13,7 +13,7 @@
   <vmat name="mat_mockup"  colorname="darkturquoise" alpha="0.3"/>
   <vmat name="mat_gadai"   colorname="darkturquoise" alpha="1.0"/>
 
-  <body name="body_mockup" dynamical="false">
+  <body name="body_obstacle0" dynamical="false">
     <connector name="c_mockup" trn="1240 489.5 0"/>
     <connector name="c_gadai" />
   </body>

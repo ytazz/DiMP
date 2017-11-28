@@ -5,6 +5,7 @@
 namespace DiMP{;
 
 class Graph;
+class Connector;
 class Object;
 class ObjectKey;
 class TimeSlot;
@@ -30,11 +31,14 @@ public:
 class Task : public ScheduledNode{
 public:
 	// 拘束対象オブジェクト
-	Object*		obj0;
-	Object*		obj1;
+	//Object*		obj0;
+	//Object*		obj1;
+	Connector*  con0;
+	Connector*  con1;
 	
 public:
-	Task(Object* _obj0, Object* _obj1, TimeSlot* _time, const string& n);
+	//Task(Object* _obj0, Object* _obj1, TimeSlot* _time, const string& n);
+	Task(Connector* _con0, Connector* _con1, TimeSlot* _time, const string& n);
 	virtual ~Task();
 };
 

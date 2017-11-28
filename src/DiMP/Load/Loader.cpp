@@ -139,26 +139,26 @@ void Loader::LoadTimeSlot(XMLNode* node, Graph* graph){
 void Loader::LoadTask(XMLNode* node, Graph* graph){
 	string name;
 	string type;
-	string obj0Name;
-	string obj1Name;
+	string con0Name;
+	string con1Name;
 	string tsName;
 
 	node->Get(name    , ".name"    );
 	node->Get(type    , ".type"    );
-	node->Get(obj0Name, ".obj0"    );
-	node->Get(obj1Name, ".obj1"    );
+	node->Get(con0Name, ".con0"    );
+	node->Get(con1Name, ".con1"    );
 	node->Get(tsName  , ".timeslot");
 
-	Object  * obj0 = graph->objects  .Find(obj0Name);
-	Object  * obj1 = graph->objects  .Find(obj1Name);
-	TimeSlot* ts   = graph->timeslots.Find(tsName  );
+	Connector* con0 = graph->cons     .Find(con0Name);
+	Connector* con1 = graph->cons     .Find(con1Name);
+	TimeSlot * ts   = graph->timeslots.Find(tsName  );
 
-	if(obj0 && obj1 && ts){
+	if(con0 && con1 && ts){
 		if(type == "avoid"){
-			new AvoidTask(obj0, obj1, ts, name);
+			new AvoidTask(con0, con1, ts, name);
 		}
 		if(type == "match"){
-			MatchTask* task = new MatchTask(obj0, obj1, ts, name);
+			MatchTask* task = new MatchTask(con0, con1, ts, name);
 			node->Get(task->param.match_tp, ".match_tp");
 			node->Get(task->param.match_tv, ".match_tv");
 			node->Get(task->param.match_rp, ".match_rp");

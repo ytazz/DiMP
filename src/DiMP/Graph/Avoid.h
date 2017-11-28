@@ -14,9 +14,15 @@ class AvoidConP;
 class AvoidConV;
 
 class AvoidKey : public TaskKey{
-public:	
+public:
+	ObjectKey*  obj[2];
+
 	AvoidConP*	con_p;
 	AvoidConV*	con_v;
+
+	vec3_t prox0, prox1;
+	vec3_t normal;
+	real_t depth;
 
 public:
 	virtual void AddCon(Solver* solver);
@@ -33,7 +39,7 @@ public:
 	virtual Keypoint*	CreateKeypoint(){ return new AvoidKey(); }
 	virtual void Prepare();
 	
-	AvoidTask(Object* _obj0, Object* _obj1, TimeSlot* _time, const string& n);
+	AvoidTask(Connector* _con0, Connector* _con1, TimeSlot* _time, const string& n);
 
 };
 
@@ -41,14 +47,13 @@ class AvoidCon : public Constraint{
 public:
 	AvoidKey*	key;
 
-	virtual void CalcCoef();
-
 	AvoidCon(Solver* solver, ID id, AvoidKey* _key, real_t _scale);
 	virtual ~AvoidCon(){}
 };
 
 class AvoidConP : public AvoidCon{
 public:
+	virtual void CalcCoef();
 	virtual void CalcDeviation();
 	virtual void Project(real_t& l, uint k);
 
@@ -58,6 +63,7 @@ public:
 
 class AvoidConV : public AvoidCon{
 public:
+	virtual void CalcCoef();
 	virtual void CalcDeviation();
 	virtual void Project(real_t& l, uint k);
 

@@ -18,7 +18,6 @@ class  Geometry;
 
 class  ForceConT;
 class  ForceConR;
-//class  C1ConV3;
 class  ObjectConC1R;
 
 /**
@@ -27,6 +26,15 @@ class  ObjectConC1R;
 
 class ObjectKey : public Keypoint{
 public:
+	struct OptionS{
+		bool    tp, rp, tv, rv;
+		vec3_t  k_tp, k_rp, k_tv, k_rv;
+	};
+	struct OptionV3{
+		bool    tp, rp, tv, rv;
+		real_t  k_tp, k_rp, k_tv, k_rv;
+	};
+
 	typedef vector< pair<JointKey*, bool> >	JointKeys;
 	JointKeys	joints;		///< 接続しているJointのKeypoint, ソケット側true
 	TreeKey*	tree;
@@ -49,11 +57,15 @@ public:
 	/* ツリーに属しているかを考慮してリンクと係数を設定する
 		t_or_r : translational or rotational
 		p_or_v : position or velocity
-		s_or_r : scalar link or row link
+		s_or_r : v3 constraint or scalar constraint
 	 */
-	void AddLinks(Constraint* con, bool t_or_r, bool p_or_v, bool s_or_r);
-	void CalcCoef(Constraint* con, bool t_or_r, real_t k, uint& i);
-	void CalcCoef(Constraint* con, bool t_or_r, vec3_t k, uint& i);
+	//void AddLinks(Constraint* con, bool t_or_r, bool p_or_v, bool v_or_s);
+	//void CalcCoef(Constraint* con, bool t_or_r, real_t k, uint& i);
+	//void CalcCoef(Constraint* con, bool t_or_r, vec3_t k, uint& i);
+	void AddLinks(Constraint* con, const OptionS & opt);
+	void AddLinks(Constraint* con, const OptionV3& opt);
+	void CalcCoef(Constraint* con, const OptionS & opt, uint& i);
+	void CalcCoef(Constraint* con, const OptionV3& opt, uint& i);
 
 public:
 	virtual void AddVar (Solver* solver);
@@ -79,8 +91,7 @@ public:
 			inertia   = 1.0;
 			dynamical = true;
 		}
-	};	
-	Param		param;
+	};
 
 	struct Snapshot{
 		real_t time;
@@ -89,6 +100,9 @@ public:
 		vec3_t vel;
 		vec3_t angvel;
 	};
+	
+	Param		param;
+
 	vector<Snapshot>	snapshots;
 
 	Connectors	cons;

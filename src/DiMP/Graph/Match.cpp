@@ -80,8 +80,8 @@ MatchTask::Param::Param(){
 	match_rv = false;
 }
 
-MatchTask::MatchTask(Object* _obj0, Object* _obj1, TimeSlot* _time, const string& n)
-	:Task(_obj0, _obj1, _time, n){
+MatchTask::MatchTask(Connector* _con0, Connector* _con1, TimeSlot* _time, const string& n)
+	:Task(_con0, _con1, _time, n){
 }
 
 void MatchTask::Draw(Render::Canvas* canvas){
@@ -131,59 +131,79 @@ MatchConRV::MatchConRV(Solver* solver, const string& _name, MatchTaskKey* _key, 
 void MatchConT::AddLinks(bool pos_or_vel){
 	MatchTask* task = (MatchTask*)key->node;
 
+	ObjectKey::OptionV3 opt;
+
 	if(mode == MatchTaskKey::Start){
 		MatchTaskKey* next = (MatchTaskKey*)key->next;
-		key ->obj0->AddLinks(this, true, true , true);
-		key ->obj0->AddLinks(this, true, false, true);
-		next->obj0->AddLinks(this, true, true , true);
-		next->obj0->AddLinks(this, true, false, true);
-		key ->obj1->AddLinks(this, true, true , true);
-		key ->obj1->AddLinks(this, true, false, true);
-		next->obj1->AddLinks(this, true, true , true);
-		next->obj1->AddLinks(this, true, false, true);
+		opt.tp = true ;
+		opt.rp = false;
+		opt.tv = true ;
+		opt.rv = false;
+		key ->obj0->AddLinks(this, opt);
+		next->obj0->AddLinks(this, opt);
+		key ->obj1->AddLinks(this, opt);
+		next->obj1->AddLinks(this, opt);
 		
 		if(task->time)
 			AddC3Link(task->time->time_s);
 	}
 	else if(mode == MatchTaskKey::End){
 		MatchTaskKey* prev = (MatchTaskKey*)key->prev;
-		prev->obj0->AddLinks(this, true, true , true);
-		prev->obj0->AddLinks(this, true, false, true);
-		key ->obj0->AddLinks(this, true, true , true);
-		key ->obj0->AddLinks(this, true, false, true);
-		prev->obj1->AddLinks(this, true, true , true);
-		prev->obj1->AddLinks(this, true, false, true);
-		key ->obj1->AddLinks(this, true, true , true);
-		key ->obj1->AddLinks(this, true, false, true);
+		opt.tp = true ;
+		opt.rp = false;
+		opt.tv = true ;
+		opt.rv = false;
+		prev->obj0->AddLinks(this, opt);
+		key ->obj0->AddLinks(this, opt);
+		prev->obj1->AddLinks(this, opt);
+		key ->obj1->AddLinks(this, opt);
 
 		if(task->time)
 			AddC3Link(task->time->time_e);
 	}
 	else{
 		if(pos_or_vel){
-			key->obj0->AddLinks(this, true, true, true);
-			key->obj1->AddLinks(this, true, true, true);
+			opt.tp = true ;
+			opt.rp = false;
+			opt.tv = false;
+			opt.rv = false;
+			key->obj0->AddLinks(this, opt);
+			key->obj1->AddLinks(this, opt);
 		}
 		else{
-			key->obj0->AddLinks(this, true, false, true);
-			key->obj1->AddLinks(this, true, false, true);
+			opt.tp = false;
+			opt.rp = false;
+			opt.tv = true ;
+			opt.rv = false;
+			key->obj0->AddLinks(this, opt);
+			key->obj1->AddLinks(this, opt);
 		}
 	}
 }
 
 void MatchConR::AddLinks(bool pos_or_vel){
+	ObjectKey::OptionV3 opt;
+
 	if(mode == MatchTaskKey::Start){
 	}
 	else if(mode == MatchTaskKey::End){
 	}
 	else{
 		if(pos_or_vel){
-			key->obj0->AddLinks(this, false, true, true);
-			key->obj1->AddLinks(this, false, true, true);
+			opt.tp = false;
+			opt.rp = true ;
+			opt.tv = false;
+			opt.rv = false;
+			key->obj0->AddLinks(this, opt);
+			key->obj1->AddLinks(this, opt);
 		}
 		else{
-			key->obj0->AddLinks(this, false, false, true);
-			key->obj1->AddLinks(this, false, false, true);
+			opt.tp = false;
+			opt.rp = false;
+			opt.tv = false;
+			opt.rv = true ;
+			key->obj0->AddLinks(this, opt);
+			key->obj1->AddLinks(this, opt);
 		}
 	}
 }
@@ -194,6 +214,8 @@ void MatchConR::AddLinks(bool pos_or_vel){
 void MatchConTP::CalcCoef(){
 	if(!active)
 		return;
+
+	ObjectKey::OptionV3 opt;
 
 	MatchTask* task = (MatchTask*)key->node;
 	if(mode == MatchTaskKey::Start || mode == MatchTaskKey::End){
@@ -233,31 +255,31 @@ void MatchConTP::CalcCoef(){
 			k_v1 = 0;
 		}
 		
-		vec3_t v0 = task->obj0->Vel(t, Interpolate::Quadratic);
-		vec3_t v1 = task->obj1->Vel(t, Interpolate::Quadratic);
+		vec3_t v0 = task->con0->obj->Vel(t, Interpolate::Quadratic);
+		vec3_t v1 = task->con1->obj->Vel(t, Interpolate::Quadratic);
 
 		uint i = 0;
 		if(mode == MatchTaskKey::Start){
 			MatchTaskKey* next = (MatchTaskKey*)key->next;
-			key ->obj0->CalcCoef(this, true,  k_p0, i);
-			key ->obj0->CalcCoef(this, true,  k_v0, i);
-			next->obj0->CalcCoef(this, true,  k_p1, i);
-			next->obj0->CalcCoef(this, true,  k_v1, i);
-			key ->obj1->CalcCoef(this, true, -k_p0, i);
-			key ->obj1->CalcCoef(this, true, -k_v0, i);
-			next->obj1->CalcCoef(this, true, -k_p1, i);
-			next->obj1->CalcCoef(this, true, -k_v1, i);
+			opt.tp = true ;
+			opt.rp = false;
+			opt.tv = true ;
+			opt.rv = false;
+			opt.k_tp =  k_p0; opt.k_tv =  k_v0; key ->obj0->CalcCoef(this, opt, i);
+			opt.k_tp =  k_p1; opt.k_tv =  k_v1; next->obj0->CalcCoef(this, opt, i);
+			opt.k_tp = -k_p0; opt.k_tv = -k_v0; key ->obj1->CalcCoef(this, opt, i);
+			opt.k_tp = -k_p1; opt.k_tv = -k_v1; next->obj1->CalcCoef(this, opt, i);
 		}
 		else{
 			MatchTaskKey* prev = (MatchTaskKey*)key->prev;
-			prev->obj0->CalcCoef(this, true,  k_p0, i);
-			prev->obj0->CalcCoef(this, true,  k_v0, i);
-			key ->obj0->CalcCoef(this, true,  k_p1, i);
-			key ->obj0->CalcCoef(this, true,  k_v1, i);
-			prev->obj1->CalcCoef(this, true, -k_p0, i);
-			prev->obj1->CalcCoef(this, true, -k_v0, i);
-			key ->obj1->CalcCoef(this, true, -k_p1, i);
-			key ->obj1->CalcCoef(this, true, -k_v1, i);
+			opt.tp = true ;
+			opt.rp = false;
+			opt.tv = true ;
+			opt.rv = false;
+			opt.k_tp =  k_p0; opt.k_tv =  k_v0; prev->obj0->CalcCoef(this, opt, i);
+			opt.k_tp =  k_p1; opt.k_tv =  k_v1; key ->obj0->CalcCoef(this, opt, i);
+			opt.k_tp = -k_p0; opt.k_tv = -k_v0; prev->obj1->CalcCoef(this, opt, i);
+			opt.k_tp = -k_p1; opt.k_tv = -k_v1; key ->obj1->CalcCoef(this, opt, i);
 		}
 
 		if(task->time)
@@ -265,14 +287,20 @@ void MatchConTP::CalcCoef(){
 	}
 	else{
 		uint i = 0;
-		key->obj0->CalcCoef(this, true,  1.0, i);
-		key->obj1->CalcCoef(this, true, -1.0, i);
+		opt.tp = true ;
+		opt.rp = false;
+		opt.tv = false;
+		opt.rv = false;
+		opt.k_tp =  1.0; key->obj0->CalcCoef(this, opt, i);
+		opt.k_tp = -1.0; key->obj1->CalcCoef(this, opt, i);
 	}
 }
 
 void MatchConTV::CalcCoef(){
 	if(!active)
 		return;
+
+	ObjectKey::OptionV3 opt;
 
 	MatchTask* task = (MatchTask*)key->node;
 	if(mode == MatchTaskKey::Start || mode == MatchTaskKey::End){
@@ -311,31 +339,31 @@ void MatchConTV::CalcCoef(){
 			k_v1 = 0;
 		}
 		
-		vec3_t a0 = task->obj0->Acc(t, Interpolate::Quadratic);
-		vec3_t a1 = task->obj1->Acc(t, Interpolate::Quadratic);
+		vec3_t a0 = task->con0->obj->Acc(t, Interpolate::Quadratic);
+		vec3_t a1 = task->con1->obj->Acc(t, Interpolate::Quadratic);
 
 		uint i = 0;
 		if(mode == MatchTaskKey::Start){
 			MatchTaskKey* next = (MatchTaskKey*)key->next;
-			key ->obj0->CalcCoef(this, true,  k_p0, i);
-			key ->obj0->CalcCoef(this, true,  k_v0, i);
-			next->obj0->CalcCoef(this, true,  k_p1, i);
-			next->obj0->CalcCoef(this, true,  k_v1, i);
-			key ->obj1->CalcCoef(this, true, -k_p0, i);
-			key ->obj1->CalcCoef(this, true, -k_v0, i);
-			next->obj1->CalcCoef(this, true, -k_p1, i);
-			next->obj1->CalcCoef(this, true, -k_v1, i);
+			opt.tp = true ;
+			opt.rp = false;
+			opt.tv = true ;
+			opt.rv = false;
+			opt.k_tp =  k_p0; opt.k_tv =  k_v0; key ->obj0->CalcCoef(this, opt, i);
+			opt.k_tp =  k_p1; opt.k_tv =  k_v1; next->obj0->CalcCoef(this, opt, i);
+			opt.k_tp = -k_p0; opt.k_tv = -k_v0; key ->obj1->CalcCoef(this, opt, i);
+			opt.k_tp = -k_p1; opt.k_tv = -k_v1; next->obj1->CalcCoef(this, opt, i);
 		}
 		else{
 			MatchTaskKey* prev = (MatchTaskKey*)key->prev;
-			prev->obj0->CalcCoef(this, true,  k_p0, i);
-			prev->obj0->CalcCoef(this, true,  k_v0, i);
-			key ->obj0->CalcCoef(this, true,  k_p1, i);
-			key ->obj0->CalcCoef(this, true,  k_v1, i);
-			prev->obj1->CalcCoef(this, true, -k_p0, i);
-			prev->obj1->CalcCoef(this, true, -k_v0, i);
-			key ->obj1->CalcCoef(this, true, -k_p1, i);
-			key ->obj1->CalcCoef(this, true, -k_v1, i);
+			opt.tp = true ;
+			opt.rp = false;
+			opt.tv = true ;
+			opt.rv = false;
+			opt.k_tp =  k_p0; opt.k_tv =  k_v0; prev->obj0->CalcCoef(this, opt, i);
+			opt.k_tp =  k_p1; opt.k_tv =  k_v1; key ->obj0->CalcCoef(this, opt, i);
+			opt.k_tp = -k_p0; opt.k_tv = -k_v0; prev->obj1->CalcCoef(this, opt, i);
+			opt.k_tp = -k_p1; opt.k_tv = -k_v1; key ->obj1->CalcCoef(this, opt, i);
 		}
 	
 		if(task->time)
@@ -343,8 +371,12 @@ void MatchConTV::CalcCoef(){
 	}
 	else{
 		uint i = 0;
-		key->obj0->CalcCoef(this, true,  1.0, i);
-		key->obj1->CalcCoef(this, true, -1.0, i);
+		opt.tp = false;
+		opt.rp = false;
+		opt.tv = true ;
+		opt.rv = false;
+		opt.k_tv =  1.0; key->obj0->CalcCoef(this, opt, i);
+		opt.k_tv = -1.0; key->obj1->CalcCoef(this, opt, i);
 	}
 }
 
@@ -352,14 +384,20 @@ void MatchConRP::CalcCoef(){
 	if(!active)
 		return;
 	
+	ObjectKey::OptionV3 opt;
+
 	if(mode == MatchTaskKey::Start){
 	}
 	else if(mode == MatchTaskKey::End){
 	}
 	else{
 		uint i = 0;
-		key->obj0->CalcCoef(this, false,  1.0, i);
-		key->obj1->CalcCoef(this, false, -1.0, i);
+		opt.tp = false;
+		opt.rp = true ;
+		opt.tv = false;
+		opt.rv = false;
+		opt.k_rp =  1.0; key->obj0->CalcCoef(this, opt, i);
+		opt.k_rp = -1.0; key->obj1->CalcCoef(this, opt, i);
 	}
 }
 
@@ -367,14 +405,20 @@ void MatchConRV::CalcCoef(){
 	if(!active)
 		return;
 	
+	ObjectKey::OptionV3 opt;
+
 	if(mode == MatchTaskKey::Start){
 	}
 	else if(mode == MatchTaskKey::End){
 	}
 	else{
 		uint i = 0;
-		key->obj0->CalcCoef(this, false,  1.0, i);
-		key->obj1->CalcCoef(this, false, -1.0, i);
+		opt.tp = false;
+		opt.rp = false;
+		opt.tv = false;
+		opt.rv = true ;
+		opt.k_rv =  1.0; key->obj0->CalcCoef(this, opt, i);
+		opt.k_rv = -1.0; key->obj1->CalcCoef(this, opt, i);
 	}
 }
 
@@ -400,14 +444,14 @@ void MatchConTP::CalcDeviation(){
 		if(task->time)
 			 t = task->time->time_s->val;
 		else t = task->key_s->tick->time;
-		y = task->obj0->Pos(t, type) - task->obj1->Pos(t, type);
+		y = task->con0->obj->Pos(t, type) - task->con1->obj->Pos(t, type);
 	}
 	// 終点時刻上の誤差
 	else if(mode == MatchTaskKey::End){
 		if(task->time)
 			 t = task->time->time_e->val;
 		else t = task->key_e->tick->time;
-		y = task->obj0->Pos(t, type) - task->obj1->Pos(t, type);
+		y = task->con0->obj->Pos(t, type) - task->con1->obj->Pos(t, type);
 	}
 }
 
@@ -430,14 +474,14 @@ void MatchConTV::CalcDeviation(){
 		if(task->time)
 			 t = task->time->time_s->val;
 		else t = task->key_s->tick->time;
-		y = task->obj0->Vel(t, type) - task->obj1->Vel(t, type);
+		y = task->con0->obj->Vel(t, type) - task->con1->obj->Vel(t, type);
 	}
 	// 終点時刻上の誤差
 	else if(mode == MatchTaskKey::End){
 		if(task->time)
 			 t = task->time->time_e->val;
 		else t = task->key_e->tick->time;
-		y = task->obj0->Vel(t, type) - task->obj1->Vel(t, type);
+		y = task->con0->obj->Vel(t, type) - task->con1->obj->Vel(t, type);
 	}
 }
 
