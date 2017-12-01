@@ -146,13 +146,13 @@ bool MyModule::Build(){
 		DiMP::TimeSlot* timeSlot = new DiMP::TimeSlot(graph, conf.welding.startTime, conf.welding.endTime, true, "ts_welding");
 
 		// マッチングタスク生成
-		new DiMP::MatchTask(robot[0]->link.back()->cons[0], target[0]->cons[0], timeSlot, "match_welding");
+		new DiMP::MatchTask(robot[0]->link.back(), target[0], timeSlot, "match_welding");
 		// 回避タスク生成
 		stringstream ss;
 		for(int i = 0; i < (int)robot[0]->link.size(); i++){
 			ss.str("");
 			ss << "avoid" << i;
-			new DiMP::AvoidTask(robot[0]->link[i]->cons[0], obstacle[0]->cons[0], timeSlot, ss.str());
+			new DiMP::AvoidTask(robot[0]->link[i], obstacle[0], timeSlot, ss.str());
 		}
 	}
 
@@ -183,7 +183,7 @@ bool MyModule::Build(){
 	if(sceneSelect == Welding){
 		// 目標点列の軌跡を溶接点列に合わせて固定
 		int npoints = (int)weldingPoints.size();
-		for(uint k = 0; k < (uint)graph->ticks.size(); k++){
+		for(int k = 0; k < (int)graph->ticks.size(); k++){
 			DiMP::ObjectKey* key = (DiMP::ObjectKey*)target[0]->traj.GetKeypoint(graph->ticks[k]);
 			real_t t = graph->ticks[k]->time;
 
@@ -200,26 +200,24 @@ bool MyModule::Build(){
 			key->vel_t->locked = true;
 			key->vel_r->locked = true;
 		}
-	}
 
-	// ソルバオプションの設定
-	//graph->solver->SetAlgorithm(DiMP::Algorithm::Pareto);
-	//graph.solver.SetAlgorithm(DiMP2::Algorithm::Steepest);
-	//graph->solver->weights.resize(4);
-	//graph->solver->weights[0] = 10.0;
-	//graph->solver->weights[1] = 1.0;
-	//graph->solver->weights[2] = 5.0;
-	//graph->solver->weights[3] = 0.5;
-	//graph->solver->SetIterationOrder(DiMP::Iteration::Sequential);
+		// 初期軌道を設定
+		for(int k = 0; k < (int)graph->ticks.size(); k++){
+			for(int j = 0; j < (int)robot[0]->joint.size(); j++){
+				// 関節jの時刻kのキーポイント
+				DiMP::JointKey* key = (DiMP::JointKey*)robot[0]->joint[j]->traj.GetKeypoint(graph->ticks[k]);
+
+				// 関節角を0.5[rad]にする場合
+				key->pos[0]->val = 0.5;
+			}
+		}
+	}
 
 	for(uint i = 0; i < robot.size(); i++){
 		RobotArm* r = robot[i];
-		// 順機構学計算でリンク位置を決定
+		// 順運動学計算でリンク位置を決定
 		r->link[0]->ForwardKinematics();
 	}
-
-	// ログ有効化
-	//graph->solver->EnableLogging(DiMP::Logging::MajorLoop, true);
 
 	return true;
 }
