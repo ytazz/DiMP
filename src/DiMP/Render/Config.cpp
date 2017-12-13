@@ -27,6 +27,7 @@ bool Config::Set(Canvas* canvas, int attr, Node* node){
 	else if(attr == Item::JointForce  ) c = "red";
 	else if(attr == Item::JointMoment ) c = "magenta";
 	else if(attr == Item::Geometry    ) c = "green";
+	else if(attr == Item::Avoid       ) c = "red";
 	
 	canvas->SetLineColor(c, 0);
 	canvas->SetLineColor(c, 1);

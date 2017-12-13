@@ -13,8 +13,8 @@ TaskKey::TaskKey(){
 
 void TaskKey::AddVar(Solver* solver){
 	// get object keypoints to constrain
-	obj0 = (ObjectKey*)((Task*)node)->con0->obj->traj.GetKeypoint(tick);
-	obj1 = (ObjectKey*)((Task*)node)->con1->obj->traj.GetKeypoint(tick);
+	obj0 = (ObjectKey*)((Task*)node)->obj0->traj.GetKeypoint(tick);
+	obj1 = (ObjectKey*)((Task*)node)->obj1->traj.GetKeypoint(tick);
 }
 
 void TaskKey::Draw(Render::Canvas* canvas){
@@ -38,9 +38,9 @@ void TaskKey::Draw(Render::Canvas* canvas){
 //-------------------------------------------------------------------------------------------------
 // Task
 
-Task::Task(Connector* _con0, Connector* _con1, TimeSlot* _time, const string& n) : ScheduledNode(_con0->graph, _time, n){
-	con0 = _con0;
-	con1 = _con1;
+Task::Task(Object* _obj0, Object* _obj1, TimeSlot* _time, const string& n) : ScheduledNode(_obj0->graph, _time, n){
+	obj0 = _obj0;
+	obj1 = _obj1;
 
 	graph->tasks.Add(this);
 

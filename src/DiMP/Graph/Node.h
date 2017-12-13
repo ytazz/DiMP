@@ -50,6 +50,9 @@ public:
 	void Add(T v){
 		push_back(v);
 	}
+	void Add(T* p, size_t n){
+		insert(end(), p, p+n);
+	}
 	void Remove(T v){
 		erase(find(begin(), end(), v));
 	}
@@ -115,6 +118,8 @@ public:
 	virtual void AddVar(Solver* solver){}
 	/// add constraints
 	virtual void AddCon(Solver* solver){}
+	/// initialization
+	virtual void Init(){}
 	/// preparation before each iteration
 	virtual void Prepare(){}
 	/// draw
@@ -160,6 +165,7 @@ public:
 
 	void AddVar(Solver* solver);
 	void AddCon(Solver* solver);
+	void Init();
 	void Prepare();
 	void Draw(Render::Canvas* canvas, Render::Config* conf);
 };
@@ -179,8 +185,12 @@ public:
 
 	/// create keypoint
 	virtual Keypoint* CreateKeypoint() = 0;
-	/// draw snapshot at given time
-	virtual void DrawSnapshot(real_t time, Render::Canvas* canvas, Render::Config* conf){}
+	
+	/// take snapshot at givein time
+	virtual void CreateSnapshot(real_t t){}
+
+	/// draw snapshot
+	virtual void DrawSnapshot(Render::Canvas* canvas, Render::Config* conf){}
 
  	void AddKeypoints();
 
@@ -194,10 +204,15 @@ public:
 		for(uint i = 0; i < size(); i++)
 			at(i)->AddKeypoints();
 	}
-	
-	void DrawSnapshot(real_t time, Render::Canvas* canvas, Render::Config* conf){
+
+	void CreateSnapshot(real_t t){
 		for(uint i = 0; i < size(); i++)
-			at(i)->DrawSnapshot(time, canvas, conf);
+			at(i)->CreateSnapshot(t);
+	}
+	
+	void DrawSnapshot(Render::Canvas* canvas, Render::Config* conf){
+		for(uint i = 0; i < size(); i++)
+			at(i)->DrawSnapshot(canvas, conf);
 	}
 };
 

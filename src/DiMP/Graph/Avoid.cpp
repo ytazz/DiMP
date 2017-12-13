@@ -1,31 +1,89 @@
 #include <DiMP/Graph/Avoid.h>
+#include <DiMP/Graph/Geometry.h>
 #include <DiMP/Graph/Object.h>
 #include <DiMP/Graph/Graph.h>
 #include <DiMP/Render/Config.h>
 
 namespace DiMP{;
 
+const real_t inf = numeric_limits<real_t>::max();
+
 //-------------------------------------------------------------------------------------------------
 // AvoidKey
 
 AvoidKey::AvoidKey(){
-	con_p = 0;
-	con_v = 0;
+	//con_p = 0;
+	//con_v = 0;
 }
 
 void AvoidKey::AddCon(Solver* solver){
-	// create constraints
-	con_p = new AvoidConP(solver, name + "_p", this, node->graph->scale.pos_t);
-	con_v = new AvoidConV(solver, name + "_v", this, node->graph->scale.vel_t);
+	AvoidTask* task = (AvoidTask*)node;
+	
+	for(int i0 = 0; i0 < (int)obj0->geoInfos.size(); i0++) for(int i1 = 0; i1 < (int)obj1->geoInfos.size(); i1++){
+		GeometryPair gp;
+		gp.info0 = &obj0->geoInfos[i0];
+		gp.info1 = &obj1->geoInfos[i1];
+		geoPairs.push_back(gp);
+	}
+	for(int i = 0; i < (int)geoPairs.size(); i++){
+		GeometryPair& gp = geoPairs[i];
+		gp.con_p = new AvoidConP(solver, name + "_p", this, &gp, node->graph->scale.pos_t);
+		gp.con_v = new AvoidConV(solver, name + "_v", this, &gp, node->graph->scale.vel_t);
+	}
 }
 
 void AvoidKey::Prepare(){
 	TaskKey::Prepare();
 
 	if(relation == Inside){
-		con_p->active = true;
-		con_v->active = true;
+		AvoidTask* task = (AvoidTask*)node;
+				
+		// すべての形状の対をbsphereの距離でソート
+		for(int i = 0; i < (int)geoPairs.size(); i++){
+			GeometryPair& gp = geoPairs[i];
+			real_t d    = (gp.info0->bsphereCenterAbs - gp.info1->bsphereCenterAbs).norm();
+			real_t rsum = gp.info0->geo->bsphereRadius + gp.info1->geo->bsphereRadius;
+			gp.dmin = d - rsum;
+			gp.dmax = d + rsum;
+			gp.dist = inf;
+		}
+		
+		// 距離の下限の昇順に衝突判定
+		for(int i = 0; i < (int)geoPairs.size(); i++){
+			GeometryPair& gp = geoPairs[i];
 
+			// 下限が正なら交差なし
+			if(gp.dmin > 0.0){
+				gp.con_p->active = false;
+				gp.con_v->active = false;
+				continue;
+			}
+
+			CalcNearest(
+				gp.info0->geo, gp.info1->geo,
+				gp.info0->poseAbs, gp.info1->poseAbs,
+				gp.sup0, gp.sup1, gp.dist
+			);
+
+			if(gp.dist > 0.0){
+				gp.con_p->active = false;
+				gp.con_v->active = false;
+			}
+			else{
+				const real_t eps = 1.0e-10;
+				vec3_t diff = gp.sup1 - gp.sup0;
+				real_t dnorm = diff.norm();
+				if(dnorm < eps){
+					gp.con_p->active = false;
+					gp.con_v->active = false;
+				}
+				gp.normal = diff/dnorm;
+				gp.con_p->active = true;
+				gp.con_v->active = true;
+			}
+		}
+
+		/*
 		AvoidTask* task = (AvoidTask*)node;
 		vec3_t r = obj1->pos_t->val - obj0->pos_t->val;
 			
@@ -38,18 +96,38 @@ void AvoidKey::Prepare(){
 		prox0 = obj0->pos_t->val + task->con0->obj->bsphere * normal;
 		prox1 = obj1->pos_t->val - task->con1->obj->bsphere * normal;
 		depth = rnorm - (task->con0->obj->bsphere + task->con1->obj->bsphere);
+		*/
 	}
 	else{
-		con_v->active = false;
-		con_p->active = false;
+		for(int i = 0; i < (int)geoPairs.size(); i++){
+			GeometryPair& gp = geoPairs[i];
+			gp.con_v->active = false;
+			gp.con_p->active = false;
+		}
+	}
+}
+
+void AvoidKey::Draw(Render::Canvas* canvas, Render::Config* conf){
+	Vec3f p0, p1;
+	
+	if(relation == Inside && conf->Set(canvas, Render::Item::Avoid, node)){
+		for(int i = 0; i < (int)geoPairs.size(); i++){
+			GeometryPair& gp = geoPairs[i];
+			// bsphereで枝刈りされておらず，かつ交差もしていない場合にsupport pointを結ぶ線を描画
+			if(gp.dist != inf && gp.dist > 0.0){
+				p0 = gp.sup0;
+				p1 = gp.sup1;
+				canvas->Line(p0, p1);
+			}
+		}
 	}
 }
 
 //-------------------------------------------------------------------------------------------------
 // AvoidTask
 
-AvoidTask::AvoidTask(Connector* _con0, Connector* _con1, TimeSlot* _time, const string& n)
-	:Task(_con0, _con1, _time, n){
+AvoidTask::AvoidTask(Object* _obj0, Object* _obj1, TimeSlot* _time, const string& n)
+	:Task(_obj0, _obj1, _time, n){
 	
 	dmin = 0.0;
 }
@@ -64,12 +142,13 @@ void AvoidTask::Prepare(){
 //-------------------------------------------------------------------------------------------------
 // constructors
 
-AvoidCon::AvoidCon(Solver* solver, ID id, AvoidKey* _key, real_t _scale):Constraint(solver, 1, id, _scale){
-	key  = _key;
+AvoidCon::AvoidCon(Solver* solver, ID id, AvoidKey* _key, AvoidKey::GeometryPair* _gp, real_t _scale):Constraint(solver, 1, id, _scale){
+	key = _key;
+	gp  = _gp;
 }
 
-AvoidConP::AvoidConP(Solver* solver, const string& _name, AvoidKey* _key, real_t _scale):
-	AvoidCon(solver, ID(ConTag::AvoidP, _key->node, _key->tick, _name), _key, _scale){
+AvoidConP::AvoidConP(Solver* solver, const string& _name, AvoidKey* _key, AvoidKey::GeometryPair* _gp, real_t _scale):
+	AvoidCon(solver, ID(ConTag::AvoidP, _key->node, _key->tick, _name), _key, _gp, _scale){
 	// translational, position, scalar constraint
 	ObjectKey::OptionS opt;
 	opt.tp = true ;
@@ -80,8 +159,8 @@ AvoidConP::AvoidConP(Solver* solver, const string& _name, AvoidKey* _key, real_t
 	key->obj1->AddLinks(this, opt);
 }
 
-AvoidConV::AvoidConV(Solver* solver, const string& _name, AvoidKey* _key, real_t _scale):
-	AvoidCon(solver, ID(ConTag::AvoidV, _key->node, _key->tick, _name), _key, _scale){
+AvoidConV::AvoidConV(Solver* solver, const string& _name, AvoidKey* _key, AvoidKey::GeometryPair* _gp, real_t _scale):
+	AvoidCon(solver, ID(ConTag::AvoidV, _key->node, _key->tick, _name), _key, _gp, _scale){
 	// translational, velocity, scalar constraint
 	ObjectKey::OptionS opt;
 	opt.tp = false;
@@ -102,8 +181,8 @@ void AvoidConP::CalcCoef(){
 	opt.rp = true ;
 	opt.tv = false;
 	opt.rv = false;
-	opt.k_tp = -key->normal; opt.k_rp = -(key->prox0 - key->obj0->pos_t->val) % key->normal; key->obj0->CalcCoef(this, opt, i);
-	opt.k_tp =  key->normal, opt.k_rp =  (key->prox1 - key->obj1->pos_t->val) % key->normal; key->obj1->CalcCoef(this, opt, i);
+	opt.k_tp = -gp->normal; opt.k_rp = -(gp->sup0 - key->obj0->pos_t->val) % gp->normal; key->obj0->CalcCoef(this, opt, i);
+	opt.k_tp =  gp->normal, opt.k_rp =  (gp->sup1 - key->obj1->pos_t->val) % gp->normal; key->obj1->CalcCoef(this, opt, i);
 }
 
 void AvoidConV::CalcCoef(){
@@ -113,32 +192,23 @@ void AvoidConV::CalcCoef(){
 	opt.rp = true ;
 	opt.tv = false;
 	opt.rv = false;
-	opt.k_tv = -key->normal; opt.k_rv = -(key->prox0 - key->obj0->pos_t->val) % key->normal; key->obj0->CalcCoef(this, opt, i);
-	opt.k_tv =  key->normal; opt.k_rv =  (key->prox1 - key->obj1->pos_t->val) % key->normal; key->obj1->CalcCoef(this, opt, i);
+	opt.k_tv = -gp->normal; opt.k_rv = -(gp->sup0 - key->obj0->pos_t->val) % gp->normal; key->obj0->CalcCoef(this, opt, i);
+	opt.k_tv =  gp->normal; opt.k_rv =  (gp->sup1 - key->obj1->pos_t->val) % gp->normal; key->obj1->CalcCoef(this, opt, i);
 }
 
 //-------------------------------------------------------------------------------------------------
 // CalcDeviation
 
 void AvoidConP::CalcDeviation(){
-	y[0] = key->depth;
-	if(y[0] < 0.0)
-		active = true;
-	else{
-		active = false;
+	if(!active){
 		y[0] = 0.0;
+		return;
 	}
+	y[0] = gp->dist;
 }
 
 void AvoidConV::CalcDeviation(){
 	Constraint::CalcDeviation();
-
-	// AvoidConPがactiveのときのみactive
-	if(key->depth <= 0.0 && y[0] < 0.0)
-		active = true;
-	else{
-		active = false;
-	}
 }
 
 //-------------------------------------------------------------------------------------------------

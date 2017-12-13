@@ -123,6 +123,10 @@ bool MyModule::Build(){
 
 	// Init前の処理
 	if(sceneSelect == Welding){
+		// tree生成
+		DiMP::Tree* tree = new DiMP::Tree(graph, "tree");
+		tree->root = robot[0]->link[0];
+		
 		// 溶接点列を読み込み
 		CsvReader csv;
 		csv.Read(conf.welding.pointsFilename, ",");
@@ -147,12 +151,15 @@ bool MyModule::Build(){
 
 		// マッチングタスク生成
 		new DiMP::MatchTask(robot[0]->link.back(), target[0], timeSlot, "match_welding");
+		
 		// 回避タスク生成
 		stringstream ss;
 		for(int i = 0; i < (int)robot[0]->link.size(); i++){
-			ss.str("");
-			ss << "avoid" << i;
-			new DiMP::AvoidTask(robot[0]->link[i], obstacle[0], timeSlot, ss.str());
+			//if(i == 11){
+				ss.str("");
+				ss << "avoid" << i;
+				new DiMP::AvoidTask(robot[0]->link[i], obstacle[0], timeSlot, ss.str());
+			//}
 		}
 	}
 
@@ -231,7 +238,9 @@ void MyModule::OnStep(){
 }
 
 void MyModule::DrawSnapshot(real_t time){
-	adaptorDiMP .SetSyncTime(time);
+	//adaptorDiMP .SetSyncTime(time);
+	//adaptorDiMP .graph->CreateSnapshot(time);
+	robot[0]->link[0]->ForwardKinematics(time);
 	adaptorDiMP .SyncProperty(false, AttrCategory::State);
 	adaptorSprGR.SyncProperty(true , AttrCategory::State);
 	

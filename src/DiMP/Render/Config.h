@@ -26,6 +26,7 @@ struct Item{
 		BipedCop,           ///< biped CoP
 		BipedFoot,         ///< biped swing foot trajectory
 		BipedTorso,         ///< biped torso trajectory
+		Avoid,
 	};
 };
 

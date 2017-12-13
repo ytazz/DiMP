@@ -54,7 +54,7 @@ public:
 	virtual Keypoint* CreateKeypoint(){ return new MatchTaskKey(); }
 	virtual void      Draw          (Render::Canvas* canvas);
 	
-	MatchTask(Connector* _con0, Connector* _con1, TimeSlot* _time, const string& n = "");
+	MatchTask(Object* _obj0, Object* _obj1, TimeSlot* _time, const string& n = "");
 };
 
 class MatchCon : public Constraint{

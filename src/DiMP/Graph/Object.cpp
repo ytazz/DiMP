@@ -53,6 +53,18 @@ void ObjectKey::AddCon(Solver* solver){
 			con_force_r = new ForceConR(solver, name + "_force_r", this, node->graph->scale.force_r);
 		}
 	}
+
+	geoInfos.clear();
+	for(int i = 0; i < (int)obj->cons.size(); i++){
+		Connector* con = obj->cons[i];
+		for(int j = 0; j < (int)con->geos.size(); j++){
+			Geometry* geo = con->geos[j];
+			GeometryInfo info;
+			info.con = con;
+			info.geo = geo;
+			geoInfos.push_back(info);
+		}
+	}
 }
 
 void ObjectKey::AddLinks(Constraint* con, const ObjectKey::OptionS& opt){
@@ -143,6 +155,13 @@ void ObjectKey::Prepare(){
 	Object* obj = (Object*)node;
 	fext_t = obj->param.mass * obj->graph->param.gravity;
 	fext_r.clear();
+
+	// absolute pose of geometries
+	for(int i = 0; i < (int)geoInfos.size(); i++){
+		GeometryInfo& info = geoInfos[i];
+		info.poseAbs = pose_t(pos_t->val, pos_r->val) * info.con->pose;
+		info.bsphereCenterAbs = info.poseAbs * info.geo->bsphereCenter;
+	}
 }
 
 void ObjectKey::Draw(Render::Canvas* canvas, Render::Config* conf){
@@ -166,6 +185,17 @@ void ObjectKey::Draw(Render::Canvas* canvas, Render::Config* conf){
 		p1 = p0 + s * vel_r->val;
 		canvas->Line(p0, p1);
 	}
+
+	// geometries
+	Affinef aff;
+	for(int i = 0; i < (int)geoInfos.size(); i++){
+		GeometryInfo& info = geoInfos[i];
+		info.poseAbs.ToAffine(aff);
+		canvas->Push();
+		canvas->Transform(aff);
+		info.geo->Draw(canvas, conf);
+		canvas->Pop();
+	}
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -182,6 +212,8 @@ Object::~Object(){
 }
 
 void Object::Init(){
+	TrajectoryNode::Init();
+
 	for(uint i = 0; i < graph->ticks.size(); i++){
 		ObjectKey* key = (ObjectKey*)traj.GetKeypoint(graph->ticks[i]);
 		
@@ -213,11 +245,12 @@ void Object::Init(){
 			key->con_force_r->enabled = false;
 		}
 	}
+
+	CalcBSphere();
 }
 
 void Object::Prepare(){
 	TrajectoryNode::Prepare();
-	CalcBSphere();
 }
 
 void Object::ForwardKinematics(){
@@ -229,6 +262,19 @@ void Object::ForwardKinematics(){
 
 			if(jnt->sock == con)
 				jnt->ForwardKinematics();
+		}
+	}
+}
+
+void Object::ForwardKinematics(real_t t){
+	for(uint i = 0; i < cons.size(); i++){
+		Connector* con = cons[i];
+
+		for(uint j = 0; j < con->joints.size(); j++){
+			Joint* jnt = con->joints[j];
+
+			if(jnt->sock == con)
+				jnt->ForwardKinematics(t);
 		}
 	}
 }
@@ -357,11 +403,13 @@ void Object::DrawTrajectory(Render::Canvas* canvas, uint ndiv){
 	}
 }
 
-void Object::DrawSnapshot(real_t time, Render::Canvas* canvas, Render::Config* conf){
-	pose_t pose;
-	pose.Pos() = Pos(time, Interpolate::Quadratic);
-	pose.Ori() = Ori(time, Interpolate::SlerpDiff);
-	DrawSnapshot(pose, canvas, conf);
+void Object::CreateSnapshot(real_t t){
+	snapshot.pos = Pos(t, Interpolate::Quadratic);
+	snapshot.ori = Ori(t, Interpolate::SlerpDiff);
+}
+
+void Object::DrawSnapshot(Render::Canvas* canvas, Render::Config* conf){
+	DrawSnapshot(pose_t(snapshot.pos, snapshot.ori), canvas, conf);
 }
 
 void Object::DrawSnapshot(const pose_t& pose, Render::Canvas* canvas, Render::Config* conf){

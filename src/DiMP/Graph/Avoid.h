@@ -9,24 +9,35 @@
 
 namespace DiMP{;
 
+class Connector;
+class Geometry;
+class GeometryInfo;
 class AvoidTask;
 class AvoidConP;
 class AvoidConV;
 
 class AvoidKey : public TaskKey{
 public:
-	ObjectKey*  obj[2];
-
-	AvoidConP*	con_p;
-	AvoidConV*	con_v;
-
-	vec3_t prox0, prox1;
-	vec3_t normal;
-	real_t depth;
+	struct GeometryPair{
+		GeometryInfo* info0;
+		GeometryInfo* info1;
+		real_t        dmin;
+		real_t        dmax;
+		real_t        dist;   //< distance between objects: dist > 0 if apart, dist < 0 if intersect
+		vec3_t        sup0;
+		vec3_t        sup1;
+		vec3_t        normal;
+		
+		AvoidConP*	con_p;
+		AvoidConV*	con_v;
+	};
+	typedef vector<GeometryPair> GeometryPairs;
+	GeometryPairs geoPairs;
 
 public:
 	virtual void AddCon(Solver* solver);
 	virtual void Prepare();
+	virtual void Draw   (Render::Canvas* canvas, Render::Config* conf);	
 
 	AvoidKey();
 };
@@ -39,15 +50,16 @@ public:
 	virtual Keypoint*	CreateKeypoint(){ return new AvoidKey(); }
 	virtual void Prepare();
 	
-	AvoidTask(Connector* _con0, Connector* _con1, TimeSlot* _time, const string& n);
+	AvoidTask(Object* _obj0, Object* _obj1, TimeSlot* _time, const string& n);
 
 };
 
 class AvoidCon : public Constraint{
 public:
-	AvoidKey*	key;
+	AvoidKey*  key;
+	AvoidKey::GeometryPair* gp;
 
-	AvoidCon(Solver* solver, ID id, AvoidKey* _key, real_t _scale);
+	AvoidCon(Solver* solver, ID id, AvoidKey* _key, AvoidKey::GeometryPair* _gp, real_t _scale);
 	virtual ~AvoidCon(){}
 };
 
@@ -57,7 +69,7 @@ public:
 	virtual void CalcDeviation();
 	virtual void Project(real_t& l, uint k);
 
-	AvoidConP(Solver* solver, const string& _name, AvoidKey* _key, real_t _scale);
+	AvoidConP(Solver* solver, const string& _name, AvoidKey* _key, AvoidKey::GeometryPair* _gp, real_t _scale);
 	virtual ~AvoidConP(){}
 };
 
@@ -67,7 +79,7 @@ public:
 	virtual void CalcDeviation();
 	virtual void Project(real_t& l, uint k);
 
-	AvoidConV(Solver* solver, const string& _name, AvoidKey* _key, real_t _scale);
+	AvoidConV(Solver* solver, const string& _name, AvoidKey* _key, AvoidKey::GeometryPair* _gp, real_t _scale);
 	virtual ~AvoidConV(){}
 };
 

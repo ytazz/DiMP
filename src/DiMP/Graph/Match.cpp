@@ -80,8 +80,8 @@ MatchTask::Param::Param(){
 	match_rv = false;
 }
 
-MatchTask::MatchTask(Connector* _con0, Connector* _con1, TimeSlot* _time, const string& n)
-	:Task(_con0, _con1, _time, n){
+MatchTask::MatchTask(Object* _obj0, Object* _obj1, TimeSlot* _time, const string& n)
+	:Task(_obj0, _obj1, _time, n){
 }
 
 void MatchTask::Draw(Render::Canvas* canvas){
@@ -255,8 +255,8 @@ void MatchConTP::CalcCoef(){
 			k_v1 = 0;
 		}
 		
-		vec3_t v0 = task->con0->obj->Vel(t, Interpolate::Quadratic);
-		vec3_t v1 = task->con1->obj->Vel(t, Interpolate::Quadratic);
+		vec3_t v0 = task->obj0->Vel(t, Interpolate::Quadratic);
+		vec3_t v1 = task->obj1->Vel(t, Interpolate::Quadratic);
 
 		uint i = 0;
 		if(mode == MatchTaskKey::Start){
@@ -339,8 +339,8 @@ void MatchConTV::CalcCoef(){
 			k_v1 = 0;
 		}
 		
-		vec3_t a0 = task->con0->obj->Acc(t, Interpolate::Quadratic);
-		vec3_t a1 = task->con1->obj->Acc(t, Interpolate::Quadratic);
+		vec3_t a0 = task->obj0->Acc(t, Interpolate::Quadratic);
+		vec3_t a1 = task->obj1->Acc(t, Interpolate::Quadratic);
 
 		uint i = 0;
 		if(mode == MatchTaskKey::Start){
@@ -444,14 +444,14 @@ void MatchConTP::CalcDeviation(){
 		if(task->time)
 			 t = task->time->time_s->val;
 		else t = task->key_s->tick->time;
-		y = task->con0->obj->Pos(t, type) - task->con1->obj->Pos(t, type);
+		y = task->obj0->Pos(t, type) - task->obj1->Pos(t, type);
 	}
 	// 終点時刻上の誤差
 	else if(mode == MatchTaskKey::End){
 		if(task->time)
 			 t = task->time->time_e->val;
 		else t = task->key_e->tick->time;
-		y = task->con0->obj->Pos(t, type) - task->con1->obj->Pos(t, type);
+		y = task->obj0->Pos(t, type) - task->obj1->Pos(t, type);
 	}
 }
 
@@ -474,14 +474,14 @@ void MatchConTV::CalcDeviation(){
 		if(task->time)
 			 t = task->time->time_s->val;
 		else t = task->key_s->tick->time;
-		y = task->con0->obj->Vel(t, type) - task->con1->obj->Vel(t, type);
+		y = task->obj0->Vel(t, type) - task->obj1->Vel(t, type);
 	}
 	// 終点時刻上の誤差
 	else if(mode == MatchTaskKey::End){
 		if(task->time)
 			 t = task->time->time_e->val;
 		else t = task->key_e->tick->time;
-		y = task->con0->obj->Vel(t, type) - task->con1->obj->Vel(t, type);
+		y = task->obj0->Vel(t, type) - task->obj1->Vel(t, type);
 	}
 }
 

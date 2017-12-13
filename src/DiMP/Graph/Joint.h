@@ -105,8 +105,8 @@ public:
 		Param();
 	};
 	
-	Param				param;
-	vector<Snapshot>	snapshots;
+	Param			param;
+	Snapshot	    snapshot;
 
 	Connector*		sock;		///< socket connector
 	Connector*		plug;		///< plug connector
@@ -121,8 +121,11 @@ public:
 	/// virtual function of Node
 	virtual void	Init();
 
+	///
+	virtual void    CreateSnapshot(real_t t);
+
 	/// virtual functions of TrajectoryNode
-	virtual void	DrawSnapshot(real_t time, Render::Canvas* canvas, Render::Config* conf);
+	virtual void	DrawSnapshot(Render::Canvas* canvas, Render::Config* conf);
 
 	/// returns true if i-th DOF is rotational
 	virtual bool	IsRotational(uint i) = 0;
@@ -137,6 +140,7 @@ public:
 public:
 	/// compute forward kinematics
 	void	ForwardKinematics();
+	void	ForwardKinematics(real_t t);
 
 	/// calculate joint position from relative pose of objects
 	void    ResetJointPos();

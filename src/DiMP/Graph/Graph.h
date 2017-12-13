@@ -89,6 +89,9 @@ public:
 	/// set scaling factor;
 	void	SetScaling(real_t T, real_t L, real_t M);
 
+	/// take snapshot
+	void    CreateSnapshot(real_t t);
+
 	/// does initialization
 	virtual void Init();
 

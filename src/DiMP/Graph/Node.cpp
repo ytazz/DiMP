@@ -90,6 +90,10 @@ void Trajectory::AddCon(Solver* solver){
 	for(uint i = 0; i < size(); i++)
 		at(i)->AddCon(solver);
 }
+void Trajectory::Init(){
+	for(int i = 0; i < (int)size(); i++)
+		at(i)->Init();
+}
 void Trajectory::Prepare(){
 	Update();
 	for(uint i = 0; i < size(); i++)

@@ -201,11 +201,16 @@ void Graph::Draw(Render::Canvas* canvas, Render::Config* _conf){
 		DrawSnapshot(ticks[i]->time, canvas, conf);
 }
 
+void Graph::CreateSnapshot(real_t t){
+	trajNodes.CreateSnapshot(t);
+}
+
 void Graph::DrawSnapshot(real_t time, Render::Canvas* canvas, Render::Config* _conf){
 	if(!_conf)
 		_conf = conf;
 
-	trajNodes.DrawSnapshot(time, canvas, _conf);
+	trajNodes.CreateSnapshot(time);
+	trajNodes.DrawSnapshot(canvas, _conf);
 }
 
 }

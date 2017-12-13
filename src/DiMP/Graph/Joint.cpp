@@ -353,6 +353,38 @@ void Joint::ForwardKinematics(){
 	plug->obj->ForwardKinematics();
 }
 
+void Joint::ForwardKinematics(real_t t){
+	pose_t prel, p0, p1, psock, pplug;
+	vec3_t vrel, v0, v1;
+	vec3_t wrel, w0, w1;
+
+	// socket object pose
+	p0.Pos() = sock->obj->snapshot.pos;
+	p0.Ori() = sock->obj->snapshot.ori;
+	v0       = sock->obj->snapshot.vel;
+	w0       = sock->obj->snapshot.angvel;
+
+	CreateSnapshot(t);
+	CalcRelativePose(&snapshot.pos[0], prel.Pos(), prel.Ori());
+	CalcRelativeVel (&snapshot.vel[0], vrel, wrel);
+
+	psock = p0 * sock->pose;
+	pplug = prel * plug->pose.Inv();
+		
+	// plug object pose
+	p1 = psock * pplug;
+
+	v1 = v0 + w0 % (p1.Pos() - p0.Pos()) + psock.Ori() * (vrel + wrel % pplug.Pos());
+	w1 = w0 + psock.Ori() * wrel;
+
+	plug->obj->snapshot.pos    = p1.Pos();
+	plug->obj->snapshot.ori    = p1.Ori();
+	plug->obj->snapshot.vel    = v1;
+	plug->obj->snapshot.angvel = w1;
+
+	plug->obj->ForwardKinematics(t);
+}
+
 void Joint::ResetJointPos(){
 	pose_t p0, p1, prel;
 	vector<real_t> vpos(dof);
@@ -394,12 +426,17 @@ void Joint::CalcDeviation(real_t t, vec3_t& pos_dev, vec3_t& ori_dev){
 	ori_dev = q[1] * (qerror.Theta() * qerror.Axis());
 }
 
-void Joint::DrawSnapshot(real_t time, Render::Canvas* canvas, Render::Config* conf){
-	pose_t pose = pose_t(sock->obj->Pos(time, Interpolate::Quadratic), sock->obj->Ori(time, Interpolate::SlerpDiff)) * sock->pose;
+void Joint::CreateSnapshot(real_t t){
+	snapshot.pos.resize(dof);
+	snapshot.vel.resize(dof);
+	for(uint i = 0; i < dof; i++){
+		snapshot.pos[i] = Pos(i, t);
+		snapshot.vel[i] = Vel(i, t);
+	}
+}
 
-	vector<real_t> pos(dof);
-	for(uint i = 0; i < dof; i++)
-		pos[i] = Pos(i, time);
+void Joint::DrawSnapshot(Render::Canvas* canvas, Render::Config* conf){
+	pose_t pose = pose_t(sock->obj->snapshot.pos, sock->obj->snapshot.ori) * sock->pose;
 	
 	/// draw geometries attached to connectors
 	Affinef aff;
@@ -407,7 +444,7 @@ void Joint::DrawSnapshot(real_t time, Render::Canvas* canvas, Render::Config* co
 	canvas->Push     ();
 	canvas->Transform(aff);
 
-	OnDraw(&pos[0], canvas);
+	OnDraw(&snapshot.pos[0], canvas);
 
 	canvas->Pop();
 }

@@ -24,6 +24,14 @@ class  ObjectConC1R;
 	object (rigid body)
  */
 
+class GeometryInfo{
+public:
+	Connector* con;
+	Geometry*  geo;
+	pose_t     poseAbs;
+	vec3_t     bsphereCenterAbs;
+};
+
 class ObjectKey : public Keypoint{
 public:
 	struct OptionS{
@@ -38,6 +46,8 @@ public:
 	typedef vector< pair<JointKey*, bool> >	JointKeys;
 	JointKeys	joints;		///< 接続しているJointのKeypoint, ソケット側true
 	TreeKey*	tree;
+
+	vector<GeometryInfo>  geoInfos;
 
 	/// variables
 	V3Var*		pos_t;				///< position
@@ -103,7 +113,7 @@ public:
 	
 	Param		param;
 
-	vector<Snapshot>	snapshots;
+	Snapshot	snapshot;
 
 	Connectors	cons;
 
@@ -133,7 +143,8 @@ public:
 	virtual void        Draw(Render::Canvas* canvas, Render::Config* conf);
 	
 	/// virtual functions of TrajectoryNode
-	virtual void		DrawSnapshot(real_t time, Render::Canvas* canvas, Render::Config* conf);
+	virtual void        CreateSnapshot(real_t t);
+	virtual void		DrawSnapshot(Render::Canvas* canvas, Render::Config* conf);
 	
 public:
 	/// compute forward kinematics
