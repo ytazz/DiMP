@@ -9,8 +9,8 @@
   <sphere name="sphere_target"   radius="50"/>
   <sphere name="sphere_gadai"   radius="400"/>
 
-  <mesh name="mesh_mockup" scale="0.001" filename="pa10welding/lowlowres/mockup.stl" binary="true" convex="true" collision="true" mass="false" visual="true"/>
-  <mesh name="mesh_gadai"  scale="0.001" filename="pa10welding/lowlowres/gadai.stl"  binary="true" convex="true" collision="true" mass="false" visual="true"/>
+  <mesh name="mesh_mockup" scale="0.001" filename="pa10welding/lowlowres/mockup.stl" binary="true" convex="false" collision="true"  mass="false" visual="true"/>
+  <mesh name="mesh_gadai"  scale="0.001" filename="pa10welding/lowlowres/gadai.stl"  binary="true" convex="false" collision="false" mass="false" visual="true"/>
 
   <vmat name="mat_target" colorname="blue"/>
   <vmat name="mat_mockup" colorname="darkturquoise" alpha="0.3"/>
@@ -29,7 +29,6 @@
   <!--
   <attach connector="body_obstacle0/c_gadai"  shape="mesh_gadai" vmat="mat_gadai"/>
   -->
-  
   <!--
   <ticks time_begin="0.0" time_step="0.5" time_end="30.0"/>
   <timeslot name="timeslot0" time_begin="5.0" time_end="30.0" locked="true"/>

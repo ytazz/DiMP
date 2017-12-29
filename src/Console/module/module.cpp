@@ -142,14 +142,14 @@ void Module::MainLoop(){
 		
 		// SDLのイベント処理
 		SDL_Event ev;
-		SDL_WaitEvent(&ev);
-
-		if(ev.type == SDL_QUIT){
-			evExit.Set();
+		while(SDL_PollEvent(&ev)){
+			if(ev.type == SDL_QUIT){
+				evExit.Set();
+				break;
+			}
+			renManager->OnEvent(&ev);
+			simManager->OnEvent(&ev);
 		}
-
-		renManager->OnEvent(&ev);
-		simManager->OnEvent(&ev);
 	}
 
 	// request managerが終了するまで待つ

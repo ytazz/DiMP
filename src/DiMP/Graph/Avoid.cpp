@@ -4,9 +4,25 @@
 #include <DiMP/Graph/Graph.h>
 #include <DiMP/Render/Config.h>
 
+#include <Foundation/UTPreciseTimer.h>
+static UTPreciseTimer ptimer;
+
 namespace DiMP{;
 
 const real_t inf = numeric_limits<real_t>::max();
+
+//-------------------------------------------------------------------------------------------------
+// GeometryPair
+
+AvoidKey::GeometryPair::GeometryPair(){
+	info0 = 0;
+	info1 = 0;
+	dmin  = inf; 
+	dmax  = inf;
+	dist  = inf;
+	con_p = 0;
+	con_v = 0;
+}
 
 //-------------------------------------------------------------------------------------------------
 // AvoidKey
@@ -19,14 +35,13 @@ AvoidKey::AvoidKey(){
 void AvoidKey::AddCon(Solver* solver){
 	AvoidTask* task = (AvoidTask*)node;
 	
-	for(int i0 = 0; i0 < (int)obj0->geoInfos.size(); i0++) for(int i1 = 0; i1 < (int)obj1->geoInfos.size(); i1++){
+	for(auto& g0 : obj0->geoInfos) for(auto& g1 : obj1->geoInfos){
 		GeometryPair gp;
-		gp.info0 = &obj0->geoInfos[i0];
-		gp.info1 = &obj1->geoInfos[i1];
+		gp.info0 = &g0;
+		gp.info1 = &g1;
 		geoPairs.push_back(gp);
 	}
-	for(int i = 0; i < (int)geoPairs.size(); i++){
-		GeometryPair& gp = geoPairs[i];
+	for(auto& gp : geoPairs){
 		gp.con_p = new AvoidConP(solver, name + "_p", this, &gp, node->graph->scale.pos_t);
 		gp.con_v = new AvoidConV(solver, name + "_v", this, &gp, node->graph->scale.vel_t);
 	}
@@ -37,25 +52,35 @@ void AvoidKey::Prepare(){
 
 	if(relation == Inside){
 		AvoidTask* task = (AvoidTask*)node;
-				
-		// すべての形状の対をbsphereの距離でソート
-		for(int i = 0; i < (int)geoPairs.size(); i++){
-			GeometryPair& gp = geoPairs[i];
+						
+		ptimer.CountUS();
+		int nsphere  = 0;
+		int nbox     = 0;
+		int ngjk     = 0;
+		int nactive  = 0;
+		for(auto& gp : geoPairs){
+			// bsphereで判定
 			real_t d    = (gp.info0->bsphereCenterAbs - gp.info1->bsphereCenterAbs).norm();
 			real_t rsum = gp.info0->geo->bsphereRadius + gp.info1->geo->bsphereRadius;
-			gp.dmin = d - rsum;
-			gp.dmax = d + rsum;
-			gp.dist = inf;
-		}
-		
-		// 距離の下限の昇順に衝突判定
-		for(int i = 0; i < (int)geoPairs.size(); i++){
-			GeometryPair& gp = geoPairs[i];
-
-			// 下限が正なら交差なし
-			if(gp.dmin > 0.0){
+			if(d > rsum){
 				gp.con_p->active = false;
 				gp.con_v->active = false;
+				nsphere++;
+				continue;
+			}
+			// bboxで判定
+			bool intersect = true;
+			for(int i = 0; i < 3; i++){
+				if( gp.info0->bbmin.x > gp.info1->bbmax.x || 
+					gp.info1->bbmin.x > gp.info0->bbmax.x ){
+					intersect = false;
+					break;
+				}
+			}
+			if(!intersect){
+				gp.con_p->active = false;
+				gp.con_v->active = false;
+				nbox++;
 				continue;
 			}
 
@@ -64,10 +89,11 @@ void AvoidKey::Prepare(){
 				gp.info0->poseAbs, gp.info1->poseAbs,
 				gp.sup0, gp.sup1, gp.dist
 			);
-
+			
 			if(gp.dist > 0.0){
 				gp.con_p->active = false;
 				gp.con_v->active = false;
+				ngjk++;
 			}
 			else{
 				const real_t eps = 1.0e-10;
@@ -80,8 +106,13 @@ void AvoidKey::Prepare(){
 				gp.normal = diff/dnorm;
 				gp.con_p->active = true;
 				gp.con_v->active = true;
+				nactive++;
 			}
 		}
+		int timeGjk = ptimer.CountUS();
+
+		DSTR << "bsphere: " << nsphere << " bbox: " << nbox << " gjk: " << ngjk << " active: " << nactive << endl;
+		DSTR << "tgjk: " << timeGjk << endl;
 
 		/*
 		AvoidTask* task = (AvoidTask*)node;
@@ -99,8 +130,7 @@ void AvoidKey::Prepare(){
 		*/
 	}
 	else{
-		for(int i = 0; i < (int)geoPairs.size(); i++){
-			GeometryPair& gp = geoPairs[i];
+		for(auto& gp : geoPairs){
 			gp.con_v->active = false;
 			gp.con_p->active = false;
 		}
@@ -111,10 +141,9 @@ void AvoidKey::Draw(Render::Canvas* canvas, Render::Config* conf){
 	Vec3f p0, p1;
 	
 	if(relation == Inside && conf->Set(canvas, Render::Item::Avoid, node)){
-		for(int i = 0; i < (int)geoPairs.size(); i++){
-			GeometryPair& gp = geoPairs[i];
+		for(auto& gp : geoPairs){
 			// bsphereで枝刈りされておらず，かつ交差もしていない場合にsupport pointを結ぶ線を描画
-			if(gp.dist != inf && gp.dist > 0.0){
+			if(/*gp.con_p->active*/gp.dist != inf && gp.dist > 0.0){
 				p0 = gp.sup0;
 				p1 = gp.sup1;
 				canvas->Line(p0, p1);
@@ -175,6 +204,8 @@ AvoidConV::AvoidConV(Solver* solver, const string& _name, AvoidKey* _key, AvoidK
 // CalcCoef
 
 void AvoidConP::CalcCoef(){
+	if(!active)
+		return;
 	uint i = 0;
 	ObjectKey::OptionS opt;
 	opt.tp = true ;
@@ -186,6 +217,8 @@ void AvoidConP::CalcCoef(){
 }
 
 void AvoidConV::CalcCoef(){
+	if(!active)
+		return;
 	uint i = 0;
 	ObjectKey::OptionS opt;
 	opt.tp = true ;
@@ -208,6 +241,10 @@ void AvoidConP::CalcDeviation(){
 }
 
 void AvoidConV::CalcDeviation(){
+	if(!active){
+		y[0] = 0.0;
+		return;
+	}
 	Constraint::CalcDeviation();
 }
 

@@ -215,7 +215,9 @@ bool MyModule::Build(){
 				DiMP::JointKey* key = (DiMP::JointKey*)robot[0]->joint[j]->traj.GetKeypoint(graph->ticks[k]);
 
 				// ŠÖßŠp‚ğ0.5[rad]‚É‚·‚éê‡
-				key->pos[0]->val = 0.5;
+				if(j == 1)
+					 key->pos[0]->val = Rad(90.0);
+				else key->pos[0]->val = Rad( 0.0);
 			}
 		}
 	}

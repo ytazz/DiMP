@@ -30,6 +30,8 @@ public:
 	Geometry*  geo;
 	pose_t     poseAbs;
 	vec3_t     bsphereCenterAbs;
+	vec3_t     bbmin;
+	vec3_t     bbmax;
 };
 
 class ObjectKey : public Keypoint{
@@ -76,6 +78,8 @@ public:
 	void AddLinks(Constraint* con, const OptionV3& opt);
 	void CalcCoef(Constraint* con, const OptionS & opt, uint& i);
 	void CalcCoef(Constraint* con, const OptionV3& opt, uint& i);
+
+	void PrepareGeometry();
 
 public:
 	virtual void AddVar (Solver* solver);
