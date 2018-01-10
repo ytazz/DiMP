@@ -146,21 +146,63 @@ bool MyModule::Build(){
 			new DiMP::Tick(graph, t);
 		}
 
+        
 		// タイムスロット
 		DiMP::TimeSlot* timeSlot = new DiMP::TimeSlot(graph, conf.welding.startTime, conf.welding.endTime, true, "ts_welding");
 
 		// マッチングタスク生成
 		new DiMP::MatchTask(robot[0]->link.back(), target[0], timeSlot, "match_welding");
+
+
+
+
+
+		// タイムスロット
+		DiMP::TimeSlot* timeSlot1 = new DiMP::TimeSlot(graph,0.3, 0.4, true, "ts_welding");
+
+		// マッチングタスク生成
+		new DiMP::MatchTask(robot[0]->link[6], target[1], timeSlot1, "match_welding");
+
+
+		// タイムスロット
+		DiMP::TimeSlot* timeSlot2 = new DiMP::TimeSlot(graph, 0.7, 0.8, true, "ts_welding");
+
+		// マッチングタスク生成
+		new DiMP::MatchTask(robot[0]->link[6], target[2], timeSlot2, "match_welding");
+
+		// タイムスロット
+		DiMP::TimeSlot* timeSlot3 = new DiMP::TimeSlot(graph, 0.9, 1.0, true, "ts_welding");
+
+		// マッチングタスク生成
+		new DiMP::MatchTask(robot[0]->link.back(), target[3], timeSlot3, "match_welding");
+
+
+
+
+
+
+
+
 		
+		
+
+		
+
+
+
+
+		
+
+
 		// 回避タスク生成
-		stringstream ss;
+		/*stringstream ss;
 		for(int i = 0; i < (int)robot[0]->link.size(); i++){
 			//if(i == 11){
 				ss.str("");
 				ss << "avoid" << i;
 				new DiMP::AvoidTask(robot[0]->link[i], obstacle[0], timeSlot, ss.str());
 			//}
-		}
+		}*/
 	}
 
 	// 初期化
@@ -215,7 +257,42 @@ bool MyModule::Build(){
 				DiMP::JointKey* key = (DiMP::JointKey*)robot[0]->joint[j]->traj.GetKeypoint(graph->ticks[k]);
 
 				// 関節角を0.5[rad]にする場合
-				key->pos[0]->val = 0.5;
+				if (j == 0) {
+					key->pos[0]->val = -2.3141;
+				}
+				if (j == 1) {
+					key->pos[0]->val = 1.8285;
+				}
+				if (j == 2) {
+					key->pos[0]->val = 2.8810;
+				}
+				if (j == 3) {
+					key->pos[0]->val = 1.4669;
+				}
+				if (j == 4) {
+					key->pos[0]->val = -1.8106;
+				}
+				if (j == 5) {
+					key->pos[0]->val = -0.5691;
+				}
+				if (j == 6) {
+					key->pos[0]->val = 2.8143;
+				}
+				if (j == 7) {
+					key->pos[0]->val = -2.9016;
+				}
+				if (j == 8) {
+					key->pos[0]->val = -2.8943;
+				}
+				if (j == 9) {
+					key->pos[0]->val = 2.1680;
+				}
+				if (j == 10) {
+					key->pos[0]->val = 0.0;
+				}
+				if (j == 11) {
+					key->pos[0]->val = 0.0;
+				}
 			}
 		}
 	}
