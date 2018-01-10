@@ -151,7 +151,30 @@ bool MyModule::Build(){
 
 		// マッチングタスク生成
 		new DiMP::MatchTask(robot[0]->link.back(), target[0], timeSlot, "match_welding");
+
+
+
+		// タイムスロット
+		DiMP::TimeSlot* timeSlot1 = new DiMP::TimeSlot(graph, 0.3, 0.4, true, "ts_welding");
+
+		// マッチングタスク生成
+		new DiMP::MatchTask(robot[0]->link[6], target[1], timeSlot1, "match_welding");
+
+
+		// タイムスロット
+		DiMP::TimeSlot* timeSlot2 = new DiMP::TimeSlot(graph, 0.7, 0.8, true, "ts_welding");
+
+		// マッチングタスク生成
+		new DiMP::MatchTask(robot[0]->link[6], target[2], timeSlot2, "match_welding");
+
+		// タイムスロット
+		DiMP::TimeSlot* timeSlot3 = new DiMP::TimeSlot(graph, 0.9, 1.0, true, "ts_welding");
+
+		// マッチングタスク生成
+		new DiMP::MatchTask(robot[0]->link.back(), target[3], timeSlot3, "match_welding");
 		
+
+
 		// 回避タスク生成
 		stringstream ss;
 		for(int i = 0; i < (int)robot[0]->link.size(); i++){
