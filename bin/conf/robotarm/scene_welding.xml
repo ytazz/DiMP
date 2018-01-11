@@ -19,6 +19,19 @@
   <body name="body_target0" dynamical="false" trn="900 900 500">
     <connector name="0"/>
   </body>
+
+  <body name="body_target1" dynamical="false" trn="653.8 -156.9 -214">
+    <connector name="0"/>
+  </body>
+
+  <body name="body_target2" dynamical="false" trn="885.1 241.7 -53.8">
+    <connector name="0"/>
+  </body>
+
+  <body name="body_target3" dynamical="false" trn="900 900 -500">
+    <connector name="0"/>
+  </body>
+
   <body name="body_obstacle0" dynamical="false">
     <connector name="c_mockup" trn="1240 489.5 0"/>
     <connector name="c_gadai" />
