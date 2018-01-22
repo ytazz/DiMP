@@ -23,15 +23,43 @@
     <connector name="0"/>
   </body>
 
-  <body name="body_target1" dynamical="false" trn="653.8 -156.9 -214">
+  <body name="body_target1" dynamical="false" trn="500 700 100">
     <connector name="0"/>
   </body>
 
-  <body name="body_target2" dynamical="false" trn="885.1 241.7 -53.8">
+  <body name="body_target2" dynamical="false" trn="400 500 -100">
     <connector name="0"/>
   </body>
 
-  <body name="body_target3" dynamical="false" trn="900 900 -500">
+  <body name="body_target3" dynamical="false" trn="310.2 425.1 144.7">
+    <connector name="0"/>
+  </body>
+
+  <body name="body_target4" dynamical="false" trn="444.2 562.9 -371">
+    <connector name="0"/>
+  </body>
+
+  <body name="body_target5" dynamical="false" trn="434.2 438.3 -39.5">
+    <connector name="0"/>
+  </body>
+
+  <body name="body_target6" dynamical="false" trn="554.3 109.4 -396.9">
+    <connector name="0"/>
+  </body>
+
+  <body name="body_target7" dynamical="false" trn="381.8 -423.8 338.2">
+    <connector name="0"/>
+  </body>
+
+  <body name="body_target8" dynamical="false" trn="764 11.7 219.3">
+    <connector name="0"/>
+  </body>
+
+  <body name="body_target9" dynamical="false" trn="479.1 17.2 427.6">
+    <connector name="0"/>
+  </body>
+
+  <body name="body_target10" dynamical="false" trn="1038 0 500">
     <connector name="0"/>
   </body>
 
