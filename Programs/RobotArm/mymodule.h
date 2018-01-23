@@ -26,7 +26,8 @@ public:
 			real_t endTime;
 			int    numTicks;
 			vec3_t mockupOffset;
-
+			bool   useTree;
+		
 			Welding();
 		};
 

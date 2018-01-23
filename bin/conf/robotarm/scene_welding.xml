@@ -6,72 +6,54 @@
   <import name="mockup" filename="pa10welding/mockup.xml"/>
   -->
 
-  <sphere name="sphere_target"   radius="50"/>
-  <sphere name="sphere_gadai"   radius="400"/>
+  <sphere name="sphere_target" radius="20"/>
+  <sphere name="sphere_gadai"  radius="400"/>
 
   <mesh name="mesh_mockup" scale="0.001" filename="pa10welding/lowlowres/mockup.stl" binary="true" convex="false" collision="true"  mass="false" visual="true"/>
   <mesh name="mesh_gadai"  scale="0.001" filename="pa10welding/lowlowres/gadai.stl"  binary="true" convex="false" collision="false" mass="false" visual="true"/>
 
-  <vmat name="mat_target0" colorname="blue"/>
-  <vmat name="mat_target1" colorname="green"/>
-  <vmat name="mat_target2" colorname="red"/>
-  <vmat name="mat_target3" colorname="cyan"/>
-  <vmat name="mat_mockup" colorname="darkturquoise" alpha="0.3"/>
-  <vmat name="mat_gadai"  colorname="darkturquoise" alpha="1.0"/>
+  <vmat name="mat_target0"  colorname="blue"/>
+  <vmat name="mat_target1"  colorname="green"/>
+  <vmat name="mat_target2"  colorname="green"/>
+  <vmat name="mat_target3"  colorname="cyan"/>
+  <vmat name="mat_target4"  colorname="cyan"/>
+  <vmat name="mat_target5"  colorname="magenta"/>
+  <vmat name="mat_target6"  colorname="magenta"/>
+  <vmat name="mat_target7"  colorname="yellow"/>
+  <vmat name="mat_target8"  colorname="yellow"/>
+  <vmat name="mat_target9"  colorname="turquoise"/>
+  <vmat name="mat_target10" colorname="turquoise"/>
+  <vmat name="mat_mockup"   colorname="darkturquoise" alpha="0.3"/>
+  <vmat name="mat_gadai"    colorname="darkturquoise" alpha="1.0"/>
 
-  <body name="body_target0" dynamical="false" trn="900 900 500">
-    <connector name="0"/>
-  </body>
-
-  <body name="body_target1" dynamical="false" trn="500 700 100">
-    <connector name="0"/>
-  </body>
-
-  <body name="body_target2" dynamical="false" trn="400 500 -100">
-    <connector name="0"/>
-  </body>
-
-  <body name="body_target3" dynamical="false" trn="310.2 425.1 144.7">
-    <connector name="0"/>
-  </body>
-
-  <body name="body_target4" dynamical="false" trn="444.2 562.9 -371">
-    <connector name="0"/>
-  </body>
-
-  <body name="body_target5" dynamical="false" trn="434.2 438.3 -39.5">
-    <connector name="0"/>
-  </body>
-
-  <body name="body_target6" dynamical="false" trn="554.3 109.4 -396.9">
-    <connector name="0"/>
-  </body>
-
-  <body name="body_target7" dynamical="false" trn="381.8 -423.8 338.2">
-    <connector name="0"/>
-  </body>
-
-  <body name="body_target8" dynamical="false" trn="764 11.7 219.3">
-    <connector name="0"/>
-  </body>
-
-  <body name="body_target9" dynamical="false" trn="479.1 17.2 427.6">
-    <connector name="0"/>
-  </body>
-
-  <body name="body_target10" dynamical="false" trn="1038 0 500">
-    <connector name="0"/>
-  </body>
+  <body name="body_target0"  dynamical="false" trn=" 900    900    500"  ><connector name="0"/></body>
+  <body name="body_target1"  dynamical="false" trn=" 500    700    100"  ><connector name="0"/></body>
+  <body name="body_target2"  dynamical="false" trn=" 400    500   -100"  ><connector name="0"/></body>
+  <body name="body_target3"  dynamical="false" trn=" 310.2  425.1  144.7"><connector name="0"/></body>
+  <body name="body_target4"  dynamical="false" trn=" 444.2  562.9 -371"  ><connector name="0"/></body>
+  <body name="body_target5"  dynamical="false" trn=" 434.2  438.3 -39.5" ><connector name="0"/></body>
+  <body name="body_target6"  dynamical="false" trn=" 554.3  109.4 -396.9"><connector name="0"/></body>
+  <body name="body_target7"  dynamical="false" trn=" 381.8 -423.8  338.2"><connector name="0"/></body>
+  <body name="body_target8"  dynamical="false" trn=" 764    11.7   219.3"><connector name="0"/></body>
+  <body name="body_target9"  dynamical="false" trn=" 479.1  17.2   427.6"><connector name="0"/></body>
+  <body name="body_target10" dynamical="false" trn="1038    0      500"  ><connector name="0"/></body>
 
   <body name="body_obstacle0" dynamical="false">
     <connector name="c_mockup" trn="1240 489.5 0"/>
     <connector name="c_gadai" />
   </body>
 
-  <attach connector="body_target0/0" shape="sphere_target" vmat="mat_target0"/>
-  <attach connector="body_target1/0" shape="sphere_target" vmat="mat_target1"/>
-  <attach connector="body_target2/0" shape="sphere_target" vmat="mat_target2"/>
-  <attach connector="body_target3/0" shape="sphere_target" vmat="mat_target3"/>
+  <attach connector="body_target0/0"  shape="sphere_target" vmat="mat_target0" />
+  <attach connector="body_target1/0"  shape="sphere_target" vmat="mat_target1" />
+  <attach connector="body_target2/0"  shape="sphere_target" vmat="mat_target2" />
+  <attach connector="body_target3/0"  shape="sphere_target" vmat="mat_target3" />
+  <attach connector="body_target4/0"  shape="sphere_target" vmat="mat_target4" />
+  <attach connector="body_target5/0"  shape="sphere_target" vmat="mat_target5" />
+  <attach connector="body_target6/0"  shape="sphere_target" vmat="mat_target6" />
+  <attach connector="body_target7/0"  shape="sphere_target" vmat="mat_target7" />
+  <attach connector="body_target8/0"  shape="sphere_target" vmat="mat_target8" />
+  <attach connector="body_target9/0"  shape="sphere_target" vmat="mat_target9" />
+  <attach connector="body_target10/0" shape="sphere_target" vmat="mat_target10"/>
   <attach connector="body_obstacle0/c_mockup" shape="mesh_mockup" vmat="mat_mockup"/>
   <!--
   <attach connector="body_obstacle0/c_gadai"  shape="mesh_gadai" vmat="mat_gadai"/>

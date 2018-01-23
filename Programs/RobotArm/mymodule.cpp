@@ -14,6 +14,7 @@ MyModule::Config::Welding::Welding(){
 	endTime        = 0.0;
 	numTicks       = 0;
 	mockupOffset   = vec3_t();
+	useTree        = false;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -34,6 +35,7 @@ void MyModule::Read(XML& xml){
 		xml.Get(conf.welding.endTime       , ".end_time"       );
 		xml.Get(conf.welding.numTicks      , ".num_ticks"      );
 		xml.Get(conf.welding.mockupOffset  , ".mockup_offset"  );
+		xml.Get(conf.welding.useTree       , ".use_tree"       );
 	}
 }
 
@@ -124,8 +126,10 @@ bool MyModule::Build(){
 	// Init前の処理
 	if(sceneSelect == Welding){
 		// tree生成
-		DiMP::Tree* tree = new DiMP::Tree(graph, "tree");
-		tree->root = robot[0]->link[0];
+		if(conf.welding.useTree){
+			DiMP::Tree* tree = new DiMP::Tree(graph, "tree");
+			tree->root = robot[0]->link[0];
+		}
 		
 		// 溶接点列を読み込み
 		CsvReader csv;
@@ -170,33 +174,19 @@ bool MyModule::Build(){
 
 		// マッチングタスク生成
 		//new DiMP::MatchTask(robot[0]->link.back(), target[0], timeSlot, "match_welding");
-
-		// タイムスロット
-		DiMP::TimeSlot* timeSlot3 = new DiMP::TimeSlot(graph, 1.0, 3.3, true, "ts_welding");
 		*/
 
 		// マッチングタスク生成（円筒付近でe1を固定）
-		new DiMP::MatchTask(robot[0]->link[4], target[3], timeSlot3, "match_welding");
-
-		// タイムスロット
-		DiMP::TimeSlot* timeSlot4 = new DiMP::TimeSlot(graph, 1.0, 3.3, true, "ts_welding");
-
 		// マッチングタスク生成（円筒付近でw2を固定）
-		new DiMP::MatchTask(robot[0]->link[7], target[4], timeSlot4, "match_welding");
-
-
-		// タイムスロット
-		DiMP::TimeSlot* timeSlot5 = new DiMP::TimeSlot(graph, 3.31, 4.0, true, "ts_welding");
+		DiMP::TimeSlot* timeSlot3 = new DiMP::TimeSlot(graph, 1.0, 3.3, true, "ts_welding");
+		new DiMP::MatchTask(robot[0]->link[4], target[3], timeSlot3, "match_welding");
+		new DiMP::MatchTask(robot[0]->link[7], target[4], timeSlot3, "match_welding");
 
 		// マッチングタスク生成（台前で肘e1を固定）
-		new DiMP::MatchTask(robot[0]->link[4], target[5], timeSlot5, "match_welding");
-
-
-		// タイムスロット
-		DiMP::TimeSlot* timeSlot6 = new DiMP::TimeSlot(graph, 3.31, 4.0, true, "ts_welding");
-
 		// マッチングタスク生成（台前で手首w2を固定）
-		new DiMP::MatchTask(robot[0]->link[7], target[6], timeSlot6, "match_welding");
+		DiMP::TimeSlot* timeSlot4 = new DiMP::TimeSlot(graph, 3.31, 10.0, true, "ts_welding");
+		new DiMP::MatchTask(robot[0]->link[4], target[5], timeSlot4, "match_welding");
+		new DiMP::MatchTask(robot[0]->link[7], target[6], timeSlot4, "match_welding");
 
 		/*
 		// タイムスロット
