@@ -179,14 +179,19 @@ bool MyModule::Build(){
 		// マッチングタスク生成（円筒付近でe1を固定）
 		// マッチングタスク生成（円筒付近でw2を固定）
 		DiMP::TimeSlot* timeSlot3 = new DiMP::TimeSlot(graph, 1.0, 3.3, true, "ts_welding");
-		new DiMP::MatchTask(robot[0]->link[4], target[3], timeSlot3, "match_welding");
-		new DiMP::MatchTask(robot[0]->link[7], target[4], timeSlot3, "match_welding");
+		DiMP::MatchTask* match3a  = new DiMP::MatchTask(robot[0]->link[4], target[3], timeSlot3, "match_welding");
+		DiMP::MatchTask* match3b  = new DiMP::MatchTask(robot[0]->link[7], target[4], timeSlot3, "match_welding");
 		
 		// マッチングタスク生成（台前で肘e1を固定）
 		// マッチングタスク生成（台前で手首w2を固定）
 		DiMP::TimeSlot* timeSlot4 = new DiMP::TimeSlot(graph, 3.31, 10.0, true, "ts_welding");
-		new DiMP::MatchTask(robot[0]->link[4], target[5], timeSlot4, "match_welding");
-		new DiMP::MatchTask(robot[0]->link[7], target[6], timeSlot4, "match_welding");
+		DiMP::MatchTask* match4a  = new DiMP::MatchTask(robot[0]->link[4], target[5], timeSlot4, "match_welding");
+		DiMP::MatchTask* match4b  = new DiMP::MatchTask(robot[0]->link[7], target[6], timeSlot4, "match_welding");
+		// ↓のようにmatch_rpをtrueにすると向きもマッチするようになる
+		match4a->param.match_tp = true;
+		match4a->param.match_rp = true;
+		match4b->param.match_tp = true;
+		match4b->param.match_rp = true;
 
 		/*
 		// タイムスロット
