@@ -71,9 +71,6 @@ public:
 		p_or_v : position or velocity
 		s_or_r : v3 constraint or scalar constraint
 	 */
-	//void AddLinks(Constraint* con, bool t_or_r, bool p_or_v, bool v_or_s);
-	//void CalcCoef(Constraint* con, bool t_or_r, real_t k, uint& i);
-	//void CalcCoef(Constraint* con, bool t_or_r, vec3_t k, uint& i);
 	void AddLinks(Constraint* con, const OptionS & opt);
 	void AddLinks(Constraint* con, const OptionV3& opt);
 	void CalcCoef(Constraint* con, const OptionS & opt, uint& i);

@@ -5,6 +5,6 @@
   end_time        = "10.0"
   num_ticks       = "50"
   mockup_offset   = "1.240 0.4895 0.0"
-  use_tree        = "false"
+  use_tree        = "true"
   />
 

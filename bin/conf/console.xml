@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
-<console>
+<console
+  play_speed = "0.1"
+  >
   <rendering
     timer_period          = "50"
     world_bound           = "300.0"

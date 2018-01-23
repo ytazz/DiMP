@@ -36,6 +36,7 @@ Module::Module(){
 	deltaNorm     = 0.0;
 	isPlaying     = true;
 	playTime      = 0.0;
+	playSpeed     = 1.0;
 	
 	renManager = new RenderingManager ();
 	reqManager = new RequestManager   ();
@@ -61,6 +62,10 @@ Module::~Module(){
 
 }
 
+void Module::Read(XML& xml){
+	xml.Get(playSpeed, ".play_speed");
+}
+
 bool Module::Init(int argc, char* argv[]){
 	// メッセージ出力バイパス
 	Message::SetStream  (0);
@@ -69,6 +74,7 @@ bool Module::Init(int argc, char* argv[]){
 	// コンフィグロード
 	XML xml;
 	xml.Load("conf/console.xml");
+	Read(xml);
 	renManager->Read(xml);
 	simManager->Read(xml);
 	
@@ -213,7 +219,7 @@ void Module::OnDraw(DiMP::Render::Canvas* canvas){
 	graph->Draw(canvas, this);
 
 	if(isPlaying){
-		playTime += 0.001 * renManager->timerPeriod;
+		playTime += playSpeed * (0.001 * renManager->timerPeriod);
 		if(playTime > graph->ticks.back()->time)
 			playTime = 0.0;
 	}

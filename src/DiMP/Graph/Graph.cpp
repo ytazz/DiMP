@@ -164,6 +164,13 @@ void Graph::Prepare(){
 	nodes.Prepare();
 }
 
+void Graph::Finish(){
+	nodes.Finish();
+
+	// ツリーについて順キネ計算
+	trees.ForwardKinematics();
+}
+
 void Graph::Step(){
 	if(!ready)
 		Init();
@@ -172,16 +179,16 @@ void Graph::Step(){
 	timer.CountUS();
 	Prepare();
 	uint TPrepare = timer.CountUS();
-	DSTR << "Prepare: " << TPrepare << endl;
+	//DSTR << "Prepare: " << TPrepare << endl;
 	
 	timer.CountUS();
 	solver->Step();
 	uint TStep = timer.CountUS();
-	DSTR << "Step: " << TStep << endl;
-	
-	// ツリーについて順キネ計算
-	trees.ForwardKinematics();
-	
+	//DSTR << "Step: " << TStep << endl;
+
+	timer.CountUS();
+	Finish();
+	uint TFinish = timer.CountUS();
 }
 
 void Graph::Draw(Render::Canvas* canvas, Render::Config* _conf){

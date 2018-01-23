@@ -84,6 +84,7 @@ public:
 	Scale		 scale;
 	
 	void Prepare();
+	void Finish ();
 
 public:
 	/// set scaling factor;

@@ -104,5 +104,10 @@
   <param name="min_step_size"   value="1.0"/>
   <param name="max_step_size"   value="1.0"/>
   <param name="method_major"    value="prioritized"/>
+  <param name="method_minor"    value="gauss_seidel"/>
+  <!--
+  <param name="method_major"    value="gauss_newton1"/>
+  <param name="method_minor"    value="direct"/>
+  -->
   <param name="verbose"         value="false"/>
 </namespace>
