@@ -25,7 +25,7 @@
   <sphere name="sphere_target" radius="200"/>
   <box    name="box_target"    size="50 50 50"/>
 
-  <body name="body_link0" auto_tree="true" dynamical="false" trn="0 0 0" rot="90deg@y">
+  <body name="body_link0" auto_tree="false" dynamical="false" trn="0 0 0" rot="90deg@y">
     <connector name="mesh"/>
     <connector name="sock" trn="0 0 340"/>
   </body>
