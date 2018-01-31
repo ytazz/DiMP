@@ -164,6 +164,13 @@ void Graph::Prepare(){
 	nodes.Prepare();
 }
 
+void Graph::Finish(){
+	nodes.Finish();
+
+	// ツリーについて順キネ計算
+	trees.ForwardKinematics();
+}
+
 void Graph::Step(){
 	if(!ready)
 		Init();
@@ -172,16 +179,16 @@ void Graph::Step(){
 	timer.CountUS();
 	Prepare();
 	uint TPrepare = timer.CountUS();
-	//cout << "Prepare: " << TPrepare << endl;
+	//DSTR << "Prepare: " << TPrepare << endl;
 	
 	timer.CountUS();
 	solver->Step();
 	uint TStep = timer.CountUS();
-	//cout << "Step: " << TStep << endl;
-	
-	// ツリーについて順キネ計算
-	trees.ForwardKinematics();
-	
+	//DSTR << "Step: " << TStep << endl;
+
+	timer.CountUS();
+	Finish();
+	uint TFinish = timer.CountUS();
 }
 
 void Graph::Draw(Render::Canvas* canvas, Render::Config* _conf){
@@ -197,8 +204,8 @@ void Graph::Draw(Render::Canvas* canvas, Render::Config* _conf){
 
 	nodes.Draw(canvas, _conf);
 	
-	for(int i = 0; i < (int)ticks.size(); i++)
-		DrawSnapshot(ticks[i]->time, canvas, conf);
+	for(Tick* tick : ticks)
+		DrawSnapshot(tick->time, canvas, conf);
 }
 
 void Graph::CreateSnapshot(real_t t){

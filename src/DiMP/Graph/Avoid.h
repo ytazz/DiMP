@@ -21,15 +21,17 @@ public:
 	struct GeometryPair{
 		GeometryInfo* info0;
 		GeometryInfo* info1;
-		real_t        dmin;
-		real_t        dmax;
+		real_t        dmin;   //< distance lower bound 
+		real_t        dmax;   //< distance upper bound
 		real_t        dist;   //< distance between objects: dist > 0 if apart, dist < 0 if intersect
-		vec3_t        sup0;
+		vec3_t        sup0;   //< nearest point
 		vec3_t        sup1;
-		vec3_t        normal;
+		vec3_t        normal; //< contact normal
 		
-		AvoidConP*	con_p;
-		AvoidConV*	con_v;
+		AvoidConP*	  con_p;
+		AvoidConV*	  con_v;
+
+		GeometryPair();
 	};
 	typedef vector<GeometryPair> GeometryPairs;
 	GeometryPairs geoPairs;

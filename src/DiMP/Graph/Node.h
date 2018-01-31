@@ -34,8 +34,11 @@ public:
 	/// do extra initialization
 	virtual void Init(){}
 
-	/// preparation before each iteration
+	/// pre-processing at each step
 	virtual void Prepare(){}
+
+	/// post-processing at each step
+	virtual void Finish(){}
 
 	/// draw
 	virtual void Draw(Render::Canvas* canvas, Render::Config* conf){}
@@ -69,11 +72,12 @@ public:
 
 class NodeArray : public ArrayBase< Node* >{
 public:
-	void AddVar (){ for(uint i = 0; i < size(); i++) at(i)->AddVar (); }
-	void AddCon (){ for(uint i = 0; i < size(); i++) at(i)->AddCon (); }
-	void Init   (){ for(uint i = 0; i < size(); i++) at(i)->Init   (); }
-	void Prepare(){ for(uint i = 0; i < size(); i++) at(i)->Prepare(); }
-	void Draw(Render::Canvas* canvas, Render::Config* conf){ for(uint i = 0; i < size(); i++) at(i)->Draw(canvas, conf); }
+	void AddVar (){ for(Node* n : *this) n->AddVar (); }
+	void AddCon (){ for(Node* n : *this) n->AddCon (); }
+	void Init   (){ for(Node* n : *this) n->Init   (); }
+	void Prepare(){ for(Node* n : *this) n->Prepare(); }
+	void Finish (){ for(Node* n : *this) n->Finish (); }
+	void Draw(Render::Canvas* canvas, Render::Config* conf){ for(Node* n : *this) n->Draw(canvas, conf); }
 };
 
 /**
@@ -120,8 +124,11 @@ public:
 	virtual void AddCon(Solver* solver){}
 	/// initialization
 	virtual void Init(){}
-	/// preparation before each iteration
+	/// pre-processing
 	virtual void Prepare(){}
+	/// post-processing
+	virtual void Finish(){}
+
 	/// draw
 	virtual void Draw(Render::Canvas* canvas, Render::Config* conf){}
 
@@ -165,8 +172,9 @@ public:
 
 	void AddVar(Solver* solver);
 	void AddCon(Solver* solver);
-	void Init();
+	void Init   ();
 	void Prepare();
+	void Finish ();
 	void Draw(Render::Canvas* canvas, Render::Config* conf);
 };
 
@@ -181,6 +189,7 @@ public:
 	virtual void AddVar ();
 	virtual void AddCon ();
 	virtual void Prepare();
+	virtual void Finish ();
 	virtual void Draw(Render::Canvas* canvas, Render::Config* conf);
 
 	/// create keypoint

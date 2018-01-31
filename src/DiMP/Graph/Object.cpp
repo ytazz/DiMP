@@ -151,17 +151,35 @@ void ObjectKey::CalcCoef(Constraint* con, const ObjectKey::OptionV3& opt, uint& 
 	}
 }
 
-void ObjectKey::Prepare(){
-	Object* obj = (Object*)node;
-	fext_t = obj->param.mass * obj->graph->param.gravity;
-	fext_r.clear();
-
+void ObjectKey::PrepareGeometry(){
 	// absolute pose of geometries
 	for(int i = 0; i < (int)geoInfos.size(); i++){
 		GeometryInfo& info = geoInfos[i];
 		info.poseAbs = pose_t(pos_t->val, pos_r->val) * info.con->pose;
+		
+		// bsphere
 		info.bsphereCenterAbs = info.poseAbs * info.geo->bsphereCenter;
+		
+		// bbox
+		vec3_t dir, dir_local;
+		for(int j = 0; j < 3; j++){
+			dir.clear();
+			dir[j]    = 1.0;
+			dir_local = info.poseAbs.Ori().Conjugated() * dir;
+			info.bbmin[j]  = info.poseAbs.Pos()[j] + dir_local * info.geo->CalcSupport(-dir_local);
+			info.bbmax[j]  = info.poseAbs.Pos()[j] + dir_local * info.geo->CalcSupport( dir_local);
+		}
 	}
+}
+
+void ObjectKey::Prepare(){
+	Object* obj = (Object*)node;
+
+	fext_t = obj->param.mass * obj->graph->param.gravity;
+	fext_r.clear();
+
+	if(obj->param.dynamical)
+		PrepareGeometry();
 }
 
 void ObjectKey::Draw(Render::Canvas* canvas, Render::Config* conf){
@@ -214,6 +232,8 @@ Object::~Object(){
 void Object::Init(){
 	TrajectoryNode::Init();
 
+	CalcBSphere();
+
 	for(uint i = 0; i < graph->ticks.size(); i++){
 		ObjectKey* key = (ObjectKey*)traj.GetKeypoint(graph->ticks[i]);
 		
@@ -244,9 +264,9 @@ void Object::Init(){
 			key->con_force_t->enabled = false;
 			key->con_force_r->enabled = false;
 		}
-	}
 
-	CalcBSphere();
+		key->PrepareGeometry();
+	}
 }
 
 void Object::Prepare(){
@@ -281,11 +301,8 @@ void Object::ForwardKinematics(real_t t){
 
 void Object::CalcBSphere(){
 	bsphere = 0.0;
-	for(uint i = 0; i < cons.size(); i++){
-		Connector* con = cons[i];
-
-		for(uint j = 0; j < con->geos.size(); j++){
-			Geometry* geo = con->geos[j];
+	for(Connector* con : cons){
+		for(Geometry* geo : con->geos){
 			geo->CalcBSphere();
 			bsphere = std::max(bsphere, con->pose.Pos().norm() + geo->bsphereCenter.norm() + geo->bsphereRadius);
 		}
@@ -420,16 +437,14 @@ void Object::DrawSnapshot(const pose_t& pose, Render::Canvas* canvas, Render::Co
 	canvas->Push();
 	canvas->Transform(aff);
 	
-	for(uint i = 0; i < cons.size(); i++){
-		Connector* con = cons[i];
-
+	for(Connector* con : cons){
 		con->pose.ToAffine(aff);
 		
 		canvas->Push();
 		canvas->Transform(aff);
 		
-		for(uint j = 0; j < con->geos.size(); j++){
-			con->geos[j]->Draw(canvas, conf);
+		for(Geometry* geo : con->geos){
+			geo->Draw(canvas, conf);
 		}
 		canvas->Pop();
 	}

@@ -15,7 +15,7 @@ Tick::Tick(Graph* g, real_t t, const string& n):Node(g, n){
 //-------------------------------------------------------------------------------------------------
 
 void Ticks::AssignIndices(){
-	for(uint i = 0; i < size(); i++){
+	for(int i = 0; i < (int)size(); i++){
 		at(i)->idx = i;
 	}
 }
@@ -50,8 +50,7 @@ Node::~Node(){
 //-------------------------------------------------------------------------------------------------
 
 void Trajectory::Update(){
-	for(uint i = 0; i < size(); i++){
-		Keypoint* key = at(i);
+	for(Keypoint* key : *this){
 		if(key->prev) key->hprev = key->tick->time - key->prev->tick->time;
 		if(key->next) key->hnext = key->next->tick->time - key->tick->time;
 	}
@@ -59,19 +58,19 @@ void Trajectory::Update(){
 
 void Trajectory::Set(const Ticks& ticks, TrajectoryNode* node){
 	clear();
-	for(uint i = 0; i < ticks.size(); i++)
+	for(Tick* t : ticks)
 		push_back(node->CreateKeypoint());
 		
 	// name keypoints [node name]_i
 	stringstream ss;
-	for(uint i = 0; i < ticks.size(); i++){
+	for(int i = 0; i < (int)ticks.size(); i++){
 		ss.str("");
 		ss << node->name << '_' << i;
 		at(i)->name = ss.str();
 	}
 
 	// then link them together
-	for(uint i = 0; i < size(); i++){
+	for(int i = 0; i < (int)size(); i++){
 		Keypoint* key = at(i);
 		key->node = node;
 		key->tick = ticks[i];
@@ -83,25 +82,29 @@ void Trajectory::Set(const Ticks& ticks, TrajectoryNode* node){
 }
 
 void Trajectory::AddVar(Solver* solver){
-	for(uint i = 0; i < size(); i++)
-		at(i)->AddVar(solver);
+	for(Keypoint* key : *this)
+		key->AddVar(solver);
 }
 void Trajectory::AddCon(Solver* solver){
-	for(uint i = 0; i < size(); i++)
-		at(i)->AddCon(solver);
+	for(Keypoint* key : *this)
+		key->AddCon(solver);
 }
 void Trajectory::Init(){
-	for(int i = 0; i < (int)size(); i++)
-		at(i)->Init();
+	for(Keypoint* key : *this)
+		key->Init();
 }
 void Trajectory::Prepare(){
 	Update();
-	for(uint i = 0; i < size(); i++)
-		at(i)->Prepare();
+	for(Keypoint* key : *this)
+		key->Prepare();
+}
+void Trajectory::Finish(){
+	for(Keypoint* key : *this)
+		key->Finish();
 }
 void Trajectory::Draw(Render::Canvas* canvas, Render::Config* conf){
-	for(uint i = 0; i < size(); i++)
-		at(i)->Draw(canvas, conf  );
+	for(Keypoint* key : *this)
+		key->Draw(canvas, conf);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -122,6 +125,9 @@ void TrajectoryNode::AddCon(){
 }
 void TrajectoryNode::Prepare(){
 	traj.Prepare();
+}
+void TrajectoryNode::Finish(){
+	traj.Finish();
 }
 void TrajectoryNode::Draw(Render::Canvas* canvas, Render::Config* conf){
 	traj.Draw(canvas, conf);

@@ -27,7 +27,11 @@ public:
 			int    numTicks;
 			vec3_t mockupOffset;
 			bool   useTree;
+<<<<<<< HEAD
 
+=======
+		
+>>>>>>> 1d6d3c1193992b547d4b552dd25ed67fc7fe14e1
 			Welding();
 		};
 

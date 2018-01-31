@@ -6,6 +6,8 @@
 
 namespace DiMP{;
 
+static const real_t pi = M_PI;
+
 JointKey::JointKey(){
 }
 
@@ -151,6 +153,18 @@ void JointKey::Prepare(){
 	}
 }
 
+void JointKey::Finish(){
+	Joint* jnt = (Joint*)node;
+
+	// wrap values to [-pi, pi] for rotaional joints
+	for(int i = 0; i < (int)jnt->dof; i++){
+		if(jnt->IsRotational(i)){
+			while(pos[i]->val < -pi) pos[i]->val += 2*pi;
+			while(pos[i]->val >  pi) pos[i]->val -= 2*pi;
+		}
+	}
+}
+
 void JointKey::Draw(Render::Canvas* canvas, Render::Config* conf){
 	Joint* jnt = (Joint*)node;
 	Vec3f p0, p1;
@@ -277,10 +291,27 @@ real_t Joint::Pos(uint i, real_t t, int type){
 	KeyPair   kp = traj.GetSegment(t)  ;
 	JointKey* k0 = (JointKey*)kp.first ;
 	JointKey* k1 = (JointKey*)kp.second;
-	return InterpolatePos(t,
-		k0->tick->time, k0->pos[i]->val, k0->vel[i]->val,
-		k1->tick->time, k1->pos[i]->val, k1->vel[i]->val,
+
+	// consider wrapping for rotational joints
+	real_t p0 = k0->pos[i]->val;
+	real_t p1 = k1->pos[i]->val;
+
+	if(IsRotational(i)){
+		while(p1 < p0 - pi) p1 += 2*pi;
+		while(p1 > p0 + pi) p1 -= 2*pi;
+	}
+
+	real_t pt = InterpolatePos(t,
+		k0->tick->time, p0, k0->vel[i]->val,
+		k1->tick->time, p1, k1->vel[i]->val,
 		type);
+
+	if(IsRotational(i)){
+		while(pt < -pi) pt += 2*pi;
+		while(pt >  pi) pt -= 2*pi;
+	}
+
+	return pt;
 }
 
 real_t Joint::Vel(uint i, real_t t, int type){

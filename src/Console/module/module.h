@@ -21,8 +21,9 @@ public:
 	int     compTime;
 	int     compTimeTotal;
 	bool    isPlaying;
-	double  playTime;		///< play time
-	double  deltaNorm;
+	real_t  playSpeed;
+	real_t  playTime;		///< play time
+	real_t  deltaNorm;
 	
 	/// Managers
 	RenderingManager*	 renManager;		///< レンダリング
@@ -35,6 +36,7 @@ public:
 public:
 	static Module* Get();
 
+	void Read     (XML& xml);
 	bool Init     (int argc, char* argv[]);		///< 初期化
 	void MainLoop ();							///< メインループ
 	void Cleanup  ();							///< 終了処理

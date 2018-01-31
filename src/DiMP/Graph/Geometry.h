@@ -73,10 +73,13 @@ public:
 struct TriangleBase{
 	vec3_t vertices[3];
 	vec3_t normal;
+
+	void  Draw(Render::Canvas* canvas);
 };
 
 class Triangle : public Geometry, public TriangleBase{
 public:
+	virtual void   Draw       (Render::Canvas* canvas, Render::Config* conf);
 	virtual void   CalcBSphere();
 	virtual vec3_t CalcSupport(const vec3_t& dir);
 
@@ -87,9 +90,16 @@ public:
  */
 class Mesh : public Geometry{
 public:
-	vector<TriangleBase> tris;
+	int ntheta;
+	int nphi;
+
+	vector<TriangleBase>     tris;
+	vector< pair<int, int> > supportMap;
 
 public:
+	void CreateSupportMap();
+
+	virtual void   Draw       (Render::Canvas* canvas, Render::Config* conf);
 	virtual void   CalcBSphere();
 	virtual vec3_t CalcSupport(const vec3_t& dir);
 

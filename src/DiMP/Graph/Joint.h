@@ -79,6 +79,7 @@ public:
 	virtual void AddVar (Solver* solver);
 	virtual void AddCon (Solver* solver);
 	virtual void Prepare();
+	virtual void Finish ();
 	virtual void Draw   (Render::Canvas* canvas, Render::Config* conf);
 
 	JointKey();
@@ -120,7 +121,7 @@ public:
 	
 	/// virtual function of Node
 	virtual void	Init();
-
+	
 	///
 	virtual void    CreateSnapshot(real_t t);
 
