@@ -46,8 +46,14 @@ public:
 
 class AvoidTask : public Task{
 public:
-	real_t	dmin;		///< Å¬Ú‹ß‹——£
+	struct Param{
+		bool	avoid_p;
+		bool	avoid_v;
+		real_t	dmin;		///< Å¬Ú‹ß‹——£
 
+		Param();
+	} param;
+	
 public:
 	virtual Keypoint*	CreateKeypoint(){ return new AvoidKey(); }
 	virtual void Prepare();

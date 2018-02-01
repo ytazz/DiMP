@@ -53,7 +53,8 @@ public:
 	vector<DiMP::Object*>       target;		    ///< target objects
 	vector<DiMP::Object*>       obstacle;		///< obstacles
 	vector<DiMP::TimeSlot*>     timeslot;		///< time slots
-	vector<DiMP::MatchTask*>    task;			///< tasks
+	vector<DiMP::MatchTask*>    matchTask;		///< match tasks
+	vector<DiMP::AvoidTask*>    avoidTask;      ///< avoid tasks
 
 	vector<vec3_t>  weldingPoints;   ///< welding‚É‚¨‚¯‚é—nÚ“_—ñ
 
@@ -61,6 +62,8 @@ public:
 	void Read(XML& xml);
 
 	void DrawSnapshot(real_t time);
+
+	void EnableConstraints (string mode, bool enable);
 
 public:
 	virtual bool Build    ();

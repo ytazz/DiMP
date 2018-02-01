@@ -50,15 +50,23 @@ void AvoidKey::AddCon(Solver* solver){
 void AvoidKey::Prepare(){
 	TaskKey::Prepare();
 
-	if(relation == Inside){
-		AvoidTask* task = (AvoidTask*)node;
-						
+	AvoidTask* task = (AvoidTask*)node;
+	for(auto& gp : geoPairs){
+		gp.con_p->enabled = task->param.avoid_p;
+		gp.con_v->enabled = task->param.avoid_v;
+	}
+
+	if(relation == Inside){				
 		ptimer.CountUS();
 		int nsphere  = 0;
 		int nbox     = 0;
 		int ngjk     = 0;
 		int nactive  = 0;
 		for(auto& gp : geoPairs){
+			if( gp.con_p->enabled == false &&
+				gp.con_v->enabled == false )
+				continue;
+
 			// bsphere‚Å”»’è
 			real_t d    = (gp.info0->bsphereCenterAbs - gp.info1->bsphereCenterAbs).norm();
 			real_t rsum = gp.info0->geo->bsphereRadius + gp.info1->geo->bsphereRadius;
@@ -111,23 +119,8 @@ void AvoidKey::Prepare(){
 		}
 		int timeGjk = ptimer.CountUS();
 
-		DSTR << "bsphere: " << nsphere << " bbox: " << nbox << " gjk: " << ngjk << " active: " << nactive << endl;
-		DSTR << "tgjk: " << timeGjk << endl;
-
-		/*
-		AvoidTask* task = (AvoidTask*)node;
-		vec3_t r = obj1->pos_t->val - obj0->pos_t->val;
-			
-		real_t rnorm = r.norm();
-		const real_t eps = 1.0e-10;
-		if(rnorm < eps)
-				normal = vec3_t(1.0, 0.0, 0.0);
-		else normal = r/rnorm;
-
-		prox0 = obj0->pos_t->val + task->con0->obj->bsphere * normal;
-		prox1 = obj1->pos_t->val - task->con1->obj->bsphere * normal;
-		depth = rnorm - (task->con0->obj->bsphere + task->con1->obj->bsphere);
-		*/
+		//DSTR << "bsphere: " << nsphere << " bbox: " << nbox << " gjk: " << ngjk << " active: " << nactive << endl;
+		//DSTR << "tgjk: " << timeGjk << endl;
 	}
 	else{
 		for(auto& gp : geoPairs){
@@ -155,10 +148,15 @@ void AvoidKey::Draw(Render::Canvas* canvas, Render::Config* conf){
 //-------------------------------------------------------------------------------------------------
 // AvoidTask
 
+AvoidTask::Param::Param(){
+	avoid_p = true;
+	avoid_v = true;
+	dmin    = 0.0;
+}
+
 AvoidTask::AvoidTask(Object* _obj0, Object* _obj1, TimeSlot* _time, const string& n)
 	:Task(_obj0, _obj1, _time, n){
 	
-	dmin = 0.0;
 }
 
 void AvoidTask::Prepare(){

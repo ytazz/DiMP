@@ -166,6 +166,8 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <Optimization>MaxSpeed</Optimization>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>../../lib;../../../Ipopt/lib/Win32/ReleaseMKL;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
