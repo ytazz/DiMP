@@ -55,7 +55,7 @@ public:
 	Robots                      robot;			///< robotic arms;
 	vector<DiMP::Object*>       target;		    ///< target objects
 	vector<DiMP::Object*>       obstacle;		///< obstacles
-	vector<DiMP::TimeSlot*>     timeslot;		///< time slots
+	vector<DiMP::TimeSlot*>     timeSlot;		///< time slots
 	vector<DiMP::MatchTask*>    matchTask;		///< match tasks
 	vector<DiMP::AvoidTask*>    avoidTask;      ///< avoid tasks
 

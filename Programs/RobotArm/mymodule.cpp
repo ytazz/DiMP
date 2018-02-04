@@ -1,4 +1,5 @@
 #include <module/rendering.h>
+#include <module/request.h>
 #include "mymodule.h"
 #include "RobotArm.h"
 
@@ -22,6 +23,8 @@ MyModule::Config::Welding::Welding() {
 MyModule::MyModule() {
 	sceneSelect = Reaching2D;
 
+	reqManager->Add("enable" )->AddArg("mode", ArgType::String);
+    reqManager->Add("disable")->AddArg("mode", ArgType::String); 
 }
 
 MyModule::~MyModule() {
@@ -31,11 +34,11 @@ MyModule::~MyModule() {
 void MyModule::Read(XML& xml) {
 	if (sceneSelect == Welding) {
 		xml.Get(conf.welding.pointsFilename, ".points_filename");
-		xml.Get(conf.welding.startTime, ".start_time");
-		xml.Get(conf.welding.endTime, ".end_time");
-		xml.Get(conf.welding.numTicks, ".num_ticks");
-		xml.Get(conf.welding.mockupOffset, ".mockup_offset");
-		xml.Get(conf.welding.useTree, ".use_tree");
+		xml.Get(conf.welding.startTime     , ".start_time"     );
+		xml.Get(conf.welding.endTime       , ".end_time"       );
+		xml.Get(conf.welding.numTicks      , ".num_ticks"      );
+		xml.Get(conf.welding.mockupOffset  , ".mockup_offset"  );
+		xml.Get(conf.welding.useTree       , ".use_tree"       );
 	}
 }
 
@@ -48,21 +51,21 @@ bool MyModule::Build() {
 	xml.Get(str, ".scene");
 	if (str == "reaching2d") sceneSelect = Reaching2D;
 	if (str == "reaching3d") sceneSelect = Reaching3D;
-	if (str == "toss3d") sceneSelect = Toss3D;
-	if (str == "welding") sceneSelect = Welding;
+	if (str == "toss3d"    ) sceneSelect = Toss3D;
+	if (str == "welding"   ) sceneSelect = Welding;
 
 	// シーン別設定ファイル
 	switch (sceneSelect) {
 	case Reaching2D: sceneFilename = "conf/robotarm/scene_reaching2d.xml"; break;
 	case Reaching3D: sceneFilename = "conf/robotarm/scene_reaching3d.xml"; break;
-	case Toss3D: sceneFilename = "conf/robotarm/scene_toss3d.xml"; break;
-	case Welding: sceneFilename = "conf/robotarm/scene_welding.xml"; break;
+	case Toss3D: sceneFilename     = "conf/robotarm/scene_toss3d.xml"    ; break;
+	case Welding: sceneFilename    = "conf/robotarm/scene_welding.xml"   ; break;
 	}
 	switch (sceneSelect) {
 	case Reaching2D: break;
 	case Reaching3D: break;
-	case Toss3D: break;
-	case Welding: confFilename = "conf/robotarm/welding.xml"; break;
+	case Toss3D    : break;
+	case Welding   : confFilename = "conf/robotarm/welding.xml"; break;
 	}
 
 	// コンフィグ
@@ -152,63 +155,37 @@ bool MyModule::Build() {
 			new DiMP::Tick(graph, t);
 		}
 
-		//初期
-		
+		// 溶接タスク用マッチングタスク
+        timeSlot.push_back(new DiMP::TimeSlot(graph, conf.welding.startTime, conf.welding.endTime, true, "ts_welding"));
+        matchTask.push_back(new DiMP::MatchTask(robot[0]->link.back(), target[0], timeSlot[0], "match_welding"));
+       
+        // 干渉回避タスク （計算が重いので末端リンクのみ）
+        avoidTask.push_back(new DiMP::AvoidTask(robot[0]->link[11], obstacle[0], timeSlot[0], "avoid_welding")); 
+
 		// マッチングタスク生成(肘e1をモックアップ円筒前に移動)
 		// マッチングタスク生成(手w2をモックアップ円筒前に移動)
-		DiMP::TimeSlot* timeSlot0 = new DiMP::TimeSlot(graph, 0.1, 0.5, true, "ts_welding");
-		DiMP::MatchTask* match0a = new DiMP::MatchTask(robot[0]->link[4], target[1], timeSlot0, "match_shoki_e1_welding");
-		DiMP::MatchTask* match0b = new DiMP::MatchTask(robot[0]->link[8], target[2], timeSlot0, "match_shoki_y1welding");
-		DiMP::MatchTask* match0c = new DiMP::MatchTask(robot[0]->link.back(), target[3], timeSlot0, "match_shoki_tesaki_welding");
-		
-		//溶接時
-		/*
-		// タイムスロット
-		DiMP::TimeSlot* timeSlot = new DiMP::TimeSlot(graph, conf.welding.startTime, conf.welding.endTime, true, "ts_welding");
-		// マッチングタスク生成
-		new DiMP::MatchTask(robot[0]->link.back(), target[0], timeSlot, "match_welding");
-		*/
-
+		timeSlot .push_back(new DiMP::TimeSlot(graph, 0.1, 0.5, true, "ts_welding"));
+		matchTask.push_back(new DiMP::MatchTask(robot[0]->link[4]    , target[1], timeSlot[1], "match_initial_e1_welding" ));
+		matchTask.push_back(new DiMP::MatchTask(robot[0]->link[8]    , target[2], timeSlot[1], "match_initial_y1_welding" ));
+		matchTask.push_back(new DiMP::MatchTask(robot[0]->link.back(), target[3], timeSlot[1], "match_initial_end_welding"));
 		
 		// マッチングタスク生成（円筒付近でe1を固定）
 		// マッチングタスク生成（円筒付近でw2を固定）
-		DiMP::TimeSlot* timeSlot1 = new DiMP::TimeSlot(graph, 1.0, 4.1, true, "ts_welding");
-		DiMP::MatchTask* match1a = new DiMP::MatchTask(robot[0]->link[4], target[4], timeSlot1, "match_entou_e1_welding");
-		DiMP::MatchTask* match1b = new DiMP::MatchTask(robot[0]->link[8], target[5], timeSlot1, "match_entou_y1_welding");
-		match1b->param.match_tp = true;
-		match1b->param.match_rp = true;
-		
+		timeSlot .push_back(new DiMP::TimeSlot(graph, 1.0, 4.1, true, "ts_welding"));
+		matchTask.push_back(new DiMP::MatchTask(robot[0]->link[4], target[4], timeSlot[2], "match_cylinder_e1_welding"));
+		matchTask.push_back(new DiMP::MatchTask(robot[0]->link[8], target[5], timeSlot[2], "match_cylinder_y1_welding"));
 		
 		// マッチングタスク生成（下カーブで肘e1を固定）
 		// マッチングタスク生成（下カーブで手首w2を固定）
-		DiMP::TimeSlot* timeSlot2 = new DiMP::TimeSlot(graph, 4.11, 7.1, true, "ts_welding");
-		DiMP::MatchTask* match2a = new DiMP::MatchTask(robot[0]->link[4], target[6], timeSlot2, "match_undercurve_e1_welding");
-		DiMP::MatchTask* match2b = new DiMP::MatchTask(robot[0]->link[8], target[7], timeSlot2, "match_undercurve_y1_welding");
-		match2b->param.match_tp = true;
-		match2b->param.match_rp = true;
-		
+		timeSlot .push_back(new DiMP::TimeSlot(graph, 4.11, 7.1, true, "ts_welding"));
+		matchTask.push_back(new DiMP::MatchTask(robot[0]->link[4], target[6], timeSlot[3], "match_undercurve_e1_welding"));
+		matchTask.push_back(new DiMP::MatchTask(robot[0]->link[8], target[7], timeSlot[3], "match_undercurve_y1_welding"));
 		
 		// マッチングタスク生成（上カーブで肘e1を固定）
 		// マッチングタスク生成（上カーブで手首w2を固定）
-		DiMP::TimeSlot* timeSlot3 = new DiMP::TimeSlot(graph, 7.11, 10.0, true, "ts_welding");
-		DiMP::MatchTask* match3a = new DiMP::MatchTask(robot[0]->link[4], target[8], timeSlot3, "match_overcurve_e1_welding");
-		DiMP::MatchTask* match3b = new DiMP::MatchTask(robot[0]->link[8], target[9], timeSlot3, "match_overcurve_y1_welding");
-		match3b->param.match_tp = true;
-		match3b->param.match_rp = true;
-		
-
-		
-
-
-		// 回避タスク生成
-		stringstream ss;
-		for (int i = 0; i < (int)robot[0]->link.size(); i++) {
-			//if(i == 11){
-			//	ss.str("");
-			//	ss << "avoid" << i;
-			//	new DiMP::AvoidTask(robot[0]->link[i], obstacle[0], timeSlot, ss.str());
-			//}
-		}
+		timeSlot .push_back(new DiMP::TimeSlot(graph, 7.11, 10.0, true, "ts_welding"));
+		matchTask.push_back(new DiMP::MatchTask(robot[0]->link[4], target[8], timeSlot[4], "match_overcurve_e1_welding"));
+		matchTask.push_back(new DiMP::MatchTask(robot[0]->link[8], target[9], timeSlot[4], "match_overcurve_y1_welding"));
 	}
 
 	// 初期化
@@ -268,6 +245,11 @@ bool MyModule::Build() {
 				else key->pos[0]->val = Rad(0.0);
 			}
 		}
+
+		// 初期設定として仮想ターゲットへのマッチングを有効とし，溶接用マッチングと干渉回避を無効とする
+        EnableConstraints("target" , true );
+        EnableConstraints("welding", false);
+        EnableConstraints("avoid"  , false); 
 	}
 
 	for (uint i = 0; i < robot.size(); i++) {
@@ -279,8 +261,68 @@ bool MyModule::Build() {
 	return true;
 }
 
+void MyModule::EnableConstraints(string mode, bool enable){
+    if(sceneSelect == Welding){
+        if(mode == "target"){
+            for(DiMP::MatchTask* task : matchTask){
+                if( task->name == "match_cylinder_y1_welding"   ||
+					task->name == "match_undercurve_y1_welding" ||
+					task->name == "match_overcurve_y1_welding"  ){
+                    task->param.match_tp = enable;
+                    task->param.match_tv = enable;
+                    task->param.match_rp = enable;
+                    task->param.match_rv = enable;
+                }
+                if( task->name == "match_initial_y1_welding"    ||
+					task->name == "match_initial_end_welding"   ||
+					task->name == "match_initial_e1_welding"    ||
+					task->name == "match_cylinder_e1_welding"   ||
+					task->name == "match_undercurve_e1_welding" ||
+					task->name == "match_overcurve_e1_welding"  ){
+                    task->param.match_tp = enable;
+                    task->param.match_tv = enable;
+                    task->param.match_rp = false;
+                    task->param.match_rv = false;
+                }
+            }
+        }
+        if(mode == "welding"){
+            for(DiMP::MatchTask* task : matchTask){
+                if(task->name == "match_welding"){
+                    task->param.match_tp = enable;
+                    task->param.match_tv = enable;
+                    task->param.match_rp = false;
+                    task->param.match_rv = false;
+                }
+            }
+        }
+        if(mode == "avoid"){
+            for(DiMP::AvoidTask* task : avoidTask){
+                if(task->name == "avoid_welding"){
+                    task->param.avoid_p = enable;
+                    task->param.avoid_v = enable;
+                }
+            }
+        }
+    }
+}
+
 bool MyModule::OnRequest() {
-	return Module::OnRequest();
+	string name           = reqManager->name;
+    vector<ArgData>& args = reqManager->args;
+
+    bool ret = false;
+
+    if(name == "enable"){
+        EnableConstraints(args[0].str, true);
+        ret = true;
+    }
+    if(name == "disable"){
+        EnableConstraints(args[0].str, false);
+        ret = true;
+    }
+
+    return ret | Module::OnRequest(); 
 }
 
 void MyModule::OnStep() {
