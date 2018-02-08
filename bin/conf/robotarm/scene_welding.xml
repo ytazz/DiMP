@@ -32,8 +32,8 @@
   <body name="body_target3" dynamical="false" trn="1100    900    -500"  ><connector name="0"/></body>
   <body name="body_target4"  dynamical="false" trn=" 210.7  418  105"><connector name="0"/></body>
   <body name="body_target5"  dynamical="false" trn=" 401.5  399.2 -410.9" rot="120.4deg@z*-27.8deg@y*152deg@x"><connector name="0"/></body>
-  <body name="body_target6"  dynamical="false" trn=" 277.8 -430.5  115.3"><connector name="0"/></body>
-  <body name="body_target7"  dynamical="false" trn=" 772.9   -168.2   244" rot="-65.9deg@z*-11deg@y*-75.2deg@x"><connector name="0"/></body>
+  <body name="body_target6"  dynamical="false" trn="371.4 163.8 418"><connector name="0"/></body>
+  <body name="body_target7"  dynamical="false" trn="795.6 -55 161.2" rot="-113.3deg@z*-56deg@y*-68.6deg@x"><connector name="0"/></body>
   <body name="body_target8"  dynamical="false" trn=" 479.1  17.2   427.6"><connector name="0"/></body>
   <body name="body_target9" dynamical="false" trn="1038    32.1    555.4" rot="125.9deg@z*-82.3deg@y*50.6deg@x" ><connector name="0"/></body>
 
@@ -43,17 +43,18 @@
     <connector name="c_gadai" />
   </body>
  
+  
   <attach connector="body_target0/0"  shape="sphere_target" vmat="mat_target0" />
   <attach connector="body_target1/0"  shape="sphere_target" vmat="mat_target1" />
   <attach connector="body_target2/0"  shape="sphere_target" vmat="mat_target2" />
   <attach connector="body_target3/0"  shape="sphere_target" vmat="mat_target3" />   
-  <attach connector="body_target4/0"  shape="sphere_target" vmat="mat_target4" />
+ <attach connector="body_target4/0"  shape="sphere_target" vmat="mat_target4" />
   <attach connector="body_target5/0"  shape="sphere_target" vmat="mat_target5" />  
   <attach connector="body_target6/0"  shape="sphere_target" vmat="mat_target6" />
   <attach connector="body_target7/0"  shape="sphere_target" vmat="mat_target7" /> 
   <attach connector="body_target8/0"  shape="sphere_target" vmat="mat_target8" />
   <attach connector="body_target9/0" shape="sphere_target" vmat="mat_target9"/>
- 
+
   
   <attach connector="body_obstacle0/c_mockup" shape="mesh_mockup" vmat="mat_mockup"/>
   <!--
