@@ -154,30 +154,31 @@ bool MyModule::Build() {
 			real_t t = conf.welding.startTime + ((conf.welding.endTime - conf.welding.startTime) / (real_t)conf.welding.numTicks) * (real_t)i;
 			new DiMP::Tick(graph, t);
 		}
-
+		
 		// 溶接タスク用マッチングタスク
         timeSlot.push_back(new DiMP::TimeSlot(graph, conf.welding.startTime, conf.welding.endTime, true, "ts_welding"));
         matchTask.push_back(new DiMP::MatchTask(robot[0]->link.back(), target[0], timeSlot[0], "match_welding"));
        
         // 干渉回避タスク （計算が重いので末端リンクのみ）
         avoidTask.push_back(new DiMP::AvoidTask(robot[0]->link[11], obstacle[0], timeSlot[0], "avoid_welding")); 
-
+		
 		// マッチングタスク生成(肘e1をモックアップ円筒前に移動)
 		// マッチングタスク生成(手w2をモックアップ円筒前に移動)
-		timeSlot .push_back(new DiMP::TimeSlot(graph, 0.1, 0.5, true, "ts_welding"));
+		timeSlot .push_back(new DiMP::TimeSlot(graph, 0.1, 0.9, true, "ts_welding"));
 		matchTask.push_back(new DiMP::MatchTask(robot[0]->link[4]    , target[1], timeSlot[1], "match_initial_e1_welding" ));
 		matchTask.push_back(new DiMP::MatchTask(robot[0]->link[8]    , target[2], timeSlot[1], "match_initial_y1_welding" ));
 		matchTask.push_back(new DiMP::MatchTask(robot[0]->link.back(), target[3], timeSlot[1], "match_initial_end_welding"));
 		
+		
 		// マッチングタスク生成（円筒付近でe1を固定）
 		// マッチングタスク生成（円筒付近でw2を固定）
-		timeSlot .push_back(new DiMP::TimeSlot(graph, 1.0, 4.1, true, "ts_welding"));
+		timeSlot .push_back(new DiMP::TimeSlot(graph, 1.0, 3.1, true, "ts_welding"));
 		matchTask.push_back(new DiMP::MatchTask(robot[0]->link[4], target[4], timeSlot[2], "match_cylinder_e1_welding"));
 		matchTask.push_back(new DiMP::MatchTask(robot[0]->link[8], target[5], timeSlot[2], "match_cylinder_y1_welding"));
 		
 		// マッチングタスク生成（下カーブで肘e1を固定）
 		// マッチングタスク生成（下カーブで手首w2を固定）
-		timeSlot .push_back(new DiMP::TimeSlot(graph, 4.11, 7.1, true, "ts_welding"));
+		timeSlot .push_back(new DiMP::TimeSlot(graph, 3.11, 7.1, true, "ts_welding"));
 		matchTask.push_back(new DiMP::MatchTask(robot[0]->link[4], target[6], timeSlot[3], "match_undercurve_e1_welding"));
 		matchTask.push_back(new DiMP::MatchTask(robot[0]->link[8], target[7], timeSlot[3], "match_undercurve_y1_welding"));
 		
@@ -186,6 +187,7 @@ bool MyModule::Build() {
 		timeSlot .push_back(new DiMP::TimeSlot(graph, 7.11, 10.0, true, "ts_welding"));
 		matchTask.push_back(new DiMP::MatchTask(robot[0]->link[4], target[8], timeSlot[4], "match_overcurve_e1_welding"));
 		matchTask.push_back(new DiMP::MatchTask(robot[0]->link[8], target[9], timeSlot[4], "match_overcurve_y1_welding"));
+		
 	}
 
 	// 初期化
