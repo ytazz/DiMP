@@ -7,8 +7,7 @@
   -->
 
   <sphere name="sphere_target" radius="20"/>
-  <sphere name="sphere_gadai"  radius="400"/>
-
+  
   <mesh name="mesh_mockup" scale="0.001" filename="pa10welding/lowlowres/mockup.stl" binary="true" convex="false" collision="true"  mass="false" visual="true"/>
   <mesh name="mesh_gadai"  scale="0.001" filename="pa10welding/lowlowres/gadai.stl"  binary="true" convex="false" collision="false" mass="false" visual="true"/>
 
@@ -43,15 +42,15 @@
     <connector name="c_gadai" />
   </body>
 
-  <attach connector="body_target0/0"  shape="sphere_target" vmat="mat_target0" />
-  <attach connector="body_target1/0"  shape="sphere_target" vmat="mat_target1" />
-  <attach connector="body_target2/0"  shape="sphere_target" vmat="mat_target2" />
-  <attach connector="body_target3/0"  shape="sphere_target" vmat="mat_target3" />   
-  <attach connector="body_target4/0"  shape="sphere_target" vmat="mat_target4" />
-  <attach connector="body_target5/0"  shape="sphere_target" vmat="mat_target5" />  
-  <attach connector="body_target6/0"  shape="sphere_target" vmat="mat_target6" />
-  <attach connector="body_target7/0"  shape="sphere_target" vmat="mat_target7" /> 
-  <attach connector="body_target8/0"  shape="sphere_target" vmat="mat_target8" />
+  <attach connector="body_target0/0" shape="sphere_target" vmat="mat_target0"/>
+  <attach connector="body_target1/0" shape="sphere_target" vmat="mat_target1"/>
+  <attach connector="body_target2/0" shape="sphere_target" vmat="mat_target2"/>
+  <attach connector="body_target3/0" shape="sphere_target" vmat="mat_target3"/>   
+  <attach connector="body_target4/0" shape="sphere_target" vmat="mat_target4"/>
+  <attach connector="body_target5/0" shape="sphere_target" vmat="mat_target5"/>  
+  <attach connector="body_target6/0" shape="sphere_target" vmat="mat_target6"/>
+  <attach connector="body_target7/0" shape="sphere_target" vmat="mat_target7"/> 
+  <attach connector="body_target8/0" shape="sphere_target" vmat="mat_target8"/>
   <attach connector="body_target9/0" shape="sphere_target" vmat="mat_target9"/>
 
   

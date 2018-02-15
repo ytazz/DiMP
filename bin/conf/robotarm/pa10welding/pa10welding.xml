@@ -22,9 +22,7 @@
   <mesh name="mesh_yousetu02" scale="0.001" filename="lowlowres/yousetu02.stl" binary="true" collision="true" convex="true" mass="false" visual="true"/>
   <mesh name="mesh_yousetu03" scale="0.001" filename="lowlowres/yousetu03.stl" binary="true" collision="true" convex="true" mass="false" visual="true"/>
   <mesh name="mesh_yousetu04" scale="0.001" filename="lowlowres/yousetu04.stl" binary="true" collision="true" convex="true" mass="false" visual="true"/>
-  <sphere name="sphere_target" radius="200"/>
-  <box    name="box_target"    size="50 50 50"/>
-
+  
   <body name="body_link0" auto_tree="false" dynamical="false" trn="0 0 0" rot="90deg@y">
     <connector name="mesh"/>
     <connector name="sock" trn="0 0 340"/>
@@ -96,21 +94,6 @@
   <attach connector="body_link9/mesh"  shape="mesh_yousetu02" vmat="mat_body" />
   <attach connector="body_link10/mesh" shape="mesh_yousetu03" vmat="mat_body" />
   <attach connector="body_link11/mesh" shape="mesh_yousetu04" vmat="mat_body" />
-  
-  <!--
-  <attach connector="body_link0/mesh"  shape="sphere_target" vmat="mat_body" />
-  <attach connector="body_link1/mesh"  shape="sphere_target" vmat="mat_body" />
-  <attach connector="body_link2/mesh"  shape="sphere_target" vmat="mat_cover"/>
-  <attach connector="body_link3/mesh"  shape="sphere_target" vmat="mat_cover"/>
-  <attach connector="body_link4/mesh"  shape="sphere_target" vmat="mat_body" />
-  <attach connector="body_link5/mesh"  shape="sphere_target" vmat="mat_body" />
-  <attach connector="body_link6/mesh"  shape="sphere_target" vmat="mat_body" />
-  <attach connector="body_link7/mesh"  shape="sphere_target" vmat="mat_cover"/>
-  <attach connector="body_link8/mesh"  shape="sphere_target" vmat="mat_cover"/>
-  <attach connector="body_link9/mesh"  shape="sphere_target" vmat="mat_body" />
-  <attach connector="body_link10/mesh" shape="sphere_target" vmat="mat_body" />
-  <attach connector="body_link11/mesh" shape="sphere_target" vmat="mat_body" />
-  -->
   
   <hinge name="joint0"  pos="0.0deg" range="-180deg 180deg" sock="body_link0/sock"  plug="body_link1/plug" />
   <hinge name="joint1"  pos="0.0deg" range="-90deg   90deg" sock="body_link1/sock"  plug="body_link2/plug" />

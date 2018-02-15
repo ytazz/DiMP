@@ -74,6 +74,8 @@ public:
 	virtual void OnStep();
 	virtual void OnDraw(DiMP::Render::Canvas* canvas);
 
+	virtual bool Set(DiMP::Render::Canvas* canvas, int attr, DiMP::Node* node);
+
 public:
 	MyModule();
 	~MyModule();

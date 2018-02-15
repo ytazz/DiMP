@@ -160,7 +160,7 @@ bool MyModule::Build() {
         matchTask.push_back(new DiMP::MatchTask(robot[0]->link.back(), target[0], timeSlot[0], "match_welding"));
        
         // 干渉回避タスク （計算が重いので末端リンクのみ）
-        avoidTask.push_back(new DiMP::AvoidTask(robot[0]->link[11], obstacle[0], timeSlot[0], "avoid_welding")); 
+        avoidTask.push_back(new DiMP::AvoidTask(robot[0]->link[8], obstacle[0], timeSlot[0], "avoid_welding")); 
 		
 		// マッチングタスク生成(肘e1をモックアップ円筒前に移動)
 		// マッチングタスク生成(手w2をモックアップ円筒前に移動)
@@ -393,4 +393,18 @@ void MyModule::OnDraw(DiMP::Render::Canvas* canvas) {
 	}
 
 	Module::OnDraw(canvas);
+}
+
+bool MyModule::Set(DiMP::Render::Canvas* canvas, int attr, DiMP::Node* node){
+	if(attr == DiMP::Render::Item::ObjectPos){
+		canvas->SetPointColor("black");
+		canvas->SetPointSize(2.0f);
+		return true;
+	}
+	if(attr == DiMP::Render::Item::ObjectTrajectory){
+		canvas->SetLineColor("black");
+		canvas->SetLineWidth(1);
+		return true;
+	}
+	return false;
 }
