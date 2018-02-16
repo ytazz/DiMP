@@ -553,7 +553,7 @@ void CalcNearest(Geometry* g0, Geometry* g1, const pose_t& pose0, const pose_t& 
 		dir = -pmin.d();
 		niter++;
 	}
-	DSTR << "niter: " << niter << endl;
+	//DSTR << "niter: " << niter << endl;
 }
 
 }

@@ -406,5 +406,8 @@ bool MyModule::Set(DiMP::Render::Canvas* canvas, int attr, DiMP::Node* node){
 		canvas->SetLineWidth(1);
 		return true;
 	}
+	if(attr == DiMP::Render::Item::Avoid){
+		return false;
+	}
 	return false;
 }
