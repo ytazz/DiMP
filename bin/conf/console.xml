@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <console
-  play_speed = "0.5"
+  play_speed = "0.25"
   >
   <rendering
     timer_period          = "50"

@@ -243,7 +243,7 @@ bool MyModule::Build() {
 
 				// ŠÖßŠp‚ð0.5[rad]‚É‚·‚éê‡
 				if (j == 1)
-					key->pos[0]->val = Rad(90.0);
+					key->pos[0]->val = Rad(0.0);
 				else key->pos[0]->val = Rad(0.0);
 			}
 		}
@@ -271,9 +271,9 @@ void MyModule::EnableConstraints(string mode, bool enable){
 					task->name == "match_undercurve_y1_welding" ||
 					task->name == "match_overcurve_y1_welding"  ){
                     task->param.match_tp = enable;
-                    task->param.match_tv = enable;
+                    task->param.match_tv = false;
                     task->param.match_rp = enable;
-                    task->param.match_rv = enable;
+                    task->param.match_rv = false;
                 }
                 if( task->name == "match_initial_y1_welding"    ||
 					task->name == "match_initial_end_welding"   ||
@@ -281,8 +281,8 @@ void MyModule::EnableConstraints(string mode, bool enable){
 					task->name == "match_cylinder_e1_welding"   ||
 					task->name == "match_undercurve_e1_welding" ||
 					task->name == "match_overcurve_e1_welding"  ){
-                    task->param.match_tp = enable;
-                    task->param.match_tv = enable;
+                    task->param.match_tp = false;
+                    task->param.match_tv = false;
                     task->param.match_rp = false;
                     task->param.match_rv = false;
                 }
@@ -333,8 +333,8 @@ void MyModule::OnStep() {
 
 void MyModule::DrawSnapshot(real_t time) {
 	//adaptorDiMP .SetSyncTime(time);
-	//adaptorDiMP .graph->CreateSnapshot(time);
-	robot[0]->link[0]->ForwardKinematics(time);
+	graph->CreateSnapshot(time);
+	//robot[0]->link[0]->ForwardKinematics(time);
 	adaptorDiMP.SyncProperty(false, AttrCategory::State);
 	adaptorSprGR.SyncProperty(true, AttrCategory::State);
 

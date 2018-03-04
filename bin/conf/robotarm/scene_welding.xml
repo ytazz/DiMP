@@ -22,7 +22,7 @@
   <vmat name="mat_target8"  colorname="turquoise"/>
   <vmat name="mat_target9" colorname="turquoise"/>
 
-  <vmat name="mat_mockup"   colorname="gray" alpha="0.3"/>
+  <vmat name="mat_mockup"   colorname="lightgray" alpha="1.0"/>
   <vmat name="mat_gadai"    colorname="darkturquoise" alpha="1.0"/>
 
   <body name="body_target0"  dynamical="false" trn=" 900    900    500"  ><connector name="0"/></body>
