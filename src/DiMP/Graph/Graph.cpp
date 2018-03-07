@@ -1,5 +1,6 @@
 #include <DiMP/Graph/Graph.h>
 #include <DiMP/Graph/Object.h>
+#include <DiMP/Graph/Joint.h>
 #include <DiMP/Render/Config.h>
 #include <DiMP/Render/Canvas.h>
 

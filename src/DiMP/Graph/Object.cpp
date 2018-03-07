@@ -397,7 +397,7 @@ void Object::Draw(Render::Canvas* canvas, Render::Config* conf){
 	if(conf->Set(canvas, Render::Item::ObjectTrajectory, this)){
 		DrawTrajectory(canvas);
 	}
-
+	
 	for(Trajectory::iterator it = traj.begin(); it != traj.end(); it++)
 		(*it)->Draw(canvas, conf);
 }

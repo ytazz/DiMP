@@ -1,10 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <welding
-  points_filename = "conf/robotarm/pa10welding/points.csv"
-  start_time      = "1.0"
-  end_time        = "10.0"
-  num_ticks       = "50"
-  mockup_offset   = "1.240 0.4895 0.0"
-  use_tree        = "true"
+  points_filename  = "conf/robotarm/pa10welding/points.csv"
+  welding_interval = "0 10"
+  lower_interval   = "1 5"
+  lower_num_ticks  = "10"
+  lower_index      = "0 1705"
+  upper_inteval    = "6 9"
+  upper_num_ticks  = "10"
+  upper_index      = "1705 2458"
+  mockup_offset    = "1.240 0.4895 0.0"
+  use_tree         = "true"
   />
 

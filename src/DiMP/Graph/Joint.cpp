@@ -157,12 +157,12 @@ void JointKey::Finish(){
 	Joint* jnt = (Joint*)node;
 
 	// wrap values to [-pi, pi] for rotaional joints
-	for(int i = 0; i < (int)jnt->dof; i++){
-		if(jnt->IsRotational(i)){
-			while(pos[i]->val < -pi) pos[i]->val += 2*pi;
-			while(pos[i]->val >  pi) pos[i]->val -= 2*pi;
-		}
-	}
+    for(int i = 0; i < (int)jnt->dof; i++){
+    	if(jnt->IsRotational(i)){
+    		while(pos[i]->val < -pi) pos[i]->val += 2*pi;
+    		while(pos[i]->val >  pi) pos[i]->val -= 2*pi;
+    	}
+    }
 }
 
 void JointKey::Draw(Render::Canvas* canvas, Render::Config* conf){
@@ -296,20 +296,20 @@ real_t Joint::Pos(uint i, real_t t, int type){
 	real_t p0 = k0->pos[i]->val;
 	real_t p1 = k1->pos[i]->val;
 
-	if(IsRotational(i)){
-		while(p1 < p0 - pi) p1 += 2*pi;
-		while(p1 > p0 + pi) p1 -= 2*pi;
-	}
+	//if(IsRotational(i)){
+	//	while(p1 < p0 - pi) p1 += 2*pi;
+	//	while(p1 > p0 + pi) p1 -= 2*pi;
+	//}
 
 	real_t pt = InterpolatePos(t,
 		k0->tick->time, p0, k0->vel[i]->val,
 		k1->tick->time, p1, k1->vel[i]->val,
 		type);
 
-	if(IsRotational(i)){
-		while(pt < -pi) pt += 2*pi;
-		while(pt >  pi) pt -= 2*pi;
-	}
+	//if(IsRotational(i)){
+	//	while(pt < -pi) pt += 2*pi;
+	//	while(pt >  pi) pt -= 2*pi;
+	//}
 
 	return pt;
 }
