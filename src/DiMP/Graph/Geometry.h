@@ -60,6 +60,20 @@ public:
 	Cylinder(Graph* g, real_t r, real_t l, const string& n = "");
 };
 
+/** capsule
+ */
+class Capsule : public Geometry{
+public:
+	real_t radius;
+	real_t length;
+
+	virtual void   Draw       (Render::Canvas* canvas, Render::Config* conf);
+	virtual void   CalcBSphere();
+	virtual vec3_t CalcSupport(const vec3_t& dir);
+
+	Capsule(Graph* g, real_t r, real_t l, const string& n = "");
+};
+
 /** infinite x-y plane
  */
 class Plane : public Geometry{

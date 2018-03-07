@@ -75,7 +75,7 @@
   -->
   
   <scaling T="1.0" L="1.0" M="1.0"/>
-  
+
   <enable  id="object_c1t"    enable="false"/>
   <enable  id="object_c1r"    enable="false"/>
   <enable  id="joint_c1"      enable="false"/>

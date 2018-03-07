@@ -86,12 +86,38 @@ void Cylinder::CalcBSphere(){
 	bsphereRadius = sqrt(radius * radius + 0.25 * length * length);
 }
 
-vec3_t Cylinder::CalcSupport(const vec3_t& d){
+vec3_t Cylinder::CalcSupport(const vec3_t& dir){
 	// T.B.D.
 	return vec3_t();
 }
 
 void Cylinder::Draw(Render::Canvas* canvas, Render::Config* conf){
+	if(conf->Set(canvas, Render::Item::Geometry, this))
+		canvas->Cylinder((float)radius, (float)length);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+Capsule::Capsule(Graph* g, real_t r, real_t l, const string& n):Geometry(g, n){
+	radius = r;
+	length = l;
+}
+
+void Capsule::CalcBSphere(){
+	bsphereCenter = vec3_t();
+	bsphereRadius = sqrt(radius + 0.5 * length);
+}
+
+vec3_t Capsule::CalcSupport(const vec3_t& dir){
+	const real_t eps = 1.0e-10;
+	real_t dnorm = dir.norm();
+	if(dnorm < eps)
+		return radius * vec3_t(1.0, 0.0, 0.0);
+
+	return (radius/dnorm) * dir + vec3_t(0.0, 0.0, (dir.z > 0.0 ? +1.0 : -1.0)*(0.5*length));
+}
+
+void Capsule::Draw(Render::Canvas* canvas, Render::Config* conf){
 	if(conf->Set(canvas, Render::Item::Geometry, this))
 		canvas->Cylinder((float)radius, (float)length);
 }
