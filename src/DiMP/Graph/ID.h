@@ -70,7 +70,6 @@ struct ConTag{
 		MatchRV,
 		AvoidP,
 		AvoidV,
-		Eom,				///< equation of motion in joint space
 		BipedLipP,
 		BipedLipV,
 		BipedFootRangeT,

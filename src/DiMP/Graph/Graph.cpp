@@ -63,7 +63,6 @@ const char* ConNames[] = {
 	"match_rv"           ,
 	"avoid_p"            ,
 	"avoid_v"            ,
-	"eom"                ,
 	"biped_lip_p"        ,
 	"biped_lip_v"        ,
 	"biped_foot_range_t" ,

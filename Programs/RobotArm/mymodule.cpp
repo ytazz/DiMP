@@ -11,9 +11,18 @@
 
 MyModule::Config::Welding::Welding() {
 	pointsFilename = "";
-	startTime = 0.0;
-	endTime = 0.0;
-	numTicks = 0;
+	weldingStartTime = 0.0;
+	weldingEndTime   = 0.0;
+	lowerStartTime   = 0.0;
+	lowerEndTime     = 0.0;
+	lowerStartIndex  = 0;
+	lowerEndIndex    = 0;
+	lowerDiv         = 0;
+	upperStartTime   = 0.0;
+	upperEndTime     = 0.0;
+	upperStartIndex  = 0;
+	upperEndIndex    = 0;
+	upperDiv         = 0;
 	mockupOffset = vec3_t();
 	useTree = false;
 }
@@ -33,12 +42,21 @@ MyModule::~MyModule() {
 
 void MyModule::Read(XML& xml) {
 	if (sceneSelect == Welding) {
-		xml.Get(conf.welding.pointsFilename, ".points_filename");
-		xml.Get(conf.welding.startTime     , ".start_time"     );
-		xml.Get(conf.welding.endTime       , ".end_time"       );
-		xml.Get(conf.welding.numTicks      , ".num_ticks"      );
-		xml.Get(conf.welding.mockupOffset  , ".mockup_offset"  );
-		xml.Get(conf.welding.useTree       , ".use_tree"       );
+		xml.Get(conf.welding.pointsFilename  , ".points_filename"   );
+		xml.Get(conf.welding.weldingStartTime, ".welding_start_time");
+		xml.Get(conf.welding.weldingEndTime  , ".welding_end_time"  );
+		xml.Get(conf.welding.lowerStartTime  , ".lower_start_time"  );
+		xml.Get(conf.welding.lowerEndTime    , ".lower_end_time"    );
+		xml.Get(conf.welding.lowerStartIndex , ".lower_start_index" );
+		xml.Get(conf.welding.lowerEndIndex   , ".lower_end_index"   );
+		xml.Get(conf.welding.lowerDiv        , ".lower_div"         );
+		xml.Get(conf.welding.upperStartTime  , ".upper_start_time"  );
+		xml.Get(conf.welding.upperEndTime    , ".upper_end_time"    );
+		xml.Get(conf.welding.upperStartIndex , ".upper_start_index" );
+		xml.Get(conf.welding.upperEndIndex   , ".upper_end_index"   );
+		xml.Get(conf.welding.upperDiv        , ".upper_div"         );
+		xml.Get(conf.welding.mockupOffset    , ".mockup_offset"     );
+		xml.Get(conf.welding.useTree         , ".use_tree"          );
 	}
 }
 
@@ -148,46 +166,51 @@ bool MyModule::Build() {
 		}
 
 		// tick生成
-		if (conf.welding.startTime != 0.0)
-			new DiMP::Tick(graph, 0.0);
-		for (int i = 0; i <= conf.welding.numTicks; i++) {
-			real_t t = conf.welding.startTime + ((conf.welding.endTime - conf.welding.startTime) / (real_t)conf.welding.numTicks) * (real_t)i;
+		new DiMP::Tick(graph, conf.welding.weldingStartTime);
+		for (int i = 0; i <= conf.welding.lowerDiv; i++) {
+			real_t t = conf.welding.lowerStartTime + ((conf.welding.lowerEndTime - conf.welding.lowerStartTime) / (real_t)conf.welding.lowerDiv) * (real_t)i;
 			new DiMP::Tick(graph, t);
 		}
+		for (int i = 0; i <= conf.welding.upperDiv; i++) {
+			real_t t = conf.welding.upperStartTime + ((conf.welding.upperEndTime - conf.welding.upperStartTime) / (real_t)conf.welding.upperDiv) * (real_t)i;
+			new DiMP::Tick(graph, t);
+		}
+		new DiMP::Tick(graph, conf.welding.weldingEndTime);
 		
 		// 溶接タスク用マッチングタスク
-        timeSlot.push_back(new DiMP::TimeSlot(graph, conf.welding.startTime, conf.welding.endTime, true, "ts_welding"));
-        matchTask.push_back(new DiMP::MatchTask(robot[0]->link.back(), target[0], timeSlot[0], "match_welding"));
+        timeSlot .push_back(new DiMP::TimeSlot(graph, conf.welding.lowerStartTime, conf.welding.lowerEndTime, true, "ts_welding_lower"));
+        matchTask.push_back(new DiMP::MatchTask(robot[0]->link.back(), target[0], timeSlot[0], "match_welding_lower"));
+
+		timeSlot .push_back(new DiMP::TimeSlot(graph, conf.welding.upperStartTime, conf.welding.upperEndTime, true, "ts_welding_upper"));
+        matchTask.push_back(new DiMP::MatchTask(robot[0]->link.back(), target[0], timeSlot[1], "match_welding_upper"));
        
         // 干渉回避タスク （計算が重いので末端リンクのみ）
-        avoidTask.push_back(new DiMP::AvoidTask(robot[0]->link[8], obstacle[0], timeSlot[0], "avoid_welding")); 
+        //avoidTask.push_back(new DiMP::AvoidTask(robot[0]->link[8], obstacle[0], timeSlot[0], "avoid_welding")); 
 		
 		// マッチングタスク生成(肘e1をモックアップ円筒前に移動)
 		// マッチングタスク生成(手w2をモックアップ円筒前に移動)
-		timeSlot .push_back(new DiMP::TimeSlot(graph, 0.1, 1.1, true, "ts_welding"));
-		matchTask.push_back(new DiMP::MatchTask(robot[0]->link[4]    , target[1], timeSlot[1], "match_initial_e1_welding" ));
-		matchTask.push_back(new DiMP::MatchTask(robot[0]->link[8]    , target[2], timeSlot[1], "match_initial_y1_welding" ));
-		matchTask.push_back(new DiMP::MatchTask(robot[0]->link.back(), target[3], timeSlot[1], "match_initial_end_welding"));
-		
+		//timeSlot .push_back(new DiMP::TimeSlot(graph, 0.1, 1.1, true, "ts_welding"));
+		//matchTask.push_back(new DiMP::MatchTask(robot[0]->link[4]    , target[1], timeSlot[1], "match_initial_e1_welding" ));
+		//matchTask.push_back(new DiMP::MatchTask(robot[0]->link[8]    , target[2], timeSlot[1], "match_initial_y1_welding" ));
+		//matchTask.push_back(new DiMP::MatchTask(robot[0]->link.back(), target[3], timeSlot[1], "match_initial_end_welding"));
 		
 		// マッチングタスク生成（円筒付近でe1を固定）
 		// マッチングタスク生成（円筒付近でw2を固定）
-		timeSlot .push_back(new DiMP::TimeSlot(graph, 1.11, 4.1, true, "ts_welding"));
-		matchTask.push_back(new DiMP::MatchTask(robot[0]->link[4], target[4], timeSlot[2], "match_cylinder_e1_welding"));
-		matchTask.push_back(new DiMP::MatchTask(robot[0]->link[8], target[5], timeSlot[2], "match_cylinder_y1_welding"));
+		//timeSlot .push_back(new DiMP::TimeSlot(graph, 1.11, 4.1, true, "ts_welding"));
+		//matchTask.push_back(new DiMP::MatchTask(robot[0]->link[4], target[4], timeSlot[2], "match_cylinder_e1_welding"));
+		//matchTask.push_back(new DiMP::MatchTask(robot[0]->link[8], target[5], timeSlot[2], "match_cylinder_y1_welding"));
 		
 		// マッチングタスク生成（下カーブで肘e1を固定）
 		// マッチングタスク生成（下カーブで手首w2を固定）
-		timeSlot .push_back(new DiMP::TimeSlot(graph, 4.11, 7.1, true, "ts_welding"));
-		matchTask.push_back(new DiMP::MatchTask(robot[0]->link[4], target[6], timeSlot[3], "match_undercurve_e1_welding"));
-		matchTask.push_back(new DiMP::MatchTask(robot[0]->link[8], target[7], timeSlot[3], "match_undercurve_y1_welding"));
+		//timeSlot .push_back(new DiMP::TimeSlot(graph, 4.11, 7.1, true, "ts_welding"));
+		//matchTask.push_back(new DiMP::MatchTask(robot[0]->link[4], target[6], timeSlot[3], "match_undercurve_e1_welding"));
+		//matchTask.push_back(new DiMP::MatchTask(robot[0]->link[8], target[7], timeSlot[3], "match_undercurve_y1_welding"));
 		
 		// マッチングタスク生成（上カーブで肘e1を固定）
 		// マッチングタスク生成（上カーブで手首w2を固定）
-		timeSlot .push_back(new DiMP::TimeSlot(graph, 7.11, 10.0, true, "ts_welding"));
-		matchTask.push_back(new DiMP::MatchTask(robot[0]->link[4], target[8], timeSlot[4], "match_overcurve_e1_welding"));
-		matchTask.push_back(new DiMP::MatchTask(robot[0]->link[8], target[9], timeSlot[4], "match_overcurve_y1_welding"));
-		
+		//timeSlot .push_back(new DiMP::TimeSlot(graph, 7.11, 10.0, true, "ts_welding"));
+		//matchTask.push_back(new DiMP::MatchTask(robot[0]->link[4], target[8], timeSlot[4], "match_overcurve_e1_welding"));
+		//matchTask.push_back(new DiMP::MatchTask(robot[0]->link[8], target[9], timeSlot[4], "match_overcurve_y1_welding"));
 	}
 
 	// 初期化
@@ -221,18 +244,27 @@ bool MyModule::Build() {
 			DiMP::ObjectKey* key = (DiMP::ObjectKey*)target[0]->traj.GetKeypoint(graph->ticks[k]);
 			real_t t = graph->ticks[k]->time;
 
-			int idx = ((t - conf.welding.startTime) / (conf.welding.endTime - conf.welding.startTime)) * npoints;
-			idx = std::min(std::max(0, idx), npoints - 1);
+			int idx = -1;
+			if(conf.welding.lowerStartTime <= t && t <= conf.welding.lowerEndTime){
+				idx = conf.welding.lowerStartIndex + ((t - conf.welding.lowerStartTime) / (conf.welding.lowerEndTime - conf.welding.lowerStartTime)) * (conf.welding.lowerEndIndex - conf.welding.lowerStartIndex);
+				idx = std::min(std::max(conf.welding.lowerStartIndex, idx), conf.welding.lowerEndIndex-1);
+			}
+			if(conf.welding.upperStartTime <= t && t <= conf.welding.upperEndTime){
+				idx = conf.welding.upperStartIndex + ((t - conf.welding.upperStartTime) / (conf.welding.upperEndTime - conf.welding.upperStartTime)) * (conf.welding.upperEndIndex - conf.welding.upperStartIndex);
+				idx = std::min(std::max(conf.welding.upperStartIndex, idx), conf.welding.upperEndIndex-1);
+			}
 
-			key->pos_t->val = weldingPoints[idx];
-			key->pos_r->val = quat_t();
-			key->vel_t->val = vec3_t();
-			key->vel_r->val = vec3_t();
+			if(idx != -1){
+				key->pos_t->val = weldingPoints[idx];
+				key->pos_r->val = quat_t();
+				key->vel_t->val = vec3_t();
+				key->vel_r->val = vec3_t();
 
-			key->pos_t->locked = true;
-			key->pos_r->locked = true;
-			key->vel_t->locked = true;
-			key->vel_r->locked = true;
+				key->pos_t->locked = true;
+				key->pos_r->locked = true;
+				key->vel_t->locked = true;
+				key->vel_r->locked = true;
+			}
 		}
 
 		// 初期軌道を設定
@@ -290,7 +322,8 @@ void MyModule::EnableConstraints(string mode, bool enable){
         }
         if(mode == "welding"){
             for(DiMP::MatchTask* task : matchTask){
-                if(task->name == "match_welding"){
+                if( task->name == "match_welding_lower" ||
+					task->name == "match_welding_upper" ){
                     task->param.match_tp = enable;
                     task->param.match_tv = enable;
                     task->param.match_rp = false;

@@ -96,8 +96,7 @@
   <enable  id="match_rv"      enable="false"/>
   <enable  id="avoid_p"       enable="true" />
   <enable  id="avoid_v"       enable="true" />
-  <enable  id="eom"           enable="false"/>
-
+  
   <correction rate="0.5"/>
 
   <param name="num_iter"        value="20" />

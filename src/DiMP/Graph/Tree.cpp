@@ -45,19 +45,7 @@ void TreeKey::AddVar(Solver* solver){
 }
 
 void TreeKey::AddCon(Solver* solver){
-	if(next){
-		TreeKey* nextTree = (TreeKey*)next;
 
-		// equation of motion constraint
-		con_eom.resize(joints.size());
-		for(uint i = 0; i < joints.size(); i++){
-			stringstream ss;
-			ss << i;
-			real_t sc = ((Joint*)joints[i]->node)->IsRotational(0) ? node->graph->scale.force_r : node->graph->scale.force_t;
-			con_eom[i] = new EomCon(solver, name + "_eom" + ss.str(), this, i, sc);
-		}
-
-	}
 }
 
 int TreeKey::GetIndex(ObjectKey* obj){
@@ -229,83 +217,6 @@ void Trees::Extract(){
 void Trees::ForwardKinematics(){
 	for(uint i = 0; i < size(); i++)
 		at(i)->root->ForwardKinematics();
-}
-
-//-------------------------------------------------------------------------------------------------
-
-EomCon::EomCon(Solver* solver, string _name, TreeKey* _tree, uint _idx, real_t _scale):
-	Constraint(solver, 1, ID(ConTag::Eom, _tree->node, _tree->tick, _name), _scale){
-	tree[0] = _tree;
-	tree[1] = (TreeKey*)_tree->next;
-	idx     = _idx;
-	
-	uint njnt = (uint)tree[0]->joints   .size();
-	uint nadj = (uint)tree[0]->adjacents.size();
-
-	// joint vel
-	for(uint i = 0; i < njnt; i++)
-		AddSLink(tree[0]->joints[i]->vel[0]);
-	for(uint i = 0; i < njnt; i++)
-		AddSLink(tree[1]->joints[i]->vel[0]);
-
-	// joint torque
-	AddSLink(tree[0]->joints[idx]->torque[0]);
-	
-	/*
-	// external force
-	for(uint i = 0; i < nadj; i++){
-		AddRLink(tree[0]->adjacents[i].joint->force_t);
-		AddRLink(tree[0]->adjacents[i].joint->force_r);
-	}
-	*/
-}
-
-void EomCon::CalcCoef(){
-	uint njnt = (uint)tree[0]->joints   .size();
-	uint nadj = (uint)tree[0]->adjacents.size();
-
-	real_t h   = tree[0]->hnext;
-
-	int l = 0;
-
-	// joint vel
-	for(uint i = 0; i < njnt; i++)
-		((SLink*)links[l++])->SetCoef(-tree[0]->M[idx][i] / h);
-	for(uint i = 0; i < njnt; i++)
-		((SLink*)links[l++])->SetCoef( tree[0]->M[idx][i] / h);
-
-	// joint torque
-	((SLink*)links[l++])->SetCoef(-1.0);
-
-	/*
-	// external force
-	for(uint i = 0; i < nadj; i++){
-		TreeKey::Adjacent& adj = tree[0]->adjacents[i];
-		JointKey* jnt = adj.joint;
-		vec3_t Jv = tree[0]->Jv[adj.iobj][idx];
-		vec3_t Jw = tree[0]->Jw[adj.iobj][idx];
-		vec3_t r  = (adj.sock ? jnt->r[0] + jnt->q[0] * jnt->rrel : jnt->r[1]);
-		((RLink*)links[l++])->SetCoef((adj.sock ? 1.0 : -1.0) * (Jv + Jw % r));
-		((RLink*)links[l++])->SetCoef((adj.sock ? 1.0 : -1.0) * Jw);
-	}
-	*/
-}
-
-void EomCon::CalcDeviation(){
-	Constraint::CalcDeviation();
-	
-	uint nobj = (uint)tree[0]->objects.size();
-
-	/*
-	// äOóÕÇ…ÇÊÇÈçÄ
-	for(uint i = 0; i < nobj; i++){
-		ObjectKey* obj = tree[0]->objects[i];
-		if(!obj->GetNode()->param.dynamical)
-			continue;
-
-		y[0] -= (tree[0]->Jv[i][idx] * obj->fext_t + tree[0]->Jw[i][idx] * obj->fext_r);
-	}
-	*/
 }
 
 }

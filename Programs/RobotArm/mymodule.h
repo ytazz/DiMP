@@ -22,14 +22,20 @@ public:
 	struct Config {
 		struct Welding {
 			string pointsFilename;
-			real_t startTime;
-			real_t endTime;
-			int    numTicks;
+			real_t weldingStartTime;
+			real_t weldingEndTime;
+			real_t lowerStartTime;
+			real_t lowerEndTime;
+			int    lowerStartIndex;
+			int    lowerEndIndex;
+			int    lowerDiv;
+			real_t upperStartTime;
+			real_t upperEndTime;
+			int    upperStartIndex;
+			int    upperEndIndex;
+			int    upperDiv;
 			vec3_t mockupOffset;
 			bool   useTree;
-
-
-
 		
 			Welding();
 		};

@@ -11,8 +11,6 @@ class ObjectKey;
 class Joint;
 class JointKey;
 
-class EomCon;
-
 /**
 	object (rigid body)
  */
@@ -35,8 +33,6 @@ public:
 	vector< vector< vec3_t> >	Jv;		///< Jv[i][j] : joint-j to body-i velocity
 	vector< vector< vec3_t> >   Jw;     ///< Jw[i][j] : joint-j to body-i ang.velocity
 	vector< vector< real_t> >   M;		///< inertia matrix
-
-	vector<EomCon*>			con_eom;
 
 public:
 	int GetIndex(ObjectKey* obj);
@@ -85,19 +81,5 @@ public:
 	void Extract          ();
 	void ForwardKinematics();
 };
-
-//-------------------------------------------------------------------------------------------------
-
-class EomCon : public Constraint{
-public:
-	TreeKey*	tree[2];
-	uint		idx;		///< ‰^“®•û’öŽ®‚Ìs
-	
-	virtual void CalcCoef();
-	virtual void CalcDeviation();
-
-	EomCon(Solver* solver, string _name, TreeKey* _tree, uint _idx, real_t _scale);
-};
-
 
 }
