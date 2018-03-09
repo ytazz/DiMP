@@ -57,7 +57,7 @@ void JointKey::AddCon(Solver* solver){
 		con_rv = new JointConRV(solver, name + "_rv", this, node->graph->scale.vel_r);
 	}
 
-	for(uint i = 0; i < jnt->dof; i++){
+	for(int i = 0; i < jnt->dof; i++){
 		real_t sp = (jnt->IsRotational(i) ? jnt->graph->scale.pos_r   : jnt->graph->scale.pos_t);
 		real_t sv = (jnt->IsRotational(i) ? jnt->graph->scale.vel_r   : jnt->graph->scale.vel_t);
 		real_t sf = (jnt->IsRotational(i) ? jnt->graph->scale.force_r : jnt->graph->scale.force_t);
@@ -95,20 +95,20 @@ void JointKey::Prepare(){
 	q[1] = plugObj->pos_r->val * jnt->plug->pose.Ori();
 
 	vector<real_t> vpos(jnt->dof);
-	for(uint i = 0; i < jnt->dof; i++)
+	for(int i = 0; i < jnt->dof; i++)
 		vpos[i] = pos[i]->val;
 	
 	jnt->CalcRelativePose(&vpos[0], rrel  , qrel  );
 	jnt->CalcJacobian    (&vpos[0], &Jv[0], &Jw[0]);
 
-	for(uint i = 0; i < jnt->dof; i++){
+	for(int i = 0; i < jnt->dof; i++){
 		Jv[i] = q[0] * Jv[i];
 		Jw[i] = q[0] * Jw[i];
 	}
 
 	vrel.clear();
 	wrel.clear();
-	for(uint i = 0; i < jnt->dof; i++){
+	for(int i = 0; i < jnt->dof; i++){
 		vrel += Jv[i] * vel[i]->val;
 		wrel += Jw[i] * vel[i]->val;
 	}
@@ -125,7 +125,7 @@ void JointKey::Prepare(){
 		force_r->val.clear();
 		force_t->Lock();
 		force_r->Lock();
-		for(uint i = 0; i < jnt->dof; i++){
+		for(int i = 0; i < jnt->dof; i++){
 			torque[i]->val = 0.0;
 			torque[i]->Lock();
 		}
@@ -139,7 +139,7 @@ void JointKey::Prepare(){
 		con_rv->active = (in && inprev);
 	}
 
-	for(uint i = 0; i < jnt->dof; i++){
+	for(int i = 0; i < jnt->dof; i++){
 		if(next){
 			con_c1     [i]->active = in && innext;
 			con_range_f[i]->active = in && innext;
@@ -260,7 +260,7 @@ void Joint::Init(){
 			key->force_r->Lock();
 		}
 
-		for(uint i = 0; i < dof; i++){
+		for(int i = 0; i < dof; i++){
 			// set initial values to positions and velocities
 			key->pos[i]->val = param.ini_p[i];
 			key->vel[i]->val = param.ini_v[i];
@@ -360,7 +360,7 @@ void Joint::ForwardKinematics(){
 		// joint relative pose
 		vpos.resize(dof);
 		vvel.resize(dof);
-		for(uint i = 0; i < dof; i++){
+		for(int i = 0; i < dof; i++){
 			vpos[i] = key->pos[i]->val;
 			vvel[i] = key->vel[i]->val;
 		}
@@ -432,7 +432,7 @@ void Joint::ResetJointPos(){
 
 		CalcJointPos(&vpos[0], prel.Pos(), prel.Ori());
 
-		for(uint i = 0; i < dof; i++)
+		for(int i = 0; i < dof; i++)
 			key->pos[i]->val = vpos[i];
 	}
 }
@@ -447,7 +447,7 @@ void Joint::CalcDeviation(real_t t, vec3_t& pos_dev, vec3_t& ori_dev){
 
 	vector<real_t> vpos;
 	vpos.resize(dof);
-	for(uint i = 0; i < dof; i++)
+	for(int i = 0; i < dof; i++)
 		vpos[i] = Pos(i, t);
 	CalcRelativePose(&vpos[0], rrel, qrel);
 
@@ -460,7 +460,7 @@ void Joint::CalcDeviation(real_t t, vec3_t& pos_dev, vec3_t& ori_dev){
 void Joint::CreateSnapshot(real_t t){
 	snapshot.pos.resize(dof);
 	snapshot.vel.resize(dof);
-	for(uint i = 0; i < dof; i++){
+	for(int i = 0; i < dof; i++){
 		snapshot.pos[i] = Pos(i, t);
 		snapshot.vel[i] = Vel(i, t);
 	}

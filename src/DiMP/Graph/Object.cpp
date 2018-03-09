@@ -13,12 +13,8 @@ namespace DiMP{;
 void ObjectKey::AddVar(Solver* solver){
 	Object* obj = (Object*)node;
 	
-	for(uint i = 0; i < obj->cons.size(); i++){
-		Connector* con = obj->cons[i];
-
-		for(uint j = 0; j < con->joints.size(); j++){
-			Joint* jnt = con->joints[j];
-
+	for(Connector* con : obj->cons){
+		for(Joint* jnt : con->joints){
 			joints.push_back( make_pair((JointKey*)jnt->traj.GetKeypoint(tick), jnt->sock == con) );
 		}
 	}
@@ -55,10 +51,8 @@ void ObjectKey::AddCon(Solver* solver){
 	}
 
 	geoInfos.clear();
-	for(int i = 0; i < (int)obj->cons.size(); i++){
-		Connector* con = obj->cons[i];
-		for(int j = 0; j < (int)con->geos.size(); j++){
-			Geometry* geo = con->geos[j];
+	for(Connector* con : obj->cons){
+		for(Geometry* geo : con->geos){
 			GeometryInfo info;
 			info.con = con;
 			info.geo = geo;
@@ -69,9 +63,19 @@ void ObjectKey::AddCon(Solver* solver){
 
 void ObjectKey::AddLinks(Constraint* con, const ObjectKey::OptionS& opt){
 	if(tree){
-		for(uint j = 0; j < tree->joints.size(); j++){
-			if(opt.tp || opt.rp) con->AddSLink (tree->joints[j]->pos[0]);
-			if(opt.tv || opt.rv) con->AddSLink (tree->joints[j]->vel[0]);
+		int i = ((Object*)node)->treeIndex;
+		for(JointKey* jnt : tree->joints){
+			int j = ((Joint*)jnt->node)->treeIndex;
+
+			// skip non-dependent joint
+			if( !((Tree*)tree->node)->dependent[i][j] )
+				continue;
+
+			int ndof = (int)((Joint*)jnt->node)->dof;
+			for(int n = 0; i < ndof; n++){
+				if(opt.tp || opt.rp) con->AddSLink(jnt->pos[n]);
+				if(opt.tv || opt.rv) con->AddSLink(jnt->vel[n]);
+			}
 		}
 	}
 	else{
@@ -84,77 +88,106 @@ void ObjectKey::AddLinks(Constraint* con, const ObjectKey::OptionS& opt){
 
 void ObjectKey::AddLinks(Constraint* con, const ObjectKey::OptionV3& opt){
 	if(tree){
-		for(uint j = 0; j < tree->joints.size(); j++){
-			if(opt.tp || opt.rp) con->AddC3Link(tree->joints[j]->pos[0]);
-			if(opt.tv || opt.rv) con->AddC3Link(tree->joints[j]->vel[0]);
+		int i = ((Object*)node)->treeIndex;
+		for(JointKey* jnt : tree->joints){
+			int j = ((Joint*)jnt->node)->treeIndex;
+
+			// skip non-dependent joint
+			if( !((Tree*)tree->node)->dependent[i][j] )
+				continue;
+
+			int ndof = (int)((Joint*)jnt->node)->dof;
+			for(int n = 0; n < ndof; n++){
+				if(opt.tp || opt.rp) con->AddC3Link(jnt->pos[n]);
+				if(opt.tv || opt.rv) con->AddC3Link(jnt->vel[n]);
+			}
 		}
 	}
 	else{
-		if(opt.tp) con->AddSLink (pos_t);
-		if(opt.rp) con->AddSLink (pos_r);
-		if(opt.tv) con->AddSLink (vel_t);
-		if(opt.rv) con->AddSLink (vel_r);
+		if(opt.tp) con->AddSLink(pos_t);
+		if(opt.rp) con->AddSLink(pos_r);
+		if(opt.tv) con->AddSLink(vel_t);
+		if(opt.rv) con->AddSLink(vel_r);
 	}
 }
 
-void ObjectKey::CalcCoef(Constraint* con, const ObjectKey::OptionS& opt, uint& i){
+void ObjectKey::CalcCoef(Constraint* con, const ObjectKey::OptionS& opt, uint& idx){
 	if(tree){
-		int idx = tree->GetIndex(this);
-		for(uint j = 0; j < tree->joints.size(); j++){
-			real_t J;
-			if(opt.tp || opt.rp){
-				J = 0.0;
-				if(opt.tp) J += opt.k_tp * tree->Jv[idx][j];
-				if(opt.rp) J += opt.k_rp * tree->Jw[idx][j];
-				((SLink*)con->links[i++])->SetCoef(J);
-			}
-			if(opt.tv || opt.rv){
-				J = 0.0;
-				if(opt.tv) J += opt.k_tv * tree->Jv[idx][j];
-				if(opt.rv) J += opt.k_rv * tree->Jw[idx][j];
-				((SLink*)con->links[i++])->SetCoef(J);
+		int i = ((Object*)node)->treeIndex;
+		for(JointKey* jnt : tree->joints){
+			int j   = ((Joint*)jnt->node)->treeIndex;
+			int j2  = ((Joint*)jnt->node)->treeDofIndex;
+			int dof = ((Joint*)jnt->node)->dof;
+			
+			// skip non-dependent joint
+			if( !((Tree*)tree->node)->dependent[i][j] )
+				continue;
+
+			for(int n = 0; n < dof; n++){
+				real_t J;
+				if(opt.tp || opt.rp){
+					J = 0.0;
+					if(opt.tp) J += opt.k_tp * tree->Jv[i][j2+n];
+					if(opt.rp) J += opt.k_rp * tree->Jw[i][j2+n];
+					((SLink*)con->links[idx++])->SetCoef(J);
+				}
+				if(opt.tv || opt.rv){
+					J = 0.0;
+					if(opt.tv) J += opt.k_tv * tree->Jv[idx][j2+n];
+					if(opt.rv) J += opt.k_rv * tree->Jw[idx][j2+n];
+					((SLink*)con->links[idx++])->SetCoef(J);
+				}
 			}
 		}
 	}
 	else{
-		if(opt.tp) ((R3Link*)con->links[i++])->SetCoef(opt.k_tp);
-		if(opt.rp) ((R3Link*)con->links[i++])->SetCoef(opt.k_rp);
-		if(opt.tv) ((R3Link*)con->links[i++])->SetCoef(opt.k_tv);
-		if(opt.rv) ((R3Link*)con->links[i++])->SetCoef(opt.k_rv);
+		if(opt.tp) ((R3Link*)con->links[idx++])->SetCoef(opt.k_tp);
+		if(opt.rp) ((R3Link*)con->links[idx++])->SetCoef(opt.k_rp);
+		if(opt.tv) ((R3Link*)con->links[idx++])->SetCoef(opt.k_tv);
+		if(opt.rv) ((R3Link*)con->links[idx++])->SetCoef(opt.k_rv);
 	}
 }
 
-void ObjectKey::CalcCoef(Constraint* con, const ObjectKey::OptionV3& opt, uint& i){
+void ObjectKey::CalcCoef(Constraint* con, const ObjectKey::OptionV3& opt, uint& idx){
 	if(tree){
-		int idx = tree->GetIndex(this);
-		for(uint j = 0; j < tree->joints.size(); j++){
-			vec3_t J;
-			if(opt.tp || opt.rp){
-				J.clear();
-				if(opt.tp) J += opt.k_tp * tree->Jv[idx][j];
-				if(opt.rp) J += opt.k_rp * tree->Jw[idx][j];
-				((C3Link*)con->links[i++])->SetCoef(J);
-			}
-			if(opt.tv || opt.rv){
-				J.clear();
-				if(opt.tv) J += opt.k_tv * tree->Jv[idx][j];
-				if(opt.rv) J += opt.k_rv * tree->Jw[idx][j];
-				((C3Link*)con->links[i++])->SetCoef(J);
+		int i = ((Object*)node)->treeIndex;
+		for(JointKey* jnt : tree->joints){
+			int j   = ((Joint*)jnt->node)->treeIndex;
+			int j2  = ((Joint*)jnt->node)->treeDofIndex;
+			int dof = ((Joint*)jnt->node)->dof;
+			
+			// skip non-dependent joint
+			if( !((Tree*)tree->node)->dependent[i][j] )
+				continue;
+
+			for(int n = 0; n < dof; n++){
+				vec3_t J;
+				if(opt.tp || opt.rp){
+					J.clear();
+					if(opt.tp) J += opt.k_tp * tree->Jv[i][j2+n];
+					if(opt.rp) J += opt.k_rp * tree->Jw[i][j2+n];
+					((C3Link*)con->links[idx++])->SetCoef(J);
+				}
+				if(opt.tv || opt.rv){
+					J.clear();
+					if(opt.tv) J += opt.k_tv * tree->Jv[i][j2+n];
+					if(opt.rv) J += opt.k_rv * tree->Jw[i][j2+n];
+					((C3Link*)con->links[idx++])->SetCoef(J);
+				}
 			}
 		}
 	}
 	else{
-		if(opt.tp) ((SLink*)con->links[i++])->SetCoef(opt.k_tp);
-		if(opt.rp) ((SLink*)con->links[i++])->SetCoef(opt.k_rp);
-		if(opt.tv) ((SLink*)con->links[i++])->SetCoef(opt.k_tv);
-		if(opt.rv) ((SLink*)con->links[i++])->SetCoef(opt.k_rv);
+		if(opt.tp) ((SLink*)con->links[idx++])->SetCoef(opt.k_tp);
+		if(opt.rp) ((SLink*)con->links[idx++])->SetCoef(opt.k_rp);
+		if(opt.tv) ((SLink*)con->links[idx++])->SetCoef(opt.k_tv);
+		if(opt.rv) ((SLink*)con->links[idx++])->SetCoef(opt.k_rv);
 	}
 }
 
 void ObjectKey::PrepareGeometry(){
 	// absolute pose of geometries
-	for(int i = 0; i < (int)geoInfos.size(); i++){
-		GeometryInfo& info = geoInfos[i];
+	for(GeometryInfo& info : geoInfos){
 		info.poseAbs = pose_t(pos_t->val, pos_r->val) * info.con->pose;
 		
 		// bsphere
@@ -206,8 +239,7 @@ void ObjectKey::Draw(Render::Canvas* canvas, Render::Config* conf){
 
 	// geometries
 	Affinef aff;
-	for(int i = 0; i < (int)geoInfos.size(); i++){
-		GeometryInfo& info = geoInfos[i];
+	for(GeometryInfo& info : geoInfos){
 		info.poseAbs.ToAffine(aff);
 		canvas->Push();
 		canvas->Transform(aff);
@@ -274,12 +306,8 @@ void Object::Prepare(){
 }
 
 void Object::ForwardKinematics(){
-	for(uint i = 0; i < cons.size(); i++){
-		Connector* con = cons[i];
-
-		for(uint j = 0; j < con->joints.size(); j++){
-			Joint* jnt = con->joints[j];
-
+	for(Connector* con : cons){
+		for(Joint* jnt : con->joints){
 			if(jnt->sock == con)
 				jnt->ForwardKinematics();
 		}
@@ -287,12 +315,8 @@ void Object::ForwardKinematics(){
 }
 
 void Object::ForwardKinematics(real_t t){
-	for(uint i = 0; i < cons.size(); i++){
-		Connector* con = cons[i];
-
-		for(uint j = 0; j < con->joints.size(); j++){
-			Joint* jnt = con->joints[j];
-
+	for(Connector* con : cons){
+		for(Joint* jnt : con->joints){
 			if(jnt->sock == con)
 				jnt->ForwardKinematics(t);
 		}

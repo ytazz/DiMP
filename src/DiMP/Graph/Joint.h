@@ -112,9 +112,11 @@ public:
 	Connector*		sock;		///< socket connector
 	Connector*		plug;		///< plug connector
 	
-	Tree*			tree;
+	Tree*			tree;          ///< tree this joint belongs to
+	int             treeIndex;     ///< index of this joint in the tree
+	int             treeDofIndex;
 
-	uint			dof;		///< degrees of freedom
+	int             dof;		///< degrees of freedom
 	
 public:
 	void			SetDof(uint n);

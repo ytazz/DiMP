@@ -17,26 +17,13 @@ class JointKey;
 
 class TreeKey : public Keypoint{
 public:
-	struct Adjacent{
-		JointKey*	joint;
-		bool		sock;
-		int			iobj;
-
-		Adjacent(){}
-		Adjacent(JointKey* j, bool s, int i):joint(j), sock(s), iobj(i){}
-	};
-
 	vector<ObjectKey*>		objects;
 	vector<JointKey *>		joints;
-	vector<Adjacent>		adjacents;	///< ツリーに隣接するJoint
 	
-	vector< vector< vec3_t> >	Jv;		///< Jv[i][j] : joint-j to body-i velocity
-	vector< vector< vec3_t> >   Jw;     ///< Jw[i][j] : joint-j to body-i ang.velocity
-	vector< vector< real_t> >   M;		///< inertia matrix
-
+	vector< vector< vec3_t> >	Jv;		///< Jv[i][j] : j-th dof to body-i velocity
+	vector< vector< vec3_t> >   Jw;     ///< Jw[i][j] : j-th dof to body-i ang.velocity
+	
 public:
-	int GetIndex(ObjectKey* obj);
-	
 	virtual void AddVar(Solver* solver);
 	virtual void AddCon(Solver* solver);
 	virtual void Prepare();
@@ -45,19 +32,9 @@ public:
 
 class Tree : public TrajectoryNode{
 public:
-	struct Adjacent{
-		Joint*	joint;
-		bool	sock;
-		int     iobj;
-
-		Adjacent(){}
-		Adjacent(Joint* j, bool s, int i):joint(j), sock(s), iobj(i){}
-	};
-
 	Object*					root;
 	vector<Object*>			objects;	///< ツリーに属するObject
 	vector<Joint*>			joints;		///< ツリーに属するJoint
-	vector<Adjacent>		adjacents;	///< ツリーに隣接するJoint
 	vector<int>             parObject;	///< 
 	vector<int>             parJoint;	///< 
 	vector< vector<bool> >	dependent;	///< object-iがjoint-jの下流にあるならtrue

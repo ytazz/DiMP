@@ -118,9 +118,10 @@ public:
 
 	Connectors	cons;
 
-	real_t		bsphere;		///< ŠOÚ‰~”¼Œa
+	real_t		bsphere;		///< bounding sphere radius
 
-	Tree*		tree;			///< ‘®‚µ‚Ä‚¢‚éƒcƒŠ[
+	Tree*		tree;			///< a tree this object belongs to
+	int         treeIndex;      ///< index of this object in the tree
 
 public:	
 	void	CalcBSphere();
