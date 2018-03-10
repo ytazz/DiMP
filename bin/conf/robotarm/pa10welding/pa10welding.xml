@@ -25,62 +25,75 @@
   <mesh name="mesh_yousetu04" scale="0.001" filename="lowlowres/yousetu04.stl" binary="true" collision="true" convex="true" mass="false" visual="true"/>
   -->
 
-  <capsule  name="capsule_base" radius="119"  height="212" collision="true" mass="false" visual="true"/>
-  <sphere   name="sphere_s1"    radius="175"               collision="true" mass="false" visual="true"/>
-  <capsule  name="capsule_s2"   radius="97.5" height="220" collision="true" mass="false" visual="true"/>
-  <capsule  name="capsule_s3"   radius="69.5" height="224" collision="true" mass="false" visual="true"/>
-  <capsule  name="capsule_e1_1" radius="65"   height="260" collision="true" mass="false" visual="true"/>
-  <capsule  name="capsule_e1_2" radius="70"   height="120" collision="true" mass="false" visual="true"/>
-  <capsule  name="capsule_e2"   radius="49"   height="168" collision="true" mass="false" visual="true"/>
-  <capsule  name="capsule_w1"   radius="50"   height="160" collision="true" mass="false" visual="true"/>
-  <sphere   name="sphere_w2"    radius="62.5"              collision="true" mass="false" visual="true"/>
-  <cylinder name="cylinder_y1"  radius="134"  height="101" collision="true" mass="false" visual="true"/>
-  <sphere   name="sphere_y1"    radius="21.35"             collision="true" mass="false" visual="true"/>
-  <sphere   name="sphere_y2"    radius="30"                collision="true" mass="false" visual="true"/>
-  
+  <cylinder name="cylinder_base" radius="119"   height="212"   collision="true" mass="false" visual="true"/>
+  <cylinder name="cylinder_s1"   radius="82"    height="275"   collision="true" mass="false" visual="true"/>
+  <cylinder name="cylinder_s2_1" radius="82"    height="172"   collision="true" mass="false" visual="true"/>
+  <cylinder name="cylinder_s2_2" radius="82"    height="286"   collision="true" mass="false" visual="true"/>
+  <cylinder name="cylinder_s3"   radius="69.5"  height="224"   collision="true" mass="false" visual="true"/>
+  <cylinder name="cylinder_e1_1" radius="70"    height="177"   collision="true" mass="false" visual="true"/>
+  <cylinder name="cylinder_e1_2" radius="64"    height="286"   collision="true" mass="false" visual="true"/>
+  <cylinder name="cylinder_e2"   radius="49"    height="174"   collision="true" mass="false" visual="true"/>
+  <capsule  name="cylinder_w1"   radius="50"    height="220"   collision="true" mass="false" visual="true"/>
+  <sphere   name="sphere_w2"     radius="62.5"                 collision="true" mass="false" visual="true"/>
+  <cylinder name="cylinder_y1_1" radius="134"   height="101"   collision="true" mass="false" visual="true"/>
+  <cylinder name="cylinder_y1_2" radius="21"    height="136"   collision="true" mass="false" visual="true"/>
+  <box      name="box_y1"        size="160 310 45"             collision="true" mass="false" visual="true"/>
+  <capsule  name="capsule_y1_1"  radius="21.35" height="86.8"  collision="true" mass="false" visual="true"/>
+  <capsule  name="capsule_y1_2"  radius="21.35" height="138.0" collision="true" mass="false" visual="true"/>
+  <capsule  name="capsule_y1_3"  radius="21.35" height="55.1"  collision="true" mass="false" visual="true"/>
+  <capsule  name="capsule_y1_4"  radius="21.35" height="229"   collision="true" mass="false" visual="true"/>
+  <sphere   name="sphere_y2"     radius="30"                   collision="true" mass="false" visual="true"/>
+  <box      name="box_y3_1"      size="30 30 120"              collision="true" mass="false" visual="true"/>
+  <box      name="box_y3_2"      size="110 55 40"              collision="true" mass="false" visual="true"/>
+  <box      name="box_y4"        size="75 67 75"               collision="true" mass="false" visual="true"/>
+  <capsule  name="capsule_y4"    radius="17" height="46"       collision="true" mass="false" visual="true"/>
+
   <body name="body_link0" auto_tree="false" dynamical="false" trn="0 0 0" rot="90deg@y">
     <connector name="mesh"/>
     <connector name="sock" trn="0 0 340"/>
-    <connector name="c_capsule" trn="0 0 106"/>
+    <connector name="c_cylinder" trn="0 0 106"/>
   </body>
   <body name="body_link1">
     <connector name="mesh"/>
     <connector name="plug"  trn=" 0 0 0"/>
     <connector name="sock"  trn=" 0 0 0" rot="-90deg@x"/>
-    <connector name="c_sphere"/>
+    <connector name="c_cylinder_1" rot="90deg@x"/>
+    <connector name="c_cylinder_2" trn="0 0 -125" rot="90deg@x"/>
   </body>
   <body name="body_link2">
     <connector name="mesh"/>
     <connector name="plug"  trn=" 0 0 0"/>
     <connector name="sock"  trn=" 0 -450 0" rot="90deg@x"/>
-    <connector name="c_capsule" trn="0 -110 0" rot="90deg@x"/>
+    <connector name="c_cylinder_1" trn="0 0 0"/>
+    <connector name="c_cylinder_2" trn="0 -143 0" rot="90deg@x"/>
   </body>
   <body name="body_link3">
     <connector name="mesh"/>
     <connector name="plug"  trn=" 0 0 0"/>
     <connector name="sock"  trn=" 0 0 0" rot="-90deg@x"/>
-    <connector name="c_capsule_1" rot="90deg@x"/>
-    <connector name="c_capsule_2" trn="0 0 -100" rot="90deg@x"/>
+    <connector name="c_cylinder_1" rot="90deg@x"/>
+    <connector name="c_cylinder_2" trn="0 0 -100" rot="90deg@x"/>
   </body>
   <body name="body_link4">
     <connector name="mesh"/>
     <connector name="plug"  trn=" 0 0 0"/>
     <connector name="sock"  trn=" 0 -480 0" rot="90deg@x"/>
-    <connector name="c_capsule_1" trn="0 -130 0" rot="90deg@x"/>
-    <connector name="c_capsule_2" trn="0 0 28.2"/>
+    <connector name="c_cylinder_1" trn="0 0 0"/>
+    <connector name="c_cylinder_2" trn="0 -143 0" rot="90deg@x"/>
   </body>
   <body name="body_link5">
     <connector name="mesh"/>
     <connector name="plug"  trn=" 0 0 0"/>
     <connector name="sock"  trn=" 0 0 0" rot="-90deg@x"/>
-    <connector name="c_capsule_1" trn="0 3 0" rot="90deg@x"/>
-    <connector name="c_capsule_2" trn="0 3 -170" rot="90deg@x"/>
+    <connector name="c_cylinder_1" trn="0 0 0"    rot="90deg@x"/>
+    <connector name="c_cylinder_2" trn="0 0 -75"  rot="90deg@x"/>
+    <connector name="c_cylinder_3" trn="0 0 -150" rot="90deg@x"/>
   </body>
   <body name="body_link6">
     <connector name="mesh"/>
     <connector name="plug" trn="0 0 0"/>
     <connector name="sock" trn="0 -95 0" rot="90deg@x"/>
-    <connector name="c_capsule" trn="0 20 0" rot="90deg@x"/>
+    <connector name="c_cylinder" trn="0 50 0" rot="90deg@x"/>
   </body>
   <body name="body_link7">
     <connector name="mesh"/>
@@ -92,12 +105,13 @@
     <connector name="mesh"/>
     <connector name="plug" trn="0 0 0"/>
     <connector name="sock" trn="-187.89 482.31 53"/>
-    <connector name="c_cylinder" trn="168.5 -215 -35" rot="90deg@y"/>
-    <connector name="c_sphere_1" trn="90 88.1 25"/>
-    <connector name="c_sphere_2" trn="68.9 172.1 31.3"/>
-    <connector name="c_sphere_3" trn="4.1 292.4 51"/>
-    <connector name="c_sphere_4" trn="-28.7 336.6 55"/>
-    <connector name="c_sphere_5" trn="-28.7-229*cos(45deg) 336.6+229*sin(45deg) 55"/>
+    <connector name="c_cylinder_1" trn="168.5 -215 -35" rot="90deg@y"/>
+    <connector name="c_cylinder_2" trn="178 -25 50" rot="90deg@y"/>
+    <connector name="c_box"        trn="38 -93 0"/>
+    <connector name="c_capsule_1"  trn="79.45 130.1 28.15" rot="1.81@z*1.49@y"/>
+    <connector name="c_capsule_2"  trn="36.5 232.25 41.15" rot="2.06@z*1.42@y"/>
+    <connector name="c_capsule_3"  trn="-12.3 314.5 53"    rot="2.20@z*1.49@y"/>
+    <connector name="c_capsule_4"  trn="-109.66 417.56 55" rot="2.35@z*1.57@y"/>
   </body>
   <body name="body_link9">
     <connector name="mesh"/>
@@ -109,11 +123,15 @@
     <connector name="mesh"/>
     <connector name="plug" trn="0 0 0"/>
     <connector name="sock" trn="0 0 0" rot="90deg@x"/>
+    <connector name="c_box_1" trn="0 0 80"/>
+    <connector name="c_box_2" trn="40 0 40"/>
   </body>
   <body name="body_link11">
     <connector name="mesh"/>
     <connector name="plug" trn="0 0 0"/>
     <connector name="sock" trn="0 0 142"/>
+    <connector name="c_box"     trn="55.5 0 79.5"/>
+    <connector name="c_capsule" trn="0 0 87"/>
   </body>
   <body name="body_link12">
     <connector name="plug"/>
@@ -133,25 +151,33 @@
   <attach connector="body_link10/mesh" shape="mesh_yousetu03" vmat="mat_body" />
   <attach connector="body_link11/mesh" shape="mesh_yousetu04" vmat="mat_body" />
   -->
-  <attach connector="body_link0/c_capsule"   shape="capsule_base" vmat="mat_body"/>
-  <attach connector="body_link1/c_sphere"    shape="sphere_s1"    vmat="mat_body"/>
-  <attach connector="body_link2/c_capsule"   shape="capsule_s2"   vmat="mat_body"/>
-  <attach connector="body_link3/c_capsule_1" shape="capsule_s3"   vmat="mat_body"/>
-  <attach connector="body_link3/c_capsule_2" shape="capsule_s3"   vmat="mat_body"/>
-  <attach connector="body_link4/c_capsule_1" shape="capsule_e1_1" vmat="mat_body"/>
-  <attach connector="body_link4/c_capsule_2" shape="capsule_e1_2" vmat="mat_body"/>
-  <attach connector="body_link5/c_capsule_1" shape="capsule_e2"   vmat="mat_body"/>
-  <attach connector="body_link5/c_capsule_2" shape="capsule_e2"   vmat="mat_body"/>
-  <attach connector="body_link6/c_capsule"   shape="capsule_w1"   vmat="mat_body"/>
-  <attach connector="body_link7/c_sphere"    shape="sphere_w2"    vmat="mat_body"/>
-  <attach connector="body_link8/c_cylinder"  shape="cylinder_y1"  vmat="mat_body"/>
-  <attach connector="body_link8/c_sphere_1"  shape="sphere_y1"    vmat="mat_body"/>
-  <attach connector="body_link8/c_sphere_2"  shape="sphere_y1"    vmat="mat_body"/>
-  <attach connector="body_link8/c_sphere_3"  shape="sphere_y1"    vmat="mat_body"/>
-  <attach connector="body_link8/c_sphere_4"  shape="sphere_y1"    vmat="mat_body"/>
-  <attach connector="body_link8/c_sphere_5"  shape="sphere_y1"    vmat="mat_body"/>
-  <attach connector="body_link9/c_sphere"    shape="sphere_y2"    vmat="mat_body"/>
-  
+  <attach connector="body_link0/c_cylinder"   shape="cylinder_base" vmat="mat_body"/>
+  <attach connector="body_link1/c_cylinder_1" shape="cylinder_s1"   vmat="mat_body"/>
+  <attach connector="body_link1/c_cylinder_2" shape="cylinder_s1"   vmat="mat_body"/>
+  <attach connector="body_link2/c_cylinder_1" shape="cylinder_s2_1" vmat="mat_body"/>
+  <attach connector="body_link2/c_cylinder_2" shape="cylinder_s2_2" vmat="mat_body"/>
+  <attach connector="body_link3/c_cylinder_1" shape="cylinder_s3"   vmat="mat_body"/>
+  <attach connector="body_link3/c_cylinder_2" shape="cylinder_s3"   vmat="mat_body"/>
+  <attach connector="body_link4/c_cylinder_1" shape="cylinder_e1_1" vmat="mat_body"/>
+  <attach connector="body_link4/c_cylinder_2" shape="cylinder_e1_2" vmat="mat_body"/>
+  <attach connector="body_link5/c_cylinder_1" shape="cylinder_e2"   vmat="mat_body"/>
+  <attach connector="body_link5/c_cylinder_2" shape="cylinder_e2"   vmat="mat_body"/>
+  <attach connector="body_link5/c_cylinder_3" shape="cylinder_e2"   vmat="mat_body"/>
+  <attach connector="body_link6/c_cylinder"   shape="cylinder_w1"   vmat="mat_body"/>
+  <attach connector="body_link7/c_sphere"     shape="sphere_w2"     vmat="mat_body"/>
+  <attach connector="body_link8/c_cylinder_1" shape="cylinder_y1_1" vmat="mat_body"/>
+  <attach connector="body_link8/c_cylinder_2" shape="cylinder_y1_2" vmat="mat_body"/>
+  <attach connector="body_link8/c_box"        shape="box_y1"        vmat="mat_body"/>
+  <attach connector="body_link8/c_capsule_1"  shape="capsule_y1_1"  vmat="mat_body"/>
+  <attach connector="body_link8/c_capsule_2"  shape="capsule_y1_2"  vmat="mat_body"/>
+  <attach connector="body_link8/c_capsule_3"  shape="capsule_y1_3"  vmat="mat_body"/>
+  <attach connector="body_link8/c_capsule_4"  shape="capsule_y1_4"  vmat="mat_body"/>
+  <attach connector="body_link9/c_sphere"     shape="sphere_y2"     vmat="mat_body"/>
+  <attach connector="body_link10/c_box_1"     shape="box_y3_1"      vmat="mat_body"/>
+  <attach connector="body_link10/c_box_2"     shape="box_y3_2"      vmat="mat_body"/>
+  <attach connector="body_link11/c_box"       shape="box_y4"        vmat="mat_body"/>
+  <attach connector="body_link11/c_capsule"   shape="capsule_y4"    vmat="mat_body"/>
+
   <hinge    name="joint0"  sock="body_link0/sock"  plug="body_link1/plug"  pos="0.0deg" range="-180deg 180deg"/>
   <hinge    name="joint1"  sock="body_link1/sock"  plug="body_link2/plug"  pos="0.0deg" range="-90deg   90deg"/>
   <hinge    name="joint2"  sock="body_link2/sock"  plug="body_link3/plug"  pos="0.0deg" range="-180deg 180deg"/>
