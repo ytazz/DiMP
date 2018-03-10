@@ -154,6 +154,12 @@ bool MyModule::Build() {
 			tree->root = robot[0]->link[0];
 		}
 
+		//// 低優先度で関節速度を0にする
+		for (DiMP::Joint* jnt : robot[0]->joint) {
+			jnt->param.rmin_dp[0] = 0.0;
+			jnt->param.rmax_dp[0] = 0.0;
+		}
+
 		// 溶接点列を読み込み
 		CsvReader csv;
 		csv.Read(conf.welding.pointsFilename, ",");
@@ -275,10 +281,16 @@ bool MyModule::Build() {
 
 				// 関節角を0.5[rad]にする場合
 				if (j == 1)
-					key->pos[0]->val = Rad(0.0);
+					 key->pos[0]->val = Rad(0.0);
 				else key->pos[0]->val = Rad(0.0);
 			}
 		}
+
+		// 関節速度の優先度
+		graph->solver->SetPriority      (ID(DiMP::ConTag::JointRangeDP), 1  );
+		graph->solver->SetCorrectionRate(ID(DiMP::ConTag::JointRangeDP), 0.1);
+		graph->solver->param.numIter[0] = 10;
+		graph->solver->param.numIter[1] = 1;
 
 		// 初期設定として仮想ターゲットへのマッチングを有効とし，溶接用マッチングと干渉回避を無効とする
         EnableConstraints("target" , true );

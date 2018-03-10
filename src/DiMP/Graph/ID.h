@@ -47,6 +47,7 @@ struct ConTag{
 		JointC2,			///< C^2 continuity of joint position
 		JointF,				///< mapping between joint torque and joint force/moment
 		JointRangeP,		///< joint position range
+		JointRangeDP,		///< joint position change range
 		JointRangeV,		///< joint velocity range
 		JointRangeF,		///< joint force range
 		JointTP,			///< kinematic constraint : position

@@ -15,16 +15,17 @@ void JointKey::AddVar(Solver* solver){
 	Joint* jnt = (Joint*)node;
 
 	uint n = jnt->dof;
-	Jv         .resize(n);
-	Jw         .resize(n);
-	pos        .resize(n);
-	vel        .resize(n);
-	torque     .resize(n);
-	con_c1     .resize(n);
-	con_force  .resize(n);
-	con_range_p.resize(n);
-	con_range_v.resize(n);
-	con_range_f.resize(n);
+	Jv          .resize(n);
+	Jw          .resize(n);
+	pos         .resize(n);
+	vel         .resize(n);
+	torque      .resize(n);
+	con_c1      .resize(n);
+	con_force   .resize(n);
+	con_range_p .resize(n);
+	con_range_dp.resize(n);
+	con_range_v .resize(n);
+	con_range_f .resize(n);
 
 	sockObj = (ObjectKey*)jnt->sock->obj->traj.GetKeypoint(tick);
 	plugObj = (ObjectKey*)jnt->plug->obj->traj.GetKeypoint(tick);
@@ -69,8 +70,12 @@ void JointKey::AddCon(Solver* solver){
 		con_range_v[i] = new RangeConS(solver, ID(ConTag::JointRangeV, node, tick, name + "_range_v" + ss.str()), vel[i]   , sv);
 		
 		if(next){
-			// C1 continuity constraint
 			JointKey* nextJnt = (JointKey*)next;
+			
+			// position change range constraint
+			con_range_dp[i] = new DiffConS(solver, ID(ConTag::JointRangeDP, node, tick, name + "_range_dp" + ss.str()), nextJnt->pos[i], pos[i], sp);
+
+			// C1 continuity constraint
 			con_c1[i] = new C1ConS(solver, ID(ConTag::JointC1, node, tick, name + "_c1" + ss.str()),
 				pos[i], vel[i], nextJnt->pos[i], nextJnt->vel[i], sp);
 			con_c1[i]->h = hnext;
@@ -206,14 +211,16 @@ Joint::Param::Param(){
 }
 
 void Joint::Param::SetDof(uint dof){
-	ini_p .resize(dof);
-	ini_v .resize(dof);
-	rmin_p.resize(dof);
-	rmax_p.resize(dof);
-	rmin_v.resize(dof);
-	rmax_v.resize(dof);
-	rmin_f.resize(dof);
-	rmax_f.resize(dof);
+	ini_p  .resize(dof);
+	ini_v  .resize(dof);
+	rmin_p .resize(dof);
+	rmax_p .resize(dof);
+	rmin_dp.resize(dof);
+	rmax_dp.resize(dof);
+	rmin_v .resize(dof);
+	rmax_v .resize(dof);
+	rmin_f .resize(dof);
+	rmax_f .resize(dof);
 
 	real_t inf = numeric_limits<real_t>::max();
 	for(uint i = 0; i < dof; i++){
@@ -277,8 +284,10 @@ void Joint::Init(){
 			key->con_range_v[i]->_min = param.rmin_v[i];
 			key->con_range_v[i]->_max = param.rmax_v[i];
 			if(key->next){
-				key->con_range_f[i]->_min = param.rmin_f[i];
-				key->con_range_f[i]->_max = param.rmax_f[i];
+				key->con_range_dp[i]->_min = param.rmin_dp[i];
+				key->con_range_dp[i]->_max = param.rmax_dp[i];
+				key->con_range_f [i]->_min = param.rmin_f [i];
+				key->con_range_f [i]->_max = param.rmax_f [i];
 			}
 		}
 	}

@@ -25,18 +25,18 @@
   <mesh name="mesh_yousetu04" scale="0.001" filename="lowlowres/yousetu04.stl" binary="true" collision="true" convex="true" mass="false" visual="true"/>
   -->
 
-  <capsule name="capsule_base" radius="119"  height="212" collision="true" mass="false" visual="true"/>
-  <sphere  name="sphere_s1"    radius="175"               collision="true" mass="false" visual="true"/>
-  <capsule name="capsule_s2"   radius="97.5" height="220" collision="true" mass="false" visual="true"/>
-  <capsule name="capsule_s3"   radius="69.5" height="224" collision="true" mass="false" visual="true"/>
-  <capsule name="capsule_e1_1" radius="65"   height="260" collision="true" mass="false" visual="true"/>
-  <capsule name="capsule_e1_2" radius="70"   height="120" collision="true" mass="false" visual="true"/>
-  <capsule name="capsule_e2"   radius="49"   height="168" collision="true" mass="false" visual="true"/>
-  <capsule name="capsule_w1"   radius="50"   height="160" collision="true" mass="false" visual="true"/>
-  <sphere  name="sphere_w2"    radius="62.5"              collision="true" mass="false" visual="true"/>
-  <sphere  name="capsule_y1"   radius="134"  height="101" collision="true" mass="false" visual="true"/>
-  <sphere  name="sphere_y1"    radius="21.35"             collision="true" mass="false" visual="true"/>
-  <sphere  name="sphere_y2"    radius="30"                collision="true" mass="false" visual="true"/>
+  <capsule  name="capsule_base" radius="119"  height="212" collision="true" mass="false" visual="true"/>
+  <sphere   name="sphere_s1"    radius="175"               collision="true" mass="false" visual="true"/>
+  <capsule  name="capsule_s2"   radius="97.5" height="220" collision="true" mass="false" visual="true"/>
+  <capsule  name="capsule_s3"   radius="69.5" height="224" collision="true" mass="false" visual="true"/>
+  <capsule  name="capsule_e1_1" radius="65"   height="260" collision="true" mass="false" visual="true"/>
+  <capsule  name="capsule_e1_2" radius="70"   height="120" collision="true" mass="false" visual="true"/>
+  <capsule  name="capsule_e2"   radius="49"   height="168" collision="true" mass="false" visual="true"/>
+  <capsule  name="capsule_w1"   radius="50"   height="160" collision="true" mass="false" visual="true"/>
+  <sphere   name="sphere_w2"    radius="62.5"              collision="true" mass="false" visual="true"/>
+  <cylinder name="cylinder_y1"  radius="134"  height="101" collision="true" mass="false" visual="true"/>
+  <sphere   name="sphere_y1"    radius="21.35"             collision="true" mass="false" visual="true"/>
+  <sphere   name="sphere_y2"    radius="30"                collision="true" mass="false" visual="true"/>
   
   <body name="body_link0" auto_tree="false" dynamical="false" trn="0 0 0" rot="90deg@y">
     <connector name="mesh"/>
@@ -92,7 +92,7 @@
     <connector name="mesh"/>
     <connector name="plug" trn="0 0 0"/>
     <connector name="sock" trn="-187.89 482.31 53"/>
-    <connector name="c_capsule"  trn="168.5 -215 -35" rot="90deg@y"/>
+    <connector name="c_cylinder" trn="168.5 -215 -35" rot="90deg@y"/>
     <connector name="c_sphere_1" trn="90 88.1 25"/>
     <connector name="c_sphere_2" trn="68.9 172.1 31.3"/>
     <connector name="c_sphere_3" trn="4.1 292.4 51"/>
@@ -144,7 +144,7 @@
   <attach connector="body_link5/c_capsule_2" shape="capsule_e2"   vmat="mat_body"/>
   <attach connector="body_link6/c_capsule"   shape="capsule_w1"   vmat="mat_body"/>
   <attach connector="body_link7/c_sphere"    shape="sphere_w2"    vmat="mat_body"/>
-  <attach connector="body_link8/c_capsule"   shape="capsule_y1"   vmat="mat_body"/>
+  <attach connector="body_link8/c_cylinder"  shape="cylinder_y1"  vmat="mat_body"/>
   <attach connector="body_link8/c_sphere_1"  shape="sphere_y1"    vmat="mat_body"/>
   <attach connector="body_link8/c_sphere_2"  shape="sphere_y1"    vmat="mat_body"/>
   <attach connector="body_link8/c_sphere_3"  shape="sphere_y1"    vmat="mat_body"/>

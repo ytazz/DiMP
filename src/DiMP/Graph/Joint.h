@@ -64,16 +64,17 @@ public:
 	JointConRP*		con_rp;
 	JointConRV*		con_rv;
 
-	vector<vec3_t    > Jv         ;	///< joint axis direction in global coord.
-	vector<vec3_t    > Jw         ; ///< 
-	vector<SVar*     > pos        ;	///< joint position
-	vector<SVar*     > vel        ;	///< joint velocity
-	vector<SVar*     > torque     ;	///< joint torque
-	vector<C1ConS*   > con_c1     ;	///< C1 constraint
-	vector<JointConF*> con_force  ;	///< force-torque mapping
-	vector<RangeConS*> con_range_p;	///< position range
-	vector<RangeConS*> con_range_v;	///< velocity range
-	vector<RangeConS*> con_range_f;	///< torque range
+	vector<vec3_t    > Jv          ;  ///< joint axis direction in global coord.
+	vector<vec3_t    > Jw          ;  ///< 
+	vector<SVar*     > pos         ;  ///< joint position
+	vector<SVar*     > vel         ;  ///< joint velocity
+	vector<SVar*     > torque      ;  ///< joint torque
+	vector<C1ConS*   > con_c1      ;  ///< C1 constraint
+	vector<JointConF*> con_force   ;  ///< force-torque mapping
+	vector<RangeConS*> con_range_p ;  ///< position range
+	vector<DiffConS* > con_range_dp;  ///< position change range
+	vector<RangeConS*> con_range_v ;  ///< velocity range
+	vector<RangeConS*> con_range_f ;  ///< torque range
 
 public:
 	virtual void AddVar (Solver* solver);
@@ -95,6 +96,8 @@ public:
 	struct Param{
 		vector<real_t>	rmin_p;		///< joint angle lower bound
 		vector<real_t>	rmax_p;		///< joint angle upper bound
+		vector<real_t>	rmin_dp;	///< joint angle change lower bound
+		vector<real_t>	rmax_dp;	///< joint angle change upper bound
 		vector<real_t>	rmin_v;		///< joint velocity lower bound
 		vector<real_t>	rmax_v;		///< joint velocity upper bound
 		vector<real_t>	rmin_f;		///< joint torque lower bound

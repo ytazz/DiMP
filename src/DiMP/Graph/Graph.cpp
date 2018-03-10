@@ -42,6 +42,7 @@ const char* ConNames[] = {
 	"joint_c2"           ,
 	"joint_f"            ,
 	"joint_range_p"      ,
+	"joint_range_dp"     ,
 	"joint_range_v"      ,
 	"joint_range_f"      ,
 	"joint_tp"           ,
