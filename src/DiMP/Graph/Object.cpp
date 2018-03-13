@@ -72,7 +72,7 @@ void ObjectKey::AddLinks(Constraint* con, const ObjectKey::OptionS& opt){
 				continue;
 
 			int ndof = (int)((Joint*)jnt->node)->dof;
-			for(int n = 0; i < ndof; n++){
+			for(int n = 0; n < ndof; n++){
 				if(opt.tp || opt.rp) con->AddSLink(jnt->pos[n]);
 				if(opt.tv || opt.rv) con->AddSLink(jnt->vel[n]);
 			}
@@ -266,8 +266,8 @@ void Object::Init(){
 
 	CalcBSphere();
 
-	for(uint i = 0; i < graph->ticks.size(); i++){
-		ObjectKey* key = (ObjectKey*)traj.GetKeypoint(graph->ticks[i]);
+	for(Tick* tick : graph->ticks){
+		ObjectKey* key = (ObjectKey*)traj.GetKeypoint(tick);
 		
 		// tree‚É]‘®‚·‚é•Ï”‚Ílock‚·‚é
 		if(tree){

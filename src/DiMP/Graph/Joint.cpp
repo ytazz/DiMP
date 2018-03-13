@@ -99,16 +99,18 @@ void JointKey::Prepare(){
 	q[0] = sockObj->pos_r->val * jnt->sock->pose.Ori();
 	q[1] = plugObj->pos_r->val * jnt->plug->pose.Ori();
 
-	vector<real_t> vpos(jnt->dof);
-	for(int i = 0; i < jnt->dof; i++)
-		vpos[i] = pos[i]->val;
+	if(jnt->dof > 0){
+		vector<real_t> vpos(jnt->dof);
+		for(int i = 0; i < jnt->dof; i++)
+			vpos[i] = pos[i]->val;
 	
-	jnt->CalcRelativePose(&vpos[0], rrel  , qrel  );
-	jnt->CalcJacobian    (&vpos[0], &Jv[0], &Jw[0]);
+		jnt->CalcRelativePose(&vpos[0], rrel  , qrel  );
+		jnt->CalcJacobian    (&vpos[0], &Jv[0], &Jw[0]);
 
-	for(int i = 0; i < jnt->dof; i++){
-		Jv[i] = q[0] * Jv[i];
-		Jw[i] = q[0] * Jw[i];
+		for(int i = 0; i < jnt->dof; i++){
+			Jv[i] = q[0] * Jv[i];
+			Jw[i] = q[0] * Jw[i];
+		}
 	}
 
 	vrel.clear();
@@ -163,10 +165,10 @@ void JointKey::Finish(){
 
 	// wrap values to [-pi, pi] for rotaional joints
     for(int i = 0; i < (int)jnt->dof; i++){
-    	if(jnt->IsRotational(i)){
-    		while(pos[i]->val < -pi) pos[i]->val += 2*pi;
-    		while(pos[i]->val >  pi) pos[i]->val -= 2*pi;
-    	}
+    	//if(jnt->IsRotational(i)){
+    	//	while(pos[i]->val < -pi) pos[i]->val += 2*pi;
+    	//	while(pos[i]->val >  pi) pos[i]->val -= 2*pi;
+    	//}
     }
 }
 
@@ -367,14 +369,21 @@ void Joint::ForwardKinematics(){
 		w0       = key->sockObj->vel_r->val;
 
 		// joint relative pose
-		vpos.resize(dof);
-		vvel.resize(dof);
-		for(int i = 0; i < dof; i++){
-			vpos[i] = key->pos[i]->val;
-			vvel[i] = key->vel[i]->val;
+		if(dof > 0){
+			vpos.resize(dof);
+			vvel.resize(dof);
+			for(int i = 0; i < dof; i++){
+				vpos[i] = key->pos[i]->val;
+				vvel[i] = key->vel[i]->val;
+			}
+			CalcRelativePose(&vpos[0], prel.Pos(), prel.Ori());
+			CalcRelativeVel (&vvel[0], vrel, wrel);
 		}
-		CalcRelativePose(&vpos[0], prel.Pos(), prel.Ori());
-		CalcRelativeVel (&vvel[0], vrel, wrel);
+		else{
+			prel = pose_t();
+			vrel = vec3_t();
+			wrel = vec3_t();
+		}
 
 		psock = p0 * sock->pose;
 		pplug = prel * plug->pose.Inv();
@@ -404,9 +413,11 @@ void Joint::ForwardKinematics(real_t t){
 	v0       = sock->obj->snapshot.vel;
 	w0       = sock->obj->snapshot.angvel;
 
-	CreateSnapshot(t);
-	CalcRelativePose(&snapshot.pos[0], prel.Pos(), prel.Ori());
-	CalcRelativeVel (&snapshot.vel[0], vrel, wrel);
+	if(dof > 0){
+		CreateSnapshot(t);
+		CalcRelativePose(&snapshot.pos[0], prel.Pos(), prel.Ori());
+		CalcRelativeVel (&snapshot.vel[0], vrel, wrel);
+	}
 
 	psock = p0 * sock->pose;
 	pplug = prel * plug->pose.Inv();
@@ -484,7 +495,7 @@ void Joint::DrawSnapshot(Render::Canvas* canvas, Render::Config* conf){
 	canvas->Push     ();
 	canvas->Transform(aff);
 
-	OnDraw(&snapshot.pos[0], canvas);
+	OnDraw((dof > 0 ? &snapshot.pos[0] : 0), canvas);
 
 	canvas->Pop();
 }

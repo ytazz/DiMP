@@ -155,7 +155,9 @@ void Loader::LoadTask(XMLNode* node, Graph* graph){
 
 	if(obj0 && obj1 && ts){
 		if(type == "avoid"){
-			new AvoidTask(obj0, obj1, ts, name);
+			AvoidTask* task = new AvoidTask(obj0, obj1, ts, name);
+			node->Get(task->param.avoid_p, ".avoid_p");
+			node->Get(task->param.avoid_v, ".avoid_t");
 		}
 		if(type == "match"){
 			MatchTask* task = new MatchTask(obj0, obj1, ts, name);

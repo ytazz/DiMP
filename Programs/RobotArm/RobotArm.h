@@ -15,7 +15,7 @@ public:
 	vector<DiMP::Joint*>	joint;			///< joints
 	
 public:
-	bool Build(int idx, AdaptorDiMP* adaptor);
+	bool Build(int idx, DiMP::Graph* graph);
 	void Clear();
 	void Step();
 

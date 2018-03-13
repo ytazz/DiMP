@@ -3,17 +3,49 @@
   points_filename    = "conf/robotarm/pa10welding/points.csv"
   welding_start_time = "0"
   welding_end_time   = "10"
-  lower_start_time   = "1"
-  lower_end_time     = "5"
-  lower_div          = "10"
-  lower_start_index  = "0"
-  lower_end_index    = "1705"
-  upper_start_time   = "6"
-  upper_end_time     = "9"
-  upper_div          = "10"
-  upper_start_index  = "1705"
-  upper_end_index    = "2458"
   mockup_offset      = "1.240 0.4895 0.0"
   use_tree           = "true"
-  />
+  >
+  <segment
+    timeslot             = "timeslot0"
+    posture              = "0 -90deg 0 0 0 0 -90deg 0 0"
+    />
+  <segment
+    timeslot             = "timeslot1"
+    match_welding        = "match0"
+    avoid_welding        = "avoid0"
+    match_waypoint_elbow = "match3"
+    match_waypoint_hand  = "match4"
+    posture              = "0deg -90deg 0 135deg 0 -45deg -45deg 0 0"
+    start_index          = "0"
+    end_index            = "1100"
+    />
+  <segment
+    timeslot             = "timeslot2"
+    match_welding        = "match1"
+    match_waypoint_elbow = "match5"
+    match_waypoint_hand  = "match6"
+    posture              = "0 -90deg 0 135deg 0 -45deg -135deg 0 0"
+    start_index          = "1100"
+    end_index            = "1705"
+    />
+  <segment
+    timeslot             = "timeslot3"
+    posture              = "0 -90deg 0 135deg 0 -45deg -135deg 0 0"
+    />
+  <segment
+    timeslot             = "timeslot4"
+    match_welding        = "match2"
+    match_waypoint_elbow = "match7"
+    match_waypoint_hand  = "match8"
+    posture              = "0 -90deg 0 90deg 0 0 -225deg 0 0"
+    start_index          = "1705"
+    end_index            = "2457"
+    />
+  <segment
+    timeslot             = "timeslot5"
+    posture              = "0 -90deg 0 0 0 0 -90deg 0 0"
+    />
+</welding>
 
+  

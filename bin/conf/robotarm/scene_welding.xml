@@ -25,16 +25,16 @@
   <vmat name="mat_mockup"   colorname="lightgray" alpha="0.3"/>
   <vmat name="mat_gadai"    colorname="darkturquoise" alpha="1.0"/>
 
-  <body name="body_target0"  dynamical="false" trn=" 900    900    500"  ><connector name="0"/></body>
-  <body name="body_target1"  dynamical="false" trn=" 522.8   163.5    -373.3"  ><connector name="0"/></body>
-  <body name="body_target2"  dynamical="false" trn=" 347.7    798.9   -262.5" ><connector name="0"/></body>
-  <body name="body_target3" dynamical="false" trn="1100    900    -500"  ><connector name="0"/></body>
-  <body name="body_target4"  dynamical="false" trn=" 327.4  447.9  41.6"><connector name="0"/></body>
-  <body name="body_target5"  dynamical="false" trn=" 496.5  160.8 -365.6" rot="104.5deg@z*-19.4deg@y*158.4deg@x"><connector name="0"/></body>
-  <body name="body_target6"  dynamical="false" trn=" 377.2 -195.7  403.5"><connector name="0"/></body>
-  <body name="body_target7"  dynamical="false" trn=" 852.6   -30.6   171.2" rot="-88deg@z*-26.9deg@y*-80.7deg@x"><connector name="0"/></body>
-  <body name="body_target8"  dynamical="false" trn=" 479.1  17.2   427.6"><connector name="0"/></body>
-  <body name="body_target9" dynamical="false" trn="1038    32.1    555.4" rot="125.9deg@z*-82.3deg@y*50.6deg@x" ><connector name="0"/></body>
+  <body name="body_target0" dynamical="false" trn=" 900    900    500"  ><connector name="0"/></body>
+  <body name="body_target1" dynamical="false" trn=" 522.8  163.5 -373.3"><connector name="0"/></body>
+  <body name="body_target2" dynamical="false" trn=" 347.7  798.9 -262.5"><connector name="0"/></body>
+  <body name="body_target3" dynamical="false" trn="1100    900   -500"  ><connector name="0"/></body>
+  <body name="body_target4" dynamical="false" trn=" 327.4  447.9   41.6"><connector name="0"/></body>
+  <body name="body_target5" dynamical="false" trn=" 496.5  160.8 -365.6" rot="104.5deg@z*-19.4deg@y*158.4deg@x"><connector name="0"/></body>
+  <body name="body_target6" dynamical="false" trn=" 377.2 -195.7  403.5"><connector name="0"/></body>
+  <body name="body_target7" dynamical="false" trn=" 852.6  -30.6  171.2" rot="-88deg@z*-26.9deg@y*-80.7deg@x"><connector name="0"/></body>
+  <body name="body_target8" dynamical="false" trn=" 479.1   17.2  427.6"><connector name="0"/></body>
+  <body name="body_target9" dynamical="false" trn="1038     32.1  555.4" rot="125.9deg@z*-82.3deg@y*50.6deg@x" ><connector name="0"/></body>
 
   
   <body name="body_obstacle0" dynamical="false">
@@ -58,19 +58,133 @@
   <!--
   <attach connector="body_obstacle0/c_gadai"  shape="mesh_gadai" vmat="mat_gadai"/>
   -->
-  <!--
-  <ticks time_begin="0.0" time_step="0.5" time_end="30.0"/>
-  <timeslot name="timeslot0" time_begin="5.0" time_end="30.0" locked="true"/>
+
+  <ticks time_begin="0.0" time_end="1.0" time_step="0.2"/>
+  <ticks time_begin="1.0" time_end="2.0" time_step="0.2"/>
+  <ticks time_begin="2.0" time_end="3.0" time_step="0.2"/>
+  <ticks time_begin="3.0" time_end="4.0" time_step="0.2"/>
+  <ticks time_begin="4.0" time_end="5.0" time_step="0.2"/>
+  <ticks time_begin="5.0" time_end="6.0" time_step="0.2"/>
+
+  <timeslot name="timeslot0" time_begin="0.0" time_end="1.0" locked="true"/>
+  <timeslot name="timeslot1" time_begin="1.0" time_end="2.0" locked="true"/>
+  <timeslot name="timeslot2" time_begin="2.0" time_end="3.0" locked="true"/>
+  <timeslot name="timeslot3" time_begin="3.0" time_end="4.0" locked="true"/>
+  <timeslot name="timeslot4" time_begin="4.0" time_end="5.0" locked="true"/>
+  <timeslot name="timeslot5" time_begin="5.0" time_end="6.0" locked="true"/>
+
   <task
-    name    ="task0"
-    type    ="match"
-    obj0    ="workspace/robot0/body_link11"
-    obj1    ="workspace/body_target0"
-    timeslot="timeslot0"
-    match_tp="true"
-    match_tv="true"
-    match_rp="false"
-    match_rv="false"
+    name     = "match0"
+    type     = "match"
+    obj0     = "workspace/robot0/body_link12"
+    obj1     = "workspace/body_target0"
+    timeslot = "timeslot1"
+    match_tp = "true"
+    match_tv = "false"
+    match_rp = "false"
+    match_rv = "false"
+  />
+  <task
+    name     = "avoid0"
+    type     = "avoid"
+    obj0     = "workspace/robot0/body_link8"
+    obj1     = "workspace/body_obstacle0"
+    timeslot = "timeslot1"
+    avoid_p  = "true"
+    avoid_v  = "false"
+  />
+
+  <task
+    name     = "match1"
+    type     = "match"
+    obj0     = "workspace/robot0/body_link12"
+    obj1     = "workspace/body_target0"
+    timeslot = "timeslot2"
+    match_tp = "true"
+    match_tv = "false"
+    match_rp = "false"
+    match_rv = "false"
+  />
+  <task
+    name     = "match2"
+    type     = "match"
+    obj0     = "workspace/robot0/body_link12"
+    obj1     = "workspace/body_target0"
+    timeslot = "timeslot4"
+    match_tp = "true"
+    match_tv = "false"
+    match_rp = "false"
+    match_rv = "false"
+  />
+
+  <!--
+  <task
+    name     = "match3"
+    type     = "match"
+    obj0     = "workspace/robot0/body_link4"
+    obj1     = "workspace/body_target4"
+    timeslot = "timeslot1"
+    match_tp = "true"
+    match_tv = "false"
+    match_rp = "false"
+    match_rv = "false"
+  />
+  <task
+    name     = "match4"
+    type     = "match"
+    obj0     = "workspace/robot0/body_link8"
+    obj1     = "workspace/body_target5"
+    timeslot = "timeslot1"
+    match_tp = "true"
+    match_tv = "false"
+    match_rp = "false"
+    match_rv = "false"
+  />
+
+  <task
+    name     = "match5"
+    type     = "match"
+    obj0     = "workspace/robot0/body_link4"
+    obj1     = "workspace/body_target6"
+    timeslot = "timeslot2"
+    match_tp = "true"
+    match_tv = "false"
+    match_rp = "false"
+    match_rv = "false"
+  />
+  <task
+    name     = "match6"
+    type     = "match"
+    obj0     = "workspace/robot0/body_link8"
+    obj1     = "workspace/body_target7"
+    timeslot = "timeslot2"
+    match_tp = "true"
+    match_tv = "false"
+    match_rp = "false"
+    match_rv = "false"
+  />
+
+  <task
+    name     = "match7"
+    type     = "match"
+    obj0     = "workspace/robot0/body_link4"
+    obj1     = "workspace/body_target8"
+    timeslot = "timeslot4"
+    match_tp = "true"
+    match_tv = "false"
+    match_rp = "false"
+    match_rv = "false"
+  />
+  <task
+    name     = "match8"
+    type     = "match"
+    obj0     = "workspace/robot0/body_link8"
+    obj1     = "workspace/body_target9"
+    timeslot = "timeslot4"
+    match_tp = "true"
+    match_tv = "false"
+    match_rp = "false"
+    match_rv = "false"
   />
   -->
   
@@ -92,11 +206,11 @@
   <enable  id="force_t"        enable="false"/>
   <enable  id="force_r"        enable="false"/>
   <enable  id="match_tp"       enable="true" />
-  <enable  id="match_tv"       enable="true" />
+  <enable  id="match_tv"       enable="false"/>
   <enable  id="match_rp"       enable="false"/>
   <enable  id="match_rv"       enable="false"/>
-  <enable  id="avoid_p"        enable="true" />
-  <enable  id="avoid_v"        enable="true" />
+  <enable  id="avoid_p"        enable="false" />
+  <enable  id="avoid_v"        enable="false" />
   
   <correction rate="0.5"/>
 
