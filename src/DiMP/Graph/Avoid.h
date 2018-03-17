@@ -27,14 +27,20 @@ public:
 		vec3_t        sup0;   //< nearest point
 		vec3_t        sup1;
 		vec3_t        normal; //< contact normal
-		
-		AvoidConP*	  con_p;
-		AvoidConV*	  con_v;
+		bool          cullSphere;  //< culled by bsphere
+		bool          cullBox;     //< culled by bbox
+		bool          cullGjk;     //< culled by gjk
+
+		//AvoidConP*	  con_p;
+		//AvoidConV*	  con_v;
 
 		GeometryPair();
 	};
 	typedef vector<GeometryPair> GeometryPairs;
 	GeometryPairs geoPairs;
+
+	AvoidConP*	  con_p;
+	AvoidConV*	  con_v;
 
 public:
 	virtual void AddCon(Solver* solver);

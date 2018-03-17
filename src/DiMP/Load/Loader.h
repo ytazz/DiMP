@@ -19,7 +19,8 @@ public:
 	void LoadConnector   (XMLNode* node, Graph* graph);
 	void LoadJoint       (XMLNode* node, Graph* graph);
 	void LoadTimeSlot    (XMLNode* node, Graph* graph);
-	void LoadTask        (XMLNode* node, Graph* graph);
+	void LoadMatchTask   (XMLNode* node, Graph* graph);
+	void LoadAvoidTask   (XMLNode* node, Graph* graph);
 	void LoadScaling     (XMLNode* node, Graph* graph);
 	void LoadEnable      (XMLNode* node, Graph* graph);
 	void LoadPriority    (XMLNode* node, Graph* graph);

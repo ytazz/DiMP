@@ -22,16 +22,17 @@ bool Loader::Load(XML& xml, Graph* graph){
 bool Loader::Load(XMLNode* node, Graph* graph){
 	//
 	string n = node->name;
-	if( n == "ticks"      ) LoadTicks   (node, graph);
-	if( n == "geometry"   ) LoadGeometry(node, graph);
-	if( n == "object"     ) LoadObject  (node, graph);
-	if( n == "joint"      ) LoadJoint   (node, graph);
-	if( n == "timeslot"   ) LoadTimeSlot(node, graph);
-	if( n == "task"       ) LoadTask    (node, graph);
-	if( n == "scaling"    ) LoadScaling (node, graph);
-	if( n == "enable"     ) LoadEnable  (node, graph);
-	if( n == "priority"   ) LoadPriority(node, graph);
-	if( n == "param"      ) LoadParam   (node, graph);
+	if( n == "ticks"      ) LoadTicks    (node, graph);
+	if( n == "geometry"   ) LoadGeometry (node, graph);
+	if( n == "object"     ) LoadObject   (node, graph);
+	if( n == "joint"      ) LoadJoint    (node, graph);
+	if( n == "timeslot"   ) LoadTimeSlot (node, graph);
+	if( n == "match"      ) LoadMatchTask(node, graph);
+	if( n == "avoid"      ) LoadAvoidTask(node, graph);
+	if( n == "scaling"    ) LoadScaling  (node, graph);
+	if( n == "enable"     ) LoadEnable   (node, graph);
+	if( n == "priority"   ) LoadPriority (node, graph);
+	if( n == "param"      ) LoadParam    (node, graph);
 	
 	for(uint i = 0; ; i++) try{
 		XMLNode* child = node->GetNode(i);
@@ -136,15 +137,13 @@ void Loader::LoadTimeSlot(XMLNode* node, Graph* graph){
 	TimeSlot* ts = new TimeSlot(graph, timeBegin, timeEnd, locked, name);
 }
 
-void Loader::LoadTask(XMLNode* node, Graph* graph){
+void Loader::LoadMatchTask(XMLNode* node, Graph* graph){
 	string name;
-	string type;
 	string obj0Name;
 	string obj1Name;
 	string tsName;
 
 	node->Get(name    , ".name"    );
-	node->Get(type    , ".type"    );
 	node->Get(obj0Name, ".obj0"    );
 	node->Get(obj1Name, ".obj1"    );
 	node->Get(tsName  , ".timeslot");
@@ -154,20 +153,34 @@ void Loader::LoadTask(XMLNode* node, Graph* graph){
 	TimeSlot * ts   = graph->timeslots.Find(tsName  );
 
 	if(obj0 && obj1 && ts){
-		if(type == "avoid"){
-			AvoidTask* task = new AvoidTask(obj0, obj1, ts, name);
-			node->Get(task->param.avoid_p, ".avoid_p");
-			node->Get(task->param.avoid_v, ".avoid_t");
-		}
-		if(type == "match"){
-			MatchTask* task = new MatchTask(obj0, obj1, ts, name);
-			node->Get(task->param.match_tp, ".match_tp");
-			node->Get(task->param.match_tv, ".match_tv");
-			node->Get(task->param.match_rp, ".match_rp");
-			node->Get(task->param.match_rv, ".match_rv");
-		}
+		MatchTask* task = new MatchTask(obj0, obj1, ts, name);
+		node->Get(task->param.match_tp, ".match_tp");
+		node->Get(task->param.match_tv, ".match_tv");
+		node->Get(task->param.match_rp, ".match_rp");
+		node->Get(task->param.match_rv, ".match_rv");
 	}
+}
 
+void Loader::LoadAvoidTask(XMLNode* node, Graph* graph){
+	string name;
+	string obj0Name;
+	string obj1Name;
+	string tsName;
+
+	node->Get(name    , ".name"    );
+	node->Get(obj0Name, ".obj0"    );
+	node->Get(obj1Name, ".obj1"    );
+	node->Get(tsName  , ".timeslot");
+
+	Object*    obj0 = graph->objects.Find(obj0Name);
+	Object*    obj1 = graph->objects.Find(obj1Name);
+	TimeSlot * ts   = graph->timeslots.Find(tsName  );
+
+	if(obj0 && obj1 && ts){
+		AvoidTask* task = new AvoidTask(obj0, obj1, ts, name);
+		node->Get(task->param.avoid_p, ".avoid_p");
+		node->Get(task->param.avoid_v, ".avoid_t");
+	}
 }
 
 void Loader::LoadScaling(XMLNode* node, Graph* graph){

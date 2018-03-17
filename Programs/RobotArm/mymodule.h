@@ -23,15 +23,15 @@ public:
 		struct Welding {
 			struct Segment{
 				string           timeslotName;
-				string           matchWeldingName;
+				//string           matchWeldingName;
 				//string           matchWaypointElbowName;
 				//string           matchWaypointHandName;
-				string           avoidWeldingName;
+				//string           avoidWeldingName;
 				DiMP::TimeSlot*  timeslot;
-				DiMP::MatchTask* matchWelding;
+				//DiMP::MatchTask* matchWelding;
 				//DiMP::MatchTask* matchWaypointElbow;
 				//DiMP::MatchTask* matchWaypointHand;
-				DiMP::AvoidTask* avoidWelding;
+				//DiMP::AvoidTask* avoidWelding;
 				vvec_t           posture;
 				int              startIndex;
 				int              endIndex;
@@ -68,9 +68,9 @@ public:
 	Robots                      robot;			///< robotic arms;
 	vector<DiMP::Object*>       target;		    ///< target objects
 	vector<DiMP::Object*>       obstacle;		///< obstacles
-	//vector<DiMP::TimeSlot*>     timeSlot;		///< time slots
-	//vector<DiMP::MatchTask*>    matchTask;		///< match tasks
-	//vector<DiMP::AvoidTask*>    avoidTask;      ///< avoid tasks
+	vector<DiMP::TimeSlot*>     timeSlot;		///< time slots
+	vector<DiMP::MatchTask*>    matchTask;		///< match tasks
+	vector<DiMP::AvoidTask*>    avoidTask;      ///< avoid tasks
 
 	vector<vec3_t>  weldingPoints;   ///< welding‚É‚¨‚¯‚é—nÚ“_—ñ
 

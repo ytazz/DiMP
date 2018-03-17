@@ -45,9 +45,9 @@ void MyModule::Read(XML& xml) {
 			node->Get(seg.startIndex            , ".start_index"  );
 			node->Get(seg.endIndex              , ".end_index"    );
 			node->Get(seg.timeslotName          , ".timeslot"     );
-			node->Get(seg.matchWeldingName      , ".match_welding");
-			node->Get(seg.avoidWeldingName      , ".avoid_welding");
 			node->Get(seg.posture               , ".posture"      );
+			//node->Get(seg.matchWeldingName      , ".match_welding");
+			//node->Get(seg.avoidWeldingName      , ".avoid_welding");
 			//node->Get(seg.matchWaypointElbowName, ".match_waypoint_elbow");
 			//node->Get(seg.matchWaypointHandName , ".match_waypoint_hand" );
 			
@@ -136,7 +136,32 @@ bool MyModule::Build() {
 			break;
 		obstacle.push_back(obj);
 	}
-	
+
+	for (int i = 0; ; i++){
+		ss.str("");
+		ss << "timeslot" << i;
+		DiMP::TimeSlot* ts = graph->timeslots.Find(ss.str());
+		if(!ts)
+			break;
+		timeSlot.push_back(ts);
+	}
+	for (int i = 0; ; i++){
+		ss.str("");
+		ss << "match" << i;
+		DiMP::Task* task = graph->tasks.Find(ss.str());
+		if(!task)
+			break;
+		matchTask.push_back((DiMP::MatchTask*)task);
+	}
+	for (int i = 0; ; i++){
+		ss.str("");
+		ss << "avoid" << i;
+		DiMP::Task* task = graph->tasks.Find(ss.str());
+		if(!task)
+			break;
+		avoidTask.push_back((DiMP::AvoidTask*)task);
+	}
+
 	adaptorSprGR.ShowSolid(true);
 	adaptorSprGR.ShowWireframe(false);
 
@@ -155,8 +180,8 @@ bool MyModule::Build() {
 
 		for(Config::Welding::Segment& seg : conf.welding.segments){
 			seg.timeslot           = graph->timeslots.Find(seg.timeslotName);
-			seg.matchWelding       = (DiMP::MatchTask*)graph->tasks.Find(seg.matchWeldingName      );
-			seg.avoidWelding       = (DiMP::AvoidTask*)graph->tasks.Find(seg.avoidWeldingName      );
+			//seg.matchWelding       = (DiMP::MatchTask*)graph->tasks.Find(seg.matchWeldingName      );
+			//seg.avoidWelding       = (DiMP::AvoidTask*)graph->tasks.Find(seg.avoidWeldingName      );
 			//seg.matchWaypointElbow = (DiMP::MatchTask*)graph->tasks.Find(seg.matchWaypointElbowName);
 			//seg.matchWaypointHand  = (DiMP::MatchTask*)graph->tasks.Find(seg.matchWaypointHandName );
 		}
@@ -291,9 +316,9 @@ bool MyModule::Build() {
 		graph->solver->param.numIter[1] = 0;
 
 		// 初期設定として仮想ターゲットへのマッチングを有効とし，溶接用マッチングと干渉回避を無効とする
-        EnableConstraints("waypoint", false);
-        EnableConstraints("welding" , true );
-        EnableConstraints("avoid"   , true); 
+        //EnableConstraints("waypoint", false);
+        EnableConstraints("match", true);
+        EnableConstraints("avoid", true); 
 	}
 
 	for (uint i = 0; i < robot.size(); i++) {
@@ -307,23 +332,30 @@ bool MyModule::Build() {
 
 void MyModule::EnableConstraints(string mode, bool enable){
     if(sceneSelect == Welding){
-        if(mode == "waypoint"){
-			for(Config::Welding::Segment& seg : conf.welding.segments){
-				//seg.matchWaypointElbow->param.match_tp = enable;
-				//seg.matchWaypointHand ->param.match_tp = enable;
-				//seg.matchWaypointHand ->param.match_rp = enable;
-			}
-        }
-        if(mode == "welding"){
-			for(Config::Welding::Segment& seg : conf.welding.segments){
-				if(seg.matchWelding)
-					seg.matchWelding->param.match_tp = enable;
+        //if(mode == "waypoint"){
+		//	for(Config::Welding::Segment& seg : conf.welding.segments){
+		//		//seg.matchWaypointElbow->param.match_tp = enable;
+		//		//seg.matchWaypointHand ->param.match_tp = enable;
+		//		//seg.matchWaypointHand ->param.match_rp = enable;
+		//	}
+        //}
+        if(mode == "match"){
+			//for(Config::Welding::Segment& seg : conf.welding.segments){
+			//	if(seg.matchWelding)
+			//		seg.matchWelding->param.match_tp = enable;
+			//}
+			for(DiMP::MatchTask* task : matchTask){
+				task->param.match_tp = enable;
 			}
         }
         if(mode == "avoid"){
-			for(Config::Welding::Segment& seg : conf.welding.segments){
-				if(seg.avoidWelding)
-					seg.avoidWelding->param.avoid_p = enable;
+			//for(Config::Welding::Segment& seg : conf.welding.segments){
+			//	if(seg.avoidWelding)
+			//		seg.avoidWelding->param.avoid_p = enable;
+			//
+			//}
+			for(DiMP::AvoidTask* task : avoidTask){
+				task->param.avoid_p = enable;
 			}
         }
     }
@@ -427,7 +459,9 @@ bool MyModule::Set(DiMP::Render::Canvas* canvas, int attr, DiMP::Node* node){
 		return true;
 	}
 	if(attr == DiMP::Render::Item::Avoid){
-		return false;
+		canvas->SetLineColor("red");
+		canvas->SetLineWidth(1);
+		return true;
 	}
 	return false;
 }
