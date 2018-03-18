@@ -122,7 +122,7 @@ public:
 		graph->scale.Set(1.0, 1.0, 1.0);
 		graph->Init();
 
-		graph->solver->SetCorrectionRate(ID(), 0.5);
+		graph->solver->SetCorrection(ID(), 0.5);
 		graph->solver->param.numIter[0]  = 20;
 		graph->solver->param.minStepSize = 1.0;
 		graph->solver->param.maxStepSize = 1.0;

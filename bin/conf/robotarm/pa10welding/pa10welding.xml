@@ -45,7 +45,7 @@
   <sphere   name="sphere_y2"     radius="30"                   collision="true" mass="false" visual="true"/>
   <box      name="box_y3_1"      size="30 30 120"              collision="true" mass="false" visual="true"/>
   <box      name="box_y3_2"      size="110 55 40"              collision="true" mass="false" visual="true"/>
-  <box      name="box_y4"        size="75 67 75"               collision="true" mass="false" visual="true"/>
+  <box      name="box_y4"        size="75 67 50"               collision="true" mass="false" visual="true"/>
   <capsule  name="capsule_y4"    radius="17" height="46"       collision="true" mass="false" visual="true"/>
 
   <body name="body_link0" auto_tree="false" dynamical="false" trn="0 0 0" rot="90deg@y">
@@ -128,10 +128,10 @@
   </body>
   <body name="body_link11">
     <connector name="mesh"/>
-    <connector name="plug"         trn=" 0   0   0"  />
-    <connector name="sock"         trn=" 0   0 142"  />
-    <connector name="c_box_y4"     trn="55.5 0  79.5"/>
-    <connector name="c_capsule_y4" trn=" 0   0  87"  />
+    <connector name="plug"         trn=" 0   0   0"/>
+    <connector name="sock"         trn=" 0   0 142"/>
+    <connector name="c_box_y4"     trn="55.5 0  70"/>
+    <connector name="c_capsule_y4" trn=" 0   0  87"/>
   </body>
   <body name="body_link12">
     <connector name="plug"/>

@@ -248,27 +248,9 @@ vec3_t Mesh::CalcSupport(const vec3_t& dir){
 	int iphi   = std::min(std::max( 0, (int)(nphi   * (phi   + pi)/(2*pi)) ), nphi  -1);
 	pair<int,int> sup = supportMap[nphi * itheta + iphi];
 	return tris[sup.first].vertices[sup.second];
-
-	/*vec3_t sup;
-	real_t dmax = -inf;
-	real_t d;
-	for(int i = 0; i < (int)tris.size(); i++){
-		for(int j = 0; j < 3; j++){
-			d = dir * tris[i].vertices[j];
-			if(d > dmax){
-				dmax = d;
-				sup  = tris[i].vertices[j];
-			}
-		}
-	}
-	return sup;*/
 }
 
 void Mesh::Draw(Render::Canvas* canvas, Render::Config* conf){
-	//if(conf->Set(canvas, Render::Item::Geometry, this)){
-	//	for(int i = 0; i < (int)tris.size(); i++)
-	//		tris[i].Draw(canvas);
-	//}
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

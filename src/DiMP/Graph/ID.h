@@ -98,46 +98,4 @@ struct Type{
 extern const char* VarNames[VarTag::NumTypes];
 extern const char* ConNames[ConTag::NumTypes];
 
-/// identifier for variable or constraint
-//class ID{
-//public:
-//	int			tag;		///< variable type
-//	Node*		node;		///< reference to owner node, if owned by a node
-//	Tick*		tick;		///< refernece to time instant
-//	string		name;
-//
-//	/** calculates match score against given id		
-//	 */
-//	int Match(ID* id){
-//		// tagが未指定のマスクは必ずマッチする
-//		if(tag == -1)
-//			return 1;
-//		// tag不一致
-//		if(tag != id->tag)
-//			return 0;
-//		// tag一致, node未指定
-//		if(!node)
-//			return 2;
-//		// node不一致
-//		if(node != id->node)
-//			return 0;
-//		// tag, node一致, tick未指定
-//		if(!tick)
-//			return 3;
-//		// tick不一致
-//		if(tick != id->tick)
-//			return 0;
-//		// 全一致
-//		return 4;
-//	}
-//
-//	ID():tag(-1), node(0), tick(0){}
-//	ID(int _tag, Node* _node = 0, Tick* _tick = 0, string _name = ""){
-//		tag  = _tag;
-//		node = _node;
-//		tick = _tick;
-//		name = _name;
-//	}
-//};
-
 }

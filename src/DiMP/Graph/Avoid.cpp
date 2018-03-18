@@ -20,8 +20,6 @@ AvoidKey::GeometryPair::GeometryPair(){
 	dmin  = inf; 
 	dmax  = inf;
 	dist  = inf;
-	//con_p = 0;
-	//con_v = 0;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -41,10 +39,6 @@ void AvoidKey::AddCon(Solver* solver){
 		gp.info1 = &g1;
 		geoPairs.push_back(gp);
 	}
-	//for(auto& gp : geoPairs){
-	//	gp.con_p = new AvoidConP(solver, name + "_p", this, &gp, node->graph->scale.pos_t);
-	//	gp.con_v = new AvoidConV(solver, name + "_v", this, &gp, node->graph->scale.vel_t);
-	//}
 	con_p = new AvoidConP(solver, name + "_p", this, 0, node->graph->scale.pos_t);
 	con_v = new AvoidConV(solver, name + "_v", this, 0, node->graph->scale.vel_t);
 }
@@ -53,10 +47,6 @@ void AvoidKey::Prepare(){
 	TaskKey::Prepare();
 
 	AvoidTask* task = (AvoidTask*)node;
-	//for(auto& gp : geoPairs){
-	//	gp.con_p->enabled = task->param.avoid_p;
-	//	gp.con_v->enabled = task->param.avoid_v;
-	//}
 	con_p->enabled = task->param.avoid_p;
 	con_v->enabled = task->param.avoid_v;
 
@@ -73,32 +63,24 @@ void AvoidKey::Prepare(){
 		real_t        dmax  = 0.0;
 
 		for(auto& gp : geoPairs){
-			//if( gp.con_p->enabled == false &&
-			//	gp.con_v->enabled == false )
-			//	continue;
-
 			// bsphere‚Å”»’è
 			real_t d    = (gp.info0->bsphereCenterAbs - gp.info1->bsphereCenterAbs).norm();
 			real_t rsum = gp.info0->geo->bsphereRadius + gp.info1->geo->bsphereRadius;
-			gp.cullSphere = (d > rsum);
+			gp.cullSphere = (d - rsum > task->param.dmin);
 			if(gp.cullSphere){
-				//gp.con_p->active = false;
-				//gp.con_v->active = false;
 				nsphere++;
 				continue;
 			}
 			// bbox‚Å”»’è
 			gp.cullBox = false;
 			for(int i = 0; i < 3; i++){
-				if( gp.info0->bbmin.x > gp.info1->bbmax.x || 
-					gp.info1->bbmin.x > gp.info0->bbmax.x ){
+				if( gp.info0->bbmin.x > gp.info1->bbmax.x + task->param.dmin || 
+					gp.info1->bbmin.x > gp.info0->bbmax.x + task->param.dmin ){
 					gp.cullBox = true;
 					break;
 				}
 			}
 			if(gp.cullBox){
-				//gp.con_p->active = false;
-				//gp.con_v->active = false;
 				nbox++;
 				continue;
 			}
@@ -108,24 +90,16 @@ void AvoidKey::Prepare(){
 				gp.info0->poseAbs, gp.info1->poseAbs,
 				gp.sup0, gp.sup1, gp.dist
 			);
-			gp.cullGjk = (gp.dist > 0.0);
+			gp.cullGjk = (gp.dist > task->param.dmin);
 			if(gp.cullGjk){
-				//gp.con_p->active = false;
-				//gp.con_v->active = false;
 				ngjk++;
 			}
 			else{
 				const real_t eps = 1.0e-10;
 				vec3_t diff = gp.sup1 - gp.sup0;
 				real_t dnorm = diff.norm();
-				if(dnorm < eps){
-					//gp.con_p->active = false;
-					//gp.con_v->active = false;
-				}
-				else{
+				if(dnorm > eps){
 					gp.normal = diff/dnorm;
-					//gp.con_p->active = true;
-					//gp.con_v->active = true;
 					nactive++;
 					if(dnorm > dmax){
 						gpmax = &gp;
@@ -152,10 +126,6 @@ void AvoidKey::Prepare(){
 		//DSTR << "tgjk: " << timeGjk << endl;
 	}
 	else{
-		//for(auto& gp : geoPairs){
-		//	gp.con_v->active = false;
-		//	gp.con_p->active = false;
-		//}
 		con_p->active = false;
 		con_v->active = false;
 	}
@@ -192,9 +162,6 @@ AvoidTask::AvoidTask(Object* _obj0, Object* _obj1, TimeSlot* _time, const string
 
 void AvoidTask::Prepare(){
 	Task::Prepare();
-
-	// Å¬Ú‹ß‹——£ŒÝ‚¢‚ÌŠOÚ‰~”¼Œa‚Ì˜a
-	//dmin = obj0->bsphere + obj1->bsphere;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -266,7 +233,7 @@ void AvoidConP::CalcDeviation(){
 		y[0] = 0.0;
 		return;
 	}
-	y[0] = gp->dist;
+	y[0] = gp->dist - ((AvoidTask*)key->node)->param.dmin;
 }
 
 void AvoidConV::CalcDeviation(){

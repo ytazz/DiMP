@@ -22,17 +22,20 @@ bool Loader::Load(XML& xml, Graph* graph){
 bool Loader::Load(XMLNode* node, Graph* graph){
 	//
 	string n = node->name;
-	if( n == "ticks"      ) LoadTicks    (node, graph);
-	if( n == "geometry"   ) LoadGeometry (node, graph);
-	if( n == "object"     ) LoadObject   (node, graph);
-	if( n == "joint"      ) LoadJoint    (node, graph);
-	if( n == "timeslot"   ) LoadTimeSlot (node, graph);
-	if( n == "match"      ) LoadMatchTask(node, graph);
-	if( n == "avoid"      ) LoadAvoidTask(node, graph);
-	if( n == "scaling"    ) LoadScaling  (node, graph);
-	if( n == "enable"     ) LoadEnable   (node, graph);
-	if( n == "priority"   ) LoadPriority (node, graph);
-	if( n == "param"      ) LoadParam    (node, graph);
+	if( n == "ticks"            ) LoadTicks           (node, graph);
+	if( n == "geometry"         ) LoadGeometry        (node, graph);
+	if( n == "object"           ) LoadObject          (node, graph);
+	if( n == "joint"            ) LoadJoint           (node, graph);
+	if( n == "timeslot"         ) LoadTimeSlot        (node, graph);
+	if( n == "match"            ) LoadMatchTask       (node, graph);
+	if( n == "avoid"            ) LoadAvoidTask       (node, graph);
+	if( n == "scaling"          ) LoadScaling         (node, graph);
+	if( n == "enable"           ) LoadEnable          (node, graph);
+	if( n == "priority"         ) LoadPriority        (node, graph);
+	if( n == "correction"       ) LoadCorrection      (node, graph);
+	if( n == "constraint_weight") LoadConstraintWeight(node, graph);
+	if( n == "variable_weight"  ) LoadVariableWeight  (node, graph);
+	if( n == "param"            ) LoadParam           (node, graph);
 	
 	for(uint i = 0; ; i++) try{
 		XMLNode* child = node->GetNode(i);
@@ -179,7 +182,8 @@ void Loader::LoadAvoidTask(XMLNode* node, Graph* graph){
 	if(obj0 && obj1 && ts){
 		AvoidTask* task = new AvoidTask(obj0, obj1, ts, name);
 		node->Get(task->param.avoid_p, ".avoid_p");
-		node->Get(task->param.avoid_v, ".avoid_t");
+		node->Get(task->param.avoid_v, ".avoid_v");
+		node->Get(task->param.dmin   , ".dmin"   );
 	}
 }
 
@@ -258,7 +262,39 @@ void Loader::LoadCorrection(XMLNode* node, Graph* graph){
 	id.tag   = StrToTag(idstr);
 	id.owner = graph->nodes.Find(targetName);
 
-	graph->solver->SetCorrectionRate(id, rate, limit);
+	graph->solver->SetCorrection(id, rate, limit);
+}
+
+void Loader::LoadConstraintWeight(XMLNode* node, Graph* graph){
+	string idstr;
+	string targetName;
+	real_t weight = 1.0;
+	
+	node->Get(idstr     , ".id"    );
+	node->Get(targetName, ".target");
+	node->Get(weight    , ".weight");
+	
+	ID id;
+	id.tag   = StrToTag(idstr);
+	id.owner = graph->nodes.Find(targetName);
+
+	graph->solver->SetConstraintWeight(id, weight);
+}
+
+void Loader::LoadVariableWeight(XMLNode* node, Graph* graph){
+	string idstr;
+	string targetName;
+	real_t weight = 1.0;
+	
+	node->Get(idstr     , ".id"    );
+	node->Get(targetName, ".target");
+	node->Get(weight    , ".weight");
+	
+	ID id;
+	id.tag   = StrToTag(idstr);
+	id.owner = graph->nodes.Find(targetName);
+
+	graph->solver->SetVariableWeight(id, weight);
 }
 
 void Loader::LoadParam(XMLNode* node, Graph* graph){
@@ -273,8 +309,7 @@ void Loader::LoadParam(XMLNode* node, Graph* graph){
 	if(name == "method_major"){
 		node->Get(str, ".value");
 		if(str == "steepest_descent") graph->solver->param.methodMajor = Solver::Method::Major::SteepestDescent;
-		if(str == "gauss_newton1"   ) graph->solver->param.methodMajor = Solver::Method::Major::GaussNewton1;
-		if(str == "gauss_newton2"   ) graph->solver->param.methodMajor = Solver::Method::Major::GaussNewton2;
+		if(str == "gauss_newton"    ) graph->solver->param.methodMajor = Solver::Method::Major::GaussNewton;
 		if(str == "prioritized"     ) graph->solver->param.methodMajor = Solver::Method::Major::Prioritized;
 	}
 	if(name == "method_minor"){

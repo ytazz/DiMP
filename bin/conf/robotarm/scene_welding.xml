@@ -77,98 +77,37 @@
   <match name="match1"  obj0="workspace/robot0/body_link12" obj1="workspace/body_target0" timeslot="timeslot2" match_tp="true" match_tv="false" match_rp="false" match_rv="false"/>
   <match name="match2"  obj0="workspace/robot0/body_link12" obj1="workspace/body_target0" timeslot="timeslot3" match_tp="true" match_tv="false" match_rp="false" match_rv="false"/>
   <match name="match3"  obj0="workspace/robot0/body_link12" obj1="workspace/body_target0" timeslot="timeslot4" match_tp="true" match_tv="false" match_rp="false" match_rv="false"/>
-
-  <avoid name="avoid0"  obj0="workspace/robot0/body_link8"  obj1="workspace/body_obstacle0" timeslot="timeslot1" avoid_p="true" avoid_v="false"/>
-  <avoid name="avoid1"  obj0="workspace/robot0/body_link8"  obj1="workspace/body_obstacle0" timeslot="timeslot2" avoid_p="true" avoid_v="false"/>
-  <avoid name="avoid2"  obj0="workspace/robot0/body_link8"  obj1="workspace/body_obstacle0" timeslot="timeslot3" avoid_p="true" avoid_v="false"/>
-  <avoid name="avoid3"  obj0="workspace/robot0/body_link8"  obj1="workspace/body_obstacle0" timeslot="timeslot4" avoid_p="true" avoid_v="false"/>
-
-  <avoid name="avoid4"  obj0="workspace/robot0/body_link9"  obj1="workspace/body_obstacle0" timeslot="timeslot1" avoid_p="true" avoid_v="false"/>
-  <avoid name="avoid5"  obj0="workspace/robot0/body_link9"  obj1="workspace/body_obstacle0" timeslot="timeslot2" avoid_p="true" avoid_v="false"/>
-  <avoid name="avoid6"  obj0="workspace/robot0/body_link9"  obj1="workspace/body_obstacle0" timeslot="timeslot3" avoid_p="true" avoid_v="false"/>
-  <avoid name="avoid7"  obj0="workspace/robot0/body_link9"  obj1="workspace/body_obstacle0" timeslot="timeslot4" avoid_p="true" avoid_v="false"/>
-
-  <avoid name="avoid8"  obj0="workspace/robot0/body_link10" obj1="workspace/body_obstacle0" timeslot="timeslot1" avoid_p="true" avoid_v="false"/>
-  <avoid name="avoid9"  obj0="workspace/robot0/body_link10" obj1="workspace/body_obstacle0" timeslot="timeslot2" avoid_p="true" avoid_v="false"/>
-  <avoid name="avoid10" obj0="workspace/robot0/body_link10" obj1="workspace/body_obstacle0" timeslot="timeslot3" avoid_p="true" avoid_v="false"/>
-  <avoid name="avoid11" obj0="workspace/robot0/body_link10" obj1="workspace/body_obstacle0" timeslot="timeslot4" avoid_p="true" avoid_v="false"/>
-
-  <avoid name="avoid12" obj0="workspace/robot0/body_link11" obj1="workspace/body_obstacle0" timeslot="timeslot1" avoid_p="true" avoid_v="false"/>
-  <avoid name="avoid13" obj0="workspace/robot0/body_link11" obj1="workspace/body_obstacle0" timeslot="timeslot2" avoid_p="true" avoid_v="false"/>
-  <avoid name="avoid14" obj0="workspace/robot0/body_link11" obj1="workspace/body_obstacle0" timeslot="timeslot3" avoid_p="true" avoid_v="false"/>
-  <avoid name="avoid15" obj0="workspace/robot0/body_link11" obj1="workspace/body_obstacle0" timeslot="timeslot4" avoid_p="true" avoid_v="false"/>
-
-  <!--
-  <task
-    name     = "match3"
-    type     = "match"
-    obj0     = "workspace/robot0/body_link4"
-    obj1     = "workspace/body_target4"
-    timeslot = "timeslot1"
-    match_tp = "true"
-    match_tv = "false"
-    match_rp = "false"
-    match_rv = "false"
-  />
-  <task
-    name     = "match4"
-    type     = "match"
-    obj0     = "workspace/robot0/body_link8"
-    obj1     = "workspace/body_target5"
-    timeslot = "timeslot1"
-    match_tp = "true"
-    match_tv = "false"
-    match_rp = "false"
-    match_rv = "false"
-  />
-
-  <task
-    name     = "match5"
-    type     = "match"
-    obj0     = "workspace/robot0/body_link4"
-    obj1     = "workspace/body_target6"
-    timeslot = "timeslot2"
-    match_tp = "true"
-    match_tv = "false"
-    match_rp = "false"
-    match_rv = "false"
-  />
-  <task
-    name     = "match6"
-    type     = "match"
-    obj0     = "workspace/robot0/body_link8"
-    obj1     = "workspace/body_target7"
-    timeslot = "timeslot2"
-    match_tp = "true"
-    match_tv = "false"
-    match_rp = "false"
-    match_rv = "false"
-  />
-
-  <task
-    name     = "match7"
-    type     = "match"
-    obj0     = "workspace/robot0/body_link4"
-    obj1     = "workspace/body_target8"
-    timeslot = "timeslot4"
-    match_tp = "true"
-    match_tv = "false"
-    match_rp = "false"
-    match_rv = "false"
-  />
-  <task
-    name     = "match8"
-    type     = "match"
-    obj0     = "workspace/robot0/body_link8"
-    obj1     = "workspace/body_target9"
-    timeslot = "timeslot4"
-    match_tp = "true"
-    match_tv = "false"
-    match_rp = "false"
-    match_rv = "false"
-  />
-  -->
   
+  <avoid name="avoid0"  obj0="workspace/robot0/body_link8"  obj1="workspace/body_obstacle0" timeslot="timeslot1" avoid_p="true" avoid_v="false" dmin="0.01"/>
+  <avoid name="avoid1"  obj0="workspace/robot0/body_link8"  obj1="workspace/body_obstacle0" timeslot="timeslot2" avoid_p="true" avoid_v="false" dmin="0.01"/>
+  <avoid name="avoid2"  obj0="workspace/robot0/body_link8"  obj1="workspace/body_obstacle0" timeslot="timeslot3" avoid_p="true" avoid_v="false" dmin="0.01"/>
+  <avoid name="avoid3"  obj0="workspace/robot0/body_link8"  obj1="workspace/body_obstacle0" timeslot="timeslot4" avoid_p="true" avoid_v="false" dmin="0.01"/>
+
+  <avoid name="avoid4"  obj0="workspace/robot0/body_link9"  obj1="workspace/body_obstacle0" timeslot="timeslot1" avoid_p="true" avoid_v="false" dmin="0.01"/>
+  <avoid name="avoid5"  obj0="workspace/robot0/body_link9"  obj1="workspace/body_obstacle0" timeslot="timeslot2" avoid_p="true" avoid_v="false" dmin="0.01"/>
+  <avoid name="avoid6"  obj0="workspace/robot0/body_link9"  obj1="workspace/body_obstacle0" timeslot="timeslot3" avoid_p="true" avoid_v="false" dmin="0.01"/>
+  <avoid name="avoid7"  obj0="workspace/robot0/body_link9"  obj1="workspace/body_obstacle0" timeslot="timeslot4" avoid_p="true" avoid_v="false" dmin="0.01"/>
+
+  <avoid name="avoid8"  obj0="workspace/robot0/body_link10" obj1="workspace/body_obstacle0" timeslot="timeslot1" avoid_p="true" avoid_v="false" dmin="0.01"/>
+  <avoid name="avoid9"  obj0="workspace/robot0/body_link10" obj1="workspace/body_obstacle0" timeslot="timeslot2" avoid_p="true" avoid_v="false" dmin="0.01"/>
+  <avoid name="avoid10" obj0="workspace/robot0/body_link10" obj1="workspace/body_obstacle0" timeslot="timeslot3" avoid_p="true" avoid_v="false" dmin="0.01"/>
+  <avoid name="avoid11" obj0="workspace/robot0/body_link10" obj1="workspace/body_obstacle0" timeslot="timeslot4" avoid_p="true" avoid_v="false" dmin="0.01"/>
+
+  <avoid name="avoid12" obj0="workspace/robot0/body_link11" obj1="workspace/body_obstacle0" timeslot="timeslot1" avoid_p="true" avoid_v="false" dmin="0.01"/>
+  <avoid name="avoid13" obj0="workspace/robot0/body_link11" obj1="workspace/body_obstacle0" timeslot="timeslot2" avoid_p="true" avoid_v="false" dmin="0.01"/>
+  <avoid name="avoid14" obj0="workspace/robot0/body_link11" obj1="workspace/body_obstacle0" timeslot="timeslot3" avoid_p="true" avoid_v="false" dmin="0.01"/>
+  <avoid name="avoid15" obj0="workspace/robot0/body_link11" obj1="workspace/body_obstacle0" timeslot="timeslot4" avoid_p="true" avoid_v="false" dmin="0.01"/>
+
+  <avoid name="avoid16"  obj0="workspace/robot0/body_link4"  obj1="workspace/body_obstacle0" timeslot="timeslot1" avoid_p="true" avoid_v="false" dmin="0.01"/>
+  <avoid name="avoid17"  obj0="workspace/robot0/body_link4"  obj1="workspace/body_obstacle0" timeslot="timeslot2" avoid_p="true" avoid_v="false" dmin="0.01"/>
+  <avoid name="avoid18"  obj0="workspace/robot0/body_link4"  obj1="workspace/body_obstacle0" timeslot="timeslot3" avoid_p="true" avoid_v="false" dmin="0.01"/>
+  <avoid name="avoid19"  obj0="workspace/robot0/body_link4"  obj1="workspace/body_obstacle0" timeslot="timeslot4" avoid_p="true" avoid_v="false" dmin="0.01"/>
+
+  <avoid name="avoid20"  obj0="workspace/robot0/body_link6"  obj1="workspace/body_obstacle0" timeslot="timeslot1" avoid_p="true" avoid_v="false" dmin="0.01"/>
+  <avoid name="avoid21"  obj0="workspace/robot0/body_link6"  obj1="workspace/body_obstacle0" timeslot="timeslot2" avoid_p="true" avoid_v="false" dmin="0.01"/>
+  <avoid name="avoid22"  obj0="workspace/robot0/body_link6"  obj1="workspace/body_obstacle0" timeslot="timeslot3" avoid_p="true" avoid_v="false" dmin="0.01"/>
+  <avoid name="avoid23"  obj0="workspace/robot0/body_link6"  obj1="workspace/body_obstacle0" timeslot="timeslot4" avoid_p="true" avoid_v="false" dmin="0.01"/>
+
   <scaling T="1.0" L="1.0" M="1.0"/>
 
   <enable  id="object_c1t"     enable="false"/>
@@ -177,13 +116,13 @@
   <enable  id="joint_c2"       enable="false"/>
   <enable  id="joint_f"        enable="false"/>
   <enable  id="joint_range_p"  enable="false"/>
-  <enable  id="joint_range_dp" enable="true" />
+  <enable  id="joint_range_dp" enable="false" />
   <enable  id="joint_range_v"  enable="false"/>
   <enable  id="joint_range_f"  enable="false"/>
   <enable  id="joint_tp"       enable="true" />
   <enable  id="joint_rp"       enable="true" />
-  <enable  id="joint_tv"       enable="true" />
-  <enable  id="joint_rv"       enable="true" />
+  <enable  id="joint_tv"       enable="false"/>
+  <enable  id="joint_rv"       enable="false"/>
   <enable  id="force_t"        enable="false"/>
   <enable  id="force_r"        enable="false"/>
   <enable  id="match_tp"       enable="true" />
@@ -195,14 +134,18 @@
   
   <correction rate="0.5"/>
 
-  <param name="num_iter"        value="20" />
-  <param name="min_step_size"   value="1.0"/>
-  <param name="max_step_size"   value="1.0"/>
+  <param name="max_step_size"    value="1.0" />
+  <param name="min_step_size"    value="0.05"/>
+  <param name="cutoff_step_size" value="0.05"/>
+
+  <!--
   <param name="method_major"    value="prioritized"/>
   <param name="method_minor"    value="gauss_seidel"/>
-  <!--
-  <param name="method_major"    value="gauss_newton1"/>
-  <param name="method_minor"    value="direct"/>
+  <param name="num_iter"        value="20" />
   -->
+  <constraint_weight weight="1.0" />
+  <variable_weight   weight="0.1"/>
+  <param name="method_major"    value="gauss_newton"/>
+  <param name="method_minor"    value="direct"/>
   <param name="verbose"         value="false"/>
 </namespace>

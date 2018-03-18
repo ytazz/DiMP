@@ -80,6 +80,7 @@ public:
 	void DrawSnapshot(real_t time);
 
 	void EnableConstraints (string mode, bool enable);
+	void Report();
 
 public:
 	virtual bool Build();
