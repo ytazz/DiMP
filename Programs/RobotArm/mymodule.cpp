@@ -344,20 +344,6 @@ void MyModule::DrawSnapshot(real_t time) {
 }
 
 void MyModule::OnDraw(DiMP::Render::Canvas* canvas) {
-	//// 再生モードの場合は再生時刻のスナップショットを描画
-	//if(GetAction(MENU_ALWAYS, ID_PLAY)->GetBool()){
-	//	DrawSnapshot(render, playTime);
-	//}
-	//// それ以外は初期時刻と各タスクの開始・終了時刻のスナップショットを描画
-	//else{
-	//	DrawSnapshot(render, 0.0);
-	//	for(uint i = 0; i < workspace.task.size(); i++){
-	//		DiMP::Task* task = workspace.task[i];
-	//		DrawSnapshot(render, task->time->time_s->val);
-	//		DrawSnapshot(render, task->time->time_e->val);
-	//	}
-	//}
-
 	// 光源設定
 	GRLightDesc ld;
 	ld.diffuse = Vec4f(0.6f, 0.6f, 0.6f, 1.0f);

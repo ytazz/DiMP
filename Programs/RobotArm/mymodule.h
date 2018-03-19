@@ -23,15 +23,7 @@ public:
 		struct Welding {
 			struct Segment{
 				string           timeslotName;
-				//string           matchWeldingName;
-				//string           matchWaypointElbowName;
-				//string           matchWaypointHandName;
-				//string           avoidWeldingName;
 				DiMP::TimeSlot*  timeslot;
-				//DiMP::MatchTask* matchWelding;
-				//DiMP::MatchTask* matchWaypointElbow;
-				//DiMP::MatchTask* matchWaypointHand;
-				//DiMP::AvoidTask* avoidWelding;
 				vvec_t           posture;
 				int              startIndex;
 				int              endIndex;
