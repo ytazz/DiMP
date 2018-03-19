@@ -120,14 +120,21 @@ public:
 		biped->waypoints[1].fix_foot_pos_r[1] = true;
 		
 		graph->scale.Set(1.0, 1.0, 1.0);
-		graph->Init();
-
 		graph->solver->SetCorrection(ID(), 0.5);
-		graph->solver->param.numIter[0]  = 20;
 		graph->solver->param.minStepSize = 1.0;
 		graph->solver->param.maxStepSize = 1.0;
+		/* gauss-newton
+		graph->solver->SetConstraintWeight(ID(), 1.0);
+		graph->solver->SetVariableWeight(ID(), 0.01);
+		graph->solver->param.methodMajor = Solver::Method::Major::GaussNewton;
+		graph->solver->param.methodMinor = Solver::Method::Minor::Direct;
+		*/
+		graph->solver->param.numIter[0]  = 20;
 		graph->solver->param.methodMajor = Solver::Method::Major::Prioritized;
 		graph->solver->param.verbose = true;
+
+		graph->Init();
+
 		
 		targetPos = vec3_t(0.0, 0.6, -0.2);
 	}
@@ -161,11 +168,12 @@ public:
 	virtual float Scale(int attr, DiMP::Node* node){
 		return 0.1f;
 	}
-} app;
-
-DiMP::Graph graph;
+};
 
 int main(int argc, char* argv[]){
+	DiMP::Graph graph;
+	MyApp       app;
+
 	app.graph = &graph;
 	app.Init(argc, argv);
 	app.StartMainLoop();
