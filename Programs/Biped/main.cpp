@@ -27,6 +27,8 @@ public:
 		appName = "Biped";
 		zAxisUp = true;
 
+		conf = this;
+
 		AddAction(MENU_MAIN, ID_X   , "switch to x")->AddHotKey('x');
 		AddAction(MENU_MAIN, ID_Y   , "switch to y")->AddHotKey('y');
 		AddAction(MENU_MAIN, ID_Z   , "switch to z")->AddHotKey('z');
@@ -160,9 +162,25 @@ public:
 		}
 		App::OnAction(menu, id);
 	}
-	
-	virtual bool Set(GRRenderIf* render, int attr, DiMP::Node* node){
-		return true;
+
+	virtual bool Set(DiMP::Render::Canvas* canvas, int attr, DiMP::Node* node){
+		if(attr == DiMP::Render::Item::BipedCom){
+			canvas->SetLineWidth(3.0f);
+			canvas->SetLineColor("black");
+			return true;
+		}
+		if(attr == DiMP::Render::Item::BipedCop){
+			canvas->SetLineWidth(3.0f);
+			canvas->SetLineColor("magenta");
+			return true;
+		}
+		if(attr == DiMP::Render::Item::BipedTorso){
+			canvas->SetLineWidth(2.0f);
+			canvas->SetLineColor("blue");
+			return true;
+		}
+		
+		return DiMP::Render::Config::Set(canvas, attr, node);
 	}
 	
 	virtual float Scale(int attr, DiMP::Node* node){
