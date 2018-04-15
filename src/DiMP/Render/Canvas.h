@@ -25,9 +25,9 @@ public:
 	bool	transparent;		///< enable transparent?
 	bool	gradation;			///< line gradation?
 
-	void SetPointColor(const string& c);
-	void SetLineColor (const string& c, uint idx = 0);
-	void SetFillColor (const string& c);
+	void SetPointColor(const string& c, float alpha = 1.0f);
+	void SetLineColor (const string& c, uint idx = 0, float alpha = 1.0f);
+	void SetFillColor (const string& c, float alpha = 1.0f);
 	void SetPointSize (float ps);
 	void SetLineWidth (float lw);
 	void Translate    (float tx, float ty);

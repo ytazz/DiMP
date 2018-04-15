@@ -6,20 +6,20 @@
   mockup_offset      = "1.240 0.4895 0.0"
   use_tree           = "true"
   >
-  <!--
   <segment timeslot="timeslot0" posture="  0deg -90deg 0deg   0deg 0deg   0deg  -90deg 0deg 0deg"/>
   <segment timeslot="timeslot1" posture="  0deg -75deg 0deg 135deg 0deg -60deg  -60deg 0deg 0deg" start_index="0"    end_index="1100"/>
   <segment timeslot="timeslot2" posture="  0deg -90deg 0deg 120deg 0deg -30deg -135deg 0deg 0deg" start_index="1100" end_index="1704"/>
   <segment timeslot="timeslot3" posture="  0deg -90deg 0deg 120deg 0deg -30deg -135deg 0deg 0deg" start_index="1704" end_index="1705"/>
   <segment timeslot="timeslot4" posture="-30deg -90deg 0deg  90deg 0deg   0deg -160deg 0deg 0deg" start_index="1705" end_index="2457"/>
   <segment timeslot="timeslot5" posture="  0deg -90deg 0deg   0deg 0deg   0deg  -90deg 0deg 0deg"/>
-  -->
+  <!--
   <segment timeslot="timeslot0" posture="0deg -90deg 0deg 0deg 0deg 0deg 0deg 0deg 0deg"/>
   <segment timeslot="timeslot1" posture="0deg -90deg 0deg 0deg 0deg 0deg 0deg 0deg 0deg" start_index="0"    end_index="1100"/>
   <segment timeslot="timeslot2" posture="0deg -90deg 0deg 0deg 0deg 0deg 0deg 0deg 0deg" start_index="1100" end_index="1704"/>
   <segment timeslot="timeslot3" posture="0deg -90deg 0deg 0deg 0deg 0deg 0deg 0deg 0deg" start_index="1704" end_index="1705"/>
   <segment timeslot="timeslot4" posture="0deg -90deg 0deg 0deg 0deg 0deg 0deg 0deg 0deg" start_index="1705" end_index="2457"/>
   <segment timeslot="timeslot5" posture="0deg -90deg 0deg 0deg 0deg 0deg 0deg 0deg 0deg"/>
+  -->
 </welding>
 
   

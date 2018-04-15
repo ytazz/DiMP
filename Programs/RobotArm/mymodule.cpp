@@ -351,7 +351,10 @@ void MyModule::OnDraw(DiMP::Render::Canvas* canvas) {
 	ld.ambient = Vec4f(0.1f, 0.1f, 0.1f, 1.0f);
 	ld.position = Vec4f(20.0f, 50.0f, 20.0f, 1.0f);
 	renManager->render->PushLight(ld);
-
+	
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_BLEND);
+	
 	renManager->render->SetLighting (true);
 	renManager->render->SetDepthTest(true);
 	if (isPlaying) {
@@ -402,7 +405,7 @@ bool MyModule::Set(DiMP::Render::Canvas* canvas, int attr, DiMP::Node* node){
 		return true;
 	}
 	if(attr == DiMP::Render::Item::Geometry){
-		canvas->SetLineColor("green");
+		canvas->SetLineColor("cyan", 0, 0.05f);
 		canvas->SetLineWidth(1);
 		return true;
 	}
