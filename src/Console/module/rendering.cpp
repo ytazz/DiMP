@@ -42,7 +42,7 @@ void RenderingManager::Read(XML& xml){
 	renNode->Get(consoleMessageDepth, ".console_message_depth");
 	renNode->Get(consoleInputRow    , ".console_input_row"    );
 
-	WindowManager::Read(xml);
+	WindowManager::Read(xml.GetRootNode()->GetNode("window_manager"));
 }
 
 bool RenderingManager::Init(){
@@ -73,7 +73,7 @@ bool RenderingManager::Init(){
 
 	// ƒJƒƒ‰ì¬
 	float r = 1.0f;
-	cam2D = new GLWin::Camera();
+	cam2D = new GLWin::Camera(root);
 	cam2D->mode = GLWin::Camera::Projection::Ortho;
 	cam2D->radius    = 10.0f * r;
 	cam2D->distMin   =  0.1f * r;
@@ -82,7 +82,7 @@ bool RenderingManager::Init(){
 	cam2D->latitude  = (float)Rad(90.0);
 	cam2D->longitude = 0.0f;
 
-	cam3D = new GLWin::Camera();
+	cam3D = new GLWin::Camera(root);
 	cam3D->mode = GLWin::Camera::Projection::Perspective;
 	cam3D->radius    = 10.0f * r;
 	cam3D->distMin   =  0.1f * r;
