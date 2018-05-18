@@ -11,7 +11,7 @@
   <mesh name="mesh_mockup" scale="0.001" filename="pa10welding/lowlowres/mockup.stl" binary="true" convex="false" collision="true"  mass="false" visual="true"/>
   <mesh name="mesh_gadai"  scale="0.001" filename="pa10welding/lowlowres/gadai.stl"  binary="true" convex="false" collision="false" mass="false" visual="true"/>
 
-  <vmat name="mat_mockup"   colorname="lightgray" alpha="0.3"/>
+  <vmat name="mat_mockup"   colorname="lightgray" alpha="1.0"/>
   <vmat name="mat_gadai"    colorname="darkturquoise" alpha="1.0"/>
 
   <body name="body_target0" dynamical="false" trn=" 900    900    500"  ><connector name="0"/></body>

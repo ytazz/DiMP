@@ -20,23 +20,26 @@ Canvas::Canvas(){
 	drawLine	= true;
 	gradation	= false;
 }
-void Canvas::SetPointColor(const string& c){
+void Canvas::SetPointColor(const string& c, float alpha){
 	if(pointColor.name != c){
 		pointColor.name = c;
 		pointColor.Init();
 	}
+	pointColor.rgba[3] = alpha;
 }
-void Canvas::SetLineColor(const string& c, uint idx){
+void Canvas::SetLineColor(const string& c, uint idx, float alpha){
 	if(lineColor[idx].name != c){
 		lineColor[idx].name = c;
 		lineColor[idx].Init();
 	}
+	lineColor[idx].rgba[3] = alpha;
 }
-void Canvas::SetFillColor(const string& c){
+void Canvas::SetFillColor(const string& c, float alpha){
 	if(fillColor.name != c){
 		fillColor.name = c;
 		fillColor.Init();
 	}
+	fillColor.rgba[3] = alpha;
 }
 void Canvas::SetPointSize(float ps){
 	pointSize = ps;

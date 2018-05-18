@@ -774,8 +774,6 @@ namespace DiMP {
 		// com
 		if (conf->Set(canvas, Render::Item::BipedCom, this)) {
 			canvas->BeginLayer("biped_com", true);
-			canvas->SetLineWidth(3.0f);
-			canvas->SetLineColor("black");
 			canvas->BeginPath();
 			canvas->MoveTo(trajectory[0].com_pos);
 			for (uint i = 1; i < trajectory.size(); i++) {
@@ -788,8 +786,6 @@ namespace DiMP {
 		// cop
 		if (conf->Set(canvas, Render::Item::BipedCop, this)) {
 			canvas->BeginLayer("biped_cop", true);
-			canvas->SetLineWidth(3.0f);
-			canvas->SetLineColor("magenta");
 			canvas->BeginPath();
 			canvas->MoveTo(trajectory[0].cop_pos);
 			for (uint i = 1; i < trajectory.size(); i++) {
@@ -802,8 +798,6 @@ namespace DiMP {
 		// torso
 		if (conf->Set(canvas, Render::Item::BipedTorso, this)) {
 			canvas->BeginLayer("biped_torso", true);
-			canvas->SetLineWidth(2.0f);
-			canvas->SetLineColor("blue");
 			canvas->BeginPath();
 			canvas->MoveTo(trajectory[0].torso_pos_t);
 			for (uint i = 1; i < trajectory.size(); i++) {

@@ -206,7 +206,7 @@ void Graph::Draw(Render::Canvas* canvas, Render::Config* _conf){
 	nodes.Draw(canvas, _conf);
 	
 	for(Tick* tick : ticks)
-		DrawSnapshot(tick->time, canvas, conf);
+		DrawSnapshot(tick->time, canvas, _conf);
 }
 
 void Graph::CreateSnapshot(real_t t){

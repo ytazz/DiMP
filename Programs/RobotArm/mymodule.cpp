@@ -351,8 +351,12 @@ void MyModule::OnDraw(DiMP::Render::Canvas* canvas) {
 	ld.ambient = Vec4f(0.1f, 0.1f, 0.1f, 1.0f);
 	ld.position = Vec4f(20.0f, 50.0f, 20.0f, 1.0f);
 	renManager->render->PushLight(ld);
-
-	renManager->render->SetLighting(true);
+	
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_BLEND);
+	
+	renManager->render->SetLighting (true);
+	renManager->render->SetDepthTest(true);
 	if (isPlaying) {
 		DrawSnapshot(playTime);
 	}
@@ -366,7 +370,8 @@ void MyModule::OnDraw(DiMP::Render::Canvas* canvas) {
 	}
 	renManager->render->PopLight();
 
-	renManager->render->SetLighting(false);
+	renManager->render->SetDepthTest(false);
+	renManager->render->SetLighting (false);
 
 	if (sceneSelect == Welding) {
 		// —nÚ“_—ñ
@@ -396,6 +401,11 @@ bool MyModule::Set(DiMP::Render::Canvas* canvas, int attr, DiMP::Node* node){
 	}
 	if(attr == DiMP::Render::Item::Avoid){
 		canvas->SetLineColor("red");
+		canvas->SetLineWidth(1);
+		return true;
+	}
+	if(attr == DiMP::Render::Item::Geometry){
+		canvas->SetLineColor("cyan", 0, 0.05f);
 		canvas->SetLineWidth(1);
 		return true;
 	}
