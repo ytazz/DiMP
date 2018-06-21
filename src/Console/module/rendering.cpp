@@ -5,8 +5,8 @@
 
 #include <sbconsole.h>
 
-#include <Foundation/UTPreciseTimer.h>
-static UTPreciseTimer ptimer;
+#include <Foundation/UTQPTimer.h>
+static UTQPTimer ptimer;
 
 RenderingManager::RenderingManager(){
 	timerPeriod	        = 100;

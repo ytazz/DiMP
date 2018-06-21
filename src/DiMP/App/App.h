@@ -11,7 +11,7 @@
 
 #include <Springhead.h>
 #include <Framework/SprFWApp.h>
-#include <Foundation/UTPreciseTimer.h>
+#include <Foundation/UTQPTimer.h>
 
 namespace DiMP{;
 
@@ -135,7 +135,7 @@ public:
 	/// タイマ
 	UTTimerIf*				timerDraw;		///< timer for rendering
 	UTTimerIf*				timerPlan;		///< timer for planning
-	UTPreciseTimer			ptimer;
+	UTQPTimer               ptimer;
 	
 	/// DiMPオブジェクト
 	UTRef<Graph>	          graph;			///< reference to DiMP graph

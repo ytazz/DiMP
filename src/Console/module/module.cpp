@@ -4,9 +4,9 @@
 #include <module/simulation.h>
 #include <module/module.h>
 
-#include <Foundation/UTPreciseTimer.h>
-static UTPreciseTimer ptimer;
-static UTPreciseTimer ptimer1;
+#include <Foundation/UTQPTimer.h>
+static UTQPTimer ptimer;
+static UTQPTimer ptimer1;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
