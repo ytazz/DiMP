@@ -1,4 +1,3 @@
-#include <window/viewer.h>
 #include <module/rendering.h>
 #include <module/request.h>
 #include <module/simulation.h>

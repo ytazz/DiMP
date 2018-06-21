@@ -1,5 +1,3 @@
-#include <window/viewer.h>
-#include <window/panel.h>
 #include <module/rendering.h>
 #include <module/module.h>
 
@@ -71,28 +69,6 @@ bool RenderingManager::Init(){
 	
 	render->Reshape(Vec2f(), Vec2f(windowWidth, windowHeight));
 
-	// カメラ作成
-	float r = 1.0f;
-	cam2D = new GLWin::Camera(root);
-	cam2D->mode = GLWin::Camera::Projection::Ortho;
-	cam2D->radius    = 10.0f * r;
-	cam2D->distMin   =  0.1f * r;
-	cam2D->distMax   = 10.0f * r;
-	cam2D->distance  =  5.0f * r;
-	cam2D->latitude  = (float)Rad(90.0);
-	cam2D->longitude = 0.0f;
-
-	cam3D = new GLWin::Camera(root);
-	cam3D->mode = GLWin::Camera::Projection::Perspective;
-	cam3D->radius    = 10.0f * r;
-	cam3D->distMin   =  0.1f * r;
-	cam3D->distMax   = 10.0f * r;
-	cam3D->distance  =  5.0f * r;
-	cam3D->latitude  = (float)Rad(60.0);
-	cam3D->longitude = 0.0f;
-
-	curCamera = cam2D;
-
 	canvasGL  = new DiMP::Render::CanvasGL ();
 	canvasSVG = new DiMP::Render::CanvasSVG();
 
@@ -151,42 +127,14 @@ void RenderingManager::OnEvent(SDL_Event* ev){
 	WindowManager::OnEvent(ev);
 }
 
-GLWin::Window* RenderingManager::CreateWindow(string type, GLWin::Window* par){
-	if(type == "viewer"){
-		viewer = new Viewer(par);
-		return viewer;
-	}
-	if(type == "panel"){
-		panel = new Panel(par);
-		return panel;
-	}
-
-	return GLWin::WindowManager::CreateWindow(type, par);
-}
-
 void RenderingManager::DrawScene(){
 	Module* mod = Module::Get();
 	CriticalSection _cs(&mod->cs);
-
-	// 視点
-	Vec2f vp = render->GetViewportSize();
-	curCamera->aspect = vp.y / vp.x;
-	curCamera->UpdateView();
-	curCamera->UpdateProj();
-	render->SetViewMatrix(curCamera->affView.inv());
-	render->SetProjectionMatrix(curCamera->affProj);
-
-	// z軸が上を向くように変換
-	// bbox中心を原点として描画
-	render->PushModelMatrix();
-	render->MultModelMatrix(Affinef::Rot((float)Rad(-90.0), 'x'));
 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_BLEND);
 
 	mod->OnDraw(canvasGL);
-
-	render->PopModelMatrix();
 }
 
 void RenderingManager::OnMessage(int lv, const char* str){
