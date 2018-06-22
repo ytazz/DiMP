@@ -24,7 +24,6 @@
     <ClCompile Include="module\rendering.cpp" />
     <ClCompile Include="module\request.cpp" />
     <ClCompile Include="module\simulation.cpp" />
-    <ClCompile Include="window\camera.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="base\typedefs.h" />
@@ -33,7 +32,6 @@
     <ClInclude Include="module\rendering.h" />
     <ClInclude Include="module\request.h" />
     <ClInclude Include="module\simulation.h" />
-    <ClInclude Include="window\camera.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{D623B383-725B-4AB9-9005-E26D987899BF}</ProjectGuid>

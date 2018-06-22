@@ -38,6 +38,9 @@ public:
 	SDL_Window*         sdlWindow;
 	SDL_GLContext       glContext;
 
+	GLWin::Viewer*  viewer;
+	GLWin::Button*  btnPlan;
+
 public:	
 	void Read      (XML& xml);
 	void OnEvent   (SDL_Event* ev);
@@ -46,6 +49,7 @@ public:
 	void DrawText  (); 
 	
 	virtual bool Init     ();
+	virtual bool OnEvent  (GLWin::Window* win, int code);
 	virtual void OnMessage(int lv, const char* str);
 	
 	 RenderingManager();
