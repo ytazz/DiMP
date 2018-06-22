@@ -2,9 +2,9 @@
 #include <module/rendering.h>
 #include <module/module.h>
 
-#include <Foundation/UTPreciseTimer.h>
+#include <Foundation/UTQPTimer.h>
 
-UTPreciseTimer ptimer;
+UTQPTimer ptimer;
 
 SimulationManager::SimulationManager(){
 	timerPeriod	= 100;

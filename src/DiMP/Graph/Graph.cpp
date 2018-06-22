@@ -4,7 +4,7 @@
 #include <DiMP/Render/Config.h>
 #include <DiMP/Render/Canvas.h>
 
-#include <Foundation/UTPreciseTimer.h>
+#include <Foundation/UTQPTimer.h>
 
 #include <omp.h>
 
@@ -176,7 +176,7 @@ void Graph::Step(){
 	if(!ready)
 		Init();
 
-	static Spr::UTPreciseTimer timer;
+	static Spr::UTQPTimer timer;
 	timer.CountUS();
 	Prepare();
 	uint TPrepare = timer.CountUS();

@@ -12,13 +12,6 @@ class Panel ;
 
 class RenderingManager : public GLWin::WindowManager, public Scenebuilder::MessageCallback{
 public:
-	struct View{
-		enum{
-			Mode2D,
-			Mode3D,
-		};
-	};
-
 	int	 timerPeriod;		///< 描画タイマ周期[ms]
 	int  consolePosX;
 	int  consolePosY;
@@ -35,16 +28,9 @@ public:
 	int            timeGL;
 	int            timeText;
 
-	UTRef<GLWin::Camera> cam2D;
-	UTRef<GLWin::Camera> cam3D;
-	GLWin::Camera*       curCamera;
-
 	UTRef<DiMP::Render::CanvasGL >   canvasGL;
 	UTRef<DiMP::Render::CanvasSVG>   canvasSVG;
 
-	Viewer*		viewer;
-	Panel *     panel ;
-	
 	Event       evResize;		///< ウィンドウサイズ変更   
 	Event		evDraw;			///< 描画
 	Event		evUpdate;		///< GUI更新
@@ -59,9 +45,8 @@ public:
 	void DrawScene ();
 	void DrawText  (); 
 	
-	virtual GLWin::Window* CreateWindow(string type, GLWin::Window* par);
-	virtual bool	       Init        ();
-	virtual void           OnMessage   (int lv, const char* str);
+	virtual bool Init     ();
+	virtual void OnMessage(int lv, const char* str);
 	
 	 RenderingManager();
 	~RenderingManager();

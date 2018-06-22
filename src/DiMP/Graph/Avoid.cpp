@@ -4,8 +4,8 @@
 #include <DiMP/Graph/Graph.h>
 #include <DiMP/Render/Config.h>
 
-#include <Foundation/UTPreciseTimer.h>
-static UTPreciseTimer ptimer;
+#include <Foundation/UTQPTimer.h>
+static UTQPTimer ptimer;
 
 namespace DiMP{;
 

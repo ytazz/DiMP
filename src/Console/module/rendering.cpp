@@ -1,11 +1,10 @@
-#include <window/panel.h>
 #include <module/rendering.h>
 #include <module/module.h>
 
 #include <sbconsole.h>
 
-#include <Foundation/UTPreciseTimer.h>
-static UTPreciseTimer ptimer;
+#include <Foundation/UTQPTimer.h>
+static UTQPTimer ptimer;
 
 RenderingManager::RenderingManager(){
 	timerPeriod	        = 100;
@@ -126,15 +125,6 @@ void RenderingManager::OnEvent(SDL_Event* ev){
 		evResize.Set();
 	}
 	WindowManager::OnEvent(ev);
-}
-
-GLWin::Window* RenderingManager::CreateWindow(string type, GLWin::Window* par){
-	if(type == "panel"){
-		panel = new Panel(par);
-		return panel;
-	}
-
-	return GLWin::WindowManager::CreateWindow(type, par);
 }
 
 void RenderingManager::DrawScene(){

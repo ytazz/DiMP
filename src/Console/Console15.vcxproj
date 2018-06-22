@@ -25,7 +25,6 @@
     <ClCompile Include="module\request.cpp" />
     <ClCompile Include="module\simulation.cpp" />
     <ClCompile Include="window\camera.cpp" />
-    <ClCompile Include="window\panel.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="base\typedefs.h" />
@@ -35,7 +34,6 @@
     <ClInclude Include="module\request.h" />
     <ClInclude Include="module\simulation.h" />
     <ClInclude Include="window\camera.h" />
-    <ClInclude Include="window\panel.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{D623B383-725B-4AB9-9005-E26D987899BF}</ProjectGuid>
@@ -90,11 +88,11 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(ProjectDir)..\..\lib\x64</OutDir>
-    <TargetName>$(ProjectName)14D</TargetName>
+    <TargetName>$(ProjectName)15D</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(ProjectDir)..\..\lib\x64</OutDir>
-    <TargetName>$(ProjectName)14</TargetName>
+    <TargetName>$(ProjectName)15</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
