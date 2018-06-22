@@ -126,7 +126,7 @@
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
-      <AdditionalDependencies>mkl_core.lib;mkl_intel_lp64.lib;mkl_sequential.lib;sdl2.lib;sdl2_ttf.lib;glew32.lib;expatd.lib;libpng16_staticd.lib;zlibstatic.lib;Springhead14.0Dx64.lib;Scenebuilder14D.lib;sbdimp14D.lib;sbsprgraphics14D.lib;glwin14D.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>mkl_core.lib;mkl_intel_lp64.lib;mkl_sequential.lib;sdl2.lib;sdl2_ttf.lib;glew32.lib;expatd.lib;libpng16_staticd.lib;zlibstatic.lib;Springhead15.0Dx64.lib;Scenebuilder15D.lib;sbdimp15D.lib;sbsprgraphics15D.lib;glwin15D.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>libcmt.lib</IgnoreSpecificDefaultLibraries>
     </Link>
     <Manifest>
@@ -178,7 +178,7 @@
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
-      <AdditionalDependencies>mkl_core.lib;mkl_intel_lp64.lib;mkl_sequential.lib;sdl2.lib;sdl2_ttf.lib;glew32.lib;expat.lib;libpng16_static.lib;zlibstatic.lib;Springhead14.0x64.lib;Scenebuilder14.lib;sbdimp14.lib;sbsprgraphics14.lib;glwin14.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>mkl_core.lib;mkl_intel_lp64.lib;mkl_sequential.lib;sdl2.lib;sdl2_ttf.lib;glew32.lib;expat.lib;libpng16_static.lib;zlibstatic.lib;Springhead15.0x64.lib;Scenebuilder15.lib;sbdimp15.lib;sbsprgraphics15.lib;glwin15.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>libcmt.lib</IgnoreSpecificDefaultLibraries>
     </Link>
     <Manifest>
@@ -195,10 +195,10 @@
     <ClInclude Include="RobotArm.h" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Console\Console.vcxproj">
+    <ProjectReference Include="..\..\src\Console\Console15.vcxproj">
       <Project>{d623b383-725b-4ab9-9005-e26d987899bf}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\src\DiMP2_14.vcxproj">
+    <ProjectReference Include="..\..\src\DiMP2_15.vcxproj">
       <Project>{38264f03-3a18-45a9-9dee-5a258dcf221a}</Project>
     </ProjectReference>
   </ItemGroup>
