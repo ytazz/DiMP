@@ -1,4 +1,5 @@
 #include <module/rendering.h>
+#include <module/request.h>
 #include <module/module.h>
 
 #include <sbconsole.h>
@@ -74,6 +75,20 @@ bool RenderingManager::Init(){
 
 	evUpdate.Set();
 
+	viewer = (GLWin::Viewer*)root->FindChild("viewer");
+	if(!viewer){
+		Message::Error("viewer not found");
+		return false;
+	}
+	viewer->AddCallback(this);	
+	
+	btnPlan = (GLWin::Button*)root->FindChild("btn_plan");
+	if(!btnPlan){
+		Message::Error("btn_plan not found");
+		return false;
+	}
+	btnPlan->AddCallback(this);	
+
 	return WindowManager::Init();
 }
 
@@ -127,14 +142,28 @@ void RenderingManager::OnEvent(SDL_Event* ev){
 	WindowManager::OnEvent(ev);
 }
 
-void RenderingManager::DrawScene(){
+bool RenderingManager::OnEvent(GLWin::Window* win, int code){
 	Module* mod = Module::Get();
-	CriticalSection _cs(&mod->cs);
 
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glEnable(GL_BLEND);
+	Affinef aff, affInv;
 
-	mod->OnDraw(canvasGL);
+	if(viewer == win && code == GLWin::Viewer::Event::Draw){
+		Module* mod = Module::Get();
+		CriticalSection _cs(&mod->cs);
+
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glEnable(GL_BLEND);
+
+		mod->OnDraw(canvasGL);
+
+		return true;
+	}
+	if(btnPlan == win && code == GLWin::Button::Clicked){
+		stringstream ss;
+		ss << (btnPlan->onoff ? "start plan" : "stop plan");
+		mod->reqManager->Query(ss.str());
+	}
+	return false;
 }
 
 void RenderingManager::OnMessage(int lv, const char* str){
