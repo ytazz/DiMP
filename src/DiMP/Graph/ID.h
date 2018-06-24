@@ -10,7 +10,7 @@ class Tick;
 /// variable identifiers
 struct VarTag{
 	enum{
-		Any = -1,
+		Any = 0,
 		ObjectTP,		///< object position: translational
 		ObjectRP,		///< object position: rotational
 		ObjectTV,		///< object velocity: translational
@@ -40,7 +40,7 @@ struct VarTag{
 /// constraint identifiers
 struct ConTag{
 	enum{
-		Any = -1,
+		Any = 0,
 		ObjectC1T,			///< C^1 continuity of object position
 		ObjectC1R,			///< C^1 continuity of object orientation
 		JointC1,			///< C^1 continuity of joint position

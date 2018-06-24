@@ -200,7 +200,7 @@ void Loader::LoadScaling(XMLNode* node, Graph* graph){
 }
 
 int StrToTag(string idstr){
-	int tag = -1;
+	int tag = 0;
 	if(idstr.empty())
 		return tag;
 

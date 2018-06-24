@@ -11,6 +11,7 @@
 namespace DiMP{;
 
 const char* VarNames[] = {
+	"any"              ,
 	"object_pos_t"     ,
 	"object_pos_r"     ,
 	"object_vel_t"     ,
@@ -36,6 +37,7 @@ const char* VarNames[] = {
 };
 
 const char* ConNames[] = {
+	"any"                ,
 	"object_c1t"         ,
 	"object_c1r"         ,
 	"joint_c1"           ,
