@@ -28,7 +28,7 @@
   -->
   
   <body name="body_obstacle0" dynamical="false">
-    <connector name="c_mockup" trn="1240 489.5 0"/>
+    <connector name="c_mockup" trn="1240+100 489.5 0"/>
     <connector name="c_gadai" />
   </body>
 
