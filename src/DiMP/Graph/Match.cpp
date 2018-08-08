@@ -6,6 +6,8 @@
 
 namespace DiMP{;
 
+static const real_t pi = M_PI;
+
 //-------------------------------------------------------------------------------------------------
 // MatchTaskKey
 
@@ -495,7 +497,11 @@ void MatchConRP::CalcDeviation(){
 		quat_t q0 = key->obj0->pos_r->val;
 		quat_t q1 = key->obj1->pos_r->val;
 		quat_t qerror = q1.Conjugated() * q0;
-		y = q1 * (qerror.Theta() * qerror.Axis());
+		vec3_t axis   = qerror.Axis ();
+		real_t theta  = qerror.Theta();
+		if(theta > pi)
+			theta -= 2*pi;
+		y = q1 * (theta * axis);
 	}
 	else if(mode == MatchTaskKey::Start){
 		y.clear();
