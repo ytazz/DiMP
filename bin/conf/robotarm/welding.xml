@@ -3,7 +3,8 @@
   points_filename    = "conf/robotarm/pa10welding/points.csv"
   welding_start_time = "0"
   welding_end_time   = "10"
-  mockup_offset      = "1.240 0.4895 0.0"
+  mockup_pos         = "1.240 0.4895 0.0"
+  mockup_ori         = "0deg@z"
   use_tree           = "true"
   >
   <segment timeslot="timeslot0" posture="  0deg -90deg 0deg   0deg 0deg   0deg  -90deg 0deg 0deg"/>
@@ -20,6 +21,7 @@
   <segment timeslot="timeslot4" posture="0deg -90deg 0deg 0deg 0deg 0deg 0deg 0deg 0deg" start_index="1705" end_index="2457"/>
   <segment timeslot="timeslot5" posture="0deg -90deg 0deg 0deg 0deg 0deg 0deg 0deg 0deg"/>
   -->
+  
 </welding>
 
   

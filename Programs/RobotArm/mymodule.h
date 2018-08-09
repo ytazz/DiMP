@@ -32,7 +32,8 @@ public:
 			};
 			
 			string           pointsFilename;
-			vec3_t           mockupOffset;
+			vec3_t           mockupPos;
+			quat_t           mockupOri;
 			bool             useTree;
 			vector<Segment>  segments;
 

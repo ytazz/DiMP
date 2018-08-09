@@ -16,8 +16,9 @@ MyModule::Config::Welding::Segment::Segment(){
 
 MyModule::Config::Welding::Welding() {
 	pointsFilename = "";
-	mockupOffset   = vec3_t();
-	useTree        = false;
+	mockupPos = vec3_t();
+	mockupOri = quat_t();
+	useTree   = false;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -37,8 +38,9 @@ MyModule::~MyModule() {
 void MyModule::Read(XML& xml) {
 	if (sceneSelect == Welding) {
 		xml.Get(conf.welding.pointsFilename, ".points_filename"   );
-		xml.Get(conf.welding.mockupOffset  , ".mockup_offset"     );
-		xml.Get(conf.welding.useTree       , ".use_tree"          );
+		xml.Get(conf.welding.mockupPos, ".mockup_pos");
+		xml.Get(conf.welding.mockupOri, ".mockup_ori");
+		xml.Get(conf.welding.useTree  , ".use_tree"  );
 
 		for(int i = 0; ; i++) try{
 			XMLNode* node = xml.GetRootNode()->GetNode("segment", i);
@@ -165,7 +167,7 @@ bool MyModule::Build() {
 	}
 
 	adaptorSprGR.ShowSolid(true);
-	adaptorSprGR.ShowWireframe(false);
+	adaptorSprGR.ShowWireframe(true);
 
 	// Init前の処理
 	if (sceneSelect == Welding) {
@@ -192,8 +194,9 @@ bool MyModule::Build() {
 		weldingPoints.resize(nrow);
 		for (int i = 0; i < nrow; i++) {
 			// mm -> m
-			// オフセット加算
-			weldingPoints[i] = conf.welding.mockupOffset + 0.001 * vec3_t(csv.Get<real_t>(i, 0), csv.Get<real_t>(i, 1), csv.Get<real_t>(i, 2));
+			vec3_t p = 0.001 * vec3_t(csv.Get<real_t>(i, 0), csv.Get<real_t>(i, 1), csv.Get<real_t>(i, 2));
+			// 座標変換
+			weldingPoints[i] = conf.welding.mockupPos + conf.welding.mockupOri * p;
 		}
 	}
 
@@ -346,10 +349,16 @@ void MyModule::DrawSnapshot(real_t time) {
 void MyModule::OnDraw(DiMP::Render::Canvas* canvas) {
 	// 光源設定
 	GRLightDesc ld;
-	ld.diffuse = Vec4f(0.6f, 0.6f, 0.6f, 1.0f);
+	ld.diffuse  = Vec4f(0.2f, 0.2f, 0.2f, 1.0f);
 	ld.specular = Vec4f(0.0f, 0.0f, 0.0f, 1.0f);
-	ld.ambient = Vec4f(0.1f, 0.1f, 0.1f, 1.0f);
-	ld.position = Vec4f(20.0f, 50.0f, 20.0f, 1.0f);
+	ld.ambient  = Vec4f(0.01f, 0.01f, 0.01f, 1.0f);
+	ld.position = Vec4f( 10.0f,  10.0f, 10.0f, 1.0f);
+	renManager->render->PushLight(ld);
+	ld.position = Vec4f( 10.0f, -10.0f, 10.0f, 1.0f);
+	renManager->render->PushLight(ld);
+	ld.position = Vec4f(-10.0f,  10.0f, 10.0f, 1.0f);
+	renManager->render->PushLight(ld);
+	ld.position = Vec4f(-10.0f, -10.0f, 10.0f, 1.0f);
 	renManager->render->PushLight(ld);
 	
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -369,8 +378,11 @@ void MyModule::OnDraw(DiMP::Render::Canvas* canvas) {
 		}
 	}
 	renManager->render->PopLight();
+	renManager->render->PopLight();
+	renManager->render->PopLight();
+	renManager->render->PopLight();
 
-	renManager->render->SetDepthTest(false);
+	renManager->render->SetDepthTest(true );
 	renManager->render->SetLighting (false);
 
 	if (sceneSelect == Welding) {
@@ -392,22 +404,22 @@ bool MyModule::Set(DiMP::Render::Canvas* canvas, int attr, DiMP::Node* node){
 	if(attr == DiMP::Render::Item::ObjectPos){
 		canvas->SetPointColor("black");
 		canvas->SetPointSize(2.0f);
-		return true;
+		return false;
 	}
 	if(attr == DiMP::Render::Item::ObjectTrajectory){
 		canvas->SetLineColor("black");
 		canvas->SetLineWidth(1);
-		return true;
+		return false;
 	}
 	if(attr == DiMP::Render::Item::Avoid){
 		canvas->SetLineColor("red");
 		canvas->SetLineWidth(1);
-		return true;
+		return false;
 	}
 	if(attr == DiMP::Render::Item::Geometry){
 		canvas->SetLineColor("cyan", 0, 0.05f);
 		canvas->SetLineWidth(1);
-		return true;
+		return false;
 	}
 	return false;
 }

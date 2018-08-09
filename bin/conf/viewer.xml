@@ -10,9 +10,9 @@
     radius   ="10.0"
     dist_min ="0.1"
     dist_max ="10.0"
-    distance ="5.0"
-    latitude ="90deg"
-    longitude="0deg"
+    distance ="7.0"
+    latitude ="15deg"
+    longitude="-135deg"
     target   ="0.0 0.0 0.0"
     />
   <camera

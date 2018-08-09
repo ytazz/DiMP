@@ -18,9 +18,9 @@
   </rendering>
 
   <window_manager
-    window_pos_x  = "1400"
+    window_pos_x  = "800"
     window_pos_y  = "60"
-    window_width  = "1100"
+    window_width  = "1600"
     window_height = "1200"
     window_title  = "DiMP Console">
     <window
