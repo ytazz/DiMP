@@ -474,7 +474,11 @@ void Joint::CalcDeviation(real_t t, vec3_t& pos_dev, vec3_t& ori_dev){
 	pos_dev = (sock->obj->Pos(t) + r[0] + q[0] * rrel) - (plug->obj->Pos(t) + r[1]);
 
 	quat_t qerror = q[1].Conjugated() * (q[0] * qrel);
-	ori_dev = q[1] * (qerror.Theta() * qerror.Axis());
+	vec3_t axis   = qerror.Axis ();
+	real_t theta  = qerror.Theta();
+	if(theta > pi)
+		theta -= 2*pi;
+	ori_dev = q[1] * (theta * axis);
 }
 
 void Joint::CreateSnapshot(real_t t){
@@ -797,7 +801,11 @@ void JointConTV::CalcDeviation(){
 void JointConRP::CalcDeviation(){
 	quat_t q = jnt->q[0] * jnt->qrel;
 	quat_t qerror = jnt->q[1].Conjugated() * q;
-	y = jnt->q[1] * (qerror.Theta() * qerror.Axis());
+	vec3_t axis   = qerror.Axis ();
+	real_t theta  = qerror.Theta();
+	if(theta > pi)
+		theta -= 2*pi;
+	y = jnt->q[1] * (theta * axis);
 }
 void JointConRV::CalcDeviation(){
 	y = (jnt->sockObj->vel_r->val + jnt->wrel)
