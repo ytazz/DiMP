@@ -118,7 +118,7 @@
       <OpenMPSupport>false</OpenMPSupport>
     </ClCompile>
     <Lib>
-      <OutputFile>$(OutDir)DiMP2_14D.lib</OutputFile>
+      <OutputFile>$(OutDir)DiMP2_15D.lib</OutputFile>
       <IgnoreSpecificDefaultLibraries>libcmt.lib</IgnoreSpecificDefaultLibraries>
     </Lib>
   </ItemDefinitionGroup>
@@ -161,7 +161,7 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Lib>
-      <OutputFile>$(OutDir)DiMP2_14.lib</OutputFile>
+      <OutputFile>$(OutDir)DiMP2_15.lib</OutputFile>
       <LinkTimeCodeGeneration>false</LinkTimeCodeGeneration>
       <IgnoreSpecificDefaultLibraries>libcmt.lib</IgnoreSpecificDefaultLibraries>
     </Lib>
