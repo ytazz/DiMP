@@ -11,7 +11,7 @@
   <mesh name="mesh_mockup" scale="0.001" filename="pa10welding/lowlowres/mockup.stl" binary="true" convex="false" collision="true"  mass="false" visual="true"/>
   <mesh name="mesh_gadai"  scale="0.001" filename="pa10welding/lowlowres/gadai.stl"  binary="true" convex="false" collision="false" mass="false" visual="true"/>
 
-  <vmat name="mat_mockup"   colorname="lightgray" alpha="1.0"/>
+  <vmat name="mat_mockup"   colorname="lightgray"     alpha="1.0"/>
   <vmat name="mat_gadai"    colorname="darkturquoise" alpha="1.0"/>
 
   <body name="body_target0" dynamical="false" trn=" 900    900    500"  ><connector name="0"/></body>
@@ -28,7 +28,7 @@
   -->
   
   <body name="body_obstacle0" dynamical="false">
-    <connector name="c_mockup" trn="1240+100 489.5 0"/>
+    <connector name="c_mockup" trn="1240 489.5 0" rot="0deg@z"/>
     <connector name="c_gadai" />
   </body>
 
@@ -46,9 +46,7 @@
   -->
   
   <attach connector="body_obstacle0/c_mockup" shape="mesh_mockup" vmat="mat_mockup"/>
-  <!--
   <attach connector="body_obstacle0/c_gadai"  shape="mesh_gadai" vmat="mat_gadai"/>
-  -->
 
   <ticks time_begin="0.0" time_end="1.0" time_step="0.1"/>
   <ticks time_begin="1.0" time_end="2.0" time_step="0.1"/>
