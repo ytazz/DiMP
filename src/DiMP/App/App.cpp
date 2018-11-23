@@ -5,6 +5,9 @@
 
 namespace DiMP{;
 
+const int    iinf = numeric_limits<int>   ::max();
+const double inf  = numeric_limits<double>::max();
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 App::Action* App::Action::AddHotKey(int key, string alt){
@@ -18,12 +21,12 @@ App::Action::Action(){
 	boolean  =  true;
 	integer  =  0;
 	intStep  =  1;
-	intMin   = -INT_MAX;
-	intMax   =  INT_MAX;
+	intMin   = -iinf;
+	intMax   =  iinf;
 	real     =  0.0;
 	realStep =  1.0;
-	realMin  = -FLT_MAX;
-	realMax  =  FLT_MAX;
+	realMin  = -inf;
+	realMax  =  inf;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

@@ -3,8 +3,11 @@
 #include <DiMP/Render/Config.h>
 #include <DiMP/Render/Canvas.h>
 
+#ifdef _WIN32
 # include <mkl_lapacke.h>
-
+#else
+# include <lapacke.h>
+#endif
 
 namespace DiMP{;
 
