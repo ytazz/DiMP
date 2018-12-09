@@ -7,6 +7,10 @@
 static UTQPTimer ptimer;
 static UTQPTimer ptimer1;
 
+#if defined __unix__
+# include <unistd.h>
+#endif
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 Uint32 TimerCallback(Uint32 interval, void *param){
@@ -158,7 +162,11 @@ void Module::MainLoop(){
 	}
 
 	// request managerが終了するまで待つ
+#if defined _WIN32
 	Sleep(100);
+#elif defined __unix__
+	usleep(100*1000);
+#endif
 
 	// スレッド終了待ち
 	simManager->Join();

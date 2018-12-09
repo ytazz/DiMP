@@ -12,3 +12,7 @@ Workspace::Workspace(){
 	
 }
 
+Workspace::~Workspace(){
+	
+}
+
