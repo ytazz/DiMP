@@ -2,7 +2,7 @@
 
 #include <base/typedefs.h>
 
-#include <sdl.h>
+#include <SDL.h>
 
 class Manager : public Thread{
 public:

@@ -101,7 +101,7 @@ bool MyModule::Build() {
 	adaptorDiMP.Set(graph);
 
 	Adaptor* adaptors[] = { &adaptorDiMP, &adaptorSprGR };
-	for each(Adaptor* a in adaptors) {
+	for(Adaptor* a : adaptors) {
 		a->Set(&scene, &typedb, &models);
 		a->Mirror();
 		a->SyncProperty(true);
