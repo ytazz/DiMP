@@ -96,9 +96,11 @@ void RenderingManager::Handle(){
 	Module* mod = Module::Get();
 
 	if(evResize.IsSet()){
+		//cout << "ren resize" << endl;
 		root->SetSize((float)windowWidth, (float)windowHeight);
 	}
 	if(evDraw.IsSet()){
+		//cout << "ren draw" << endl;
 		static bool first = true;
 		if(first){
 			evResize.Set();
@@ -124,6 +126,7 @@ void RenderingManager::Handle(){
 		timeText = ptimer.CountUS();
 	}
 	if(evUpdate.IsSet()){
+		//cout << "ren update" << endl;
 		OnUpdate();
 	}
 }
