@@ -28,7 +28,7 @@ namespace DiMP {
 	*/
 	class BipedLIPKey : public Keypoint {
 	public:
-		V2Var*      var_torso_pos_t;    ///< position         of torso
+		V2Var * var_torso_pos_t;    ///< position         of torso
 		SVar*       var_torso_pos_r;    ///< orientation      of torso
 		V2Var*      var_torso_vel_t;    ///< velocity         of torso
 		SVar*       var_torso_vel_r;    ///< angular velocity of torso
@@ -37,6 +37,7 @@ namespace DiMP {
 		V2Var*		var_com_vel;        ///< velocity of CoM
 
 		V2Var*		var_cop_pos;        ///< position of CoP
+		V2Var*		cop_pos_r;
 
 		V2Var*      var_foot_pos_t[2];  ///< position    of foot, R/L
 		SVar*       var_foot_pos_r[2];  ///< orientation of foot, R/L
@@ -54,7 +55,7 @@ namespace DiMP {
 		BipedFootConR*   con_foot_r[2];      ///< range constraint on support foot orientation relative to torso
 
 		BipedCopCon*     con_cop;            ///< range constraint on CoP relative to support foot
-		
+
 		BipedTimeCon*    con_time;
 		RangeConS*       con_duration;       ///< range constraint on step period
 
@@ -63,7 +64,7 @@ namespace DiMP {
 
 		//CoMConR  *  con_com_r[2];      ///< range constraint on angular acceleration at beginning and end of step
 		//CoPConR  *  con_cop_r[2];      ///< range constraint on turning angle of CoM
-		
+
 	public:
 		virtual void AddVar(Solver* solver);
 		virtual void AddCon(Solver* solver);
@@ -98,9 +99,11 @@ namespace DiMP {
 			real_t  heightCoM;
 			real_t  torsoMass;
 			real_t  footMass;
+			//real_t  thetaHeel; //æùÚ’nŠp
+			//real_t  thetaToe; //‚Â‚Üæ—£’nŠp
 			int     swingProfile;
 			real_t  swingHeight[2];             ///< 0: maximum swing height
-											    ///< 1: lowest height before touch down. for wedge only
+												///< 1: lowest height before touch down. for wedge only
 			real_t	durationMin[Phase::Num];	///< minimum duration of each phase
 			real_t	durationMax[Phase::Num];	///< maximum duration of each phase
 			vec2_t	footPosMin[2];              ///< admissible range of foot relative to torso
@@ -112,6 +115,9 @@ namespace DiMP {
 			real_t  T;                      ///< time constant of LIP Žž’è”
 			real_t  angAccMax;              ///< maximum admissible angular acceleration
 			real_t  turnMax;                ///< maximum admissible turning angle in single step
+
+			vec2_t  FootShapeMin;
+			vec2_t  FootShapeMax;
 
 			Param();
 		};
@@ -147,7 +153,7 @@ namespace DiMP {
 			vec3_t  foot_pos_t[2];
 			quat_t  foot_pos_r[2];
 			vec3_t  cop_pos;
-			
+
 			TrajPoint();
 		};
 
@@ -161,23 +167,26 @@ namespace DiMP {
 		virtual void		Init();
 		virtual void		Prepare();
 
-		int    Phase      (real_t t);
-		vec3_t ComPos     (real_t t);
-		vec3_t ComVel     (real_t t);
-		vec3_t ComAcc     (real_t t);
-		real_t TorsoOri   (real_t t);
+		int    Phase(real_t t);
+		vec3_t ComPos(real_t t);
+		vec3_t ComVel(real_t t);
+		vec3_t ComAcc(real_t t);
+		real_t TorsoOri(real_t t);
 		real_t TorsoAngVel(real_t t);
 		real_t TorsoAngAcc(real_t t);
-		vec3_t FootPos    (real_t t, int side);
-		quat_t FootOri    (real_t t, int side);
-		vec3_t CopPos     (real_t t);
-		
+		vec3_t FootPos(real_t t, int side);
+		quat_t FootOri(real_t t, int side);
+		vec3_t CopPos(real_t t);
+		//real_t AnklePitch(real_t t, int side);
+
+
 		vec3_t TorsoPos(const vec3_t& pcom, const vec3_t& psup, const vec3_t& pswg);
-		
+
 		void CalcTrajectory();
-		void Draw          (Render::Canvas* canvas, Render::Config* conf);
-		void DrawSnapshot  (real_t time, Render::Canvas* canvas, Render::Config* conf);
-		//void Save          ();
+		void Draw(Render::Canvas* canvas, Render::Config* conf);
+		void DrawSnapshot(real_t time, Render::Canvas* canvas, Render::Config* conf);
+		void Save();
+		void Print();//‰æ–Ê‚É•\Ž¦‚·‚éŠÖ”
 
 	public:
 		BipedLIP(Graph* g, string n);
@@ -186,14 +195,14 @@ namespace DiMP {
 
 	struct BipedLipCon : Constraint {
 		BipedLIPKey* obj[2];
-		
+
 		real_t tau, tau2;
 		real_t T, T2;
 		vec2_t p0, p1;
 		vec2_t v0, v1;
 		vec2_t c0, c1;
 		real_t C, S;
-		
+
 		void Prepare();
 
 		BipedLipCon(Solver* solver, int _tag, string _name, BipedLIPKey* _obj, real_t _scale);
@@ -201,7 +210,7 @@ namespace DiMP {
 
 	/// CoM position constraint based on LIP model
 	struct BipedLipConP : BipedLipCon {
-		virtual void CalcCoef     ();
+		virtual void CalcCoef();
 		virtual void CalcDeviation();
 
 		BipedLipConP(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale);
@@ -209,7 +218,7 @@ namespace DiMP {
 
 	/// CoM velocity constraint based on LIP model
 	struct BipedLipConV : BipedLipCon {
-		virtual void CalcCoef     ();
+		virtual void CalcCoef();
 		virtual void CalcDeviation();
 
 		BipedLipConV(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale);
@@ -218,7 +227,7 @@ namespace DiMP {
 	/// CoM position constraint
 	struct BipedComConP : Constraint {
 		BipedLIPKey* obj;
-		
+
 		virtual void CalcCoef();
 
 		BipedComConP(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale);
@@ -227,7 +236,7 @@ namespace DiMP {
 	/// CoM velocity constraint
 	struct BipedComConV : Constraint {
 		BipedLIPKey* obj;
-		
+
 		virtual void CalcCoef();
 
 		BipedComConV(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale);
@@ -242,10 +251,10 @@ namespace DiMP {
 		mat2_t       R, dR;
 		vec2_t       _min, _max;
 		bool         on_lower[2], on_upper[2];
-		
-		virtual void CalcCoef     ();
+
+		virtual void CalcCoef();
 		virtual void CalcDeviation();
-		virtual void Project      (real_t& l, uint k);
+		virtual void Project(real_t& l, uint k);
 
 		BipedFootConT(Solver* solver, string _name, BipedLIPKey* _obj, uint _side, real_t _scale);
 	};
@@ -256,10 +265,10 @@ namespace DiMP {
 		real_t       thetaf, thetat;
 		real_t       _min, _max;
 		bool	     on_lower, on_upper;
-		
-		virtual void CalcCoef     ();
+
+		virtual void CalcCoef();
 		virtual void CalcDeviation();
-		virtual void Project      (real_t& l, uint k);
+		virtual void Project(real_t& l, uint k);
 
 		BipedFootConR(Solver* solver, string _name, BipedLIPKey* _obj, uint _side, real_t _scale);
 	};
@@ -273,36 +282,36 @@ namespace DiMP {
 		mat2_t       R, dR;
 		vec2_t       _min, _max;
 		bool         on_lower[2], on_upper[2];
-		
-		virtual void CalcCoef     ();
+
+		virtual void CalcCoef();
 		virtual void CalcDeviation();
-		virtual void Project      (real_t& l, uint k);
+		virtual void Project(real_t& l, uint k);
 
 		BipedCopCon(Solver* solver, string _name, BipedLIPKey* _obj, uint _side, real_t _scale);
 	};
 
-	struct BipedTimeCon : Constraint{
+	struct BipedTimeCon : Constraint {
 		BipedLIPKey* obj[2];
-		
+
 		virtual void CalcCoef();
-		
+
 		BipedTimeCon(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale);
 	};
 
 	/// angular acceleration limit
 	/*
 	struct CoMConR : Constraint {
-		BipedLIPKey* obj[2];
-		uint         idx;
-		real_t       _min, _max;
-		bool	     on_lower, on_upper;
-		real_t       q0, w0, q1, w1, tau, tau2, tau3;
+	BipedLIPKey* obj[2];
+	uint         idx;
+	real_t       _min, _max;
+	bool	     on_lower, on_upper;
+	real_t       q0, w0, q1, w1, tau, tau2, tau3;
 
-		virtual void CalcCoef     ();
-		virtual void CalcDeviation();
-		virtual void Project      (real_t& l, uint k);
+	virtual void CalcCoef     ();
+	virtual void CalcDeviation();
+	virtual void Project      (real_t& l, uint k);
 
-		CoMConR(Solver* solver, string _name, BipedLIPKey* _obj, uint _idx, real_t _scale);
+	CoMConR(Solver* solver, string _name, BipedLIPKey* _obj, uint _idx, real_t _scale);
 	};
 	*/
 
