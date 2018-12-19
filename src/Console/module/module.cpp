@@ -7,6 +7,10 @@
 static UTQPTimer ptimer;
 static UTQPTimer ptimer1;
 
+#if defined __unix__
+# include <unistd.h>
+#endif
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 Uint32 TimerCallback(Uint32 interval, void *param){
@@ -133,17 +137,21 @@ void Module::MainLoop(){
 	// ループ処理
 	while(true){
 		// 標準入力からのリクエスト処理
+		//cout << "req handle" << endl;
 		if(reqManager->Handle()){
 			if(OnRequest())
 				renManager->OnUpdate();
 		}
 
 		// レンダラのイベント処理
+		//cout << "ren handle" << endl;
 		renManager->Handle();
 		
 		// イベント処理
-		if(evExit.IsSet())
+		if(evExit.IsSet()){
+			cout << "mod exit" << endl;
 			break;
+		}
 		
 		// SDLのイベント処理
 		SDL_Event ev;
@@ -152,13 +160,19 @@ void Module::MainLoop(){
 				evExit.Set();
 				break;
 			}
+			//cout << "ren onevent" << endl;
 			renManager->OnEvent(&ev);
+			//cout << "sim onevent" << endl;
 			simManager->OnEvent(&ev);
 		}
 	}
 
 	// request managerが終了するまで待つ
+#if defined _WIN32
 	Sleep(100);
+#elif defined __unix__
+	usleep(100*1000);
+#endif
 
 	// スレッド終了待ち
 	simManager->Join();
@@ -172,6 +186,8 @@ bool Module::OnRequest(){
 	vector<ArgData>& args = reqManager->args;
 
 	bool ret = false;
+	
+	cout << "req: " << name << " " << (args.empty() ? "" : args[0].str) << endl;
 
 	if(name == "q" || name == "quit"){
 		Message::Out("exiting...");

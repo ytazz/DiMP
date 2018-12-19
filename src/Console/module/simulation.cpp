@@ -20,7 +20,13 @@ void SimulationManager::Read(XML& xml){
 }
 
 bool SimulationManager::Init(){
+	Module* mod = Module::Get();
+
 	evPlanning  .Create(true);
+
+	evGroup.Add(&mod->evExit);
+	evGroup.Add(&evStartPlan);
+	evGroup.Add(&evStopPlan );
 	
 	return true;
 }
@@ -41,20 +47,25 @@ void SimulationManager::OnEvent(SDL_Event* ev){
 
 void SimulationManager::Func(){
 	Module* mod = Module::Get();
-	vector<Event*> ev;
-	ev.push_back(&mod->evExit);
-	ev.push_back(&evStartPlan);
-	ev.push_back(&evStopPlan );
-	
+	//vector<Event*> ev;
+	//ev.push_back(&mod->evExit);
+	//ev.push_back(&evStartPlan);
+	//ev.push_back(&evStopPlan );
+
 	while(true){
-		int i = Event::Wait(&ev[0], (uint)ev.size(), (evPlanning.IsSet() ? 10 : 1000), false);
+		//int i = Event::Wait(&ev[0], (uint)ev.size(), (evPlanning.IsSet() ? 10 : 1000), false);
+		int i = evGroup.Wait(evPlanning.IsSet() ? 10 : 1000);
+		cout << "sim wait break " << i << endl;
 		if(i == -1){
-			if(evPlanning.IsSet()) StepPlan();
+			if(evPlanning.IsSet()){
+				cout << "step plan" << endl;
+				StepPlan();
+			}
 			continue;
 		}
-		if(ev[i] == &evStartPlan) evPlanning.Set  ();
-		if(ev[i] == &evStopPlan ) evPlanning.Reset();
-		if(ev[i] == &mod->evExit)
+		if(evGroup[i] == &evStartPlan) evPlanning.Set  ();
+		if(evGroup[i] == &evStopPlan ) evPlanning.Reset();
+		if(evGroup[i] == &mod->evExit)
 			break;
 	}
 }

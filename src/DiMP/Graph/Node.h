@@ -51,20 +51,20 @@ template<class T>
 class ArrayBase : public vector<T>{
 public:
 	void Add(T v){
-		push_back(v);
+		this->push_back(v);
 	}
 	void Add(T* p, size_t n){
-		insert(end(), p, p+n);
+		this->insert(this->end(), p, p+n);
 	}
 	void Remove(T v){
-		erase(find(begin(), end(), v));
+		this->erase(find(this->begin(), this->end(), v));
 	}
 	T Find(const string& name){
 		if(name.empty())
 			return 0;
-		for(uint i = 0; i < size(); i++){
-			if(at(i)->name == name)
-				return at(i);
+		for(uint i = 0; i < this->size(); i++){
+			if(this->at(i)->name == name)
+				return this->at(i);
 		}
 		return 0;
 	}

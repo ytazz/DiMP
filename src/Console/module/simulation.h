@@ -15,6 +15,7 @@ public:
 	Event		evStartPlan;
 	Event		evStopPlan;
 	Event		evPlanning;
+	EventGroup      evGroup;
 	
 public:
 	virtual void Func();

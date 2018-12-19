@@ -7,7 +7,10 @@
 using Scenebuilder::Tokenizer;
 using Scenebuilder::string_iterator_pair;
 
-#include <windows.h>
+#if defined _WIN32
+# include <windows.h>
+#elif defined __unix__
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -196,9 +199,11 @@ void RequestManager::Func(){
 
 		// 入力受付中にevExitが立つかも知れないので100msでタイムアウトする
 		fflush(stdin);
+#if defined _WIN32
 		HANDLE hstdin = GetStdHandle(STD_INPUT_HANDLE);
 		int ret = WaitForSingleObject(hstdin, 100);
 		if(ret == WAIT_OBJECT_0){
+#endif
 			string line;
 			getline(cin, line);
 
@@ -206,6 +211,8 @@ void RequestManager::Func(){
 				Query(line);
 
 			prompt = true;
-		}		
+#if defined _WIN32
+		}
+#endif		
 	}
 }
