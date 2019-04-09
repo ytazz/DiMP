@@ -1,7 +1,37 @@
 cmake_minimum_required(VERSION 2.8.12) # Default version on Ubuntu 14.04
 
-add_library(dimp
+set(DIMP_HEADERS_APP
+	App/App.h
+	)
+set(DIMP_HEADERS_GRAPH
+	Graph/Avoid.h
+	Graph/Biped.h
+	Graph/Connector.h
+	Graph/Contact.h
+	Graph/Geometry.h
+	Graph/Graph.h
+	Graph/ID.h
+	Graph/Joint.h
+	Graph/Match.h
+	Graph/Node.h
+	Graph/Object.h
+	Graph/Task.h
+	Graph/Timing.h
+	Graph/Tree.h
+	Graph/Vehicle.h
+	)
+set(DIMP_HEADERS_LOAD
+	Load/Loader.h
+	)
+set(DIMP_HEADERS_RENDER
+	Render/Canvas.h
+	Render/Config.h
+)
+
+set(DIMP_SOURCES_APP
 	App/App.cpp
+	)
+set(DIMP_SOURCES_GRAPH
 	Graph/Avoid.cpp
 	Graph/Biped.cpp
 	Graph/Connector.cpp
@@ -16,8 +46,25 @@ add_library(dimp
 	Graph/Timing.cpp
 	Graph/Tree.cpp
 	Graph/Vehicle.cpp
+	)
+set(DIMP_SOURCES_LOAD
 	Load/Loader.cpp
+	)
+set(DIMP_SOURCES_RENDER
 	Render/Canvas.cpp
 	Render/Config.cpp
 )
 
+add_library(dimp
+	${DIMP_SOURCES_APP}
+	${DIMP_SOURCES_GRAPH}
+	${DIMP_SOURCES_LOAD}
+	${DIMP_SOURCES_RENDER}
+	)
+
+install(TARGETS dimp DESTINATION lib)
+
+install(FILES ${DIMP_HEADERS_APP}    DESTINATION include/App)
+install(FILES ${DIMP_HEADERS_GRAPH}  DESTINATION include/Graph)
+install(FILES ${DIMP_HEADERS_LOAD}   DESTINATION include/Load)
+install(FILES ${DIMP_HEADERS_RENDER} DESTINATION include/Render)

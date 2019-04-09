@@ -4,6 +4,10 @@ project(DiMP)
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 
+if(NOT CMAKE_DEBUG_POSTFIX)
+  set(CMAKE_DEBUG_POSTFIX d)
+endif()
+
 set(SPRINGHEAD_DIR "" CACHE PATH "root directory of Springhead")
 set(SCENEBUILDER_DIR "" CACHE PATH "root directory of Scenebuilder")
 set(SCENEBUILDER_LIB_DIR "" CACHE PATH "directory where Scenebuilder libraries are located")
@@ -29,6 +33,8 @@ find_package(LAPACK)
 find_package(Boost REQUIRED COMPONENTS regex thread chrono)
 find_package(SDL2)
 find_package(PNG)
+
+add_definitions(-DFREEGLUT_LIB_PRAGMAS=0)
 
 include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_SOURCE_DIR}/src/Console)
