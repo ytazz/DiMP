@@ -64,7 +64,7 @@ add_library(dimp
 
 install(TARGETS dimp DESTINATION lib)
 
-install(FILES ${DIMP_HEADERS_APP}    DESTINATION include/App)
-install(FILES ${DIMP_HEADERS_GRAPH}  DESTINATION include/Graph)
-install(FILES ${DIMP_HEADERS_LOAD}   DESTINATION include/Load)
-install(FILES ${DIMP_HEADERS_RENDER} DESTINATION include/Render)
+install(FILES ${DIMP_HEADERS_APP}    DESTINATION include/DiMP/App)
+install(FILES ${DIMP_HEADERS_GRAPH}  DESTINATION include/DiMP/Graph)
+install(FILES ${DIMP_HEADERS_LOAD}   DESTINATION include/DiMP/Load)
+install(FILES ${DIMP_HEADERS_RENDER} DESTINATION include/DiMP/Render)
