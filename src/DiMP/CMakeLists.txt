@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 2.8.12) # Default version on Ubuntu 14.04
 
+set(DIMP_HEADERS
+	DiMP.h
+	Types.h
+	)
 set(DIMP_HEADERS_APP
 	App/App.h
 	)
@@ -64,6 +68,7 @@ add_library(dimp
 
 install(TARGETS dimp DESTINATION lib)
 
+install(FILES ${DIMP_HEADERS}        DESTINATION include/DiMP)
 install(FILES ${DIMP_HEADERS_APP}    DESTINATION include/DiMP/App)
 install(FILES ${DIMP_HEADERS_GRAPH}  DESTINATION include/DiMP/Graph)
 install(FILES ${DIMP_HEADERS_LOAD}   DESTINATION include/DiMP/Load)
