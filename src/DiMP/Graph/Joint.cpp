@@ -226,14 +226,16 @@ void Joint::Param::SetDof(uint dof){
 
 	real_t inf = numeric_limits<real_t>::max();
 	for(uint i = 0; i < dof; i++){
-		ini_p [i] =  0.0;
-		ini_v [i] =  0.0;
-		rmin_p[i] = -inf;
-		rmax_p[i] =  inf;
-		rmin_v[i] = -inf;
-		rmax_v[i] =  inf;
-		rmin_f[i] = -inf;
-		rmax_f[i] =  inf;
+		ini_p  [i] =  0.0;
+		ini_v  [i] =  0.0;
+		rmin_p [i] = -inf;
+		rmax_p [i] =  inf;
+		rmin_dp[i] = -inf;
+		rmax_dp[i] =  inf;
+		rmin_v [i] = -inf;
+		rmax_v [i] =  inf;
+		rmin_f [i] = -inf;
+		rmax_f [i] =  inf;
 	}
 }
 
