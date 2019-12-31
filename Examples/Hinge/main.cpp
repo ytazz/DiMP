@@ -56,13 +56,13 @@ public:
 	
 		graph->Init();
 
-		graph->SetPriority(DiMP::ID(DiMP::ConTag::MatchTP), 1);
-		graph->SetPriority(DiMP::ID(DiMP::ConTag::MatchTV), 1);
+		graph->solver->SetPriority(ID(DiMP::ConTag::MatchTP), 1);
+		graph->solver->SetPriority(ID(DiMP::ConTag::MatchTV), 1);
 
-		graph->Enable(DiMP::ID(DiMP::ConTag::ObjectC1T), false);
-		graph->Enable(DiMP::ID(DiMP::ConTag::ObjectC1R), false);
-		graph->Enable(DiMP::ID(DiMP::ConTag::MatchRP  ), false);
-		graph->Enable(DiMP::ID(DiMP::ConTag::MatchRV  ), false);
+		graph->solver->Enable(ID(DiMP::ConTag::ObjectC1T), false);
+		graph->solver->Enable(ID(DiMP::ConTag::ObjectC1R), false);
+		graph->solver->Enable(ID(DiMP::ConTag::MatchRP  ), false);
+		graph->solver->Enable(ID(DiMP::ConTag::MatchRV  ), false);
 		
 		object[0]->ForwardKinematics();
 

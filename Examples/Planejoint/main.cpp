@@ -59,8 +59,8 @@ public:
 		
 		graph->Init();
 
-		graph->SetPriority(DiMP::ID(DiMP::ConTag::MatchTP), 1);
-		graph->SetPriority(DiMP::ID(DiMP::ConTag::MatchTV), 1);
+		graph->solver->SetPriority(ID(DiMP::ConTag::MatchTP), 1);
+		graph->solver->SetPriority(ID(DiMP::ConTag::MatchTV), 1);
 
 		object[0]->ForwardKinematics();
 
