@@ -10,6 +10,10 @@ namespace DiMP {
 
 	const real_t pi = M_PI;
 
+
+
+
+
 	//-------------------------------------------------------------------------------------------------
 	// BipedLIPKey
 
@@ -17,36 +21,36 @@ namespace DiMP {
 
 	}
 
-	//•Ï”‚ğ’Ç‰Á‚·‚éŠÖ”
+	//ï¿½Ïï¿½ï¿½ï¿½ï¿½Ç‰ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öï¿½
 	void BipedLIPKey::AddVar(Solver* solver) {
 		BipedLIP* obj = (BipedLIP*)node;
 
-		//“·‘ÌˆÊ’uE‘¬“x
+		//ï¿½ï¿½ï¿½ÌˆÊ’uï¿½Eï¿½ï¿½ï¿½x
 		var_torso_pos_t = new V2Var(solver, ID(VarTag::BipedTorsoTP, node, tick, name + "_torso_tp"), node->graph->scale.pos_t);
 		var_torso_pos_r = new SVar(solver, ID(VarTag::BipedTorsoRP, node, tick, name + "_torso_rp"), node->graph->scale.pos_r);
 		var_torso_vel_t = new V2Var(solver, ID(VarTag::BipedTorsoTV, node, tick, name + "_torso_tv"), node->graph->scale.vel_t);
 		var_torso_vel_r = new SVar(solver, ID(VarTag::BipedTorsoRV, node, tick, name + "_torso_rv"), node->graph->scale.vel_r);
 
-		//‘«æˆÊ’u
+		//ï¿½ï¿½ï¿½ï¿½ï¿½Ê’u
 		var_foot_pos_t[0] = new V2Var(solver, ID(VarTag::BipedFootT, node, tick, name + "_foot_r_t"), node->graph->scale.pos_t);
 		var_foot_pos_r[0] = new SVar(solver, ID(VarTag::BipedFootR, node, tick, name + "_foot_r_r"), node->graph->scale.pos_r);
 		var_foot_pos_t[1] = new V2Var(solver, ID(VarTag::BipedFootT, node, tick, name + "_foot_l_t"), node->graph->scale.pos_t);
 		var_foot_pos_r[1] = new SVar(solver, ID(VarTag::BipedFootR, node, tick, name + "_foot_l_r"), node->graph->scale.pos_r);
 
-		//dSˆÊ’uE‘¬“x
+		//ï¿½dï¿½Sï¿½Ê’uï¿½Eï¿½ï¿½ï¿½x
 		var_com_pos = new V2Var(solver, ID(VarTag::BipedComP, node, tick, name + "_com_p"), node->graph->scale.pos_t);
 		var_com_vel = new V2Var(solver, ID(VarTag::BipedComV, node, tick, name + "_com_v"), node->graph->scale.vel_t);
 
-		//CoPˆÊ’u
+		//CoPï¿½Ê’u
 		var_cop_pos = new V2Var(solver, ID(VarTag::BipedCop, node, tick, name + "_cop"), node->graph->scale.pos_t);
 
-		//•àsüŠú
+		//ï¿½ï¿½ï¿½sï¿½ï¿½ï¿½ï¿½
 		var_duration = new SVar(solver, ID(VarTag::BipedDuration, node, tick, name + "_duration"), node->graph->scale.time);
-		//ŠÔ
+		//ï¿½ï¿½ï¿½ï¿½
 		var_time = new SVar(solver, ID(VarTag::BipedTime, node, tick, name + "_time"), node->graph->scale.time);
 	}
 
-	//S‘©ğŒ‚ğ’Ç‰Á‚·‚éŠÖ”
+	//ï¿½Sï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç‰ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öï¿½
 	void BipedLIPKey::AddCon(Solver* solver) {
 		BipedLIP* obj = (BipedLIP*)node;
 		BipedLIPKey* nextObj = (BipedLIPKey*)next;
@@ -87,11 +91,11 @@ namespace DiMP {
 	void BipedLIPKey::Prepare() {
 		BipedLIP* obj = (BipedLIP*)node;
 
-		// •àsüŠú•Ï”‚Ì’l‚ğ‚É”½‰f
+		// ï¿½ï¿½ï¿½sï¿½ï¿½ï¿½ï¿½ï¿½Ïï¿½ï¿½Ì’lï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É”ï¿½ï¿½f
 		tick->time = var_time->val;
 
 		if (!prev) {
-			// ‰Šú‚ğŒÅ’è
+			// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å’ï¿½
 			var_time->val = 0.0;
 			var_time->locked = true;
 		}
@@ -111,14 +115,31 @@ namespace DiMP {
 		Vec3f pcom, pcop, pf[2], pt;
 		float thetaf[2];
 
-		canvas->SetPointSize(5.0f); //“_‚Ì‘å‚«‚³
-		canvas->SetLineWidth(1.0f); //ü‚Ì‘¾‚³
+		canvas->SetPointSize(5.0f); //ï¿½_ï¿½Ì‘å‚«ï¿½ï¿½
+		canvas->SetLineWidth(1.0f); //ï¿½ï¿½ï¿½Ì‘ï¿½ï¿½ï¿½
 
-									// com
+		// com
+		int n, n1;
+		real_t heightd;
+		FILE* fp = fopen("Test.csv", "r");
+		FILE* fp1 = fopen("Test1.csv", "r");
+		fscanf(fp, "%d", &n);
+		fscanf(fp1, "%d", &n1);
+		if(n==0 && n1==0){
+		 	heightd = ((BipedLIP*)node)->param.heightlow;
+		}
+	  else if(n==1 && n1==1){
+		 	heightd = ((BipedLIP*)node)->param.heighthigh;
+		 }
+		 else{
+			 heightd = ((BipedLIP*)node)->param.heightmiddle;
+		 }
+		fclose(fp);
+		fclose(fp1);
 		pcom.x = (float)var_com_pos->val.x;
 		pcom.y = (float)var_com_pos->val.y;
-		pcom.z = (float)((BipedLIP*)node)->param.heightCoM;
-		canvas->Point(pcom); //dSˆÊ’u‚ğƒvƒƒbƒg
+		pcom.z = (float)heightd;//(float)((BipedLIP*)node)->param.heightCoM;
+		canvas->Point(pcom); //ï¿½dï¿½Sï¿½Ê’uï¿½ï¿½ï¿½vï¿½ï¿½ï¿½bï¿½g
 
 							 // feet
 		Vec2f cmin = obj->param.FootShapeMin; //CoPMinmum
@@ -144,17 +165,17 @@ namespace DiMP {
 
 		// torso
 		pt = obj->TorsoPos(pcom, pf[0], pf[1]);
-		canvas->Point(pt); //“·‘ÌˆÊ’u‚ğƒvƒƒbƒg
+		canvas->Point(pt); //ï¿½ï¿½ï¿½ÌˆÊ’uï¿½ï¿½ï¿½vï¿½ï¿½ï¿½bï¿½g
 
 						   // lines connecting torso and feet
-		canvas->Line(pt, pf[0]); //“·‘ÌˆÊ’u‚Æ‘«æˆÊ’u‚ğŒ‹‚Ô
+		canvas->Line(pt, pf[0]); //ï¿½ï¿½ï¿½ÌˆÊ’uï¿½Æ‘ï¿½ï¿½ï¿½ï¿½Ê’uï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		canvas->Line(pt, pf[1]);
 
 		// cop
 		pcop.x = (float)var_cop_pos->val.x;
 		pcop.y = (float)var_cop_pos->val.y;
 		pcop.z = 0.0f;
-		canvas->Point(pcop); //CoPˆÊ’u‚ğƒvƒƒbƒg
+		canvas->Point(pcop); //CoPï¿½Ê’uï¿½ï¿½ï¿½vï¿½ï¿½ï¿½bï¿½g
 
 	}
 
@@ -162,23 +183,31 @@ namespace DiMP {
 	// BipedLIP
 
 	BipedLIP::Param::Param() {
-		gravity = 9.8; //d—Í‰Á‘¬“x
-		heightCoM = 0.4823; //dS‚‚³
-		torsoMass = 4.432*0.8; //“·‘Ì¿—Ê
-		footMass = (4.432 - torsoMass) / 2; //‘«¿—Ê
-		swingProfile = SwingProfile::Wedge;  //—V‹r‹O“¹‚Ìí—Ş
-		swingHeight[0] = 0.1; //0:—V‹r‚ÌÅ‘å‚‚³
-		swingHeight[1] = 0.1; //1:Ú’n‘O‚ÌÅ¬‚‚³(Wedge only)                   
-		durationMin[Phase::R] = 0.1; //•Ğ‘«xŠúMinimum
-		durationMax[Phase::R] = 0.7; //•Ğ‘«xŠúMax
+		gravity = 9.8; //ï¿½dï¿½Í‰ï¿½ï¿½ï¿½ï¿½x
+		heightCoM = 0.496; //ï¿½dï¿½Sï¿½ï¿½ï¿½ï¿½
+		heightlow = 0.45;
+		heighthigh = 0.51;
+		//heightmiddle = (2*heightlow + heighthigh)/3;
+		heightmiddle = (heightlow + heighthigh)/2;
+		torsoMass = 4.432*0.8; //ï¿½ï¿½ï¿½Ìï¿½ï¿½ï¿½
+		footMass = (4.432 - torsoMass) / 2; //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+		//swingProfile = SwingProfile::Wedge;  //ï¿½Vï¿½rï¿½Oï¿½ï¿½ï¿½Ìï¿½ï¿½ï¿½
+		//swingProfile = SwingProfile::Cycloid;
+		swingProfile = SwingProfile::Heel_Toe;
+		thetaHeel = 20 * pi/180;
+		thetaToe = 20 * pi/180;
+		swingHeight[0] = 0.1; //0:ï¿½Vï¿½rï¿½ÌÅ‘å‚ï¿½ï¿½
+		swingHeight[1] = 0.1; //1:ï¿½Ú’nï¿½Oï¿½ÌÅï¿½ï¿½ï¿½ï¿½ï¿½(Wedge only)
+		durationMin[Phase::R] = 0.1; //ï¿½Ğ‘ï¿½ï¿½xï¿½ï¿½ï¿½ï¿½Minimum
+		durationMax[Phase::R] = 0.8; //ï¿½Ğ‘ï¿½ï¿½xï¿½ï¿½ï¿½ï¿½Max
 		durationMin[Phase::L] = 0.1;
-		durationMax[Phase::L] = 0.7;
-		durationMin[Phase::RL] = 0.1; //—¼‘«xŠúMinimum
-		durationMax[Phase::RL] = 0.3; //—¼‘«xŠúMax
+		durationMax[Phase::L] = 0.8;
+		durationMin[Phase::RL] = 0.1; //ï¿½ï¿½ï¿½ï¿½ï¿½xï¿½ï¿½ï¿½ï¿½Minimum
+		durationMax[Phase::RL] = 0.2; //ï¿½ï¿½ï¿½ï¿½ï¿½xï¿½ï¿½ï¿½ï¿½Max
 		durationMin[Phase::LR] = 0.1;
-		durationMax[Phase::LR] = 0.3;
+		durationMax[Phase::LR] = 0.2;
 
-		//ÀŒ»‰Â”\‚ÈCoM‚ÆCoP‚Ì‘Š‘Î‹——£
+		//ï¿½ï¿½ï¿½ï¿½ï¿½Â”\ï¿½ï¿½CoMï¿½ï¿½CoPï¿½Ì‘ï¿½ï¿½Î‹ï¿½ï¿½ï¿½
 		footPosMin[0] = vec2_t(-0.2, -0.14);
 		footPosMax[0] = vec2_t(0.2, -0.07);
 		footPosMin[1] = vec2_t(-0.2, 0.07);
@@ -188,18 +217,42 @@ namespace DiMP {
 		footOriMin[1] = -Rad(15.0);
 		footOriMax[1] = Rad(15.0);
 
-		FootShapeMin = vec2_t(-0.1, -0.05); //FootMinmum
-		FootShapeMax = vec2_t(0.1, 0.05); //FootMax
-		copPosMin = vec2_t(-0.1, 0.0); //CoPMinmum
-		copPosMax = vec2_t(0.1, 0.0); //CoPMax
+		FootShapeMin = vec2_t(-0.0853/*-0.02667*/, -0.05); //FootMinmum
+		FootShapeMax = vec2_t(0.0853, 0.05); //FootMax
+		copPosMin = vec2_t(-0.0853, 0.0); //CoPMinmum
+		copPosMax = vec2_t(0.0853, 0.0); //CoPMax
+
+		// FootShapeMin = vec2_t(-0.1/*-0.02667*/, -0.05); //FootMinmum
+		// FootShapeMax = vec2_t(0.1, 0.05); //FootMax
+		// copPosMin = vec2_t(-0.1, 0.0); //CoPMinmum
+		// copPosMax = vec2_t(0.1, 0.0); //CoPMax
+
+		// FootShapeMin = vec2_t(-0.05/*-0.02667*/, -0.05); //FootMinmum
+		// FootShapeMax = vec2_t(0.09, 0.05); //FootMax
+		// copPosMin = vec2_t(-0.05, 0.0); //CoPMinmum
+		// copPosMax = vec2_t(0.09, 0.0); //CoPMax
 
 		angAccMax = 0.3;
 		turnMax = 0.5;
+
+		// int n;
+		// FILE* fp = fopen("Test.csv", "r");
+		// fscanf(fp, "%d", &n);
+		//
+		// if(n==0){
+		// 	heightCoM = 0.4;
+		// }
+		// else{
+		// 	heightCoM = 0.5;
+		// }
+		//
+		// fprintf(fp1, "%lf, \n", heightCoM);
+		// fclose(fp);
 	}
 
 	//-------------------------------------------------------------------------------------------------
-	/// Œo—R“_
-	//BipedLIPƒNƒ‰ƒX‚Ì\‘¢‘ÌWaypoint‚Ìƒƒ“ƒoŠÖ”Waypoint()
+	/// ï¿½oï¿½Rï¿½_
+	//BipedLIPï¿½Nï¿½ï¿½ï¿½Xï¿½Ì\ï¿½ï¿½ï¿½ï¿½Waypointï¿½Ìƒï¿½ï¿½ï¿½ï¿½oï¿½Öï¿½Waypoint()
 	BipedLIP::Waypoint::Waypoint() {
 		k = 0;
 		time = 0.0;
@@ -223,7 +276,7 @@ namespace DiMP {
 	}
 
 	//-------------------------------------------------------------------------------------------------
-	//BipedLIPƒNƒ‰ƒX‚Ì\‘¢‘ÌTrajPoint‚Ìƒƒ“ƒoŠÖ”Trajpoint()
+	//BipedLIPï¿½Nï¿½ï¿½ï¿½Xï¿½Ì\ï¿½ï¿½ï¿½ï¿½TrajPointï¿½Ìƒï¿½ï¿½ï¿½ï¿½oï¿½Öï¿½Trajpoint()
 	BipedLIP::TrajPoint::TrajPoint() {
 		t = 0.0;
 		torso_pos_t = vec3_t();
@@ -248,7 +301,25 @@ namespace DiMP {
 	void BipedLIP::Init() {
 		TrajectoryNode::Init();
 
-		param.T = sqrt(param.heightCoM / param.gravity);//’è”T=ãh/g
+		int n, n1;
+		real_t heightd;
+		FILE* fp = fopen("Test.csv", "r");
+		FILE* fp1 = fopen("Test1.csv", "r");
+		fscanf(fp, "%d", &n);
+		fscanf(fp1, "%d", &n1);
+		if(n==0 && n1==0){
+		 	heightd = param.heightlow;
+		}
+	  else if(n==1 && n1==1){
+		 	heightd = param.heighthigh;
+		 }
+		 else{
+			 heightd = param.heightmiddle;
+		 }
+		fclose(fp);
+		fclose(fp1);
+
+		param.T = sqrt(heightd/*param.heightCoM*/ / param.gravity);//ï¿½ï¿½ï¿½è”T=ï¿½ï¿½h/g
 
 		real_t durationAve[Phase::Num];
 		for (int i = 0; i < Phase::Num; i++)
@@ -260,7 +331,7 @@ namespace DiMP {
 
 			key->var_time->val = t;
 
-			// üŠú‚Ì‰Šú’l‚Í‰ºŒÀ‚ÆãŒÀ‚Ì’†ŠÔ’l
+			// ï¿½ï¿½ï¿½ï¿½ï¿½Ìï¿½ï¿½ï¿½ï¿½lï¿½Í‰ï¿½ï¿½ï¿½ï¿½Æï¿½ï¿½ï¿½ï¿½Ì’ï¿½ï¿½Ô’l
 			if (key->next) {
 				key->var_duration->val = durationAve[phase[k]];
 				key->con_duration->_min = param.durationMin[phase[k]];
@@ -268,14 +339,14 @@ namespace DiMP {
 			}
 
 			/*
-			//ƒXƒeƒbƒvn“_‚ÆI“_‚ÌŠp‰Á‘¬“x§ŒÀ
+			//ï¿½Xï¿½eï¿½bï¿½vï¿½nï¿½_ï¿½ÆIï¿½_ï¿½ÌŠpï¿½ï¿½ï¿½ï¿½ï¿½xï¿½ï¿½ï¿½ï¿½
 			key->con_com_r[0]->_min = -param.angAccMax;
 			key->con_com_r[0]->_max =  param.angAccMax;
 			key->con_com_r[1]->_min = -param.angAccMax;
 			key->con_com_r[1]->_max =  param.angAccMax;
 			*/
 
-			//ÀŒ»‰Â”\‚ÈCoM‚ÆCoP‚Ì‘Š‘Î‹——£
+			//ï¿½ï¿½ï¿½ï¿½ï¿½Â”\ï¿½ï¿½CoMï¿½ï¿½CoPï¿½Ì‘ï¿½ï¿½Î‹ï¿½ï¿½ï¿½
 			for (int i = 0; i < 2; i++) {
 				key->con_foot_t[i]->_min = param.footPosMin[i];
 				key->con_foot_t[i]->_max = param.footPosMax[i];
@@ -289,7 +360,7 @@ namespace DiMP {
 			t += durationAve[phase[k]];
 		}
 
-		// dSˆÊ’uCdS‘¬“xC’…’nˆÊ’u‚Ì‰Šú’l‚ğŒo—R“_‚ğŒ‹‚ÔƒXƒvƒ‰ƒCƒ“‹Èü(ŠŠ‚ç‚©‚È•âŠÔ‹Èü)‚Å—^‚¦‚é
+		// ï¿½dï¿½Sï¿½Ê’uï¿½Cï¿½dï¿½Sï¿½ï¿½ï¿½xï¿½Cï¿½ï¿½ï¿½nï¿½Ê’uï¿½Ìï¿½ï¿½ï¿½ï¿½lï¿½ï¿½ï¿½oï¿½Rï¿½_ï¿½ï¿½ï¿½ï¿½ï¿½ÔƒXï¿½vï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½Èï¿½(ï¿½ï¿½ï¿½ç‚©ï¿½È•ï¿½ï¿½Ô‹Èï¿½)ï¿½Å—^ï¿½ï¿½ï¿½ï¿½
 		Curve2d curve_torso_t, curve_foot_t[2];
 		Curved  curve_torso_r, curve_foot_r[2];
 
@@ -349,7 +420,7 @@ namespace DiMP {
 			else key->var_cop_pos->val = key->var_foot_pos_t[1]->val;
 		}
 
-		// Œo—R“_ã‚Ì•Ï”‚ğŒÅ’è
+		// ï¿½oï¿½Rï¿½_ï¿½ï¿½ï¿½Ì•Ïï¿½ï¿½ï¿½ï¿½Å’ï¿½
 		for (uint i = 0; i < waypoints.size(); i++) {
 			Waypoint& wp = waypoints[i];
 			BipedLIPKey* key = (BipedLIPKey*)traj.GetKeypoint(graph->ticks[wp.k]);
@@ -376,7 +447,7 @@ namespace DiMP {
 		return phase[key->tick->idx];
 	}
 
-	//dSˆÊ’u
+	//ï¿½dï¿½Sï¿½Ê’u
 	vec3_t BipedLIP::ComPos(real_t t) {
 		BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;
 		BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;
@@ -392,16 +463,33 @@ namespace DiMP {
 			vec2_t c0 = key0->var_cop_pos->val;
 			vec2_t c1 = key1->var_cop_pos->val;
 
-			pt = c0 + (c1 - c0)*(dt / tau) + (p0 - c0)*cosh(dt / T) + T * (v0 - (c1 - c0) / tau)*sinh(dt / T); //®(39)
+			pt = c0 + (c1 - c0)*(dt / tau) + (p0 - c0)*cosh(dt / T) + T * (v0 - (c1 - c0) / tau)*sinh(dt / T); //ï¿½ï¿½(39)
 		}
 		else {
 			pt = key0->var_com_pos->val;
 		}
+		int n, n1;
+		real_t heightd;
+		FILE* fp = fopen("Test.csv", "r");
+		FILE* fp1 = fopen("Test1.csv", "r");
+		fscanf(fp, "%d", &n);
+		fscanf(fp1, "%d", &n1);
+		if(n==0 && n1==0){
+		 	heightd = param.heightlow;
+		}
+	  else if(n==1 && n1==1){
+		 	heightd = param.heighthigh;
+		 }
+		 else{
+			 heightd = param.heightmiddle;
+		 }
+		fclose(fp);
+		fclose(fp1);
 
-		return vec3_t(pt.x, pt.y, param.heightCoM);
+		return vec3_t(pt.x/*+0.04*/, pt.y, heightd/*param.heightCoM*/);
 	}
 
-	//dS‘¬“x
+	//ï¿½dï¿½Sï¿½ï¿½ï¿½x
 	vec3_t BipedLIP::ComVel(real_t t) {
 		BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;
 		BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;
@@ -417,7 +505,7 @@ namespace DiMP {
 			vec2_t c0 = key0->var_cop_pos->val;
 			vec2_t c1 = key1->var_cop_pos->val;
 
-			vt = (c1 - c0) / tau + (1 / T)*(p0 - c0)*sinh(dt / T) + (v0 - (c1 - c0) / tau)*cosh(dt / T); //®(40)
+			vt = (c1 - c0) / tau + (1 / T)*(p0 - c0)*sinh(dt / T) + (v0 - (c1 - c0) / tau)*cosh(dt / T); //ï¿½ï¿½(40)
 		}
 		else {
 			vt = key0->var_com_vel->val;
@@ -426,7 +514,7 @@ namespace DiMP {
 		return vec3_t(vt.x, vt.y, 0.0);
 	}
 
-	//dS‰Á‘¬“x
+	//ï¿½dï¿½Sï¿½ï¿½ï¿½ï¿½ï¿½x
 	vec3_t BipedLIP::ComAcc(real_t t) {
 		BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;
 		BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;
@@ -443,7 +531,7 @@ namespace DiMP {
 			vec2_t c0 = key0->var_cop_pos->val;
 			vec2_t c1 = key1->var_cop_pos->val;
 
-			vec2_t at = (1 / T2)*(p0 - c0)*cosh(dt / T) + (1 / T)*(v0 - (c1 - c0) / tau)*sinh(dt / T); //®(41)
+			vec2_t at = (1 / T2)*(p0 - c0)*cosh(dt / T) + (1 / T)*(v0 - (c1 - c0) / tau)*sinh(dt / T); //ï¿½ï¿½(41)
 		}
 		else {
 			at.clear();
@@ -452,7 +540,7 @@ namespace DiMP {
 		return vec3_t(at.x, at.y, 0.0);
 	}
 
-	//“·‘ÌŠp“x
+	//ï¿½ï¿½ï¿½ÌŠpï¿½x
 	real_t BipedLIP::TorsoOri(real_t t) {
 		BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;
 		BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;
@@ -480,7 +568,7 @@ namespace DiMP {
 		return o;
 	}
 
-	//“·‘ÌŠp‘¬“x
+	//ï¿½ï¿½ï¿½ÌŠpï¿½ï¿½ï¿½x
 	real_t BipedLIP::TorsoAngVel(real_t t) {
 		BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;
 		BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;
@@ -508,7 +596,7 @@ namespace DiMP {
 		return r;
 	}
 
-	//“·‘ÌŠp‘¬“x
+	//ï¿½ï¿½ï¿½ÌŠpï¿½ï¿½ï¿½x
 	real_t BipedLIP::TorsoAngAcc(real_t t) {
 		BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;
 		BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;
@@ -537,7 +625,7 @@ namespace DiMP {
 	}
 
 
-	//‘«æˆÊ’u
+	//ï¿½ï¿½ï¿½ï¿½ï¿½Ê’u
 	vec3_t BipedLIP::FootPos(real_t t, int side) {
 		BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;
 		BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;
@@ -545,50 +633,1467 @@ namespace DiMP {
 		real_t       t1 = key1->tick->time;
 		real_t       h = t1 - t0;
 		real_t       hhalf = h / 2.0;
+    real_t       hspan = 0.3*h;
+		real_t       t00 = t0 + hspan;
+		real_t       t11 = t1 - hspan;
+		real_t       td = (t0 + t1)/10;
+		real_t       tdd = (t0 + t1)*29/30;
 
 		vec2_t pt;
 		real_t z = 0.0;
 		real_t s = 0.0;
+		real_t theta=0.0;
+		real_t theta0 = 30*pi/180;
+		real_t theta1 = -30*pi/180;
+		// real_t l1 = 0.11;
+		// real_t l2 = 0.11;
+		//real_t thetaop = 10*pi/180;
+		real_t thetatoe = 10*pi/180;
+		real_t thetaheel = 10*pi/180;
+		real_t theta_ds;
+		int thetad;
+		real_t px;
+
+    real_t l = 0.16;
+		real_t l0 = 0.08;
+		real_t l1 = 0.08;
+		real_t L = 0.20;
+		//real_t r = 0.025;
+		//real_t r = 0.02/thetaop;
+		//real_t r0 = (L/2-l0)/thetatoe;
+		//real_t r1 = (L/2-l1)/thetaheel;
+		real_t r0 = 0.03;
+		real_t r1 = 0.03;
+
+		// real_t thetaps = 10*pi/180;
+		// real_t l2 = 0.08;
+		// real_t r = (L/2-l0)/thetaps;
+
+    //foot_shape_diffferent
+		// real_t l0 = 0.02;
+		// real_t l1 = 0.08;
+		// real_t l2 = 0.02;
+		// real_t L = 0.20;
+		// //real_t r = 0.025;
+		// //real_t r = 0.02/thetaop;
+		// real_t r0 = (L/2-l0-l2)/theta0;
+		// real_t r1 = (L/2-l1)/thetaheel;
+
+		int n;
+		real_t dev = 0.0;
+
+
 
 		if (key1) {
 			real_t dt = t - key0->var_time->val;
 			real_t tau = key0->var_duration->val;
 			vec2_t p0 = key0->var_foot_pos_t[side]->val;
 			vec2_t p1 = key1->var_foot_pos_t[side]->val;
+			vec2_t c0 = key0->var_cop_pos->val;
+			vec2_t c1 = key1->var_cop_pos->val;
 
-			// ’P‹rxŠú‚Ì—V‹r
+			// ï¿½Pï¿½rï¿½xï¿½ï¿½ï¿½ï¿½ï¿½Ì—Vï¿½r
 			int ph = phase[key0->tick->idx];
-			if ((ph == Phase::R && side == 1) || (ph == Phase::L && side == 0)) { //(‰E‘«•Ğ‘«xŠú or ¶‘«•Ğ‘«xŠú) 
-				if (param.swingProfile == SwingProfile::Wedge) {
-					if (t < t0 + hhalf) {
-						z = param.swingHeight[0];
-					}
-					else {
-						real_t a = (t - (t0 + hhalf)) / hhalf;
-						z = (1 - a)*param.swingHeight[0] + a * param.swingHeight[1];
-					}
 
-					s = (t - t0) / h;//üŠú‚É‚¨‚¯‚ét‚ÌŠ„‡
-				}
 
-				//if (param.swingProfile == SwingProfile::Cycloid) {//æùE‚Â‚Üæ‚Ì—V‹r‹O“¹
-				//	real_t _2pi = 2.0*M_PI;
-				//	real_t tau = (t - t0) / h;
+			// if ((ph == Phase::R && side == 1) || (ph == Phase::L && side == 0)) { //(ï¿½Eï¿½ï¿½ï¿½Ğ‘ï¿½ï¿½xï¿½ï¿½ï¿½ï¿½ or ï¿½ï¿½ï¿½ï¿½ï¿½Ğ‘ï¿½ï¿½xï¿½ï¿½ï¿½ï¿½)
+			// 	if (param.swingProfile == SwingProfile::Wedge) {
+			// 		if (t < t0 + hhalf) {
+			// 			z = param.swingHeight[0];
+			// 		}
+			// 		else {
+			// 			real_t a = (t - (t0 + hhalf)) / hhalf;
+			// 			z = (1 - a)*param.swingHeight[0] + a * param.swingHeight[1];
+			// 		}
+			//
+			// 		s = (t - t0) / h;//ï¿½ï¿½ï¿½ï¿½ï¿½É‚ï¿½ï¿½ï¿½ï¿½éï¿½ï¿½tï¿½ÌŠï¿½ï¿½ï¿½
+			// 	}
+			//
+			// 	if (param.swingProfile == SwingProfile::Cycloid) {//ï¿½ï¿½ï¿½Eï¿½Â‚Üï¿½ï¿½Ì—Vï¿½rï¿½Oï¿½ï¿½
+			// 		real_t _2pi = 2.0*M_PI;
+			// 		real_t tau = (t - t0) / h;
+			//
+			// 		s = (tau - sin(_2pi*tau) / _2pi);
+			// 		z = (param.swingHeight[0] / 2.0)*(1 - cos(_2pi*tau));
+			// 	}
 
-				//	s = (tau - sin(_2pi*tau) / _2pi);
-				//	z = (param.swingHeight[0] / 2.0)*(1 - cos(_2pi*tau));
-				//}
+			// 	if (param.swingProfile == SwingProfile::Heel_Toe){
+			// 		real_t _2pi = 2.0*M_PI;
+			// 		real_t tau = (t - t0) / h;
+			// 		real_t tau0 = (t - t0) / (t00 - t0);
+			// 		real_t tau1 = (t - t11) / (t1 - t11);
+			// 		real_t tau2 = (t - t00) / (t11 - t00);
+			// 		real_t p00x = p0.x + l1*(1 - cos(theta0));
+			// 		real_t p11x = p1.x - l2*(1 - cos(theta1));
+      //     real_t p00z = l1*sin(theta0);
+			// 		real_t p11z = l2*sin(-theta1);
+			// 		real_t a = sqrt((p11x - p00x)*(p11x - p00x) + (p11z - p00z)*(p11z - p00z))/(2*pi);
+			// 		real_t alpha = atan((p11z-p00z)/(p11x-p00x));
+			// 		real_t d = p1.x - p0.x;
+			//
+			// 		if ((t >= t0) && (t <= t00)){
+			// 			theta = tau0 * theta0;
+			// 			s = l1 * (1-cos(theta))/d;
+			// 			z = l1 * sin(theta);
+			// 		}
+			// 		else if ((t >= t11) && (t <= t1)){
+			// 			theta = (1 - tau1)*theta1;
+			// 			s = 1 - l2*(1-cos(theta))/d;
+			// 			z = l2 * sin(-theta);
+			// 		}
+			// 		else {
+			// 			real_t thetadash = 2*pi*tau2;
+			// 			real_t px = p00x + a*((thetadash-sin(thetadash))*cos(alpha)-(1-cos(thetadash))*sin(alpha));
+			// 			s = (px - p0.x)/d;
+			// 			z = p00z + a*((1-cos(thetadash))*cos(alpha)+(thetadash-sin(thetadash))*sin(alpha))/2;
+			// 		}
+			// 	}
+			// }
+
+      //kataoka saigenn
+			// if (param.swingProfile == SwingProfile::Heel_Toe){
+			//   real_t _2pi = 2.0*M_PI;
+			//   real_t tau = (t - t0) / h;
+			//   real_t tau0 = (t - t0) / (t00 - t0);
+			//   real_t tau1 = (t - t11) / (t1 - t11);
+			//   real_t tau2 = (t - t00) / (t11 - t00);
+			//   real_t p00x = p0.x + l1*(1 - cos(theta0));
+			//   real_t p11x = p1.x - l2*(1 - cos(theta1));
+			//   real_t p00z = l1*sin(theta0);
+			//   real_t p11z = l2*sin(-theta1);
+			//   real_t a = sqrt((p11x - p00x)*(p11x - p00x) + (p11z - p00z)*(p11z - p00z))/(2*pi);
+			//   real_t alpha = atan((p11z-p00z)/(p11x-p00x));
+			//   real_t d = p1.x - p0.x;
+			//
+			//   if ((ph == Phase::R && side == 1) || (ph == Phase::L && side == 0)){
+			//     real_t thetadash = 2*pi*tau;
+			//     real_t px = p00x + a*((thetadash-sin(thetadash))*cos(alpha)-(1-cos(thetadash))*sin(alpha));
+			//     s = (px - p0.x)/d;
+			//     z = p00z + a*((1-cos(thetadash))*cos(alpha)+(thetadash-sin(thetadash))*sin(alpha))/3;
+			//   }
+			//   else if ((ph == Phase::RL && side == 0) || (ph == Phase::LR && side == 1)){
+			//     if(t<= t11){
+			//       z = 0;
+			//       s = 1;
+			//     }
+			//     else{
+			//       theta = tau1 * theta0;
+			//       s = 1 + l1 * (1-cos(theta))/d;
+			//       z = l1 * sin(theta);
+			//     }
+			//   }
+			//   else if ((ph == Phase::RL && side == 1) || (ph == Phase::LR && side == 0)) { //ï¿½Â‚Üæ‚¨ï¿½ë‚µ
+			//     if (t <= t00) {
+			//       theta = (1 - tau0)*theta1;
+			//       s = 1 - l2*(1-cos(theta))/d;
+			//       z = l2 * sin(-theta);
+			//     }
+			//     else {
+			//       z = 0;
+			//       s = 1;
+			//     }
+			//   }
+			//   else{
+			//     z = 0;
+			//     s = 1;
+			//   }
+
+
+		//kataoka_saigenn_new_style
+		// if (param.swingProfile == SwingProfile::Heel_Toe){
+		//   real_t _2pi = 2.0*M_PI;
+		//   real_t tau = (t - t0) / h;
+		//   real_t tau0 = (t - t0) / (t00 - t0);
+		//   real_t tau1 = (t - t11) / (t1 - t11);
+		//   real_t tau2 = (t - t00) / (t11 - t00);
+		// 	real_t p00x = p0.x + r*(theta0 - sin(theta0)) + l1*(1 - cos(theta0));
+ 		// 	real_t p11x = p1.x - (r*(-theta1 - sin(-theta1)) + l2*(1 - cos(theta1)));
+ 		// 	real_t p00z = r*(1 - cos(theta0)) + l1*sin(theta0);
+ 		// 	real_t p11z = r*(1 - cos(theta1)) + l2*sin(-theta1);
+		//   real_t a = sqrt((p11x - p00x)*(p11x - p00x) + (p11z - p00z)*(p11z - p00z))/(2*pi);
+		//   real_t alpha = atan((p11z-p00z)/(p11x-p00x));
+		//   real_t d = p1.x - p0.x;
+		//
+		//   if ((ph == Phase::R && side == 1) || (ph == Phase::L && side == 0)){
+		//     real_t thetadash = 2*pi*tau;
+		//     real_t px = p00x + a*((thetadash-sin(thetadash))*cos(alpha)-(1-cos(thetadash))*sin(alpha));
+		//     s = (px - p0.x)/d;
+		//     z = p00z + a*((1-cos(thetadash))*cos(alpha)+(thetadash-sin(thetadash))*sin(alpha))/3;
+		//   }
+		//   else if ((ph == Phase::RL && side == 0) || (ph == Phase::LR && side == 1)){
+		//     if(t<= t11){
+		//       z = 0;
+		//       s = 1;
+		//     }
+		//     else{
+		//       theta = tau1 * theta0;
+		// 			s = 1 + (r*(theta - sin(theta)) + l1*(1-cos(theta)))/d;
+		// 			z = r*(1 - cos(theta)) + l1*sin(theta);
+		//     }
+		//   }
+		//   else if ((ph == Phase::RL && side == 1) || (ph == Phase::LR && side == 0)) { //ï¿½Â‚Üæ‚¨ï¿½ë‚µ
+		//     if (t <= t00) {
+		//       theta = -(1 - tau0)*theta1;
+		// 			s = 1 - (r*(theta - sin(theta)) + l2*(1-cos(theta)))/d;
+		//  			z = r*(1 - cos(theta)) + l2*sin(theta);
+		//     }
+		//     else {
+		//       z = 0;
+		//       s = 1;
+		//     }
+		//   }
+		//   else{
+		//     z = 0;
+		//     s = 1;
+		//   }
+
+
+    //new
+		// if (param.swingProfile == SwingProfile::Heel_Toe){
+		// 	real_t _2pi = 2.0*M_PI;
+		// 	real_t tau = (t - t0) / h;
+		// 	real_t tau1 = (t - t0) / (td - t0);
+		// 	real_t tau2 = (t - tdd) / (t1 - tdd);
+		// 	real_t p00x = p0.x + l1*(1 - cos(theta0));
+		// 	real_t p11x = p1.x - l2*(1 - cos(theta1));
+		// 	real_t p00z = l1*sin(theta0);
+		// 	real_t p11z = l2*sin(-theta1);
+		// 	real_t a = sqrt((p11x - p00x)*(p11x - p00x) + (p11z - p00z)*(p11z - p00z))/(2*pi);
+		// 	real_t alpha = atan((p11z-p00z)/(p11x-p00x));
+		// 	real_t d = p1.x - p0.x;
+		//
+		// 	if ((ph == Phase::R && side == 1) || (ph == Phase::L && side == 0)){
+		// 		real_t thetadash = 2*pi*tau;
+		// 		real_t px = p00x + a*((thetadash-sin(thetadash))*cos(alpha)-(1-cos(thetadash))*sin(alpha));
+		// 		s = (px - p0.x)/d;
+		// 		z = p00z + a*((1-cos(thetadash))*cos(alpha)+(thetadash-sin(thetadash))*sin(alpha))/3;
+		// 	}
+		// 	else if ((ph == Phase::RL && side == 0) || (ph == Phase::LR && side == 1)){
+		// 		theta = thetaps + tau*(theta0-thetaps);
+		// 		s = 1 + l1*(1-cos(theta))/d;
+		// 		z = l1*sin(theta);
+		// 	}
+		// 	else if ((ph == Phase::RL && side == 1) || (ph == Phase::LR && side == 0)) { //ï¿½Â‚Üæ‚¨ï¿½ë‚µ
+		// 		if(t<= td){
+		// 			theta = (1-tau1)*theta1;
+		// 			s = 1 - l2*(1-cos(theta))/d;
+		// 			z = l2*sin(-theta);
+		// 		}
+		// 		else{
+		// 			s = 1;
+		// 			z = 0;
+		// 		}
+		// 	}
+		// 	else{
+		// 		if(t<= tdd){
+		// 			s = 1;
+		// 			z = 0;
+		// 		}
+		// 		else{
+		// 			theta = tau2*thetaps;
+		// 			s = 1 + l1*(1-cos(theta))/d;
+		// 			z = l1*sin(theta);
+		// 		}
+		// }
+
+	  //new_style
+		 // if (param.swingProfile == SwingProfile::Heel_Toe){
+ 			// real_t _2pi = 2.0*M_PI;
+ 			// real_t tau = (t - t0) / h;
+ 			// real_t tau1 = (t - t0) / (td - t0);
+ 			// real_t tau2 = (t - tdd) / (t1 - tdd);
+ 			// real_t p00x = p0.x + r*(theta0 - sin(theta0)) + l1*(1 - cos(theta0));
+ 			// real_t p11x = p1.x - (r*(-theta1 - sin(-theta1)) + l2*(1 - cos(theta1)));
+ 			// real_t p00z = r*(1 - cos(theta0)) + l1*sin(theta0);
+ 			// real_t p11z = r*(1 - cos(theta1)) + l2*sin(-theta1);
+ 			// real_t a = sqrt((p11x - p00x)*(p11x - p00x) + (p11z - p00z)*(p11z - p00z))/(2*pi);
+ 			// real_t alpha = atan((p11z-p00z)/(p11x-p00x));
+ 			// real_t d = p1.x - p0.x;
+		 //
+ 			// if ((ph == Phase::R && side == 1) || (ph == Phase::L && side == 0)){
+ 			// 	real_t thetadash = 2*pi*tau;
+ 			// 	real_t px = p00x + a*((thetadash-sin(thetadash))*cos(alpha)-(1-cos(thetadash))*sin(alpha));
+ 			// 	s = (px - p0.x)/d;
+ 			// 	z = p00z + a*((1-cos(thetadash))*cos(alpha)+(thetadash-sin(thetadash))*sin(alpha))/3;
+ 			// }
+ 			// else if ((ph == Phase::RL && side == 0) || (ph == Phase::LR && side == 1)){
+ 			// 	theta = thetaps + tau*(theta0-thetaps);
+ 			// 	s = 1 + (r*(theta - sin(theta)) + l1*(1-cos(theta)))/d;
+ 			// 	z = r*(1 - cos(theta)) + l1*sin(theta);
+ 			// }
+ 			// else if ((ph == Phase::RL && side == 1) || (ph == Phase::LR && side == 0)) { //ï¿½Â‚Üæ‚¨ï¿½ë‚µ
+ 			// 	if(t<= td){
+ 			// 		theta = -(1-tau1)*theta1;
+ 			// 		s = 1 - (r*(theta - sin(theta)) + l2*(1-cos(theta)))/d;
+ 			// 		z = r*(1 - cos(theta)) + l2*sin(theta);
+ 			// 	}
+ 			// 	else{
+ 			// 		s = 1;
+ 			// 		z = 0;
+ 			// 	}
+ 			// }
+ 			// else{
+ 			// 	if(t<= tdd){
+ 			// 		s = 1;
+ 			// 		z = 0;
+ 			// 	}
+ 			// 	else{
+ 			// 		theta = tau2*thetaps;
+ 			// 		s = 1 + (r*(theta - sin(theta)) + l1*(1-cos(theta)))/d;
+ 			// 		z = r*(1 - cos(theta)) + l1*sin(theta);
+ 			// 	}
+ 			// }
+
+		//gait_change
+		// if (param.swingProfile == SwingProfile::Heel_Toe){
+		// 	real_t _2pi = 2.0*M_PI;
+		// 	real_t tau = (t - t0) / h;
+		// 	real_t tau1 = (t - t0) / (td - t0);
+		// 	real_t tau2 = (t - tdd) / (t1 - tdd);
+		// 	real_t p00x = p0.x + r*(theta0 - sin(theta0)) + l/2*(1 - cos(theta0));
+		// 	real_t p11x = p1.x - (r*(-theta1 - sin(-theta1)) + l/2*(1 - cos(theta1)));
+		// 	real_t p00z = r*(1 - cos(theta0)) + l/2*sin(theta0);
+		// 	real_t p11z = r*(1 - cos(theta1)) + l/2*sin(-theta1);
+		// 	real_t d = p1.x - p0.x;
+		// 	real_t c = c0.x + (c1.x - c0.x)*tau;
+		// 	real_t thetadash = 2*pi*tau;
+		//
+		// 	if((c0.x - p1.x) > l/2){
+		// 		theta_ds = (c0.x - p1.x - l/2)/r;
+		// 	}
+		// 	else{
+		// 		theta_ds = 0;
+		// 	}
+		//
+		// 	if(ph == Phase::L && side == 0){
+		//     FILE* fp = fopen("Test.csv", "r");
+		//     fscanf(fp, "%lf", &thetad);
+		//
+		//     if(thetad == 0){
+		//       //real_t alpha = atan(p11z/(p11x-p0.x));
+		//       real_t a = d/(2*pi);
+		//       px = p0.x + a*(thetadash-sin(thetadash));
+		//       z = a*((1-cos(thetadash)))/2;
+		//     }
+		//     else{
+		//       real_t a = (p11x - p00x)/(2*pi);
+		//       px = p00x + a*(thetadash-sin(thetadash));
+		//       z = p00z + a*(1-cos(thetadash))/3;
+		//     }
+		//     s = (px - p0.x)/d;
+		//
+		//     fclose(fp);
+		//   }
+		//   else if (ph == Phase::RL && side == 0){
+		//     theta = theta_ds;
+		//     s = 1 + (r*(theta - sin(theta)) + l/2*(1-cos(theta)))/d;
+		//     z = r*(1 - cos(theta)) + l/2*sin(theta);
+		//
+		//     FILE* fp = fopen("Test.csv", "w");
+		//     fprintf(fp, "%3.4lf", theta);
+		//     fclose(fp);
+		//
+		//   }
+		//   else if (ph == Phase::LR && side == 0) { //ï¿½Â‚Üæ‚¨ï¿½ë‚µ
+		//     FILE* fp = fopen("Test.csv", "r");
+		//     fscanf(fp, "%lf", &thetad);
+		//     if(thetad == 0){
+		//       theta = 0;
+		//     }
+		//     else{
+		//       theta = (p1.x - c1.x -l/2)/r;
+		//     }
+		//     s = 1 - (r*(theta - sin(theta)) + l/2*(1-cos(theta)))/d;
+		//     z = r*(1 - cos(theta)) + l/2*sin(theta);
+		//     fclose(fp);
+		//   }
+		//   else if (ph == Phase::R && side == 0){
+		//     FILE* fp = fopen("Test.csv", "r");
+		//     fscanf(fp, "%lf", &thetad);
+		//
+		//     if(((c0.x - p1.x) < -l/2) && ((c1.x - p1.x) > l/2)){
+		//       if(c < (p1.x - l/2)){
+		//         if(thetad==0){
+		//           s = 1;
+		//           z = 0;
+		//         }
+		//         else{
+		//           theta = (p1.x - c - l/2)/r;
+		//           s = 1 - (r*(theta - sin(theta)) + l/2*(1-cos(theta)))/d;
+		//           z = r*(1 - cos(theta)) + l/2*sin(theta);
+		//         }
+		//       }
+		//       else if(c > (p1.x + l/2)){
+		//         theta = (c - p1.x - l/2)/r;
+		//         s = 1 + (r*(theta - sin(theta)) + l/2*(1-cos(theta)))/d;
+		//         z = r*(1 - cos(theta)) + l/2*sin(theta);
+		//       }
+		//       else{
+		//         s = 1;
+		//         z = 0;
+		//       }
+		//     }
+		//     else{
+		//       if(c < (p1.x - l/2)){
+		//         if(thetad==0){
+		//           s = 1;
+		//           z = 0;
+		//         }
+		//         else{
+		//           theta = (p1.x - c - l/2)/r;
+		//           s = 1 - (r*(theta - sin(theta)) + l/2*(1-cos(theta)))/d;
+		//           z = r*(1 - cos(theta)) + l/2*sin(theta);
+		//         }
+		//       }
+		//       else{
+		//         s = 1;
+		//         z = 0;
+		//       }
+		//      }
+		//
+		//      fclose(fp);
+		//
+		//   }
+		//
+		//
+		//
+		//
+		//   else if (ph == Phase::R && side == 1){
+		//     FILE* fp1 = fopen("Test1.csv", "r");
+		//     fscanf(fp1, "%lf", &thetad);
+		//
+		//     if(thetad == 0){
+		//       //real_t alpha = atan(p11z/(p11x-p0.x));
+		//       real_t a = d/(2*pi);
+		//       px = p0.x + a*(thetadash-sin(thetadash));
+		//       z = a*((1-cos(thetadash)))/2;
+		//     }
+		//     else{
+		//       real_t a = (p11x - p00x)/(2*pi);
+		//       px = p00x + a*(thetadash-sin(thetadash));
+		//       z = p00z + a*(1-cos(thetadash))/3;
+		//     }
+		//     s = (px - p0.x)/d;
+		//     fclose(fp1);
+		//   }
+		//   else if (ph == Phase::LR && side == 1){
+		//     theta = theta_ds;
+		//     s = 1 + (r*(theta - sin(theta)) + l/2*(1-cos(theta)))/d;
+		//     z = r*(1 - cos(theta)) + l/2*sin(theta);
+		//
+		//     FILE* fp1 = fopen("Test1.csv", "w");
+		//     fprintf(fp1, "%3.4lf", theta);
+		//     fclose(fp1);
+		//
+		//   }
+		//   else if (ph == Phase::RL && side == 1) { //ï¿½Â‚Üæ‚¨ï¿½ë‚µ
+		//     FILE* fp1 = fopen("Test1.csv", "r");
+		//     fscanf(fp1, "%lf", &thetad);
+		//     if(thetad == 0){
+		//       theta = 0;
+		//     }
+		//     else{
+		//       theta = (p1.x - c1.x -l/2)/r;
+		//     }
+		//     s = 1 - (r*(theta - sin(theta)) + l/2*(1-cos(theta)))/d;
+		//     z = r*(1 - cos(theta)) + l/2*sin(theta);
+		//     fclose(fp1);
+		//   }
+		//   else if(ph == Phase::L && side == 1){
+		//     FILE* fp1 = fopen("Test1.csv", "r");
+		//     fscanf(fp1, "%lf", &thetad);
+		//
+		//     if(((c0.x - p1.x) < -l/2) && ((c1.x - p1.x) > l/2)){
+		//       if(c < (p1.x - l/2)){
+		//         if(thetad==0){
+		//           s = 1;
+		//           z = 0;
+		//         }
+		//         else{
+		//           theta = (p1.x - c - l/2)/r;
+		//           s = 1 - (r*(theta - sin(theta)) + l/2*(1-cos(theta)))/d;
+		//           z = r*(1 - cos(theta)) + l/2*sin(theta);
+		//         }
+		//       }
+		//       else if(c > (p1.x + l/2)){
+		//         theta = (c - p1.x - l/2)/r;
+		//         s = 1 + (r*(theta - sin(theta)) + l/2*(1-cos(theta)))/d;
+		//         z = r*(1 - cos(theta)) + l/2*sin(theta);
+		//       }
+		//       else{
+		//         s = 1;
+		//         z = 0;
+		//       }
+		//     }
+		//     else{
+		//       if(c < (p1.x - l/2)){
+		//         if(thetad==0){
+		//           s = 1;
+		//           z = 0;
+		//         }
+		//         else{
+		//           theta = (p1.x - c - l/2)/r;
+		//           s = 1 - (r*(theta - sin(theta)) + l/2*(1-cos(theta)))/d;
+		//           z = r*(1 - cos(theta)) + l/2*sin(theta);
+		//         }
+		//       }
+		//       else{
+		//         s = 1;
+		//         z = 0;
+		//       }
+		//      }
+		//
+		//      fclose(fp1);
+		//
+		//   }
+
+
+
+	 //gait_change_smooth
+	 // if (param.swingProfile == SwingProfile::Heel_Toe){
+		//  real_t _2pi = 2.0*M_PI;
+		//  real_t tau = (t - t0) / h;
+		//  real_t tau1 = (t - t0) / (td - t0);
+		//  real_t tau2 = (t - tdd) / (t1 - tdd);
+		//  real_t p00x = p0.x + r0*(theta0 - sin(theta0)) + l/2*(1 - cos(theta0));
+		//  real_t p11x = p1.x - (r1*(-theta1 - sin(-theta1)) + l/2*(1 - cos(theta1)));
+		//  real_t p00z = r0*(1 - cos(theta0)) + l/2*sin(theta0);
+		//  real_t p11z = r1*(1 - cos(theta1)) + l/2*sin(-theta1);
+		//  real_t d = p1.x - p0.x;
+		//  real_t c = c0.x + (c1.x - c0.x)*tau;
+		//  real_t thetadash = 2*pi*tau;
+	 //
+		//  if((c0.x - p1.x) > l/2){
+		// 	 n = 1;
+		//  }
+		//  else{
+		// 	 n = 0;
+		//  }
+	 //
+		//  if(ph == Phase::L && side == 0){
+		// 	 FILE* fp = fopen("Test.csv", "r");
+		// 	 fscanf(fp, "%d", &thetad);
+	 //
+		// 	 if(thetad == 0){
+		// 		 //real_t alpha = atan(p11z/(p11x-p0.x));
+		// 		 real_t a = d/(2*pi);
+		// 		 px = p0.x + a*(thetadash-sin(thetadash));
+		// 		 z = a*(1-cos(thetadash))/2;
+		// 	 }
+		// 	 else{
+		// 		 real_t a = sqrt((p11x - p00x)*(p11x - p00x) + (p11z - p00z)*(p11z - p00z))/(2*pi);
+	 //  		 real_t alpha = atan((p11z-p00z)/(p11x-p00x));
+		// 		 px = p00x + a*((thetadash-sin(thetadash))*cos(alpha)-(1-cos(thetadash))*sin(alpha));
+	 //  		 z = p00z + a*((1-cos(thetadash))*cos(alpha)/5+(thetadash-sin(thetadash))*sin(alpha));
+		// 		 // px = p00x + a*(thetadash-sin(thetadash));
+		// 		 // z = p00z + a*(1-cos(thetadash))/3;
+		// 	 }
+		// 	 s = (px - p0.x)/d;
+	 //
+		// 	 fclose(fp);
+		//  }
+		//  else if (ph == Phase::RL && side == 0){
+		// 	 if(n == 0){
+		// 		 theta = 0;
+		// 	 }
+		// 	 else{
+		// 		 theta_ds = (c0.x - p1.x -l/2)/r0;
+		// 		 theta = theta_ds + (theta0 - theta_ds)*tau;
+		// 	 }
+	 //
+		// 	 s = 1 + (r0*(theta - sin(theta)) + l/2*(1-cos(theta)))/d;
+		// 	 z = r0*(1 - cos(theta)) + l/2*sin(theta);
+	 //
+		// 	 FILE* fp = fopen("Test.csv", "w");
+		// 	 fprintf(fp, "%d", n);
+		// 	 fclose(fp);
+	 //
+		//  }
+		//  else if (ph == Phase::LR && side == 0) { //ï¿½Â‚Üæ‚¨ï¿½ë‚µ
+		// 	 FILE* fp = fopen("Test.csv", "r");
+		// 	 fscanf(fp, "%d", &thetad);
+	 //
+		// 	 if(thetad == 0){
+		// 		 theta = 0;
+		// 	 }
+		// 	 else{
+		// 		 theta_ds = (p1.x - c1.x -l/2)/r1;
+		// 		 theta = -theta1 + (theta_ds + theta1)*tau;
+		// 	 }
+	 //
+		// 	 s = 1 - (r1*(theta - sin(theta)) + l/2*(1-cos(theta)))/d;
+		// 	 z = r1*(1 - cos(theta)) + l/2*sin(theta);
+		// 	 fclose(fp);
+		//  }
+		//  else if (ph == Phase::R && side == 0){
+		// 	 FILE* fp = fopen("Test.csv", "r");
+		// 	 fscanf(fp, "%d", &thetad);
+	 //
+		// 	 if(((c0.x - p1.x) < -l/2) && ((c1.x - p1.x) > l/2)){
+		// 		 if(c < (p1.x - l/2)){
+		// 			 if(thetad==0){
+		// 				 s = 1;
+		// 				 z = 0;
+		// 			 }
+		// 			 else{
+		// 				 theta = (p1.x - c - l/2)/r1;
+		// 				 s = 1 - (r1*(theta - sin(theta)) + l/2*(1-cos(theta)))/d;
+		// 				 z = r1*(1 - cos(theta)) + l/2*sin(theta);
+		// 			 }
+		// 		 }
+		// 		 else if(c > (p1.x + l/2)){
+		// 			 theta = (c - p1.x - l/2)/r0;
+		// 			 s = 1 + (r0*(theta - sin(theta)) + l/2*(1-cos(theta)))/d;
+		// 			 z = r0*(1 - cos(theta)) + l/2*sin(theta);
+		// 		 }
+		// 		 else{
+		// 			 s = 1;
+		// 			 z = 0;
+		// 		 }
+		// 	 }
+		// 	 else{
+		// 		 if(c < (p1.x - l/2)){
+		// 			 if(thetad==0){
+		// 				 s = 1;
+		// 				 z = 0;
+		// 			 }
+		// 			 else{
+		// 				 theta = (p1.x - c - l/2)/r1;
+		// 				 s = 1 - (r1*(theta - sin(theta)) + l/2*(1-cos(theta)))/d;
+		// 				 z = r1*(1 - cos(theta)) + l/2*sin(theta);
+		// 			 }
+		// 		 }
+		// 		 else{
+		// 			 s = 1;
+		// 			 z = 0;
+		// 		 }
+		// 		}
+	 //
+		// 		fclose(fp);
+	 //
+		//  }
+	 //
+	 //
+	 //
+	 //
+		//  else if (ph == Phase::R && side == 1){
+		// 	 FILE* fp1 = fopen("Test1.csv", "r");
+		// 	 fscanf(fp1, "%d", &thetad);
+	 //
+		// 	 if(thetad == 0){
+		// 		 //real_t alpha = atan(p11z/(p11x-p0.x));
+		// 		 real_t a = d/(2*pi);
+		// 		 px = p0.x + a*(thetadash-sin(thetadash));
+		// 		 z = a*((1-cos(thetadash)))/2;
+		// 	 }
+		// 	 else{
+		// 		 // real_t a = (p11x - p00x)/(2*pi);
+		// 		 // px = p00x + a*(thetadash-sin(thetadash));
+		// 		 // z = p00z + a*(1-cos(thetadash))/3;
+		// 		 real_t a = sqrt((p11x - p00x)*(p11x - p00x) + (p11z - p00z)*(p11z - p00z))/(2*pi);
+	 //  		 real_t alpha = atan((p11z-p00z)/(p11x-p00x));
+		// 		 px = p00x + a*((thetadash-sin(thetadash))*cos(alpha)-(1-cos(thetadash))*sin(alpha));
+	 //  		 z = p00z + a*((1-cos(thetadash))*cos(alpha)/5+(thetadash-sin(thetadash))*sin(alpha));
+		// 	 }
+		// 	 s = (px - p0.x)/d;
+		// 	 fclose(fp1);
+		//  }
+		//  else if (ph == Phase::LR && side == 1){
+		// 	 if(n == 0){
+		// 		 theta = 0;
+		// 	 }
+		// 	 else{
+		// 		 theta_ds = (c0.x - p1.x -l/2)/r0;
+		// 		 theta = theta_ds + (theta0 - theta_ds)*tau;
+		// 	 }
+	 //
+		// 	 s = 1 + (r0*(theta - sin(theta)) + l/2*(1-cos(theta)))/d;
+		// 	 z = r0*(1 - cos(theta)) + l/2*sin(theta);
+	 //
+		// 	 FILE* fp1 = fopen("Test1.csv", "w");
+		// 	 fprintf(fp1, "%d", n);
+		// 	 fclose(fp1);
+	 //
+		//  }
+		//  else if (ph == Phase::RL && side == 1) { //ï¿½Â‚Üæ‚¨ï¿½ë‚µ
+		// 	 FILE* fp1 = fopen("Test1.csv", "r");
+		// 	 fscanf(fp1, "%d", &thetad);
+	 //
+		// 	 if(thetad == 0){
+		// 		 theta = 0;
+		// 	 }
+		// 	 else{
+		// 		 theta_ds = (p1.x - c1.x -l/2)/r1;
+		// 		 theta = -theta1 + (theta_ds + theta1)*tau;
+		// 	 }
+	 //
+		// 	 s = 1 - (r1*(theta - sin(theta)) + l/2*(1-cos(theta)))/d;
+		// 	 z = r1*(1 - cos(theta)) + l/2*sin(theta);
+		// 	 fclose(fp1);
+		//  }
+		//  else if(ph == Phase::L && side == 1){
+		// 	 FILE* fp1 = fopen("Test1.csv", "r");
+		// 	 fscanf(fp1, "%d", &thetad);
+	 //
+		// 	 if(((c0.x - p1.x) < -l/2) && ((c1.x - p1.x) > l/2)){
+		// 		 if(c < (p1.x - l/2)){
+		// 			 if(thetad==0){
+		// 				 s = 1;
+		// 				 z = 0;
+		// 			 }
+		// 			 else{
+		// 				 theta = (p1.x - c - l/2)/r1;
+		// 				 s = 1 - (r1*(theta - sin(theta)) + l/2*(1-cos(theta)))/d;
+		// 				 z = r1*(1 - cos(theta)) + l/2*sin(theta);
+		// 			 }
+		// 		 }
+		// 		 else if(c > (p1.x + l/2)){
+		// 			 theta = (c - p1.x - l/2)/r0;
+		// 			 s = 1 + (r0*(theta - sin(theta)) + l/2*(1-cos(theta)))/d;
+		// 			 z = r0*(1 - cos(theta)) + l/2*sin(theta);
+		// 		 }
+		// 		 else{
+		// 			 s = 1;
+		// 			 z = 0;
+		// 		 }
+		// 	 }
+		// 	 else{
+		// 		 if(c < (p1.x - l/2)){
+		// 			 if(thetad==0){
+		// 				 s = 1;
+		// 				 z = 0;
+		// 			 }
+		// 			 else{
+		// 				 theta = (p1.x - c - l/2)/r1;
+		// 				 s = 1 - (r1*(theta - sin(theta)) + l/2*(1-cos(theta)))/d;
+		// 				 z = r1*(1 - cos(theta)) + l/2*sin(theta);
+		// 			 }
+		// 		 }
+		// 		 else{
+		// 			 s = 1;
+		// 			 z = 0;
+		// 		 }
+		// 		}
+	 //
+		// 		fclose(fp1);
+	 //
+		//  }
+
+		//various_gait
+		// if (param.swingProfile == SwingProfile::Heel_Toe){
+		//   real_t _2pi = 2.0*M_PI;
+		//   real_t tau = (t - t0) / h;
+		//   real_t tau1 = (t - t0) / (td - t0);
+		//   real_t tau2 = (t - tdd) / (t1 - tdd);
+		//   real_t p00x = p0.x + r0*(theta0 - sin(theta0)) + l0*(1 - cos(theta0));
+		//   real_t p11x = p1.x - (r1*(-theta1 - sin(-theta1)) + l1*(1 - cos(theta1)));
+		//   real_t p00z = r0*(1 - cos(theta0)) + l0*sin(theta0);
+		//   real_t p11z = r1*(1 - cos(theta1)) + l1*sin(-theta1);
+		//   real_t d = p1.x - p0.x;
+		//   real_t c = c0.x + (c1.x - c0.x)*tau;
+		//   real_t thetadash = 2*pi*tau;
+		//
+		//   if((c0.x - p1.x) > l0){
+		//  	 n = 1;
+		//   }
+		//   else{
+		//  	 n = 0;
+		//   }
+		//
+		//   if(ph == Phase::L && side == 0){
+		//  	 FILE* fp = fopen("Test.csv", "r");
+		//  	 fscanf(fp, "%d", &thetad);
+		//
+		//  	 if(thetad == 0){
+		//  		 //real_t alpha = atan(p11z/(p11x-p0.x));
+		//  		 real_t a = d/(2*pi);
+		//  		 px = p0.x + a*(thetadash-sin(thetadash));
+		//  		 z = a*(1-cos(thetadash))/2;
+		//  	 }
+		//  	 else{
+		//  		 real_t a = sqrt((p11x - p00x)*(p11x - p00x) + (p11z - p00z)*(p11z - p00z))/(2*pi);
+		//  		 real_t alpha = atan((p11z-p00z)/(p11x-p00x));
+		//  		 px = p00x + a*((thetadash-sin(thetadash))*cos(alpha)-(1-cos(thetadash))*sin(alpha));
+		//  		 z = p00z + a*((1-cos(thetadash))*cos(alpha)/5+(thetadash-sin(thetadash))*sin(alpha));
+		//  		 // px = p00x + a*(thetadash-sin(thetadash));
+		//  		 // z = p00z + a*(1-cos(thetadash))/3;
+		//  	 }
+		//  	 s = (px - p0.x)/d;
+		//
+		//  	 fclose(fp);
+		//   }
+		//   else if (ph == Phase::RL && side == 0){
+		//  	 if(n == 0){
+		//  		 theta = 0;
+		//  	 }
+		//  	 else{
+		//  		 theta_ds = (c0.x - p1.x -l0)/r0;
+		//  		 theta = theta_ds + (theta0 - theta_ds)*tau;
+		//  	 }
+		//
+		//  	 s = 1 + (r0*(theta - sin(theta)) + l0*(1-cos(theta)))/d;
+		//  	 z = r0*(1 - cos(theta)) + l0*sin(theta);
+		//
+		//  	 FILE* fp = fopen("Test.csv", "w");
+		//  	 fprintf(fp, "%d", n);
+		//  	 fclose(fp);
+		//
+		//   }
+		//   else if (ph == Phase::LR && side == 0) { //ï¿½Â‚Üæ‚¨ï¿½ë‚µ
+		//  	 FILE* fp = fopen("Test.csv", "r");
+		//  	 fscanf(fp, "%d", &thetad);
+		//
+		//  	 if(thetad == 0){
+		//  		 theta = 0;
+		//  	 }
+		//  	 else{
+		//  		 theta_ds = (p1.x - c1.x -l1)/r1;
+		//  		 theta = -theta1 + (theta_ds + theta1)*tau;
+		//  	 }
+		//
+		//  	 s = 1 - (r1*(theta - sin(theta)) + l1*(1-cos(theta)))/d;
+		//  	 z = r1*(1 - cos(theta)) + l1*sin(theta);
+		//  	 fclose(fp);
+		//   }
+		//   else if (ph == Phase::R && side == 0){
+		//  	 FILE* fp = fopen("Test.csv", "r");
+		//  	 fscanf(fp, "%d", &thetad);
+		//
+		//  	 if(((c0.x - p1.x) < -l1) && ((c1.x - p1.x) > l0)){
+		//  		 if(c < (p1.x - l1)){
+		//  			 if(thetad==0){
+		//  				 s = 1;
+		//  				 z = 0;
+		//  			 }
+		//  			 else{
+		//  				 theta = (p1.x - c - l1)/r1;
+		//  				 s = 1 - (r1*(theta - sin(theta)) + l1*(1-cos(theta)))/d;
+		//  				 z = r1*(1 - cos(theta)) + l1*sin(theta);
+		//  			 }
+		//  		 }
+		//  		 else if(c > (p1.x + l0)){
+		//  			 theta = (c - p1.x - l0)/r0;
+		//  			 s = 1 + (r0*(theta - sin(theta)) + l0*(1-cos(theta)))/d;
+		//  			 z = r0*(1 - cos(theta)) + l0*sin(theta);
+		//  		 }
+		//  		 else{
+		//  			 s = 1;
+		//  			 z = 0;
+		//  		 }
+		//  	 }
+		//  	 else{
+		//  		 if(c < (p1.x - l1)){
+		//  			 if(thetad==0){
+		//  				 s = 1;
+		//  				 z = 0;
+		//  			 }
+		//  			 else{
+		//  				 theta = (p1.x - c - l1)/r1;
+		//  				 s = 1 - (r1*(theta - sin(theta)) + l1*(1-cos(theta)))/d;
+		//  				 z = r1*(1 - cos(theta)) + l1*sin(theta);
+		//  			 }
+		//  		 }
+		//  		 else{
+		//  			 s = 1;
+		//  			 z = 0;
+		//  		 }
+		//  		}
+		//
+		//  		fclose(fp);
+		//
+		//   }
+		//
+		//
+		//
+		//
+		//   else if (ph == Phase::R && side == 1){
+		//  	 FILE* fp1 = fopen("Test1.csv", "r");
+		//  	 fscanf(fp1, "%d", &thetad);
+		//
+		//  	 if(thetad == 0){
+		//  		 //real_t alpha = atan(p11z/(p11x-p0.x));
+		//  		 real_t a = d/(2*pi);
+		//  		 px = p0.x + a*(thetadash-sin(thetadash));
+		//  		 z = a*((1-cos(thetadash)))/2;
+		//  	 }
+		//  	 else{
+		//  		 // real_t a = (p11x - p00x)/(2*pi);
+		//  		 // px = p00x + a*(thetadash-sin(thetadash));
+		//  		 // z = p00z + a*(1-cos(thetadash))/3;
+		//  		 real_t a = sqrt((p11x - p00x)*(p11x - p00x) + (p11z - p00z)*(p11z - p00z))/(2*pi);
+		//  		 real_t alpha = atan((p11z-p00z)/(p11x-p00x));
+		//  		 px = p00x + a*((thetadash-sin(thetadash))*cos(alpha)-(1-cos(thetadash))*sin(alpha));
+		//  		 z = p00z + a*((1-cos(thetadash))*cos(alpha)/5+(thetadash-sin(thetadash))*sin(alpha));
+		//  	 }
+		//  	 s = (px - p0.x)/d;
+		//  	 fclose(fp1);
+		//   }
+		//   else if (ph == Phase::LR && side == 1){
+		//  	 if(n == 0){
+		//  		 theta = 0;
+		//  	 }
+		//  	 else{
+		//  		 theta_ds = (c0.x - p1.x -l0)/r0;
+		//  		 theta = theta_ds + (theta0 - theta_ds)*tau;
+		//  	 }
+		//
+		//  	 s = 1 + (r0*(theta - sin(theta)) + l0*(1-cos(theta)))/d;
+		//  	 z = r0*(1 - cos(theta)) + l0*sin(theta);
+		//
+		//  	 FILE* fp1 = fopen("Test1.csv", "w");
+		//  	 fprintf(fp1, "%d", n);
+		//  	 fclose(fp1);
+		//
+		//   }
+		//   else if (ph == Phase::RL && side == 1) { //ï¿½Â‚Üæ‚¨ï¿½ë‚µ
+		//  	 FILE* fp1 = fopen("Test1.csv", "r");
+		//  	 fscanf(fp1, "%d", &thetad);
+		//
+		//  	 if(thetad == 0){
+		//  		 theta = 0;
+		//  	 }
+		//  	 else{
+		//  		 theta_ds = (p1.x - c1.x -l1)/r1;
+		//  		 theta = -theta1 + (theta_ds + theta1)*tau;
+		//  	 }
+		//
+		//  	 s = 1 - (r1*(theta - sin(theta)) + l1*(1-cos(theta)))/d;
+		//  	 z = r1*(1 - cos(theta)) + l1*sin(theta);
+		//  	 fclose(fp1);
+		//   }
+		//   else if(ph == Phase::L && side == 1){
+		//  	 FILE* fp1 = fopen("Test1.csv", "r");
+		//  	 fscanf(fp1, "%d", &thetad);
+		//
+		//  	 if(((c0.x - p1.x) < -l1) && ((c1.x - p1.x) > l0)){
+		//  		 if(c < (p1.x - l1)){
+		//  			 if(thetad==0){
+		//  				 s = 1;
+		//  				 z = 0;
+		//  			 }
+		//  			 else{
+		//  				 theta = (p1.x - c - l1)/r1;
+		//  				 s = 1 - (r1*(theta - sin(theta)) + l1*(1-cos(theta)))/d;
+		//  				 z = r1*(1 - cos(theta)) + l1*sin(theta);
+		//  			 }
+		//  		 }
+		//  		 else if(c > (p1.x + l0)){
+		//  			 theta = (c - p1.x - l0)/r0;
+		//  			 s = 1 + (r0*(theta - sin(theta)) + l0*(1-cos(theta)))/d;
+		//  			 z = r0*(1 - cos(theta)) + l0*sin(theta);
+		//  		 }
+		//  		 else{
+		//  			 s = 1;
+		//  			 z = 0;
+		//  		 }
+		//  	 }
+		//  	 else{
+		//  		 if(c < (p1.x - l1)){
+		//  			 if(thetad==0){
+		//  				 s = 1;
+		//  				 z = 0;
+		//  			 }
+		//  			 else{
+		//  				 theta = (p1.x - c - l1)/r1;
+		//  				 s = 1 - (r1*(theta - sin(theta)) + l1*(1-cos(theta)))/d;
+		//  				 z = r1*(1 - cos(theta)) + l1*sin(theta);
+		//  			 }
+		//  		 }
+		//  		 else{
+		//  			 s = 1;
+		//  			 z = 0;
+		//  		 }
+		//  		}
+		//
+		//  		fclose(fp1);
+		//
+		//   }
+
+
+	  //foot_shape_change
+		if (param.swingProfile == SwingProfile::Heel_Toe){
+		 real_t _2pi = 2.0*M_PI;
+		 real_t tau = (t - t0) / h;
+		 real_t tau1 = (t - t0) / (td - t0);
+		 real_t tau2 = (t - tdd) / (t1 - tdd);
+		 real_t p00x = (p0.x + dev) + r0*(theta0 - sin(theta0)) + l0*(1 - cos(theta0));
+		 real_t p11x = (p1.x + dev) - (r1*(-theta1 - sin(-theta1)) + l1*(1 - cos(theta1)));
+		 real_t p00z = r0*(1 - cos(theta0)) + l0*sin(theta0);
+		 real_t p11z = r1*(1 - cos(theta1)) + l1*sin(-theta1);
+		 real_t d = p1.x - p0.x;
+		 real_t c = c0.x + (c1.x - c0.x)*tau;
+		 real_t thetadash = 2*pi*tau;
+
+		 if((c0.x - (p1.x + dev)) > l0){
+			n = 1;
+		 }
+		 else{
+			n = 0;
+		 }
+
+		 if(ph == Phase::L && side == 0){
+			FILE* fp = fopen("Test.csv", "r");
+			fscanf(fp, "%d", &thetad);
+
+			if(thetad == 0){
+				//real_t alpha = atan(p11z/(p11x-p0.x));
+				real_t a = d/(2*pi);
+				px = (p0.x + dev) + a*(thetadash-sin(thetadash));
+				z = a*(1-cos(thetadash))/2;
 			}
-			pt = (1 - s)*p0 + s * p1;
+			else{
+				real_t a = sqrt((p11x - p00x)*(p11x - p00x) + (p11z - p00z)*(p11z - p00z))/(2*pi);
+				real_t alpha = atan((p11z-p00z)/(p11x-p00x));
+				px = p00x + a*((thetadash-sin(thetadash))*cos(alpha)-(1-cos(thetadash))*sin(alpha));
+				z = p00z + a*((1-cos(thetadash))*cos(alpha)/5+(thetadash-sin(thetadash))*sin(alpha));
+				// px = p00x + a*(thetadash-sin(thetadash));
+				// z = p00z + a*(1-cos(thetadash))/3;
+			}
+			s = (px - (p0.x + dev))/d;
+
+			fclose(fp);
+		 }
+		 else if (ph == Phase::RL && side == 0){
+			if(n == 0){
+				theta = 0;
+			}
+			else{
+				theta_ds = (c0.x - (p1.x + dev) -l0)/r0;
+				theta = theta_ds + (theta0 - theta_ds)*tau;
+			}
+
+			s = 1 + (r0*(theta - sin(theta)) + l0*(1-cos(theta)))/d;
+			z = r0*(1 - cos(theta)) + l0*sin(theta);
+
+			FILE* fp = fopen("Test.csv", "w");
+			fprintf(fp, "%d", n);
+			fclose(fp);
+
+		 }
+		 else if (ph == Phase::LR && side == 0) { //ï¿½Â‚Üæ‚¨ï¿½ë‚µ
+			FILE* fp = fopen("Test.csv", "r");
+			fscanf(fp, "%d", &thetad);
+
+			if(thetad == 0){
+				theta = 0;
+			}
+			else{
+				theta_ds = ((p1.x + dev) - c1.x -l1)/r1;
+				theta = -theta1 + (theta_ds + theta1)*tau;
+			}
+
+			s = 1 - (r1*(theta - sin(theta)) + l1*(1-cos(theta)))/d;
+			z = r1*(1 - cos(theta)) + l1*sin(theta);
+			fclose(fp);
+		 }
+		 else if (ph == Phase::R && side == 0){
+			FILE* fp = fopen("Test.csv", "r");
+			fscanf(fp, "%d", &thetad);
+
+			if(((c0.x - (p1.x + dev)) < -l1) && ((c1.x - (p1.x + dev)) > l0)){
+				if(c < ((p1.x + dev) - l1)){
+					if(thetad==0){
+						s = 1;
+						z = 0;
+					}
+					else{
+						theta = ((p1.x + dev) - c - l1)/r1;
+						s = 1 - (r1*(theta - sin(theta)) + l1*(1-cos(theta)))/d;
+						z = r1*(1 - cos(theta)) + l1*sin(theta);
+					}
+				}
+				else if(c > ((p1.x + dev) + l0)){
+					theta = (c - (p1.x + dev) - l0)/r0;
+					s = 1 + (r0*(theta - sin(theta)) + l0*(1-cos(theta)))/d;
+					z = r0*(1 - cos(theta)) + l0*sin(theta);
+				}
+				else{
+					s = 1;
+					z = 0;
+				}
+			}
+			else{
+				if(c < ((p1.x + dev) - l1)){
+					if(thetad==0){
+						s = 1;
+						z = 0;
+					}
+					else{
+						theta = ((p1.x + dev) - c - l1)/r1;
+						s = 1 - (r1*(theta - sin(theta)) + l1*(1-cos(theta)))/d;
+						z = r1*(1 - cos(theta)) + l1*sin(theta);
+					}
+				}
+				else{
+					s = 1;
+					z = 0;
+				}
+			 }
+
+			 fclose(fp);
+
+		 }
+
+
+
+
+		 else if (ph == Phase::R && side == 1){
+			FILE* fp1 = fopen("Test1.csv", "r");
+			fscanf(fp1, "%d", &thetad);
+
+			if(thetad == 0){
+				//real_t alpha = atan(p11z/(p11x-p0.x));
+				real_t a = d/(2*pi);
+				px = (p0.x + dev) + a*(thetadash-sin(thetadash));
+				z = a*((1-cos(thetadash)))/2;
+			}
+			else{
+				// real_t a = (p11x - p00x)/(2*pi);
+				// px = p00x + a*(thetadash-sin(thetadash));
+				// z = p00z + a*(1-cos(thetadash))/3;
+				real_t a = sqrt((p11x - p00x)*(p11x - p00x) + (p11z - p00z)*(p11z - p00z))/(2*pi);
+				real_t alpha = atan((p11z-p00z)/(p11x-p00x));
+				px = p00x + a*((thetadash-sin(thetadash))*cos(alpha)-(1-cos(thetadash))*sin(alpha));
+				z = p00z + a*((1-cos(thetadash))*cos(alpha)/5+(thetadash-sin(thetadash))*sin(alpha));
+			}
+			s = (px - (p0.x + dev))/d;
+			fclose(fp1);
+		 }
+		 else if (ph == Phase::LR && side == 1){
+			if(n == 0){
+				theta = 0;
+			}
+			else{
+				theta_ds = (c0.x - (p1.x + dev) -l0)/r0;
+				theta = theta_ds + (theta0 - theta_ds)*tau;
+			}
+
+			s = 1 + (r0*(theta - sin(theta)) + l0*(1-cos(theta)))/d;
+			z = r0*(1 - cos(theta)) + l0*sin(theta);
+
+			FILE* fp1 = fopen("Test1.csv", "w");
+			fprintf(fp1, "%d", n);
+			fclose(fp1);
+
+		 }
+		 else if (ph == Phase::RL && side == 1) { //ï¿½Â‚Üæ‚¨ï¿½ë‚µ
+			FILE* fp1 = fopen("Test1.csv", "r");
+			fscanf(fp1, "%d", &thetad);
+
+			if(thetad == 0){
+				theta = 0;
+			}
+			else{
+				theta_ds = ((p1.x + dev) - c1.x -l1)/r1;
+				theta = -theta1 + (theta_ds + theta1)*tau;
+			}
+
+			s = 1 - (r1*(theta - sin(theta)) + l1*(1-cos(theta)))/d;
+			z = r1*(1 - cos(theta)) + l1*sin(theta);
+			fclose(fp1);
+		 }
+		 else if(ph == Phase::L && side == 1){
+			FILE* fp1 = fopen("Test1.csv", "r");
+			fscanf(fp1, "%d", &thetad);
+
+			if(((c0.x - (p1.x + dev)) < -l1) && ((c1.x - (p1.x + dev)) > l0)){
+				if(c < ((p1.x + dev) - l1)){
+					if(thetad==0){
+						s = 1;
+						z = 0;
+					}
+					else{
+						theta = ((p1.x + dev) - c - l1)/r1;
+						s = 1 - (r1*(theta - sin(theta)) + l1*(1-cos(theta)))/d;
+						z = r1*(1 - cos(theta)) + l1*sin(theta);
+					}
+				}
+				else if(c > ((p1.x + dev) + l0)){
+					theta = (c - (p1.x + dev) - l0)/r0;
+					s = 1 + (r0*(theta - sin(theta)) + l0*(1-cos(theta)))/d;
+					z = r0*(1 - cos(theta)) + l0*sin(theta);
+				}
+				else{
+					s = 1;
+					z = 0;
+				}
+			}
+			else{
+				if(c < ((p1.x + dev) - l1)){
+					if(thetad==0){
+						s = 1;
+						z = 0;
+					}
+					else{
+						theta = ((p1.x + dev) - c - l1)/r1;
+						s = 1 - (r1*(theta - sin(theta)) + l1*(1-cos(theta)))/d;
+						z = r1*(1 - cos(theta)) + l1*sin(theta);
+					}
+				}
+				else{
+					s = 1;
+					z = 0;
+				}
+			 }
+
+			 fclose(fp1);
+
+		 }
+
+    //foot_shape_diffferent
+		// if (param.swingProfile == SwingProfile::Heel_Toe){
+		//   real_t _2pi = 2.0*M_PI;
+		//   real_t tau = (t - t0) / h;
+		//   real_t tau1 = (t - t0) / (td - t0);
+		//   real_t tau2 = (t - tdd) / (t1 - tdd);
+		//   real_t p00x = p0.x + r0*(theta0 - sin(theta0)) + l0*(1 - cos(theta0));
+		//   real_t p11x = p1.x - (r1*(-theta1 - sin(-theta1)) + l1*(1 - cos(theta1)));
+		//   real_t p00z = r0*(1 - cos(theta0)) + l0*sin(theta0);
+		//   real_t p11z = r1*(1 - cos(theta1)) + l1*sin(-theta1);
+		//   real_t d = p1.x - p0.x;
+		//   real_t c = c0.x + (c1.x - c0.x)*tau;
+		//   real_t thetadash = 2*pi*tau;
+		//
+		//   if((c0.x - p1.x) > l0 + r0*theta0){
+		//  	 n = 1;
+		//   }
+		//   else{
+		//  	 n = 0;
+		//   }
+		//
+		//   if(ph == Phase::L && side == 0){
+		//  	 FILE* fp = fopen("Test.csv", "r");
+		//  	 fscanf(fp, "%d", &thetad);
+		//
+		//  	 if(thetad == 0){
+		//  		 //real_t alpha = atan(p11z/(p11x-p0.x));
+		//  		 real_t a = d/(2*pi);
+		//  		 px = p0.x + a*(thetadash-sin(thetadash));
+		//  		 z = a*(1-cos(thetadash))/2;
+		//  	 }
+		//  	 else{
+		//  		 real_t a = sqrt((p11x - p00x)*(p11x - p00x) + (p11z - p00z)*(p11z - p00z))/(2*pi);
+		//  		 real_t alpha = atan((p11z-p00z)/(p11x-p00x));
+		//  		 px = p00x + a*((thetadash-sin(thetadash))*cos(alpha)-(1-cos(thetadash))*sin(alpha));
+		//  		 z = p00z + a*((1-cos(thetadash))*cos(alpha)/5+(thetadash-sin(thetadash))*sin(alpha));
+		//  		 // px = p00x + a*(thetadash-sin(thetadash));
+		//  		 // z = p00z + a*(1-cos(thetadash))/3;
+		//  	 }
+		//  	 s = (px - p0.x)/d;
+		//
+		//  	 fclose(fp);
+		//   }
+		//   else if (ph == Phase::RL && side == 0){
+		//  	 if(n == 0){
+		//  		 theta = 0;
+		//  	 }
+		//  	 else{
+		//  		 theta = theta0;
+		//  	 }
+		//
+		//  	 s = 1 + (r0*(theta - sin(theta)) + l0*(1-cos(theta)))/d;
+		//  	 z = r0*(1 - cos(theta)) + l0*sin(theta);
+		//
+		//  	 FILE* fp = fopen("Test.csv", "w");
+		//  	 fprintf(fp, "%d", n);
+		//  	 fclose(fp);
+		//
+		//   }
+		//   else if (ph == Phase::LR && side == 0) { //ï¿½Â‚Üæ‚¨ï¿½ë‚µ
+		//  	 FILE* fp = fopen("Test.csv", "r");
+		//  	 fscanf(fp, "%d", &thetad);
+		//
+		//  	 if(thetad == 0){
+		//  		 theta = 0;
+		//  	 }
+		//  	 else{
+		// 		 theta_ds = (p1.x - c1.x -l1)/r1;
+		//  		 theta = -theta1 + (theta_ds + theta1)*tau;
+		//  	 }
+		//
+		//  	 s = 1 - (r1*(theta - sin(theta)) + l1*(1-cos(theta)))/d;
+		//  	 z = r1*(1 - cos(theta)) + l1*sin(theta);
+		//  	 fclose(fp);
+		//   }
+		//   else if (ph == Phase::R && side == 0){
+		//  	 FILE* fp = fopen("Test.csv", "r");
+		//  	 fscanf(fp, "%d", &thetad);
+		//
+		//  	 if(((c0.x - p1.x) < -l1) && ((c1.x - p1.x) > l0 + r0*theta0)){
+		//  		 if(c < (p1.x - l1)){
+		//  			 if(thetad==0){
+		//  				 s = 1;
+		//  				 z = 0;
+		//  			 }
+		//  			 else{
+		//  				 theta = (p1.x - c - l1)/r1;
+		//  				 s = 1 - (r1*(theta - sin(theta)) + l1*(1-cos(theta)))/d;
+		//  				 z = r1*(1 - cos(theta)) + l1*sin(theta);
+		//  			 }
+		//  		 }
+		//  		 else if(c > (p1.x + l0) && c < (p1.x + l0 + r0*theta0)){
+		//  			 theta = (c - p1.x - l0)/r0;
+		//  			 s = 1 + (r0*(theta - sin(theta)) + l0*(1-cos(theta)))/d;
+		//  			 z = r0*(1 - cos(theta)) + l0*sin(theta);
+		//  		 }
+		// 		 else if(c > (p1.x + l0 + r0*theta0)){
+		// 			 theta = theta0;
+		// 			 s = 1 + (r0*(theta - sin(theta)) + l0*(1-cos(theta)))/d;
+		//  			 z = r0*(1 - cos(theta)) + l0*sin(theta);
+		// 		 }
+		//  		 else{
+		//  			 s = 1;
+		//  			 z = 0;
+		//  		 }
+		//  	 }
+		//  	 else{
+		//  		 if(c < (p1.x - l1)){
+		//  			 if(thetad==0){
+		//  				 s = 1;
+		//  				 z = 0;
+		//  			 }
+		//  			 else{
+		//  				 theta = (p1.x - c - l1)/r1;
+		//  				 s = 1 - (r1*(theta - sin(theta)) + l1*(1-cos(theta)))/d;
+		//  				 z = r1*(1 - cos(theta)) + l1*sin(theta);
+		//  			 }
+		//  		 }
+		//  		 else{
+		//  			 s = 1;
+		//  			 z = 0;
+		//  		 }
+		//  		}
+		//
+		//  		fclose(fp);
+		//
+		//   }
+		//
+		//
+		//
+		//
+		//   else if (ph == Phase::R && side == 1){
+		//  	 FILE* fp1 = fopen("Test1.csv", "r");
+		//  	 fscanf(fp1, "%d", &thetad);
+		//
+		//  	 if(thetad == 0){
+		//  		 //real_t alpha = atan(p11z/(p11x-p0.x));
+		//  		 real_t a = d/(2*pi);
+		//  		 px = p0.x + a*(thetadash-sin(thetadash));
+		//  		 z = a*((1-cos(thetadash)))/2;
+		//  	 }
+		//  	 else{
+		//  		 // real_t a = (p11x - p00x)/(2*pi);
+		//  		 // px = p00x + a*(thetadash-sin(thetadash));
+		//  		 // z = p00z + a*(1-cos(thetadash))/3;
+		//  		 real_t a = sqrt((p11x - p00x)*(p11x - p00x) + (p11z - p00z)*(p11z - p00z))/(2*pi);
+		//  		 real_t alpha = atan((p11z-p00z)/(p11x-p00x));
+		//  		 px = p00x + a*((thetadash-sin(thetadash))*cos(alpha)-(1-cos(thetadash))*sin(alpha));
+		//  		 z = p00z + a*((1-cos(thetadash))*cos(alpha)/5+(thetadash-sin(thetadash))*sin(alpha));
+		//  	 }
+		//  	 s = (px - p0.x)/d;
+		//  	 fclose(fp1);
+		//   }
+		//   else if (ph == Phase::LR && side == 1){
+		//  	 if(n == 0){
+		//  		 theta = 0;
+		//  	 }
+		//  	 else{
+		//  		 theta = theta0;
+		//  	 }
+		//
+		//  	 s = 1 + (r0*(theta - sin(theta)) + l0*(1-cos(theta)))/d;
+		//  	 z = r0*(1 - cos(theta)) + l0*sin(theta);
+		//
+		//  	 FILE* fp1 = fopen("Test1.csv", "w");
+		//  	 fprintf(fp1, "%d", n);
+		//  	 fclose(fp1);
+		//
+		//   }
+		//   else if (ph == Phase::RL && side == 1) { //ï¿½Â‚Üæ‚¨ï¿½ë‚µ
+		//  	 FILE* fp1 = fopen("Test1.csv", "r");
+		//  	 fscanf(fp1, "%d", &thetad);
+		//
+		//  	 if(thetad == 0){
+		//  		 theta = 0;
+		//  	 }
+		//  	 else{
+		//  		 theta_ds = (p1.x - c1.x -l1)/r1;
+		//  		 theta = -theta1 + (theta_ds + theta1)*tau;
+		//  	 }
+		//
+		//  	 s = 1 - (r1*(theta - sin(theta)) + l1*(1-cos(theta)))/d;
+		//  	 z = r1*(1 - cos(theta)) + l1*sin(theta);
+		//  	 fclose(fp1);
+		//   }
+		//   else if(ph == Phase::L && side == 1){
+		//  	 FILE* fp1 = fopen("Test1.csv", "r");
+		//  	 fscanf(fp1, "%d", &thetad);
+		//
+		//  	 if(((c0.x - p1.x) < -l1) && ((c1.x - p1.x) > l0 + r0*theta0)){
+		//  		 if(c < (p1.x - l1)){
+		//  			 if(thetad==0){
+		//  				 s = 1;
+		//  				 z = 0;
+		//  			 }
+		//  			 else{
+		//  				 theta = (p1.x - c - l1)/r1;
+		//  				 s = 1 - (r1*(theta - sin(theta)) + l1*(1-cos(theta)))/d;
+		//  				 z = r1*(1 - cos(theta)) + l1*sin(theta);
+		//  			 }
+		//  		 }
+		//  		 else if(c > (p1.x + l0) && c < (p1.x + l0 + r0*theta0)){
+		//  			 theta = (c - p1.x - l0)/r0;
+		//  			 s = 1 + (r0*(theta - sin(theta)) + l0*(1-cos(theta)))/d;
+		//  			 z = r0*(1 - cos(theta)) + l0*sin(theta);
+		//  		 }
+		// 		 else if(c > (p1.x + l0 + r0*theta0)){
+		// 			 theta = theta0;
+		// 			 s = 1 + (r0*(theta - sin(theta)) + l0*(1-cos(theta)))/d;
+		//  			 z = r0*(1 - cos(theta)) + l0*sin(theta);
+		// 		 }
+		//  		 else{
+		//  			 s = 1;
+		//  			 z = 0;
+		//  		 }
+		//  	 }
+		//  	 else{
+		//  		 if(c < (p1.x - l1)){
+		//  			 if(thetad==0){
+		//  				 s = 1;
+		//  				 z = 0;
+		//  			 }
+		//  			 else{
+		//  				 theta = (p1.x - c - l1)/r1;
+		//  				 s = 1 - (r1*(theta - sin(theta)) + l1*(1-cos(theta)))/d;
+		//  				 z = r1*(1 - cos(theta)) + l1*sin(theta);
+		//  			 }
+		//  		 }
+		//  		 else{
+		//  			 s = 1;
+		//  			 z = 0;
+		//  		 }
+		//  		}
+		//
+		//  		fclose(fp1);
+		//
+		//   }
+
+
+
+
+
 		}
-		else {
-			pt = key0->var_foot_pos_t[side]->val;
-		}
+		pt.x = (1 - s)*(p0.x + dev) + s * (p1.x + dev);
+		pt.y = p0.y + tau*(p1.y-p0.y);
+	}
+	else {
+		pt = key0->var_foot_pos_t[side]->val;
+	}
 
 		return vec3_t(pt.x, pt.y, z);
 	}
 
-	//‘«æŠp“x
+	//ï¿½ï¿½ï¿½ï¿½ï¿½pï¿½x
 	quat_t BipedLIP::FootOri(real_t t, int side) {
 		BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;
 		BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;
@@ -613,7 +2118,1045 @@ namespace DiMP {
 		return qt;
 	}
 
-	//CoPˆÊ’u
+
+
+	real_t BipedLIP::AnklePitch(real_t t, int side) {
+	  BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;
+	  BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;
+	  real_t       t0 = key0->tick->time;
+	  real_t       t1 = key1->tick->time;
+	  real_t       h = t1 - t0;
+	  real_t		   hspan = 0.3*h;
+	  real_t		   t00 = t0 + hspan;
+	  real_t       t11 = t1 - hspan;
+		real_t       td = (t0 + t1)/10;
+		real_t       tdd = (t0 + t1)*29/30;
+
+	  real_t theta = 0.0;
+	  real_t theta0 = 30*pi/180;
+		real_t theta1 = -30*pi/180;
+		//real_t thetaop = 10*pi/180;
+		real_t thetatoe = 10*pi/180;
+		real_t thetaheel = 10*pi/180;
+		real_t theta_ds;
+		int thetad;
+
+		//real_t l = 0.16;
+		// //real_t r = 0.02/thetaop;
+		// real_t r0 = 0.01/thetatoe;
+		// real_t r1 = 0.01/thetaheel;
+
+		real_t l0 = 0.08;
+		real_t l1 = 0.08;
+		real_t L = 0.20;
+		//real_t r = 0.025;
+		//real_t r = 0.02/thetaop;
+		//real_t r0 = (L/2-l0)/thetatoe;
+		//real_t r1 = (L/2-l1)/thetaheel;
+		real_t r0 = 0.03;
+		real_t r1 = 0.03;
+
+		real_t dev = 0.0;
+
+		// real_t thetaps = 10*pi/180;
+		// real_t l2 = 0.08;
+		// real_t r = (L/2-l0)/thetaps;
+
+		// real_t l0 = 0.02;
+		// real_t l1 = 0.08;
+		// real_t l2 = 0.02;
+		// real_t L = 0.20;
+		// //real_t r = 0.025;
+		// //real_t r = 0.02/thetaop;
+		// real_t r0 = (L/2-l0-l2)/theta0;
+		// real_t r1 = (L/2-l1)/thetaheel;
+
+
+
+
+	  if (key0->prev) {
+	    real_t dt = t - key0->var_time->val;
+	    real_t tau = key0->var_duration->val;
+			vec2_t p0 = key0->var_foot_pos_t[side]->val;
+			vec2_t p1 = key1->var_foot_pos_t[side]->val;
+			vec2_t c0 = key0->var_cop_pos->val;
+			vec2_t c1 = key1->var_cop_pos->val;
+			int ph = phase[key0->tick->idx];
+
+			// if((ph == Phase::R && side == 1) || (ph == Phase::L && side == 0)){
+			// 	if((c0.x - p1.x < -l/2) && (c1.x - p1.x > l/2)){
+			// 		param.swingProfile = SwingProfile::Heel_Toe;
+			// 	}
+			// 	else{
+			// 		param.swingProfile = SwingProfile::Cycloid;
+			// 	}
+			// }
+
+
+
+	    // ï¿½Pï¿½rï¿½xï¿½ï¿½ï¿½ï¿½ï¿½Ì—Vï¿½r
+			//kataoka saigen
+	  //   int ph = phase[key0->tick->idx];
+	  //   if (param.swingProfile == SwingProfile::Heel_Toe){
+	  //     real_t _2pi = 2.0*M_PI;
+	  //     real_t tau = (t - t0) / h;
+	  //     real_t tau0 = (t - t0) / (t00 - t0);
+	  //     real_t tau1 = (t - t11) / (t1 - t11);
+	  //     real_t tau2 = (t - t00) / (t11 - t00);
+		//
+		//
+	  //     if ((ph == Phase::R && side == 1) || (ph == Phase::L && side == 0)){
+	  //       theta = theta0 + tau*(theta1 - theta0);
+	  //     }
+	  //     else if ((ph == Phase::RL && side == 0) || (ph == Phase::LR && side == 1)){
+	  //       if(t<= t11){
+	  //         theta=0;
+	  //       }
+	  //       else{
+	  //         theta = tau1 * theta0;
+	  //       }
+	  //     }
+	  //     else if ((ph == Phase::RL && side == 1) || (ph == Phase::LR && side == 0)) { //ï¿½Â‚Üæ‚¨ï¿½ë‚µ
+	  //       if (t <= t00) {
+	  //         theta = (1 - tau0)*theta1;
+	  //       }
+	  //       else {
+	  //         theta=0;
+	  //       }
+	  //     }
+	  //     else{
+	  //       theta=0;
+	  //     }
+	  //   }
+	  // }
+
+
+			// if (key1) {
+			// 	real_t dt = t - key0->var_time->val;
+			// 	real_t tau = key0->var_duration->val;
+			// 	vec2_t p0 = key0->var_foot_pos_t[side]->val;
+			// 	vec2_t p1 = key1->var_foot_pos_t[side]->val;
+			//
+			// 	// ï¿½Pï¿½rï¿½xï¿½ï¿½ï¿½ï¿½ï¿½Ì—Vï¿½r
+			// 	int ph = phase[key0->tick->idx];
+			// 	if ((ph == Phase::R && side == 1) || (ph == Phase::L && side == 0)) { //(ï¿½Eï¿½ï¿½ï¿½Ğ‘ï¿½ï¿½xï¿½ï¿½ï¿½ï¿½ or ï¿½ï¿½ï¿½ï¿½ï¿½Ğ‘ï¿½ï¿½xï¿½ï¿½ï¿½ï¿½)
+			// 		  real_t _2pi = 2.0*M_PI;
+			// 			real_t tau = (t - t0) / h;
+			// 			real_t tau0 = (t - t0) / (t00 - t0);
+			// 			real_t tau1 = (t - t11) / (t1 - t11);
+			// 			real_t tau2 = (t - t00) / (t11 - t00);
+			//
+			//
+			// 			if ((t >= t0) && (t <= t00)){
+			// 				theta = tau0 * theta0;
+			// 			}
+			// 			else if ((t >= t11) && (t <= t1)){
+			// 				theta = (1 - tau1)*theta1;
+			// 			}
+			// 			else {
+			// 				theta = theta0 + tau2*(theta1 - theta0);
+			// 			}
+			// 		}
+			// 	}
+
+
+			//new
+			//int ph = phase[key0->tick->idx];
+			// if (param.swingProfile == SwingProfile::Heel_Toe){
+			// 	real_t _2pi = 2.0*M_PI;
+			// 	real_t tau = (t - t0) / h;
+			// 	real_t tau1 = (t - t0) / (td - t0);
+			// 	real_t tau2 = (t - tdd) / (t1 - tdd);
+			//
+			//
+			// 	if ((ph == Phase::R && side == 1) || (ph == Phase::L && side == 0)){
+			// 		theta = theta0 + tau*(theta1 - theta0);
+			// 	}
+			// 	else if ((ph == Phase::RL && side == 0) || (ph == Phase::LR && side == 1)){
+			// 		theta = thetaps + tau*(theta0-thetaps);
+			// 	}
+			// 	else if ((ph == Phase::RL && side == 1) || (ph == Phase::LR && side == 0)) { //ï¿½Â‚Üæ‚¨ï¿½ë‚µ
+			// 		if (t <= td) {
+			// 			theta = (1-tau1)*theta1;
+			// 		}
+			// 		else {
+			// 			theta = 0;
+			// 		}
+			// 	}
+			// 	else{
+			// 		if (t <= tdd) {
+			// 			theta = 0;
+			// 		}
+			// 		else {
+			// 			theta = tau2 * thetaps;
+			// 		}
+			// 	}
+
+
+
+
+
+		// //gait_change
+		// if (param.swingProfile == SwingProfile::Heel_Toe){
+		// 	real_t _2pi = 2.0*M_PI;
+		// 	real_t tau = (t - t0) / h;
+		// 	// real_t tau1 = (t - t0) / (td - t0);
+		// 	// real_t tau2 = (t - tdd) / (t1 - tdd);
+	  //   real_t c = c0.x + (c1.x - c0.x)*tau;
+		//
+		//
+		//
+		//
+		// 	if(ph == Phase::L && side == 0){
+		//     FILE* fp = fopen("Test.csv", "r");
+		//     fscanf(fp, "%lf", &thetad);
+		//
+		//     if(thetad == 0){
+		//       theta = 0;
+		//     }
+		//     else{
+		//       theta = theta0 + tau*(theta1 - theta0);
+		//     }
+		//
+		//     fclose(fp);
+		//   }
+		//   else if (ph == Phase::RL && side == 0){
+		// 		FILE* fp = fopen("Test.csv", "r");
+		//     fscanf(fp, "%lf", &thetad);
+		// 		theta = thetad;
+		//     fclose(fp);
+		//   }
+		//   else if (ph == Phase::LR && side == 0) { //ï¿½Â‚Üæ‚¨ï¿½ë‚µ
+		//     FILE* fp = fopen("Test.csv", "r");
+		//     fscanf(fp, "%lf", &thetad);
+		//
+		//     if(thetad == 0){
+		//       theta = 0;
+		//     }
+		//     else{
+		//       theta = -(p1.x - c1.x -l/2)/r;
+		//     }
+		//
+		//     fclose(fp);
+		//   }
+		//   else if (ph == Phase::R && side == 0){
+		//     FILE* fp = fopen("Test.csv", "r");
+		//     fscanf(fp, "%lf", &thetad);
+		//
+		//     if(((c0.x - p1.x) < -l/2) && ((c1.x - p1.x) > l/2)){
+		//       if(c < (p1.x - l/2)){
+		//         if(thetad==0){
+		//           theta = 0;
+		//         }
+		//         else{
+		//           theta = -(p1.x - c - l/2)/r;
+		//         }
+		//       }
+		//       else if(c > (p1.x + l/2)){
+		//         theta = (c - p1.x - l/2)/r;
+		//       }
+		//       else{
+		//         theta = 0;
+		//       }
+		//     }
+		//     else{
+		//       if(c < (p1.x - l/2)){
+		//         if(thetad==0){
+		//           theta = 0;
+		//         }
+		//         else{
+		//           theta = -(p1.x - c - l/2)/r;
+		//         }
+		//       }
+		//       else{
+		//         theta = 0;
+		//       }
+		//      }
+		//
+		//      fclose(fp);
+		//
+		//   }
+		//
+		//
+		//
+		//
+		//   else if (ph == Phase::R && side == 1){
+		//     FILE* fp1 = fopen("Test1.csv", "r");
+		//     fscanf(fp1, "%lf", &thetad);
+		//
+		//     if(thetad == 0){
+		//       theta = 0;
+		//     }
+		//     else{
+		//       theta = theta0 + tau*(theta1 - theta0);
+		//     }
+		//
+		//     fclose(fp1);
+		//   }
+		//   else if (ph == Phase::LR && side == 1){
+		// 		FILE* fp1 = fopen("Test1.csv", "r");
+		//     fscanf(fp1, "%lf", &thetad);
+		// 		theta = thetad;
+		//     fclose(fp1);
+		//   }
+		//   else if (ph == Phase::RL && side == 1) { //ï¿½Â‚Üæ‚¨ï¿½ë‚µ
+		//     FILE* fp1 = fopen("Test1.csv", "r");
+		//     fscanf(fp1, "%lf", &thetad);
+		//
+		//     if(thetad == 0){
+		//       theta = 0;
+		//     }
+		//     else{
+		//       theta = -(p1.x - c1.x -l/2)/r;
+		//     }
+		//
+		//     fclose(fp1);
+		//   }
+		//   else if(ph == Phase::L && side == 1){
+		//     FILE* fp1 = fopen("Test1.csv", "r");
+		//     fscanf(fp1, "%lf", &thetad);
+		//
+		//     if(((c0.x - p1.x) < -l/2) && ((c1.x - p1.x) > l/2)){
+		//       if(c < (p1.x - l/2)){
+		//         if(thetad==0){
+		//           theta = 0;
+		//         }
+		//         else{
+		//           theta = -(p1.x - c - l/2)/r;
+		//         }
+		//       }
+		//       else if(c > (p1.x + l/2)){
+		//         theta = (c - p1.x - l/2)/r;
+		//       }
+		//       else{
+		//         theta = 0;
+		//       }
+		//     }
+		//     else{
+		//       if(c < (p1.x - l/2)){
+		//         if(thetad==0){
+		//           theta = 0;
+		//         }
+		//         else{
+		//           theta = -(p1.x - c - l/2)/r;
+		//         }
+		//       }
+		//       else{
+		//         theta = 0;
+		//       }
+		//      }
+		//
+		//      fclose(fp1);
+		//
+		//   }
+
+		//gait_change_smooth
+		// if (param.swingProfile == SwingProfile::Heel_Toe){
+		// 	real_t _2pi = 2.0*M_PI;
+		// 	real_t tau = (t - t0) / h;
+		// 	// real_t tau1 = (t - t0) / (td - t0);
+		// 	// real_t tau2 = (t - tdd) / (t1 - tdd);
+	  //   real_t c = c0.x + (c1.x - c0.x)*tau;
+		//
+		//
+		//
+		//
+		// 	if(ph == Phase::L && side == 0){
+		//     FILE* fp = fopen("Test.csv", "r");
+		//     fscanf(fp, "%d", &thetad);
+		//
+		//     if(thetad == 0){
+		//       theta = 0;
+		//     }
+		//     else{
+		//       theta = theta0 + tau*(theta1 - theta0);
+		//     }
+		//
+		//     fclose(fp);
+		//   }
+		//   else if (ph == Phase::RL && side == 0){
+		// 		FILE* fp = fopen("Test.csv", "r");
+		//     fscanf(fp, "%d", &thetad);
+		//
+		// 		if(thetad == 0){
+ 		// 		 theta = 0;
+ 		// 	 }
+ 		// 	 else{
+ 		// 		 theta_ds = (c0.x - p1.x -l/2)/r0;
+ 		// 		 theta = theta_ds + (theta0 - theta_ds)*tau;
+ 		// 	 }
+		//
+		//     fclose(fp);
+		//   }
+		//   else if (ph == Phase::LR && side == 0) { //ï¿½Â‚Üæ‚¨ï¿½ë‚µ
+		//     FILE* fp = fopen("Test.csv", "r");
+		//     fscanf(fp, "%d", &thetad);
+		//
+		//     if(thetad == 0){
+		//       theta = 0;
+		//     }
+		//     else{
+		// 			theta_ds = (p1.x - c1.x -l/2)/r1;
+		// 			theta = theta1 - (theta_ds + theta1)*tau;
+		//     }
+		//
+		//     fclose(fp);
+		//   }
+		//   else if (ph == Phase::R && side == 0){
+		//     FILE* fp = fopen("Test.csv", "r");
+		//     fscanf(fp, "%d", &thetad);
+		//
+		//     if(((c0.x - p1.x) < -l/2) && ((c1.x - p1.x) > l/2)){
+		//       if(c < (p1.x - l/2)){
+		//         if(thetad==0){
+		//           theta = 0;
+		//         }
+		//         else{
+		//           theta = -(p1.x - c - l/2)/r1;
+		//         }
+		//       }
+		//       else if(c > (p1.x + l/2)){
+		//         theta = (c - p1.x - l/2)/r0;
+		//       }
+		//       else{
+		//         theta = 0;
+		//       }
+		//     }
+		//     else{
+		//       if(c < (p1.x - l/2)){
+		//         if(thetad==0){
+		//           theta = 0;
+		//         }
+		//         else{
+		//           theta = -(p1.x - c - l/2)/r1;
+		//         }
+		//       }
+		//       else{
+		//         theta = 0;
+		//       }
+		//      }
+		//
+		//      fclose(fp);
+		//
+		//   }
+		//
+		//
+		//
+		//
+		//   else if (ph == Phase::R && side == 1){
+		//     FILE* fp1 = fopen("Test1.csv", "r");
+		//     fscanf(fp1, "%d", &thetad);
+		//
+		//     if(thetad == 0){
+		//       theta = 0;
+		//     }
+		//     else{
+		//       theta = theta0 + tau*(theta1 - theta0);
+		//     }
+		//
+		//     fclose(fp1);
+		//   }
+		//   else if (ph == Phase::LR && side == 1){
+		// 		FILE* fp1 = fopen("Test1.csv", "r");
+		//     fscanf(fp1, "%d", &thetad);
+		//
+		// 		if(thetad == 0){
+ 		// 		 theta = 0;
+ 		// 	 }
+ 		// 	 else{
+ 		// 		 theta_ds = (c0.x - p1.x -l/2)/r0;
+ 		// 		 theta = theta_ds + (theta0 - theta_ds)*tau;
+ 		// 	 }
+		//
+		//     fclose(fp1);
+		//   }
+		//   else if (ph == Phase::RL && side == 1) { //ï¿½Â‚Üæ‚¨ï¿½ë‚µ
+		//     FILE* fp1 = fopen("Test1.csv", "r");
+		//     fscanf(fp1, "%d", &thetad);
+		//
+		//     if(thetad == 0){
+		//       theta = 0;
+		//     }
+		//     else{
+		// 			theta_ds = (p1.x - c1.x -l/2)/r1;
+		// 			theta = theta1 - (theta_ds + theta1)*tau;
+		//     }
+		//
+		//     fclose(fp1);
+		//   }
+		//   else if(ph == Phase::L && side == 1){
+		//     FILE* fp1 = fopen("Test1.csv", "r");
+		//     fscanf(fp1, "%d", &thetad);
+		//
+		//     if(((c0.x - p1.x) < -l/2) && ((c1.x - p1.x) > l/2)){
+		//       if(c < (p1.x - l/2)){
+		//         if(thetad==0){
+		//           theta = 0;
+		//         }
+		//         else{
+		//           theta = -(p1.x - c - l/2)/r1;
+		//         }
+		//       }
+		//       else if(c > (p1.x + l/2)){
+		//         theta = (c - p1.x - l/2)/r0;
+		//       }
+		//       else{
+		//         theta = 0;
+		//       }
+		//     }
+		//     else{
+		//       if(c < (p1.x - l/2)){
+		//         if(thetad==0){
+		//           theta = 0;
+		//         }
+		//         else{
+		//           theta = -(p1.x - c - l/2)/r1;
+		//         }
+		//       }
+		//       else{
+		//         theta = 0;
+		//       }
+		//      }
+		//
+		//      fclose(fp1);
+		//
+		//   }
+
+			//various_gait
+			// if (param.swingProfile == SwingProfile::Heel_Toe){
+			// 	real_t _2pi = 2.0*M_PI;
+			// 	real_t tau = (t - t0) / h;
+			// 	// real_t tau1 = (t - t0) / (td - t0);
+			// 	// real_t tau2 = (t - tdd) / (t1 - tdd);
+		  //   real_t c = c0.x + (c1.x - c0.x)*tau;
+			//
+			//
+			//
+			//
+			// 	if(ph == Phase::L && side == 0){
+			//     FILE* fp = fopen("Test.csv", "r");
+			//     fscanf(fp, "%d", &thetad);
+			//
+			//     if(thetad == 0){
+			//       theta = 0;
+			//     }
+			//     else{
+			//       theta = theta0 + tau*(theta1 - theta0);
+			//     }
+			//
+			//     fclose(fp);
+			//   }
+			//   else if (ph == Phase::RL && side == 0){
+			// 		FILE* fp = fopen("Test.csv", "r");
+			//     fscanf(fp, "%d", &thetad);
+			//
+			// 		if(thetad == 0){
+	 		// 		 theta = 0;
+	 		// 	 }
+	 		// 	 else{
+	 		// 		 theta_ds = (c0.x - p1.x -l0)/r0;
+	 		// 		 theta = theta_ds + (theta0 - theta_ds)*tau;
+	 		// 	 }
+			//
+			//     fclose(fp);
+			//   }
+			//   else if (ph == Phase::LR && side == 0) { //ï¿½Â‚Üæ‚¨ï¿½ë‚µ
+			//     FILE* fp = fopen("Test.csv", "r");
+			//     fscanf(fp, "%d", &thetad);
+			//
+			//     if(thetad == 0){
+			//       theta = 0;
+			//     }
+			//     else{
+			// 			theta_ds = (p1.x - c1.x -l1)/r1;
+			// 			theta = theta1 - (theta_ds + theta1)*tau;
+			//     }
+			//
+			//     fclose(fp);
+			//   }
+			//   else if (ph == Phase::R && side == 0){
+			//     FILE* fp = fopen("Test.csv", "r");
+			//     fscanf(fp, "%d", &thetad);
+			//
+			//     if(((c0.x - p1.x) < -l1) && ((c1.x - p1.x) > l0)){
+			//       if(c < (p1.x - l1)){
+			//         if(thetad==0){
+			//           theta = 0;
+			//         }
+			//         else{
+			//           theta = -(p1.x - c - l1)/r1;
+			//         }
+			//       }
+			//       else if(c > (p1.x + l0)){
+			//         theta = (c - p1.x - l0)/r0;
+			//       }
+			//       else{
+			//         theta = 0;
+			//       }
+			//     }
+			//     else{
+			//       if(c < (p1.x - l1)){
+			//         if(thetad==0){
+			//           theta = 0;
+			//         }
+			//         else{
+			//           theta = -(p1.x - c - l1)/r1;
+			//         }
+			//       }
+			//       else{
+			//         theta = 0;
+			//       }
+			//      }
+			//
+			//      fclose(fp);
+			//
+			//   }
+			//
+			//
+			//
+			//
+			//   else if (ph == Phase::R && side == 1){
+			//     FILE* fp1 = fopen("Test1.csv", "r");
+			//     fscanf(fp1, "%d", &thetad);
+			//
+			//     if(thetad == 0){
+			//       theta = 0;
+			//     }
+			//     else{
+			//       theta = theta0 + tau*(theta1 - theta0);
+			//     }
+			//
+			//     fclose(fp1);
+			//   }
+			//   else if (ph == Phase::LR && side == 1){
+			// 		FILE* fp1 = fopen("Test1.csv", "r");
+			//     fscanf(fp1, "%d", &thetad);
+			//
+			// 		if(thetad == 0){
+	 		// 		 theta = 0;
+	 		// 	 }
+	 		// 	 else{
+	 		// 		 theta_ds = (c0.x - p1.x -l0)/r0;
+	 		// 		 theta = theta_ds + (theta0 - theta_ds)*tau;
+	 		// 	 }
+			//
+			//     fclose(fp1);
+			//   }
+			//   else if (ph == Phase::RL && side == 1) { //ï¿½Â‚Üæ‚¨ï¿½ë‚µ
+			//     FILE* fp1 = fopen("Test1.csv", "r");
+			//     fscanf(fp1, "%d", &thetad);
+			//
+			//     if(thetad == 0){
+			//       theta = 0;
+			//     }
+			//     else{
+			// 			theta_ds = (p1.x - c1.x -l1)/r1;
+			// 			theta = theta1 - (theta_ds + theta1)*tau;
+			//     }
+			//
+			//     fclose(fp1);
+			//   }
+			//   else if(ph == Phase::L && side == 1){
+			//     FILE* fp1 = fopen("Test1.csv", "r");
+			//     fscanf(fp1, "%d", &thetad);
+			//
+			//     if(((c0.x - p1.x) < -l1) && ((c1.x - p1.x) > l0)){
+			//       if(c < (p1.x - l1)){
+			//         if(thetad==0){
+			//           theta = 0;
+			//         }
+			//         else{
+			//           theta = -(p1.x - c - l1)/r1;
+			//         }
+			//       }
+			//       else if(c > (p1.x + l0)){
+			//         theta = (c - p1.x - l0)/r0;
+			//       }
+			//       else{
+			//         theta = 0;
+			//       }
+			//     }
+			//     else{
+			//       if(c < (p1.x - l1)){
+			//         if(thetad==0){
+			//           theta = 0;
+			//         }
+			//         else{
+			//           theta = -(p1.x - c - l1)/r1;
+			//         }
+			//       }
+			//       else{
+			//         theta = 0;
+			//       }
+			//      }
+			//
+			//      fclose(fp1);
+			//
+			//   }
+
+
+			//foot_shape_change
+			if (param.swingProfile == SwingProfile::Heel_Toe){
+				real_t _2pi = 2.0*M_PI;
+				real_t tau = (t - t0) / h;
+				// real_t tau1 = (t - t0) / (td - t0);
+				// real_t tau2 = (t - tdd) / (t1 - tdd);
+		    real_t c = c0.x + (c1.x - c0.x)*tau;
+
+
+
+
+				if(ph == Phase::L && side == 0){
+			    FILE* fp = fopen("Test.csv", "r");
+			    fscanf(fp, "%d", &thetad);
+
+			    if(thetad == 0){
+			      theta = 0;
+			    }
+			    else{
+			      theta = theta0 + tau*(theta1 - theta0);
+			    }
+
+			    fclose(fp);
+			  }
+			  else if (ph == Phase::RL && side == 0){
+					FILE* fp = fopen("Test.csv", "r");
+			    fscanf(fp, "%d", &thetad);
+
+					if(thetad == 0){
+	 				 theta = 0;
+	 			 }
+	 			 else{
+	 				 theta_ds = (c0.x - (p1.x + dev) -l0)/r0;
+	 				 theta = theta_ds + (theta0 - theta_ds)*tau;
+	 			 }
+
+			    fclose(fp);
+			  }
+			  else if (ph == Phase::LR && side == 0) { //ï¿½Â‚Üæ‚¨ï¿½ë‚µ
+			    FILE* fp = fopen("Test.csv", "r");
+			    fscanf(fp, "%d", &thetad);
+
+			    if(thetad == 0){
+			      theta = 0;
+			    }
+			    else{
+						theta_ds = ((p1.x + dev) - c1.x -l1)/r1;
+						theta = theta1 - (theta_ds + theta1)*tau;
+			    }
+
+			    fclose(fp);
+			  }
+			  else if (ph == Phase::R && side == 0){
+			    FILE* fp = fopen("Test.csv", "r");
+			    fscanf(fp, "%d", &thetad);
+
+			    if(((c0.x - (p1.x + dev)) < -l1) && ((c1.x - (p1.x + dev)) > l0)){
+			      if(c < ((p1.x + dev)- l1)){
+			        if(thetad==0){
+			          theta = 0;
+			        }
+			        else{
+			          theta = -((p1.x + dev) - c - l1)/r1;
+			        }
+			      }
+			      else if(c > ((p1.x + dev) + l0)){
+			        theta = (c - (p1.x + dev)- l0)/r0;
+			      }
+			      else{
+			        theta = 0;
+			      }
+			    }
+			    else{
+			      if(c < ((p1.x + dev) - l1)){
+			        if(thetad==0){
+			          theta = 0;
+			        }
+			        else{
+			          theta = -((p1.x + dev) - c - l1)/r1;
+			        }
+			      }
+			      else{
+			        theta = 0;
+			      }
+			     }
+
+			     fclose(fp);
+
+			  }
+
+
+
+
+			  else if (ph == Phase::R && side == 1){
+			    FILE* fp1 = fopen("Test1.csv", "r");
+			    fscanf(fp1, "%d", &thetad);
+
+			    if(thetad == 0){
+			      theta = 0;
+			    }
+			    else{
+			      theta = theta0 + tau*(theta1 - theta0);
+			    }
+
+			    fclose(fp1);
+			  }
+			  else if (ph == Phase::LR && side == 1){
+					FILE* fp1 = fopen("Test1.csv", "r");
+			    fscanf(fp1, "%d", &thetad);
+
+					if(thetad == 0){
+	 				 theta = 0;
+	 			 }
+	 			 else{
+	 				 theta_ds = (c0.x - (p1.x + dev) -l0)/r0;
+	 				 theta = theta_ds + (theta0 - theta_ds)*tau;
+	 			 }
+
+			    fclose(fp1);
+			  }
+			  else if (ph == Phase::RL && side == 1) { //ï¿½Â‚Üæ‚¨ï¿½ë‚µ
+			    FILE* fp1 = fopen("Test1.csv", "r");
+			    fscanf(fp1, "%d", &thetad);
+
+			    if(thetad == 0){
+			      theta = 0;
+			    }
+			    else{
+						theta_ds = ((p1.x + dev) - c1.x -l1)/r1;
+						theta = theta1 - (theta_ds + theta1)*tau;
+			    }
+
+			    fclose(fp1);
+			  }
+			  else if(ph == Phase::L && side == 1){
+			    FILE* fp1 = fopen("Test1.csv", "r");
+			    fscanf(fp1, "%d", &thetad);
+
+			    if(((c0.x - (p1.x + dev)) < -l1) && ((c1.x - (p1.x + dev)) > l0)){
+			      if(c < ((p1.x + dev) - l1)){
+			        if(thetad==0){
+			          theta = 0;
+			        }
+			        else{
+			          theta = -((p1.x + dev) - c - l1)/r1;
+			        }
+			      }
+			      else if(c > ((p1.x + dev) + l0)){
+			        theta = (c - (p1.x + dev) - l0)/r0;
+			      }
+			      else{
+			        theta = 0;
+			      }
+			    }
+			    else{
+			      if(c < ((p1.x + dev) - l1)){
+			        if(thetad==0){
+			          theta = 0;
+			        }
+			        else{
+			          theta = -((p1.x + dev) - c - l1)/r1;
+			        }
+			      }
+			      else{
+			        theta = 0;
+			      }
+			     }
+
+			     fclose(fp1);
+
+			  }
+
+			//foot_shape_diffferent
+			// if (param.swingProfile == SwingProfile::Heel_Toe){
+			// 	real_t _2pi = 2.0*M_PI;
+			// 	real_t tau = (t - t0) / h;
+			// 	// real_t tau1 = (t - t0) / (td - t0);
+			// 	// real_t tau2 = (t - tdd) / (t1 - tdd);
+		  //   real_t c = c0.x + (c1.x - c0.x)*tau;
+			//
+			//
+			//
+			//
+			// 	if(ph == Phase::L && side == 0){
+			//     FILE* fp = fopen("Test.csv", "r");
+			//     fscanf(fp, "%d", &thetad);
+			//
+			//     if(thetad == 0){
+			//       theta = 0;
+			//     }
+			//     else{
+			//       theta = theta0 + tau*(theta1 - theta0);
+			//     }
+			//
+			//     fclose(fp);
+			//   }
+			//   else if (ph == Phase::RL && side == 0){
+			// 		FILE* fp = fopen("Test.csv", "r");
+			//     fscanf(fp, "%d", &thetad);
+			//
+			// 		if(thetad == 0){
+	 		// 		 theta = 0;
+	 		// 	 }
+	 		// 	 else{
+	 		// 		 theta = theta0;
+	 		// 	 }
+			//
+			//     fclose(fp);
+			//   }
+			//   else if (ph == Phase::LR && side == 0) { //ï¿½Â‚Üæ‚¨ï¿½ë‚µ
+			//     FILE* fp = fopen("Test.csv", "r");
+			//     fscanf(fp, "%d", &thetad);
+			//
+			//     if(thetad == 0){
+			//       theta = 0;
+			//     }
+			//     else{
+			// 			theta_ds = (p1.x - c1.x -l1)/r1;
+			// 			theta = theta1 - (theta_ds + theta1)*tau;
+			//     }
+			//
+			//     fclose(fp);
+			//   }
+			//   else if (ph == Phase::R && side == 0){
+			//     FILE* fp = fopen("Test.csv", "r");
+			//     fscanf(fp, "%d", &thetad);
+			//
+			//     if(((c0.x - p1.x) < -l1) && ((c1.x - p1.x) > (l0 + r0*theta0))){
+			//       if(c < (p1.x - l1)){
+			//         if(thetad==0){
+			//           theta = 0;
+			//         }
+			//         else{
+			//           theta = -(p1.x - c - l1)/r1;
+			//         }
+			//       }
+			//       else if(c > (p1.x + l0) && c < (p1.x + l0 + r0*theta0)){
+			//         theta = (c - p1.x - l0)/r0;
+			//       }
+			// 			else if(c > (p1.x + l0 + r0*theta0)){
+			// 				theta = theta0;
+			// 			}
+			//       else{
+			//         theta = 0;
+			//       }
+			//     }
+			//     else{
+			//       if(c < (p1.x - l1)){
+			//         if(thetad==0){
+			//           theta = 0;
+			//         }
+			//         else{
+			//           theta = -(p1.x - c - l1)/r1;
+			//         }
+			//       }
+			//       else{
+			//         theta = 0;
+			//       }
+			//      }
+			//
+			//      fclose(fp);
+			//
+			//   }
+			//
+			//
+			//
+			//
+			//   else if (ph == Phase::R && side == 1){
+			//     FILE* fp1 = fopen("Test1.csv", "r");
+			//     fscanf(fp1, "%d", &thetad);
+			//
+			//     if(thetad == 0){
+			//       theta = 0;
+			//     }
+			//     else{
+			//       theta = theta0 + tau*(theta1 - theta0);
+			//     }
+			//
+			//     fclose(fp1);
+			//   }
+			//   else if (ph == Phase::LR && side == 1){
+			// 		FILE* fp1 = fopen("Test1.csv", "r");
+			//     fscanf(fp1, "%d", &thetad);
+			//
+			// 		if(thetad == 0){
+	 		// 		 theta = 0;
+	 		// 	 }
+	 		// 	 else{
+	 		// 		 theta = theta0;
+	 		// 	 }
+			//
+			//     fclose(fp1);
+			//   }
+			//   else if (ph == Phase::RL && side == 1) { //ï¿½Â‚Üæ‚¨ï¿½ë‚µ
+			//     FILE* fp1 = fopen("Test1.csv", "r");
+			//     fscanf(fp1, "%d", &thetad);
+			//
+			//     if(thetad == 0){
+			//       theta = 0;
+			//     }
+			//     else{
+			// 			theta_ds = (p1.x - c1.x -l1)/r1;
+			// 			theta = theta1 - (theta_ds + theta1)*tau;
+			//     }
+			//
+			//     fclose(fp1);
+			//   }
+			//   else if(ph == Phase::L && side == 1){
+			//     FILE* fp1 = fopen("Test1.csv", "r");
+			//     fscanf(fp1, "%d", &thetad);
+			//
+			//     if(((c0.x - p1.x) < -l1) && ((c1.x - p1.x) > (l0 + r0*theta0))){
+			//       if(c < (p1.x - l1)){
+			//         if(thetad==0){
+			//           theta = 0;
+			//         }
+			//         else{
+			//           theta = -(p1.x - c - l1)/r1;
+			//         }
+			//       }
+			// 			else if(c > (p1.x + l0) && c < (p1.x + l0 + r0*theta0)){
+			//         theta = (c - p1.x - l0)/r0;
+			//       }
+			// 			else if(c > (p1.x + l0 + r0*theta0)){
+			// 				theta = theta0;
+			// 			}
+			//       else{
+			//         theta = 0;
+			//       }
+			//     }
+			//     else{
+			//       if(c < (p1.x - l1)){
+			//         if(thetad==0){
+			//           theta = 0;
+			//         }
+			//         else{
+			//           theta = -(p1.x - c - l1)/r1;
+			//         }
+			//       }
+			//       else{
+			//         theta = 0;
+			//       }
+			//      }
+			//
+			//      fclose(fp1);
+			//
+			//   }
+
+
+
+	}
+}
+
+	  else {
+	    theta=0;
+	  }
+	  return theta;
+	}
+
+
+
+	//CoPï¿½Ê’u
 	vec3_t BipedLIP::CopPos(real_t t) {
 		BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;
 		BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;
@@ -635,9 +3178,9 @@ namespace DiMP {
 		return vec3_t(ct.x, ct.y, 0.0);
 	}
 
-	//“·‘ÌˆÊ’u(3.4.7 dS‚Ìˆê’v§–ñ)
+	//ï¿½ï¿½ï¿½ÌˆÊ’u(3.4.7 ï¿½dï¿½Sï¿½Ìˆï¿½ï¿½vï¿½ï¿½ï¿½ï¿½)
 	vec3_t BipedLIP::TorsoPos(const vec3_t& pcom, const vec3_t& psup, const vec3_t& pswg) {
-		// ƒRƒ“ƒpƒXƒ‚ƒfƒ‹‚æ‚è“·‘Ì‚ÌˆÊ’u‚ğ‹‚ß‚é
+		// ï¿½Rï¿½ï¿½ï¿½pï¿½Xï¿½ï¿½ï¿½fï¿½ï¿½ï¿½ï¿½ï¿½è“·ï¿½Ì‚ÌˆÊ’uï¿½ï¿½ï¿½ï¿½ï¿½ß‚ï¿½
 		real_t mt = param.torsoMass;
 		real_t mf = param.footMass;
 		vec3_t pt = ((mt + 2.0*mf)*pcom - mf * (psup + pswg)) / mt;
@@ -752,7 +3295,8 @@ namespace DiMP {
 	}
 
 	void BipedLIP::Save() {
-		FILE* file = fopen("C:/Users/repor/OneDrive/ƒhƒLƒ…ƒƒ“ƒg/DiMP_save//exa.csv", "w");
+		//FILE* file = fopen("C:/Users/repor/OneDrive/ï¿½hï¿½Lï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½g/DiMP_save//exa.csv", "w");
+		FILE* file = fopen("C:/devel/DiMP/DiMP_save/exa.csv", "w");
 
 		real_t dt = 0.0001;
 		real_t tf = traj.back()->tick->time;
@@ -771,9 +3315,9 @@ namespace DiMP {
 		fclose(file);
 
 
-		//FILE* fp = fopen("//LANDISK3/Public/ŒÂl—p(Personal)/kataoka/Œ¤‹†ƒf[ƒ^/2018_10/10_25//Flat_0.30m_100step_data.csv", "w");
-		////fprintf(fp, "ƒXƒeƒbƒv, t, üŠúƒÑ, dSˆÊ’uCoM_p_x, dSˆÊ’uCoM_p_x, dSˆÊ’uCoM_p_x, dSˆÊ’uCoM_p_x,");
-		////fprintf(fp, "Ú’nˆÊ’uCoP_p_x, Ú’nˆÊ’uCoP_p_x\n");
+		//FILE* fp = fopen("//LANDISK3/Public/ï¿½Âlï¿½p(Personal)/kataoka/ï¿½ï¿½ï¿½ï¿½ï¿½fï¿½[ï¿½^/2018_10/10_25//Flat_0.30m_100step_data.csv", "w");
+		////fprintf(fp, "ï¿½Xï¿½eï¿½bï¿½v, ï¿½ï¿½ï¿½ï¿½t, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½dï¿½Sï¿½Ê’uCoM_p_x, ï¿½dï¿½Sï¿½Ê’uCoM_p_x, ï¿½dï¿½Sï¿½Ê’uCoM_p_x, ï¿½dï¿½Sï¿½Ê’uCoM_p_x,");
+		////fprintf(fp, "ï¿½Ú’nï¿½Ê’uCoP_p_x, ï¿½Ú’nï¿½Ê’uCoP_p_x\n");
 
 		//real_t t = 0.0;
 		//for (uint k = 0; k < graph->ticks.size(); k++) {
@@ -793,7 +3337,7 @@ namespace DiMP {
 	}
 
 
-	void BipedLIP::Print()//‰æ–Ê‚É•\¦‚·‚éŠÖ”
+	void BipedLIP::Print()//ï¿½ï¿½ï¿½Ê‚É•\ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öï¿½
 	{
 		real_t dt = 0.0001;
 		real_t tf = traj.back()->tick->time;
@@ -931,7 +3475,7 @@ namespace DiMP {
 		c1 = obj[1]->var_cop_pos->val;
 	}
 
-	void BipedLipConP::CalcCoef() {//dSˆÊ’u(¶•Ó-‰E•Ó)‚ğ•Î”÷•ª
+	void BipedLipConP::CalcCoef() {//ï¿½dï¿½Sï¿½Ê’u(ï¿½ï¿½ï¿½ï¿½-ï¿½Eï¿½ï¿½)ï¿½ï¿½ï¿½Î”ï¿½ï¿½ï¿½
 		Prepare();
 
 		((SLink*)links[0])->SetCoef(1.0);
@@ -942,7 +3486,7 @@ namespace DiMP {
 		((C2Link*)links[5])->SetCoef(-(S / T)*(p0 - c0) - C * (v0 - (c1 - c0) / tau) - (T*S)*(c1 - c0) / tau2);
 	}
 
-	void BipedLipConV::CalcCoef() {//dS‘¬“x(¶•Ó-‰E•Ó)‚ğ•Î”÷•ª
+	void BipedLipConV::CalcCoef() {//ï¿½dï¿½Sï¿½ï¿½ï¿½x(ï¿½ï¿½ï¿½ï¿½-ï¿½Eï¿½ï¿½)ï¿½ï¿½ï¿½Î”ï¿½ï¿½ï¿½
 		Prepare();
 
 		((SLink*)links[0])->SetCoef(1.0);

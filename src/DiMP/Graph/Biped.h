@@ -89,18 +89,22 @@ namespace DiMP {
 		/// swing foot trajectory type
 		struct SwingProfile {
 			enum {
-				Wedge,        ///< 
-				Cycloid,      ///< 
+				Wedge,        ///<
+				Cycloid,      ///<
+				Heel_Toe,
 			};
 		};
 
 		struct Param {
 			real_t	gravity;				///< gravity (positive)
 			real_t  heightCoM;
+			real_t  heightlow;
+			real_t  heighthigh;
+			real_t  heightmiddle;
 			real_t  torsoMass;
 			real_t  footMass;
-			//real_t  thetaHeel; //æùÚ’nŠp
-			//real_t  thetaToe; //‚Â‚Üæ—£’nŠp
+			real_t  thetaHeel; //ï¿½ï¿½ï¿½Ú’nï¿½p
+			real_t  thetaToe; //ï¿½Â‚Üæ—£ï¿½nï¿½p
 			int     swingProfile;
 			real_t  swingHeight[2];             ///< 0: maximum swing height
 												///< 1: lowest height before touch down. for wedge only
@@ -112,7 +116,7 @@ namespace DiMP {
 			real_t  footOriMax[2];
 			vec2_t  copPosMin;                  ///< admissible range of CoP relative to foot
 			vec2_t  copPosMax;
-			real_t  T;                      ///< time constant of LIP Žž’è”
+			real_t  T;                      ///< time constant of LIP ï¿½ï¿½ï¿½è”
 			real_t  angAccMax;              ///< maximum admissible angular acceleration
 			real_t  turnMax;                ///< maximum admissible turning angle in single step
 
@@ -122,7 +126,7 @@ namespace DiMP {
 			Param();
 		};
 
-		/// Œo—R“_
+		/// ï¿½oï¿½Rï¿½_
 		struct Waypoint {
 			int     k;
 			real_t  time;
@@ -144,7 +148,7 @@ namespace DiMP {
 			Waypoint();
 		};
 
-		/// ‹O“¹
+		/// ï¿½Oï¿½ï¿½
 		struct TrajPoint {
 			real_t  t;
 			vec3_t  com_pos;
@@ -177,7 +181,7 @@ namespace DiMP {
 		vec3_t FootPos(real_t t, int side);
 		quat_t FootOri(real_t t, int side);
 		vec3_t CopPos(real_t t);
-		//real_t AnklePitch(real_t t, int side);
+		real_t AnklePitch(real_t t, int side);
 
 
 		vec3_t TorsoPos(const vec3_t& pcom, const vec3_t& psup, const vec3_t& pswg);
@@ -186,7 +190,7 @@ namespace DiMP {
 		void Draw(Render::Canvas* canvas, Render::Config* conf);
 		void DrawSnapshot(real_t time, Render::Canvas* canvas, Render::Config* conf);
 		void Save();
-		void Print();//‰æ–Ê‚É•\Ž¦‚·‚éŠÖ”
+		void Print();//ï¿½ï¿½ï¿½Ê‚É•\ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öï¿½
 
 	public:
 		BipedLIP(Graph* g, string n);

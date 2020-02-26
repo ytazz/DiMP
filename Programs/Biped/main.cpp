@@ -1,6 +1,6 @@
 #include <DiMP/DiMP.h>
 
-/** 2‘«ƒƒ{ƒbƒg‚Ìƒoƒ‰ƒ“ƒX§Œä
+/** 2ï¿½ï¿½ï¿½ï¿½ï¿½{ï¿½bï¿½gï¿½Ìƒoï¿½ï¿½ï¿½ï¿½ï¿½Xï¿½ï¿½ï¿½ï¿½
 */
 
 class MyApp : public DiMP::App, public DiMP::Render::Config {
@@ -41,19 +41,23 @@ public:
 	virtual void BuildScene() {
 		biped = new DiMP::BipedLIP(graph, "biped");
 		biped->param.gravity = 9.8;
-		biped->param.heightCoM = 0.4823;
+		biped->param.heightCoM = 0.496;
+		biped->param.heightlow = 0.52;
+		biped->param.heighthigh = 0.54;
+		//biped->param.heightmiddle = (2*biped->param.heightlow + biped->param.heighthigh)/3;
+		biped->param.heightmiddle = (biped->param.heightlow + biped->param.heighthigh)/2;
 		biped->param.torsoMass = 4.432*0.8;
 		biped->param.footMass = (4.432 - biped->param.torsoMass) / 2;
-		//biped->param.thetaHeel = 15.9160 * M_PI / 180;
-		//biped->param.thetaToe = biped->param.thetaHeel;
+		biped->param.thetaHeel = 20 * M_PI / 180;
+		biped->param.thetaToe = 20 * M_PI / 180;
 		biped->param.durationMin[DiMP::BipedLIP::Phase::R] = 0.1;
-		biped->param.durationMax[DiMP::BipedLIP::Phase::R] = 0.7;
+		biped->param.durationMax[DiMP::BipedLIP::Phase::R] = 0.8;
 		biped->param.durationMin[DiMP::BipedLIP::Phase::L] = 0.1;
-		biped->param.durationMax[DiMP::BipedLIP::Phase::L] = 0.7;
+		biped->param.durationMax[DiMP::BipedLIP::Phase::L] = 0.8;
 		biped->param.durationMin[DiMP::BipedLIP::Phase::RL] = 0.1;
-		biped->param.durationMax[DiMP::BipedLIP::Phase::RL] = 0.3;
+		biped->param.durationMax[DiMP::BipedLIP::Phase::RL] = 0.2;
 		biped->param.durationMin[DiMP::BipedLIP::Phase::LR] = 0.1;
-		biped->param.durationMax[DiMP::BipedLIP::Phase::LR] = 0.3;
+		biped->param.durationMax[DiMP::BipedLIP::Phase::LR] = 0.2;
 		biped->param.footPosMin[0] = vec2_t(-0.20, -0.14);
 		biped->param.footPosMax[0] = vec2_t(0.20, -0.07);
 		biped->param.footPosMin[1] = vec2_t(-0.20, 0.07);
@@ -63,8 +67,8 @@ public:
 		biped->param.footOriMin[1] = Rad(-15.0);
 		biped->param.footOriMax[1] = Rad(15.0);
 
-		// •à”Ý’èDtick‚ÌŽž‚ÍŽg‚í‚ê‚È‚¢
-		const uint nstep = 10;
+		// ï¿½ï¿½ï¿½ï¿½ï¿½Ý’ï¿½ï¿½Dtickï¿½ÌŽï¿½ï¿½ï¿½ï¿½ÍŽgï¿½ï¿½ï¿½ï¿½ï¿½È‚ï¿½
+		const uint nstep = 13;
 		//const uint nstep = 30;
 		const uint nphase = 2 * nstep + 1;
 
@@ -72,25 +76,26 @@ public:
 			new DiMP::Tick(graph, 0.0, "");
 
 		biped->phase.resize(nphase);
+
 		for (uint i = 0; i < nphase; i++) {
 			switch (i % 4) {
-			case 0: biped->phase[i] = DiMP::BipedLIP::Phase::LR; break;
-			case 1: biped->phase[i] = DiMP::BipedLIP::Phase::R; break;
-			case 2: biped->phase[i] = DiMP::BipedLIP::Phase::RL; break;
-			case 3: biped->phase[i] = DiMP::BipedLIP::Phase::L; break;
+			case 0: biped->phase[i] = DiMP::BipedLIP::Phase::RL; break;
+			case 1: biped->phase[i] = DiMP::BipedLIP::Phase::L; break;
+			case 2: biped->phase[i] = DiMP::BipedLIP::Phase::LR; break;
+			case 3: biped->phase[i] = DiMP::BipedLIP::Phase::R; break;
 			}
 		}
 
-		real_t spacing = 0.1; //‘«‚ÌŠJ‚«•
+		real_t spacing = 0.1; //ï¿½ï¿½ï¿½ÌŠJï¿½ï¿½ï¿½ï¿½
 
-							  //real_t step_length = 0.1; //’èí•àsŽž‚Ì•à•
-							  //vec2_t steady_start_r(5 * step_length*0.6, -spacing); //’èí•àsŠJŽnŽž‚Ì‰E‘«Ú’nˆÊ’u
-							  //vec2_t steady_start_l(5 * step_length*0.6 - step_length, spacing); //’èí•àsŠJŽnŽž‚Ì¶‘«Ú’nˆÊ’u
+							  //real_t step_length = 0.1; //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½sï¿½ï¿½ï¿½Ì•ï¿½ï¿½ï¿½
+							  //vec2_t steady_start_r(5 * step_length*0.6, -spacing); //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½sï¿½Jï¿½nï¿½ï¿½ï¿½Ì‰Eï¿½ï¿½ï¿½Ú’nï¿½Ê’u
+							  //vec2_t steady_start_l(5 * step_length*0.6 - step_length, spacing); //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½sï¿½Jï¿½nï¿½ï¿½ï¿½Ìï¿½ï¿½ï¿½ï¿½Ú’nï¿½Ê’u
 							  //real_t steady_start_time = 5 * step_length*0.6;
 
-							  //vec2_t goalPos(5*step_length*0.6*2 + 20* step_length, 0.0); //–Ú•WˆÊ’u
-		vec2_t goalPos(2.0, 0.0); //–Ú•WˆÊ’u
-		real_t goalOri = Rad(0); //–Ú•WŽp¨
+							  //vec2_t goalPos(5*step_length*0.6*2 + 20* step_length, 0.0); //ï¿½Ú•Wï¿½Ê’u
+		vec2_t goalPos(3.0, 0.0); //ï¿½Ú•Wï¿½Ê’u
+		real_t goalOri = Rad(0); //ï¿½Ú•Wï¿½pï¿½ï¿½
 
 		biped->waypoints.resize(2);
 		//biped->waypoints.resize(3);
