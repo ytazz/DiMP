@@ -38,11 +38,11 @@ public:
 		for(real_t t = 0.0; t <= 5.0; t += 0.5)
 			new DiMP::Tick(graph, t);
 
-		graph->SetCorrectionRate(DiMP::ID(), 0.1);
+		graph->solver->SetCorrection(ID(), 0.1);
 		graph->Init();
 
-		graph->Enable(DiMP::ID(DiMP::ConTag::ObjectC1T), false);
-		graph->Enable(DiMP::ID(DiMP::ConTag::ObjectC1R), false);
+		graph->solver->Enable(ID(DiMP::ConTag::ObjectC1T), false);
+		graph->solver->Enable(ID(DiMP::ConTag::ObjectC1R), false);
 
 		object[0]->ForwardKinematics();
 	}
