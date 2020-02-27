@@ -103,8 +103,8 @@ namespace DiMP {
 			real_t  heightmiddle;
 			real_t  torsoMass;
 			real_t  footMass;
-			real_t  thetaHeel; //���ڒn�p
-			real_t  thetaToe; //�ܐ旣�n�p
+			real_t  thetaHeel;
+			real_t  thetaToe; 
 			int     swingProfile;
 			real_t  swingHeight[2];             ///< 0: maximum swing height
 												///< 1: lowest height before touch down. for wedge only
@@ -116,7 +116,7 @@ namespace DiMP {
 			real_t  footOriMax[2];
 			vec2_t  copPosMin;                  ///< admissible range of CoP relative to foot
 			vec2_t  copPosMax;
-			real_t  T;                      ///< time constant of LIP ���萔
+			real_t  T;                      ///< time constant of LIP
 			real_t  angAccMax;              ///< maximum admissible angular acceleration
 			real_t  turnMax;                ///< maximum admissible turning angle in single step
 
@@ -126,7 +126,6 @@ namespace DiMP {
 			Param();
 		};
 
-		/// �o�R�_
 		struct Waypoint {
 			int     k;
 			real_t  time;
@@ -148,7 +147,6 @@ namespace DiMP {
 			Waypoint();
 		};
 
-		/// �O��
 		struct TrajPoint {
 			real_t  t;
 			vec3_t  com_pos;
@@ -189,8 +187,8 @@ namespace DiMP {
 		void CalcTrajectory();
 		void Draw(Render::Canvas* canvas, Render::Config* conf);
 		void DrawSnapshot(real_t time, Render::Canvas* canvas, Render::Config* conf);
-		void Save();
-		void Print();//���ʂɕ\�������֐�
+		void Save (const char* filename);
+		void Print();
 
 	public:
 		BipedLIP(Graph* g, string n);

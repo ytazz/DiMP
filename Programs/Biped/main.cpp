@@ -1,7 +1,4 @@
-#include <DiMP/DiMP.h>
-
-/** 2�����{�b�g�̃o�����X����
-*/
+﻿#include <DiMP/DiMP.h>
 
 class MyApp : public DiMP::App, public DiMP::Render::Config {
 public:
@@ -21,6 +18,7 @@ public:
 
 	vec3_t  targetPos;
 	uint    curIdx;
+	string  saveFilename;
 
 public:
 	MyApp() {
@@ -34,6 +32,8 @@ public:
 		AddAction(MENU_MAIN, ID_DEC, "decrease")->AddHotKey('m');
 		AddAction(MENU_MAIN, ID_SAVE, "save")->AddHotKey('s');
 
+		saveFilename = "save.csv";
+
 		curIdx = 0;
 	}
 	virtual ~MyApp() {}
@@ -44,7 +44,6 @@ public:
 		biped->param.heightCoM = 0.496;
 		biped->param.heightlow = 0.52;
 		biped->param.heighthigh = 0.54;
-		//biped->param.heightmiddle = (2*biped->param.heightlow + biped->param.heighthigh)/3;
 		biped->param.heightmiddle = (biped->param.heightlow + biped->param.heighthigh)/2;
 		biped->param.torsoMass = 4.432*0.8;
 		biped->param.footMass = (4.432 - biped->param.torsoMass) / 2;
@@ -67,9 +66,7 @@ public:
 		biped->param.footOriMin[1] = Rad(-15.0);
 		biped->param.footOriMax[1] = Rad(15.0);
 
-		// �����ݒ��Dtick�̎����͎g�����Ȃ�
 		const uint nstep = 13;
-		//const uint nstep = 30;
 		const uint nphase = 2 * nstep + 1;
 
 		for (uint i = 0; i < nphase; i++)
@@ -86,20 +83,12 @@ public:
 			}
 		}
 
-		real_t spacing = 0.1; //���̊J����
-
-							  //real_t step_length = 0.1; //�������s���̕���
-							  //vec2_t steady_start_r(5 * step_length*0.6, -spacing); //�������s�J�n���̉E���ڒn�ʒu
-							  //vec2_t steady_start_l(5 * step_length*0.6 - step_length, spacing); //�������s�J�n���̍����ڒn�ʒu
-							  //real_t steady_start_time = 5 * step_length*0.6;
-
-							  //vec2_t goalPos(5*step_length*0.6*2 + 20* step_length, 0.0); //�ڕW�ʒu
-		vec2_t goalPos(3.0, 0.0); //�ڕW�ʒu
-		real_t goalOri = Rad(0); //�ڕW�p��
+		real_t spacing = 0.1;
+		vec2_t goalPos(3.0, 0.0);
+		real_t goalOri = Rad(0);
 
 		biped->waypoints.resize(2);
-		//biped->waypoints.resize(3);
-
+		
 		biped->waypoints[0].k = 0;
 		biped->waypoints[0].torso_pos_t = vec2_t(0.0, 0.0);
 		biped->waypoints[0].torso_pos_r = 0.0;
@@ -136,8 +125,6 @@ public:
 		biped->waypoints[1].fix_foot_pos_t[1] = true;
 		biped->waypoints[1].fix_foot_pos_r[1] = true;
 
-
-
 		graph->scale.Set(1.0, 1.0, 1.0);
 		graph->Init();
 
@@ -167,7 +154,7 @@ public:
 			if (id == ID_DEC) {
 			}
 			if (id == ID_SAVE) {
-				biped->Save();
+				biped->Save(saveFilename.c_str());
 			}
 		}
 		App::OnAction(menu, id);
