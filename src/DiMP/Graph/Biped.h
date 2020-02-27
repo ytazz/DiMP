@@ -89,9 +89,9 @@ namespace DiMP {
 		/// swing foot trajectory type
 		struct SwingProfile {
 			enum {
-				Wedge,        ///<
-				Cycloid,      ///<
-				Heel_Toe,
+				Wedge,        ///< flat-landing with wedge-like swing profile
+				Cycloid,      ///< flat-landing with cycloid swing profile
+				HeelToe,      ///< heel-to-toe walking
 			};
 		};
 

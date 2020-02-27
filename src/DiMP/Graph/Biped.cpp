@@ -180,18 +180,16 @@ void BipedLIPKey::Draw(Render::Canvas* canvas, Render::Config* conf) {
 // BipedLIP
 
 BipedLIP::Param::Param() {
-	gravity = 9.8;
-	heightCoM = 0.496;
-	heightlow = 0.45;
-	heighthigh = 0.51;
-	heightmiddle = (heightlow + heighthigh)/2;
-	torsoMass = 4.432*0.8;
-	footMass = (4.432 - torsoMass) / 2;
-	//swingProfile = SwingProfile::Wedge;
-	//swingProfile = SwingProfile::Cycloid;
-	swingProfile = SwingProfile::Heel_Toe;
-	thetaHeel = 20 * pi/180;
-	thetaToe = 20 * pi/180;
+	gravity        = 9.8;
+	heightCoM      = 0.496;
+	heightlow      = 0.45;
+	heighthigh     = 0.51;
+	heightmiddle   = (heightlow + heighthigh)/2;
+	torsoMass      = 4.432*0.8;
+	footMass       = (4.432 - torsoMass) / 2;
+	swingProfile   = SwingProfile::Cycloid;
+	thetaHeel      = 20 * pi/180;
+	thetaToe       = 20 * pi/180;
 	swingHeight[0] = 0.1; //0: maximum swing foot height
 	swingHeight[1] = 0.1; //1: swing foot height before landing (Wedge only)
 	durationMin[Phase::R] = 0.1; // duration minimum at single support
@@ -271,6 +269,7 @@ BipedLIP::~BipedLIP() {
 void BipedLIP::Init() {
 	TrajectoryNode::Init();
 
+	/*
 	int n, n1;
 	real_t heightd;
 	FILE* fp = fopen("Test.csv", "r");
@@ -288,9 +287,9 @@ void BipedLIP::Init() {
 		}
 	fclose(fp);
 	fclose(fp1);
-
+	*/
 	// time constant of inverted pendulum
-	param.T = sqrt(heightd/*param.heightCoM*/ / param.gravity);
+	param.T = sqrt(param.heightCoM / param.gravity);
 
 	real_t durationAve[Phase::Num];
 	for (int i = 0; i < Phase::Num; i++)
@@ -638,7 +637,7 @@ vec3_t BipedLIP::FootPos(real_t t, int side) {
 		int ph = phase[key0->tick->idx];
 
 		//foot_shape_change
-		if (param.swingProfile == SwingProfile::Heel_Toe){
+		if (param.swingProfile == SwingProfile::HeelToe){
 			real_t _2pi = 2.0*M_PI;
 			real_t tau = (t - t0) / h;
 			real_t tau1 = (t - t0) / (td - t0);
@@ -695,7 +694,7 @@ vec3_t BipedLIP::FootPos(real_t t, int side) {
 				fprintf(fp, "%d", n);
 				fclose(fp);
 			}
-			else if (ph == Phase::LR && side == 0) { //�ܐ您�낵
+			else if (ph == Phase::LR && side == 0) {
 				FILE* fp = fopen("Test.csv", "r");
 				fscanf(fp, "%d", &thetad);
 
@@ -795,7 +794,7 @@ vec3_t BipedLIP::FootPos(real_t t, int side) {
 				fclose(fp1);
 
 			}
-			else if (ph == Phase::RL && side == 1) { //�ܐ您�낵
+			else if (ph == Phase::RL && side == 1) {
 				FILE* fp1 = fopen("Test1.csv", "r");
 				fscanf(fp1, "%d", &thetad);
 
@@ -929,7 +928,7 @@ real_t BipedLIP::AnklePitch(real_t t, int side) {
 		vec2_t c1 = key1->var_cop_pos->val;
 		int ph = phase[key0->tick->idx];
 		//foot_shape_change
-		if (param.swingProfile == SwingProfile::Heel_Toe){
+		if (param.swingProfile == SwingProfile::HeelToe){
 			real_t _2pi = 2.0*M_PI;
 			real_t tau = (t - t0) / h;
 			real_t c = c0.x + (c1.x - c0.x)*tau;
