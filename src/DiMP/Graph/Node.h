@@ -195,7 +195,7 @@ public:
 	/// create keypoint
 	virtual Keypoint* CreateKeypoint() = 0;
 	
-	/// take snapshot at givein time
+	/// take snapshot at given time
 	virtual void CreateSnapshot(real_t t){}
 
 	/// draw snapshot

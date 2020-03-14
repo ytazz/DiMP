@@ -5,9 +5,12 @@
 
 #include<stdio.h>
 
+#include <sbrollpitchyaw.h>
+
 namespace DiMP {;
 
-const real_t pi = M_PI;
+const real_t   pi = M_PI;
+const real_t _2pi = 2.0*pi;
 
 //-------------------------------------------------------------------------------------------------
 // BipedLIPKey
@@ -55,17 +58,20 @@ void BipedLIPKey::AddCon(Solver* solver) {
 		con_lip_v = new BipedLipConV(solver, name + "_lip_v", this, node->graph->scale.vel_t);
 	}
 
-	con_foot_t[0] = new BipedFootConT(solver, name + "_foot_range_r_t", this, 0, node->graph->scale.pos_t);
-	con_foot_r[0] = new BipedFootConR(solver, name + "_foot_range_r_r", this, 0, node->graph->scale.pos_r);
-	con_foot_t[1] = new BipedFootConT(solver, name + "_foot_range_l_t", this, 1, node->graph->scale.pos_t);
-	con_foot_r[1] = new BipedFootConR(solver, name + "_foot_range_l_r", this, 1, node->graph->scale.pos_r);
+	con_foot_t[0][0] = new BipedFootConT(solver, name + "_foot_range_r_t", this, 0, vec2_t(1.0, 0.0), node->graph->scale.pos_t);
+	con_foot_t[0][1] = new BipedFootConT(solver, name + "_foot_range_r_t", this, 0, vec2_t(0.0, 1.0), node->graph->scale.pos_t);
+	con_foot_r[0]    = new BipedFootConR(solver, name + "_foot_range_r_r", this, 0,                   node->graph->scale.pos_r);
+	con_foot_t[1][0] = new BipedFootConT(solver, name + "_foot_range_l_t", this, 1, vec2_t(1.0, 0.0), node->graph->scale.pos_t);
+	con_foot_t[1][1] = new BipedFootConT(solver, name + "_foot_range_l_t", this, 1, vec2_t(0.0, 1.0), node->graph->scale.pos_t);
+	con_foot_r[1]    = new BipedFootConR(solver, name + "_foot_range_l_r", this, 1,                   node->graph->scale.pos_r);
 
 	int phase = obj->phase[tick->idx];
 	int side;
 	if (phase == BipedLIP::Phase::R || phase == BipedLIP::Phase::RL)
 		side = 0;
 	else side = 1;
-	con_cop = new BipedCopCon(solver, name + "_cop", this, side, node->graph->scale.pos_t);
+	con_cop[0] = new BipedCopCon(solver, name + "_cop", this, side, vec2_t(1.0, 0.0), node->graph->scale.pos_t);
+	con_cop[1] = new BipedCopCon(solver, name + "_cop", this, side, vec2_t(0.0, 1.0), node->graph->scale.pos_t);
 
 	if (next) {
 		con_duration = new RangeConS(solver, ID(ConTag::BipedDuration, node, tick, name + "_duration"), var_duration, node->graph->scale.time);
@@ -86,9 +92,6 @@ void BipedLIPKey::AddCon(Solver* solver) {
 void BipedLIPKey::Prepare() {
 	BipedLIP* obj = (BipedLIP*)node;
 
-	// tick's time is updated from time variable
-	tick->time = var_time->val;
-
 	if (!prev) {
 		// initial time is fixed
 		var_time->val = 0.0;
@@ -102,6 +105,15 @@ void BipedLIPKey::Prepare() {
 		con_foot_match_t[1]->enabled = (phase != BipedLIP::Phase::R);
 		con_foot_match_r[1]->enabled = (phase != BipedLIP::Phase::R);
 	}
+}
+
+void BipedLIPKey::Finish(){
+	BipedLIP* obj = (BipedLIP*)node;
+	
+	// tick's time is updated from time variable
+	tick->time = var_time->val;
+
+
 }
 
 void BipedLIPKey::Draw(Render::Canvas* canvas, Render::Config* conf) {
@@ -139,8 +151,8 @@ void BipedLIPKey::Draw(Render::Canvas* canvas, Render::Config* conf) {
 	canvas->Point(pcom);
 
 	// feet
-	Vec2f cmin = obj->param.FootShapeMin; //CoPMinmum
-	Vec2f cmax = obj->param.FootShapeMax; //CoPMax
+	Vec2f cmin = obj->param.copPosMin; //CoPMinmum
+	Vec2f cmax = obj->param.copPosMax; //CoPMax
 
 	for (uint i = 0; i < 2; i++) {
 		pf[i].x = (float)var_foot_pos_t[i]->val.x;
@@ -188,8 +200,6 @@ BipedLIP::Param::Param() {
 	torsoMass      = 4.432*0.8;
 	footMass       = (4.432 - torsoMass) / 2;
 	swingProfile   = SwingProfile::Cycloid;
-	thetaHeel      = 20 * pi/180;
-	thetaToe       = 20 * pi/180;
 	swingHeight[0] = 0.1; //0: maximum swing foot height
 	swingHeight[1] = 0.1; //1: swing foot height before landing (Wedge only)
 	durationMin[Phase::R] = 0.1; // duration minimum at single support
@@ -211,13 +221,16 @@ BipedLIP::Param::Param() {
 	footOriMin[1] = -Rad(15.0);
 	footOriMax[1] = Rad(15.0);
 
-	FootShapeMin = vec2_t(-0.0853, -0.05); //FootMinmum
-	FootShapeMax = vec2_t( 0.0853,  0.05); //FootMax
-	copPosMin    = vec2_t(-0.0853,  0.0 ); //CoPMinmum
-	copPosMax    = vec2_t( 0.0853,  0.0 ); //CoPMax
+	copPosMin    = vec2_t(-0.1, -0.05 );
+	copPosMax    = vec2_t( 0.1,  0.05 );
 
 	angAccMax = 0.3;
-	turnMax = 0.5;
+	turnMax   = 0.5;
+
+	ankleToToe  = 0.07;
+	ankleToHeel = 0.07;
+	toeRadius   = 0.03;
+	heelRadius  = 0.03;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -245,7 +258,7 @@ BipedLIP::Waypoint::Waypoint() {
 }
 
 //-------------------------------------------------------------------------------------------------
-BipedLIP::TrajPoint::TrajPoint() {
+BipedLIP::Snapshot::Snapshot() {
 	t = 0.0;
 	torso_pos_t = vec3_t();
 	torso_pos_r = 0.0;
@@ -318,14 +331,18 @@ void BipedLIP::Init() {
 
 		// range limit of foot position
 		for (int i = 0; i < 2; i++) {
-			key->con_foot_t[i]->_min = param.footPosMin[i];
-			key->con_foot_t[i]->_max = param.footPosMax[i];
-			key->con_foot_r[i]->_min = param.footOriMin[i];
-			key->con_foot_r[i]->_max = param.footOriMax[i];
+			key->con_foot_t[i][0]->_min = param.footPosMin[i][0];
+			key->con_foot_t[i][1]->_min = param.footPosMin[i][1];
+			key->con_foot_t[i][0]->_max = param.footPosMax[i][0];
+			key->con_foot_t[i][1]->_max = param.footPosMax[i][1];
+			key->con_foot_r[i]   ->_min = param.footOriMin[i];
+			key->con_foot_r[i]   ->_max = param.footOriMax[i];
 		}
 
-		key->con_cop->_min = param.copPosMin;
-		key->con_cop->_max = param.copPosMax;
+		key->con_cop[0]->_min = param.copPosMin[0];
+		key->con_cop[1]->_min = param.copPosMin[1];
+		key->con_cop[0]->_max = param.copPosMax[0];
+		key->con_cop[1]->_max = param.copPosMax[1];
 
 		t += durationAve[phase[k]];
 	}
@@ -410,6 +427,10 @@ void BipedLIP::Init() {
 void BipedLIP::Prepare() {
 	TrajectoryNode::Prepare();
 	trajReady = false;
+}
+
+void BipedLIP::Finish() {
+	TrajectoryNode::Finish();
 }
 
 int BipedLIP::Phase(real_t t) {
@@ -589,325 +610,197 @@ real_t BipedLIP::TorsoAngAcc(real_t t) {
 	return a;
 }
 
-
-vec3_t BipedLIP::FootPos(real_t t, int side) {
+pose_t BipedLIP::FootPose(real_t t, int side) {
+	BipedLIPKey* keym2 = 0;
+	BipedLIPKey* keym1 = 0;
 	BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;
 	BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;
-	real_t       t0 = key0->tick->time;
-	real_t       t1 = key1->tick->time;
-	real_t       h = t1 - t0;
-	real_t       hhalf = h / 2.0;
-	real_t       hspan = 0.3*h;
-	real_t       t00 = t0 + hspan;
-	real_t       t11 = t1 - hspan;
-	real_t       td = (t0 + t1)/10;
-	real_t       tdd = (t0 + t1)*29/30;
+	BipedLIPKey* key2  = 0;
+	BipedLIPKey* key3  = 0;
 
-	vec2_t pt;
-	real_t z = 0.0;
-	real_t s = 0.0;
-	real_t theta=0.0;
-	real_t theta0 = 30*pi/180;
-	real_t theta1 = -30*pi/180;
-	real_t thetatoe = 10*pi/180;
-	real_t thetaheel = 10*pi/180;
-	real_t theta_ds;
-	int thetad;
-	real_t px;
+	if(         key0 ->prev) keym1 = (BipedLIPKey*)key0 ->prev;
+	if(keym1 && keym1->prev) keym2 = (BipedLIPKey*)keym1->prev;
+	if(         key1 ->next) key2  = (BipedLIPKey*)key1 ->next;
+	if(key2  && key2 ->next) key3  = (BipedLIPKey*)key2 ->next;
 
-	real_t l = 0.16;
-	real_t l0 = 0.08;
-	real_t l1 = 0.08;
-	real_t L = 0.20;
-	real_t r0 = 0.03;
-	real_t r1 = 0.03;
+	pose_t pose;
+	vec2_t pos2;         //< pos x, y
+	real_t z     = 0.0;  //< pos z
+	real_t theta = 0.0;  //< pitch angle
 
-	int n;
-	real_t dev = 0.0;
+	// phase
+	int ph = phase[key0->tick->idx];
 
-	if (key1) {
-		real_t dt = t - key0->var_time->val;
-		real_t tau = key0->var_duration->val;
-		vec2_t p0 = key0->var_foot_pos_t[side]->val;
-		vec2_t p1 = key1->var_foot_pos_t[side]->val;
-		vec2_t c0 = key0->var_cop_pos->val;
-		vec2_t c1 = key1->var_cop_pos->val;
-
-		// swing foot during single support phase
-		int ph = phase[key0->tick->idx];
-
-		//foot_shape_change
-		if (param.swingProfile == SwingProfile::HeelToe){
-			real_t _2pi = 2.0*M_PI;
-			real_t tau = (t - t0) / h;
-			real_t tau1 = (t - t0) / (td - t0);
-			real_t tau2 = (t - tdd) / (t1 - tdd);
-			real_t p00x = (p0.x + dev) + r0*(theta0 - sin(theta0)) + l0*(1 - cos(theta0));
-			real_t p11x = (p1.x + dev) - (r1*(-theta1 - sin(-theta1)) + l1*(1 - cos(theta1)));
-			real_t p00z = r0*(1 - cos(theta0)) + l0*sin(theta0);
-			real_t p11z = r1*(1 - cos(theta1)) + l1*sin(-theta1);
-			real_t d = p1.x - p0.x;
-			real_t c = c0.x + (c1.x - c0.x)*tau;
-			real_t thetadash = 2*pi*tau;
-
-			if((c0.x - (p1.x + dev)) > l0){
-				n = 1;
+	real_t dt  = t - key0->var_time->val;  //< elapsed time since phase change
+	real_t tau = key0->var_duration->val;  //< phase duration
+	real_t s   = dt/tau;                   //< normalized time
+	vec2_t p0  = key0->var_foot_pos_t[side]->val;
+	vec2_t p1  = key1->var_foot_pos_t[side]->val;
+			
+	if (param.swingProfile == SwingProfile::Wedge) {
+		// double support
+		if(ph == Phase::LR || ph == Phase::RL){
+			pos2 = key0->var_foot_pos_t[side]->val;
+		}
+		// support foot of single support
+		if( (ph == Phase::R && side == 0) ||
+		    (ph == Phase::L && side == 1) ){
+			pos2 = key0->var_foot_pos_t[side]->val;
+		}
+		// swing foot of single support
+		if( (ph == Phase::R && side == 1) ||
+		    (ph == Phase::L && side == 0) ){
+			if (dt < tau/2.0) {
+				z = param.swingHeight[0];
 			}
 			else{
-				n = 0;
+				real_t a = dt/(tau/2.0) - 1.0;
+				z = (1 - a)*param.swingHeight[0] + a*param.swingHeight[1];
 			}
+			pos2 = p0 + (p1 - p0)*s;
+		}
+		pose.Pos() = vec3_t(pos2.x, pos2.y, z);
+	}
+	if (param.swingProfile == SwingProfile::Cycloid){
+		// double support
+		if(ph == Phase::LR || ph == Phase::RL){
+			pos2 = key0->var_foot_pos_t[side]->val;
+		}
+		// support foot of single support
+		if( (ph == Phase::R && side == 0) ||
+		    (ph == Phase::L && side == 1) ){
+			pos2 = key0->var_foot_pos_t[side]->val;
+		}
+		// swing foot of single support
+		if( (ph == Phase::R && side == 1) ||
+		    (ph == Phase::L && side == 0) ){
+			real_t ch = (s - sin(_2pi*s)/_2pi);
+			real_t cv = (1 - cos(_2pi*s))/2.0;
+				
+			pos2 = p0 + (p1 - p0)*ch;
+			z    = param.swingHeight[0]*cv;
+		}
+		pose.Pos() = vec3_t(pos2.x, pos2.y, z);
+	}
+	if(param.swingProfile == SwingProfile::HeelToe){
+		real_t l0 = param.ankleToToe ;
+		real_t l1 = param.ankleToHeel;
+		real_t r0 = param.toeRadius  ;
+		real_t r1 = param.heelRadius ;
 
-			if(ph == Phase::L && side == 0){
-				FILE* fp = fopen("Test.csv", "r");
-				fscanf(fp, "%d", &thetad);
-
-				if(thetad == 0){
-					//real_t alpha = atan(p11z/(p11x-p0.x));
-					real_t a = d/(2*pi);
-					px = (p0.x + dev) + a*(thetadash-sin(thetadash));
-					z = a*(1-cos(thetadash))/2;
-				}
-				else{
-					real_t a = sqrt((p11x - p00x)*(p11x - p00x) + (p11z - p00z)*(p11z - p00z))/(2*pi);
-					real_t alpha = atan((p11z-p00z)/(p11x-p00x));
-					px = p00x + a*((thetadash-sin(thetadash))*cos(alpha)-(1-cos(thetadash))*sin(alpha));
-					z = p00z + a*((1-cos(thetadash))*cos(alpha)/5+(thetadash-sin(thetadash))*sin(alpha));
-					// px = p00x + a*(thetadash-sin(thetadash));
-					// z = p00z + a*(1-cos(thetadash))/3;
-				}
-				s = (px - (p0.x + dev))/d;
-
-				fclose(fp);
+		vec2_t c0 = key0->var_cop_pos->val;
+		vec2_t c1 = key1->var_cop_pos->val;
+		real_t ct = c0.x + (c1.x - c0.x)*s;
+		
+		// support foot of single support phase
+		if( (ph == Phase::R && side == 0) ||
+			(ph == Phase::L && side == 1) ){
+			
+			// current cop is on heel
+			if(ct < p0.x - l1){
+				theta  = (ct - (p0.x - l1))/r1;
+				pos2.x = p0.x + r1*(theta - sin(theta)) - l1*(1-cos(theta));
+				z      =        r1*(1.0   - cos(theta)) - l1*sin(theta);
 			}
-			else if (ph == Phase::RL && side == 0){
-				if(n == 0){
-					theta = 0;
-				}
-				else{
-					theta_ds = (c0.x - (p1.x + dev) -l0)/r0;
-					theta = theta_ds + (theta0 - theta_ds)*tau;
-				}
-				s = 1 + (r0*(theta - sin(theta)) + l0*(1-cos(theta)))/d;
-				z = r0*(1 - cos(theta)) + l0*sin(theta);
-
-				FILE* fp = fopen("Test.csv", "w");
-				fprintf(fp, "%d", n);
-				fclose(fp);
+			// current cop is on toe
+			else if(ct > p0.x + l0){
+				theta  = (ct - (p0.x + l0))/r0;
+				pos2.x = p0.x + r0*(theta - sin(theta)) + l0*(1 - cos(theta));
+				z      =        r0*(1.0   - cos(theta)) + l0*sin(theta);
 			}
-			else if (ph == Phase::LR && side == 0) {
-				FILE* fp = fopen("Test.csv", "r");
-				fscanf(fp, "%d", &thetad);
-
-				if(thetad == 0){
-					theta = 0;
-				}
-				else{
-					theta_ds = ((p1.x + dev) - c1.x -l1)/r1;
-					theta = -theta1 + (theta_ds + theta1)*tau;
-				}
-
-				s = 1 - (r1*(theta - sin(theta)) + l1*(1-cos(theta)))/d;
-				z = r1*(1 - cos(theta)) + l1*sin(theta);
-				fclose(fp);
-			}
-			else if (ph == Phase::R && side == 0){
-				FILE* fp = fopen("Test.csv", "r");
-				fscanf(fp, "%d", &thetad);
-
-				if(((c0.x - (p1.x + dev)) < -l1) && ((c1.x - (p1.x + dev)) > l0)){
-					if(c < ((p1.x + dev) - l1)){
-						if(thetad==0){
-							s = 1;
-							z = 0;
-						}
-						else{
-							theta = ((p1.x + dev) - c - l1)/r1;
-							s = 1 - (r1*(theta - sin(theta)) + l1*(1-cos(theta)))/d;
-							z = r1*(1 - cos(theta)) + l1*sin(theta);
-						}
-					}
-					else if(c > ((p1.x + dev) + l0)){
-						theta = (c - (p1.x + dev) - l0)/r0;
-						s = 1 + (r0*(theta - sin(theta)) + l0*(1-cos(theta)))/d;
-						z = r0*(1 - cos(theta)) + l0*sin(theta);
-					}
-					else{
-						s = 1;
-						z = 0;
-					}
-				}
-				else{
-					if(c < ((p1.x + dev) - l1)){
-						if(thetad==0){
-							s = 1;
-							z = 0;
-						}
-						else{
-							theta = ((p1.x + dev) - c - l1)/r1;
-							s = 1 - (r1*(theta - sin(theta)) + l1*(1-cos(theta)))/d;
-							z = r1*(1 - cos(theta)) + l1*sin(theta);
-						}
-					}
-					else{
-						s = 1;
-						z = 0;
-					}
-				}
-				fclose(fp);
-			}
-			else if (ph == Phase::R && side == 1){
-				FILE* fp1 = fopen("Test1.csv", "r");
-				fscanf(fp1, "%d", &thetad);
-
-				if(thetad == 0){
-					//real_t alpha = atan(p11z/(p11x-p0.x));
-					real_t a = d/(2*pi);
-					px = (p0.x + dev) + a*(thetadash-sin(thetadash));
-					z = a*((1-cos(thetadash)))/2;
-				}
-				else{
-					// real_t a = (p11x - p00x)/(2*pi);
-					// px = p00x + a*(thetadash-sin(thetadash));
-					// z = p00z + a*(1-cos(thetadash))/3;
-					real_t a = sqrt((p11x - p00x)*(p11x - p00x) + (p11z - p00z)*(p11z - p00z))/(2*pi);
-					real_t alpha = atan((p11z-p00z)/(p11x-p00x));
-					px = p00x + a*((thetadash-sin(thetadash))*cos(alpha)-(1-cos(thetadash))*sin(alpha));
-					z = p00z + a*((1-cos(thetadash))*cos(alpha)/5+(thetadash-sin(thetadash))*sin(alpha));
-				}
-				s = (px - (p0.x + dev))/d;
-				fclose(fp1);
-			}
-			else if (ph == Phase::LR && side == 1){
-				if(n == 0){
-					theta = 0;
-				}
-				else{
-					theta_ds = (c0.x - (p1.x + dev) -l0)/r0;
-					theta = theta_ds + (theta0 - theta_ds)*tau;
-				}
-
-				s = 1 + (r0*(theta - sin(theta)) + l0*(1-cos(theta)))/d;
-				z = r0*(1 - cos(theta)) + l0*sin(theta);
-
-				FILE* fp1 = fopen("Test1.csv", "w");
-				fprintf(fp1, "%d", n);
-				fclose(fp1);
-
-			}
-			else if (ph == Phase::RL && side == 1) {
-				FILE* fp1 = fopen("Test1.csv", "r");
-				fscanf(fp1, "%d", &thetad);
-
-				if(thetad == 0){
-					theta = 0;
-				}
-				else{
-					theta_ds = ((p1.x + dev) - c1.x -l1)/r1;
-					theta = -theta1 + (theta_ds + theta1)*tau;
-				}
-
-				s = 1 - (r1*(theta - sin(theta)) + l1*(1-cos(theta)))/d;
-				z = r1*(1 - cos(theta)) + l1*sin(theta);
-				fclose(fp1);
-			}
-			else if(ph == Phase::L && side == 1){
-				FILE* fp1 = fopen("Test1.csv", "r");
-				fscanf(fp1, "%d", &thetad);
-
-				if(((c0.x - (p1.x + dev)) < -l1) && ((c1.x - (p1.x + dev)) > l0)){
-					if(c < ((p1.x + dev) - l1)){
-						if(thetad==0){
-							s = 1;
-							z = 0;
-						}
-						else{
-							theta = ((p1.x + dev) - c - l1)/r1;
-							s = 1 - (r1*(theta - sin(theta)) + l1*(1-cos(theta)))/d;
-							z = r1*(1 - cos(theta)) + l1*sin(theta);
-						}
-					}
-					else if(c > ((p1.x + dev) + l0)){
-						theta = (c - (p1.x + dev) - l0)/r0;
-						s = 1 + (r0*(theta - sin(theta)) + l0*(1-cos(theta)))/d;
-						z = r0*(1 - cos(theta)) + l0*sin(theta);
-					}
-					else{
-						s = 1;
-						z = 0;
-					}
-				}
-				else{
-					if(c < ((p1.x + dev) - l1)){
-						if(thetad==0){
-							s = 1;
-							z = 0;
-						}
-						else{
-							theta = ((p1.x + dev) - c - l1)/r1;
-							s = 1 - (r1*(theta - sin(theta)) + l1*(1-cos(theta)))/d;
-							z = r1*(1 - cos(theta)) + l1*sin(theta);
-						}
-					}
-					else{
-						s = 1;
-						z = 0;
-					}
-				}
-
-				fclose(fp1);
+			// current cop is in the middle
+			else{
+				theta  = 0.0;
+				pos2.x = p0.x;
+				z      = 0.0;
 			}
 		}
-		pt.x = (1 - s)*(p0.x + dev) + s * (p1.x + dev);
-		pt.y = p0.y + tau*(p1.y-p0.y);
-	}
-	else {
-		pt = key0->var_foot_pos_t[side]->val;
+		// swing foot of single support phase
+		if( (ph == Phase::L && side == 0) ||
+			(ph == Phase::R && side == 1) ){
+
+			real_t cvm2   = 0.0;  //< cop velocity of previous single support phase
+			real_t cv2    = 0.0;  //< cop velocity of next single support phase
+			real_t theta0 = 0.0;  //< foot angle at lift-off
+			real_t theta1 = 0.0;  //< foot angle at landing
+
+			if(keym2 && keym1) cvm2 = std::max(0.0, keym1->var_cop_pos->val.x - keym2->var_cop_pos->val.x) / (keym2->var_duration->val);
+			if(key2  && key3 ) cv2  = std::max(0.0, key3 ->var_cop_pos->val.x - key2 ->var_cop_pos->val.x) / (key2 ->var_duration->val);
+						
+			if(keym1) theta0 = std::max(0.0, (keym1->var_cop_pos->val.x + cvm2*keym1->var_duration->val) - (p0.x + l0))/r0;
+			if(key2 ) theta1 = std::min(0.0, (key2 ->var_cop_pos->val.x - cv2 *key1 ->var_duration->val) - (p1.x - l1))/r1;
+
+			// foot position at lift-off
+			real_t p00x = p0.x + r0*(theta0 - sin( theta0)) + l0*(1.0 - cos(theta0));
+			real_t p00z =        r0*(1 - cos(theta0))       + l0*sin(theta0);
+
+			// foot position at landing
+			real_t p11x = p1.x + r1*(theta1 - sin(theta1)) - l1*(1 - cos(theta1));
+			real_t p11z =        r1*(1.0 - cos(theta1))    - l1*sin(theta1);
+		
+			vec2_t r(p11x - p00x, p11z - p00z);
+			real_t a     = r.norm();
+			real_t alpha = atan2(r[1], r[0]);
+
+			DSTR << alpha << endl;
+
+			real_t ch = (a    )*(s   - sin(_2pi*s)/_2pi);
+			real_t cv = (a/5.0)*(1.0 - cos(_2pi*s))/2.0;
+			
+			theta  = theta0 + (theta1 - theta0)*s;
+			pos2.x = p00x + cos(alpha)*ch - sin(alpha)*cv;
+			z      = p00z + sin(alpha)*ch + cos(alpha)*cv;
+		}
+		// lifting-off foot of double support phase
+		if ( (ph == Phase::RL && side == 0) ||
+			 (ph == Phase::LR && side == 1) ){
+
+			// cop velocity of previous single support phase
+			real_t cv = 0.0;
+			if(keym1)
+				cv = std::max(0.0, key0->var_cop_pos->val.x - keym1->var_cop_pos->val.x) / (keym1->var_duration->val);
+
+			//DSTR << cv << " " << tau << endl;
+
+			theta  = std::max(0.0, (c0.x + cv*dt) - (p0.x + l0))/r0;		
+			pos2.x = p0.x + r0*(theta - sin(theta)) + l0*(1.0 - cos(theta));
+			z      =        r0*(1.0   - cos(theta)) + l0*sin(theta);
+		}
+		// landed foot of double support phase
+		if( (ph == Phase::LR && side == 0)||
+			(ph == Phase::RL && side == 1) ){
+
+			// cop velocity of next single support phase
+			real_t cv = 0.0;
+			if(key2)
+				cv = std::max(0.0, key2->var_cop_pos->val.x - key1->var_cop_pos->val.x) / (key1->var_duration->val);
+
+			theta  = std::min(0.0, (c1.x - cv*(tau - dt)) - (p0.x - l1))/r1;
+			pos2.x = p0.x + r1*(theta - sin(theta)) - l1*(1.0 - cos(theta));
+			z      =        r1*(1.0   - cos(theta)) - l1*sin(theta);
+		}
+
+		pos2.y = p0.y + (p1.y - p0.y)*s;
+		pose.Pos() = vec3_t(pos2.x, pos2.y, z);
+		pose.Ori() = FromRollPitchYaw(vec3_t(0.0, theta, 0.0));
+		//pose.Ori() = quat_t();
+		//DSTR << z << " " << theta << endl;
 	}
 
-	return vec3_t(pt.x, pt.y, z);
+	return pose;
 }
 
-quat_t BipedLIP::FootOri(real_t t, int side) {
-	BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;
-	BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;
-
-	real_t ot;
-	quat_t qt;
-
-	if (key1) {
-		real_t dt = t - key0->var_time->val;
-		real_t tau = key0->var_duration->val;
-		real_t o0 = key0->var_foot_pos_r[side]->val;
-		real_t o1 = key1->var_foot_pos_r[side]->val;
-
-		ot = o0 + (o1 - o0)*(dt / tau);
-	}
-	else {
-		ot = key0->var_foot_pos_r[side]->val;
-	}
-
-	qt = quat_t::Rot(ot, 'z');
-
-	return qt;
-}
-
+/*
 real_t BipedLIP::AnklePitch(real_t t, int side) {
 	BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;
 	BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;
 	real_t       t0 = key0->tick->time;
 	real_t       t1 = key1->tick->time;
 	real_t       h = t1 - t0;
-	real_t		 hspan = 0.3*h;
-	real_t		 t00 = t0 + hspan;
-	real_t       t11 = t1 - hspan;
-	real_t       td = (t0 + t1)/10;
-	real_t       tdd = (t0 + t1)*29/30;
-
+	
 	real_t theta = 0.0;
-	real_t theta0 = 30*pi/180;
+	real_t theta0 =  30*pi/180;
 	real_t theta1 = -30*pi/180;
-	real_t thetatoe = 10*pi/180;
-	real_t thetaheel = 10*pi/180;
 	real_t theta_ds;
 	int thetad;
 
@@ -916,8 +809,6 @@ real_t BipedLIP::AnklePitch(real_t t, int side) {
 	real_t L = 0.20;
 	real_t r0 = 0.03;
 	real_t r1 = 0.03;
-
-	real_t dev = 0.0;
 
 	if (key0->prev) {
 		real_t dt = t - key0->var_time->val;
@@ -934,150 +825,119 @@ real_t BipedLIP::AnklePitch(real_t t, int side) {
 			real_t c = c0.x + (c1.x - c0.x)*tau;
 
 			if(ph == Phase::L && side == 0){
-				FILE* fp = fopen("Test.csv", "r");
-				fscanf(fp, "%d", &thetad);
-
 				if(thetad == 0){
 					theta = 0;
 				}
 				else{
 					theta = theta0 + tau*(theta1 - theta0);
 				}
-				fclose(fp);
 			}
 			else if (ph == Phase::RL && side == 0){
-				FILE* fp = fopen("Test.csv", "r");
-				fscanf(fp, "%d", &thetad);
-
 				if(thetad == 0){
 	 				theta = 0;
 	 			}
 	 			else{
-	 				theta_ds = (c0.x - (p1.x + dev) -l0)/r0;
+	 				theta_ds = (c0.x - p1.x - l0)/r0;
 	 				theta = theta_ds + (theta0 - theta_ds)*tau;
 	 			}
-				fclose(fp);
 			}
-			else if (ph == Phase::LR && side == 0) { //�ܐ您�낵
-				FILE* fp = fopen("Test.csv", "r");
-				fscanf(fp, "%d", &thetad);
-
+			else if (ph == Phase::LR && side == 0) { 
 				if(thetad == 0){
 					theta = 0;
 				}
 				else{
-					theta_ds = ((p1.x + dev) - c1.x -l1)/r1;
+					theta_ds = (p1.x - c1.x - l1)/r1;
 					theta = theta1 - (theta_ds + theta1)*tau;
 				}
-				fclose(fp);
 			}
 			else if (ph == Phase::R && side == 0){
-				FILE* fp = fopen("Test.csv", "r");
-				fscanf(fp, "%d", &thetad);
-
-				if(((c0.x - (p1.x + dev)) < -l1) && ((c1.x - (p1.x + dev)) > l0)){
-				    if(c < ((p1.x + dev)- l1)){
+				if(((c0.x - p1.x) < -l1) && ((c1.x - p1.x) > l0)){
+				    if(c < p1.x - l1){
 					    if(thetad==0){
 					        theta = 0;
 						}
 						else{
-							theta = -((p1.x + dev) - c - l1)/r1;
+							theta = -(p1.x - c - l1)/r1;
 						}
 					}
-					else if(c > ((p1.x + dev) + l0)){
-						theta = (c - (p1.x + dev)- l0)/r0;
+					else if(c > p1.x + l0){
+						theta = (c - p1.x - l0)/r0;
 					}
 					else{
 					theta = 0;
 					}
 				}
 				else{
-					if(c < ((p1.x + dev) - l1)){
-						if(thetad==0){
+					if(c < p1.x - l1){
+						if(thetad == 0){
 							theta = 0;
 						}
 						else{
-							theta = -((p1.x + dev) - c - l1)/r1;
+							theta = -(p1.x - c - l1)/r1;
 						}
 					}
 					else{
 						theta = 0;
 					}
 			    }
-			    fclose(fp);
 			}
 			else if (ph == Phase::R && side == 1){
-				FILE* fp1 = fopen("Test1.csv", "r");
-				fscanf(fp1, "%d", &thetad);
-
 				if(thetad == 0){
 					theta = 0;
 				}
 				else{
 					theta = theta0 + tau*(theta1 - theta0);
 				}
-				fclose(fp1);
 			}
 			else if (ph == Phase::LR && side == 1){
-				FILE* fp1 = fopen("Test1.csv", "r");
-				fscanf(fp1, "%d", &thetad);
-
 				if(thetad == 0){
 	 				theta = 0;
 	 			}
 	 			else{
-	 				theta_ds = (c0.x - (p1.x + dev) -l0)/r0;
+	 				theta_ds = (c0.x - p1.x - l0)/r0;
 	 				theta = theta_ds + (theta0 - theta_ds)*tau;
 	 			}
-				fclose(fp1);
 			}
-			else if (ph == Phase::RL && side == 1) { //�ܐ您�낵
-				FILE* fp1 = fopen("Test1.csv", "r");
-				fscanf(fp1, "%d", &thetad);
-
+			else if (ph == Phase::RL && side == 1) {
 				if(thetad == 0){
 					theta = 0;
 				}
 				else{
-					theta_ds = ((p1.x + dev) - c1.x -l1)/r1;
+					theta_ds = (p1.x - c1.x -l1)/r1;
 					theta = theta1 - (theta_ds + theta1)*tau;
 				}
-				fclose(fp1);
 			}
 			else if(ph == Phase::L && side == 1){
-				FILE* fp1 = fopen("Test1.csv", "r");
-				fscanf(fp1, "%d", &thetad);
-
-				if(((c0.x - (p1.x + dev)) < -l1) && ((c1.x - (p1.x + dev)) > l0)){
-					if(c < ((p1.x + dev) - l1)){
+				if( (c0.x - p1.x < -l1) &&
+					(c1.x - p1.x >  l0)){
+					if(c < p1.x - l1){
 						if(thetad==0){
 							theta = 0;
 						}
 						else{
-							theta = -((p1.x + dev) - c - l1)/r1;
+							theta = -(p1.x - c - l1)/r1;
 						}
 					}
-					else if(c > ((p1.x + dev) + l0)){
-						theta = (c - (p1.x + dev) - l0)/r0;
+					else if(c > (p1.x + l0)){
+						theta = (c - p1.x - l0)/r0;
 					}
 					else{
 						theta = 0;
 					}
 				}
 				else{
-					if(c < ((p1.x + dev) - l1)){
+					if(c < p1.x - l1){
 						if(thetad==0){
 							theta = 0;
 						}
 						else{
-							theta = -((p1.x + dev) - c - l1)/r1;
+							theta = -(p1.x - c - l1)/r1;
 						}
 					}
 					else{
 						theta = 0;
 					}
 			    }
-			    fclose(fp1);
 			}
 		}
 	}
@@ -1086,6 +946,7 @@ real_t BipedLIP::AnklePitch(real_t t, int side) {
 	}
 	return theta;
 }
+*/
 
 vec3_t BipedLIP::CopPos(real_t t) {
 	BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;
@@ -1113,31 +974,6 @@ vec3_t BipedLIP::TorsoPos(const vec3_t& pcom, const vec3_t& psup, const vec3_t& 
 	real_t mf = param.footMass;
 	vec3_t pt = ((mt + 2.0*mf)*pcom - mf * (psup + pswg)) / mt;
 	return pt;
-}
-
-//------------------------------------------------------------------------------------------------
-
-void BipedLIP::CalcTrajectory() {
-	real_t tf = traj.back()->tick->time;
-	real_t dt = 0.01;
-
-	trajectory.clear();
-	for (real_t t = 0.0; t <= tf; t += dt) {
-		TrajPoint tp;
-		tp.t = t;
-		tp.com_pos = ComPos(t);
-		tp.foot_pos_t[0] = FootPos(t, 0);
-		tp.foot_pos_r[0] = FootOri(t, 0);
-		tp.foot_pos_t[1] = FootPos(t, 1);
-		tp.foot_pos_r[1] = FootOri(t, 1);
-		tp.torso_pos_t = TorsoPos(tp.com_pos, tp.foot_pos_t[0], tp.foot_pos_t[1]);
-		tp.torso_pos_r = TorsoOri(t);
-		tp.cop_pos = CopPos(t);
-
-		trajectory.push_back(tp);
-	}
-
-	trajReady = true;
 }
 
 //------------------------------------------------------------------------------------------------
@@ -1212,14 +1048,70 @@ void BipedLIP::Draw(Render::Canvas* canvas, Render::Config* conf) {
 	}
 }
 
-void BipedLIP::DrawSnapshot(real_t time, Render::Canvas* canvas, Render::Config* conf) {
+void BipedLIP::CreateSnapshot(real_t t, BipedLIP::Snapshot& s){
+	pose_t pose;
+
+	s.t = t;
+	s.com_pos = ComPos(t);
+	pose = FootPose(t, 0);
+	s.foot_pos_t[0] = pose.Pos();
+	s.foot_pos_r[0] = pose.Ori();
+	pose = FootPose(t, 1);
+	s.foot_pos_t[1] = pose.Pos();
+	s.foot_pos_r[1] = pose.Ori();
+	s.torso_pos_t = TorsoPos(s.com_pos, s.foot_pos_t[0], s.foot_pos_t[1]);
+	s.torso_pos_r = TorsoOri(t);
+	s.cop_pos = CopPos(t);
+}
+
+void BipedLIP::CreateSnapshot(real_t t){
+	CreateSnapshot(t, snapshot);
+}
+
+void BipedLIP::CalcTrajectory() {
+	real_t tf = traj.back()->tick->time;
+	real_t dt = 0.01;
+
+	trajectory.clear();
+	for (real_t t = 0.0; t <= tf; t += dt) {
+		Snapshot s;
+		CreateSnapshot(t, s);
+		trajectory.push_back(s);
+	}
+
+	trajReady = true;
+}
+
+void BipedLIP::DrawSnapshot(Render::Canvas* canvas, Render::Config* conf) {
+	// lines connecting com and feet
 	canvas->SetLineWidth(2.0f);
 	canvas->BeginPath();
-	canvas->MoveTo(ComPos(time));
-	canvas->LineTo(FootPos(time, 0));
-	canvas->MoveTo(ComPos(time));
-	canvas->LineTo(FootPos(time, 1));
+	for(int i = 0; i < 2; i++){
+		canvas->MoveTo(snapshot.com_pos);
+		canvas->LineTo(snapshot.foot_pos_t[i]);
+	}
 	canvas->EndPath();
+
+	// foot outline
+	vec3_t v[4];
+	vec3_t p[4];
+	v[0] = vec3_t(param.copPosMin.x, param.copPosMin.y, 0.0);
+	v[1] = vec3_t(param.copPosMin.x, param.copPosMax.y, 0.0);
+	v[2] = vec3_t(param.copPosMax.x, param.copPosMax.y, 0.0);
+	v[3] = vec3_t(param.copPosMax.x, param.copPosMin.y, 0.0);
+	for(int i = 0; i < 2; i++){
+		for(int j = 0; j < 4; j++){
+			p[j] = snapshot.foot_pos_t[i] + snapshot.foot_pos_r[i]*v[j];
+		}
+		canvas->SetLineWidth(2.0f);
+		canvas->BeginPath();
+		canvas->MoveTo(p[0]);
+		canvas->LineTo(p[1]);
+		canvas->LineTo(p[2]);
+		canvas->LineTo(p[3]);
+		canvas->LineTo(p[0]);
+		canvas->EndPath();
+	}
 }
 
 void BipedLIP::Save(const char* filename) {
@@ -1229,10 +1121,10 @@ void BipedLIP::Save(const char* filename) {
 	real_t tf = traj.back()->tick->time;
 	for (real_t t = 0.0; t <= tf; t += dt) {
 
-		vec3_t com_p = ComPos(t);
-		vec3_t lfoot_p = FootPos(t, 1);
-		vec3_t rfoot_p = FootPos(t, 0);
-		vec3_t cop_p = CopPos(t);
+		vec3_t com_p   = ComPos(t);
+		vec3_t lfoot_p = FootPose(t, 1).Pos();
+		vec3_t rfoot_p = FootPose(t, 0).Pos();
+		vec3_t cop_p   = CopPos(t);
 
 		fprintf(file, "%3.4lf,", t);
 		fprintf(file, "%3.4lf, %3.4lf, %3.4lf,", com_p.x, com_p.y, com_p.z);
@@ -1317,15 +1209,16 @@ BipedComConV::BipedComConV(Solver* solver, string _name, BipedLIPKey* _obj, real
 	AddSLink(obj->var_torso_vel_t);
 }
 
-BipedFootConT::BipedFootConT(Solver* solver, string _name, BipedLIPKey* _obj, uint _side, real_t _scale) :
-	Constraint(solver, 2, ID(ConTag::BipedFootRangeT, _obj->node, _obj->tick, _name), _scale) {
+BipedFootConT::BipedFootConT(Solver* solver, string _name, BipedLIPKey* _obj, uint _side, vec2_t _dir, real_t _scale) :
+	Constraint(solver, 1, ID(ConTag::BipedFootRangeT, _obj->node, _obj->tick, _name), _scale) {
 
 	obj = _obj;
 	side = _side;
+	dir  = _dir;
 
-	AddM2Link(obj->var_foot_pos_t[side]);
-	AddM2Link(obj->var_torso_pos_t);
-	AddC2Link(obj->var_torso_pos_r);
+	AddR2Link(obj->var_foot_pos_t[side]);
+	AddR2Link(obj->var_torso_pos_t);
+	AddSLink (obj->var_torso_pos_r);
 }
 
 BipedFootConR::BipedFootConR(Solver* solver, string _name, BipedLIPKey* _obj, uint _side, real_t _scale) :
@@ -1338,15 +1231,16 @@ BipedFootConR::BipedFootConR(Solver* solver, string _name, BipedLIPKey* _obj, ui
 	AddSLink(obj->var_torso_pos_r);
 }
 
-BipedCopCon::BipedCopCon(Solver* solver, string _name, BipedLIPKey* _obj, uint _side, real_t _scale) :
-	Constraint(solver, 2, ID(ConTag::BipedCop, _obj->node, _obj->tick, _name), _scale) {
+BipedCopCon::BipedCopCon(Solver* solver, string _name, BipedLIPKey* _obj, uint _side, vec2_t _dir, real_t _scale) :
+	Constraint(solver, 1, ID(ConTag::BipedCop, _obj->node, _obj->tick, _name), _scale) {
 
-	obj = _obj;
+	obj  = _obj;
 	side = _side;
+	dir  = _dir;
 
-	AddM2Link(obj->var_cop_pos);
-	AddM2Link(obj->var_foot_pos_t[side]);
-	AddC2Link(obj->var_foot_pos_r[side]);
+	AddR2Link(obj->var_cop_pos);
+	AddR2Link(obj->var_foot_pos_t[side]);
+	AddSLink (obj->var_foot_pos_r[side]);
 }
 
 BipedTimeCon::BipedTimeCon(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale) :
@@ -1455,12 +1349,13 @@ void BipedFootConT::CalcCoef() {
 	pf = obj->var_foot_pos_t[side]->val;
 	pt = obj->var_torso_pos_t->val;
 	thetat = obj->var_torso_pos_r->val;
-	R = mat2_t::Rot(thetat);
-	dR = mat2_t::Rot(thetat + pi / 2);
+	R       = mat2_t::Rot(thetat);
+	dR      = mat2_t::Rot(thetat + pi/2);
+	dir_abs = R*dir;
 
-	((M2Link*)links[0])->SetCoef(R.trans());
-	((M2Link*)links[1])->SetCoef(-R.trans());
-	((C2Link*)links[2])->SetCoef(dR.trans()*(pf - pt));
+	((R2Link*)links[0])->SetCoef( dir_abs);
+	((R2Link*)links[1])->SetCoef(-dir_abs);
+	((SLink* )links[2])->SetCoef( dir*(dR.trans()*(pf - pt)));
 }
 
 void BipedFootConR::CalcCoef() {
@@ -1475,12 +1370,13 @@ void BipedCopCon::CalcCoef() {
 	pc = obj->var_cop_pos->val;
 	pf = obj->var_foot_pos_t[side]->val;
 	thetaf = obj->var_foot_pos_r[side]->val;
-	R = mat2_t::Rot(thetaf);
-	dR = mat2_t::Rot(thetaf + pi / 2);
+	R       = mat2_t::Rot(thetaf);
+	dR      = mat2_t::Rot(thetaf + pi/2);
+	dir_abs = R*dir;
 
-	((M2Link*)links[0])->SetCoef(R.trans());
-	((M2Link*)links[1])->SetCoef(-R.trans());
-	((C2Link*)links[2])->SetCoef(dR.trans()*(pc - pf));
+	((R2Link*)links[0])->SetCoef( dir_abs);
+	((R2Link*)links[1])->SetCoef(-dir_abs);
+	((SLink* )links[2])->SetCoef( dir*(dR.trans()*(pc - pf)));
 }
 
 void BipedTimeCon::CalcCoef() {
@@ -1518,20 +1414,18 @@ if (on_upper) y[0] = (s - _max);
 */
 
 void BipedFootConT::CalcDeviation() {
-	vec2_t s = R.trans() * (pf - pt);
+	real_t s = dir*(R.trans()*(pf - pt));
 
 	active = false;
-	for (uint i = 0; i < 2; i++) {
-		on_lower[i] = (s[i] < _min[i]);
-		on_upper[i] = (s[i] > _max[i]);
-		if (on_lower[i]) {
-			y[i] = (s[i] - _min[i]);
-			active = true;
-		}
-		if (on_upper[i]) {
-			y[i] = (s[i] - _max[i]);
-			active = true;
-		}
+	on_lower = (s < _min);
+	on_upper = (s > _max);
+	if (on_lower) {
+		y[0] = (s - _min);
+		active = true;
+	}
+	if (on_upper) {
+		y[0] = (s - _max);
+		active = true;
 	}
 }
 
@@ -1545,18 +1439,22 @@ void BipedFootConR::CalcDeviation() {
 }
 
 void BipedCopCon::CalcDeviation() {
-	vec2_t s = R.trans() * (pc - pf);
+	real_t s = dir*(R.trans()*(pc - pf));
 
-	active = false;
-	for (uint i = 0; i < 2; i++) {
-		on_lower[i] = (s[i] < _min[i]);
-		on_upper[i] = (s[i] > _max[i]);
-		if (on_lower[i]) {
-			y[i] = (s[i] - _min[i]);
+	if(_min == _max){
+		active = true;
+		y[0] = s - _min;
+	}
+	else{
+		active = false;
+		on_lower = (s < _min);
+		on_upper = (s > _max);
+		if (on_lower) {
+			y[0] = (s - _min);
 			active = true;
 		}
-		if (on_upper[i]) {
-			y[i] = (s[i] - _max[i]);
+		if (on_upper) {
+			y[0] = (s - _max);
 			active = true;
 		}
 	}
@@ -1565,21 +1463,21 @@ void BipedCopCon::CalcDeviation() {
 //-------------------------------------------------------------------------------------------------
 
 void BipedFootConT::Project(real_t& l, uint k) {
-	if (on_upper[k] && l > 0.0) l = 0.0;
-	if (on_lower[k] && l < 0.0) l = 0.0;
-	if (!on_upper[k] && !on_lower[k]) l = 0.0;
+	if ( on_upper && l > 0.0  ) l = 0.0;
+	if ( on_lower && l < 0.0  ) l = 0.0;
+	if (!on_upper && !on_lower) l = 0.0;
 }
 
 void BipedFootConR::Project(real_t& l, uint k) {
-	if (on_upper &&  l > 0.0) l = 0.0;
-	if (on_lower &&  l < 0.0) l = 0.0;
+	if ( on_upper && l > 0.0  ) l = 0.0;
+	if ( on_lower && l < 0.0  ) l = 0.0;
 	if (!on_upper && !on_lower) l = 0.0;
 }
 
 void BipedCopCon::Project(real_t& l, uint k) {
-	if (on_upper[k] && l > 0.0) l = 0.0;
-	if (on_lower[k] && l < 0.0) l = 0.0;
-	if (!on_upper[k] && !on_lower[k]) l = 0.0;
+	if ( on_upper && l > 0.0  ) l = 0.0;
+	if ( on_lower && l < 0.0  ) l = 0.0;
+	if (!on_upper && !on_lower) l = 0.0;
 }
 
 }

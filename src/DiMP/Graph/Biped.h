@@ -28,7 +28,7 @@ namespace DiMP {
 	*/
 	class BipedLIPKey : public Keypoint {
 	public:
-		V2Var * var_torso_pos_t;    ///< position         of torso
+		V2Var*      var_torso_pos_t;    ///< position         of torso
 		SVar*       var_torso_pos_r;    ///< orientation      of torso
 		V2Var*      var_torso_vel_t;    ///< velocity         of torso
 		SVar*       var_torso_vel_r;    ///< angular velocity of torso
@@ -51,10 +51,10 @@ namespace DiMP {
 		BipedComConP*    con_com_p;          ///< CoM position constraint
 		BipedComConV*    con_com_v;          ///< CoM velocity constraint
 
-		BipedFootConT*   con_foot_t[2];      ///< range constraint on support foot position relative to torso
-		BipedFootConR*   con_foot_r[2];      ///< range constraint on support foot orientation relative to torso
+		BipedFootConT*   con_foot_t[2][2];   ///< range constraint on foot position relative to torso, [r|l][x|y]
+		BipedFootConR*   con_foot_r[2];      ///< range constraint on foot orientation relative to torso, [r|l]
 
-		BipedCopCon*     con_cop;            ///< range constraint on CoP relative to support foot
+		BipedCopCon*     con_cop[2];         ///< range constraint on CoP relative to support foot, [x|y]
 
 		BipedTimeCon*    con_time;
 		RangeConS*       con_duration;       ///< range constraint on step period
@@ -69,6 +69,7 @@ namespace DiMP {
 		virtual void AddVar(Solver* solver);
 		virtual void AddCon(Solver* solver);
 		virtual void Prepare();
+		virtual void Finish ();
 		virtual void Draw(Render::Canvas* canvas, Render::Config* conf);
 
 		BipedLIPKey();
@@ -103,8 +104,6 @@ namespace DiMP {
 			real_t  heightmiddle;
 			real_t  torsoMass;
 			real_t  footMass;
-			real_t  thetaHeel;
-			real_t  thetaToe; 
 			int     swingProfile;
 			real_t  swingHeight[2];             ///< 0: maximum swing height
 												///< 1: lowest height before touch down. for wedge only
@@ -120,8 +119,10 @@ namespace DiMP {
 			real_t  angAccMax;              ///< maximum admissible angular acceleration
 			real_t  turnMax;                ///< maximum admissible turning angle in single step
 
-			vec2_t  FootShapeMin;
-			vec2_t  FootShapeMax;
+			real_t  ankleToToe ;
+			real_t  ankleToHeel;
+			real_t  toeRadius  ;
+			real_t  heelRadius ;
 
 			Param();
 		};
@@ -147,7 +148,7 @@ namespace DiMP {
 			Waypoint();
 		};
 
-		struct TrajPoint {
+		struct Snapshot{
 			real_t  t;
 			vec3_t  com_pos;
 			vec3_t  torso_pos_t;
@@ -156,37 +157,42 @@ namespace DiMP {
 			quat_t  foot_pos_r[2];
 			vec3_t  cop_pos;
 
-			TrajPoint();
+			Snapshot();
 		};
 
 		Param	            param;
 		vector<int>	        phase;		///< walking phase at each step
 		vector<Waypoint>    waypoints;
-		vector<TrajPoint>   trajectory;
+		Snapshot            snapshot;
+		vector<Snapshot>    trajectory;
 		bool                trajReady;
 
 		virtual Keypoint*	CreateKeypoint() { return new BipedLIPKey(); }
 		virtual void		Init();
 		virtual void		Prepare();
-
-		int    Phase(real_t t);
-		vec3_t ComPos(real_t t);
-		vec3_t ComVel(real_t t);
-		vec3_t ComAcc(real_t t);
-		real_t TorsoOri(real_t t);
+		virtual void        Finish ();
+		virtual void        CreateSnapshot(real_t time);
+		virtual void        DrawSnapshot  (Render::Canvas* canvas, Render::Config* conf);
+		virtual void        Draw          (Render::Canvas* canvas, Render::Config* conf);
+		
+		int    Phase      (real_t t);
+		vec3_t ComPos     (real_t t);
+		vec3_t ComVel     (real_t t);
+		vec3_t ComAcc     (real_t t);
+		real_t TorsoOri   (real_t t);
 		real_t TorsoAngVel(real_t t);
 		real_t TorsoAngAcc(real_t t);
-		vec3_t FootPos(real_t t, int side);
-		quat_t FootOri(real_t t, int side);
-		vec3_t CopPos(real_t t);
-		real_t AnklePitch(real_t t, int side);
+		pose_t FootPose   (real_t t, int side);
+		vec3_t CopPos     (real_t t);
+		//vec3_t FootPos(real_t t, int side);
+		//quat_t FootOri(real_t t, int side);
+		//real_t AnklePitch(real_t t, int side);
 
 
 		vec3_t TorsoPos(const vec3_t& pcom, const vec3_t& psup, const vec3_t& pswg);
 
+		void CreateSnapshot(real_t t, Snapshot& s);
 		void CalcTrajectory();
-		void Draw(Render::Canvas* canvas, Render::Config* conf);
-		void DrawSnapshot(real_t time, Render::Canvas* canvas, Render::Config* conf);
 		void Save (const char* filename);
 		void Print();
 
@@ -248,17 +254,18 @@ namespace DiMP {
 	struct BipedFootConT : Constraint {
 		BipedLIPKey* obj;
 		uint         side;
+		vec2_t       dir, dir_abs;
 		vec2_t       pf, pt;
 		real_t       thetat;
 		mat2_t       R, dR;
-		vec2_t       _min, _max;
-		bool         on_lower[2], on_upper[2];
+		real_t       _min, _max;
+		bool         on_lower, on_upper;
 
 		virtual void CalcCoef();
 		virtual void CalcDeviation();
 		virtual void Project(real_t& l, uint k);
 
-		BipedFootConT(Solver* solver, string _name, BipedLIPKey* _obj, uint _side, real_t _scale);
+		BipedFootConT(Solver* solver, string _name, BipedLIPKey* _obj, uint _side, vec2_t _dir, real_t _scale);
 	};
 
 	struct BipedFootConR : Constraint {
@@ -279,17 +286,18 @@ namespace DiMP {
 	struct BipedCopCon : Constraint {
 		BipedLIPKey* obj;
 		uint         side;
+		vec2_t       dir, dir_abs;
 		vec2_t       pc, pf;
 		real_t       thetaf;
 		mat2_t       R, dR;
-		vec2_t       _min, _max;
-		bool         on_lower[2], on_upper[2];
+		real_t       _min, _max;
+		bool         on_lower, on_upper;
 
 		virtual void CalcCoef();
 		virtual void CalcDeviation();
 		virtual void Project(real_t& l, uint k);
 
-		BipedCopCon(Solver* solver, string _name, BipedLIPKey* _obj, uint _side, real_t _scale);
+		BipedCopCon(Solver* solver, string _name, BipedLIPKey* _obj, uint _side, vec2_t _dir, real_t _scale);
 	};
 
 	struct BipedTimeCon : Constraint {
