@@ -72,12 +72,12 @@ public:
 
 class NodeArray : public ArrayBase< Node* >{
 public:
-	void AddVar (){ for(Node* n : *this) n->AddVar (); }
-	void AddCon (){ for(Node* n : *this) n->AddCon (); }
-	void Init   (){ for(Node* n : *this) n->Init   (); }
-	void Prepare(){ for(Node* n : *this) n->Prepare(); }
-	void Finish (){ for(Node* n : *this) n->Finish (); }
-	void Draw(Render::Canvas* canvas, Render::Config* conf){ for(Node* n : *this) n->Draw(canvas, conf); }
+	void AddVar ();
+	void AddCon ();
+	void Init   ();
+	void Prepare();
+	void Finish ();
+	void Draw(Render::Canvas* canvas, Render::Config* conf);
 };
 
 /**

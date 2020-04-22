@@ -3,13 +3,13 @@
 #include <DiMP/Graph/Node.h>
 //#include <DiMP/Solver/Range.h>
 
-namespace DiMP {
-	;
+namespace DiMP {;
 
 	class  BipedLIP;
 
 	struct BipedLipConP;
 	struct BipedLipConV;
+	struct BipedLipConC;
 
 	//struct CoMConR;
 
@@ -37,7 +37,7 @@ namespace DiMP {
 		V2Var*		var_com_vel;        ///< velocity of CoM
 
 		V2Var*		var_cop_pos;        ///< position of CoP
-		V2Var*		cop_pos_r;
+		V2Var*      var_cop_vel;        ///< velocity of CoP
 
 		V2Var*      var_foot_pos_t[2];  ///< position    of foot, R/L
 		SVar*       var_foot_pos_r[2];  ///< orientation of foot, R/L
@@ -47,6 +47,7 @@ namespace DiMP {
 
 		BipedLipConP*    con_lip_p;          ///< LIP position constraint
 		BipedLipConV*    con_lip_v;          ///< LIP velocity constraint
+		BipedLipConC*    con_lip_c;          ///< LIP cop constraint
 
 		BipedComConP*    con_com_p;          ///< CoM position constraint
 		BipedComConV*    con_com_v;          ///< CoM velocity constraint
@@ -204,11 +205,12 @@ namespace DiMP {
 	struct BipedLipCon : Constraint {
 		BipedLIPKey* obj[2];
 
-		real_t tau, tau2;
-		real_t T, T2;
+		real_t tau;
+		real_t T;
 		vec2_t p0, p1;
 		vec2_t v0, v1;
 		vec2_t c0, c1;
+		vec2_t cv0;
 		real_t C, S;
 
 		void Prepare();
@@ -218,8 +220,10 @@ namespace DiMP {
 
 	/// CoM position constraint based on LIP model
 	struct BipedLipConP : BipedLipCon {
-		virtual void CalcCoef();
-		virtual void CalcDeviation();
+		virtual void  CalcCoef();
+		virtual void  CalcDeviation();
+		virtual void  CalcLhs();
+		virtual Link* GetLhs();
 
 		BipedLipConP(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale);
 	};
@@ -228,11 +232,23 @@ namespace DiMP {
 	struct BipedLipConV : BipedLipCon {
 		virtual void CalcCoef();
 		virtual void CalcDeviation();
+		virtual void CalcLhs();
+		virtual Link* GetLhs();
 
 		BipedLipConV(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale);
 	};
 
-	/// CoM position constraint
+	/// CoP constraint based on LIP model
+	struct BipedLipConC : BipedLipCon {
+		virtual void CalcCoef();
+		virtual void CalcDeviation();
+		virtual void CalcLhs();
+		virtual Link* GetLhs();
+
+		BipedLipConC(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale);
+	};
+
+	/// CoM position constraint (com position is constrained to weighted average of torso and feet position)
 	struct BipedComConP : Constraint {
 		BipedLIPKey* obj;
 
@@ -241,7 +257,7 @@ namespace DiMP {
 		BipedComConP(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale);
 	};
 
-	/// CoM velocity constraint
+	/// CoM velocity constraint (com velocity is constrained to weighted average of torso and feet velocity)
 	struct BipedComConV : Constraint {
 		BipedLIPKey* obj;
 
@@ -300,6 +316,7 @@ namespace DiMP {
 		BipedCopCon(Solver* solver, string _name, BipedLIPKey* _obj, uint _side, vec2_t _dir, real_t _scale);
 	};
 
+	/// time constraint
 	struct BipedTimeCon : Constraint {
 		BipedLIPKey* obj[2];
 

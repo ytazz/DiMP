@@ -25,27 +25,42 @@ void BipedLIPKey::AddVar(Solver* solver) {
 
 	// torso position and velocity
 	var_torso_pos_t = new V2Var(solver, ID(VarTag::BipedTorsoTP, node, tick, name + "_torso_tp"), node->graph->scale.pos_t);
-	var_torso_pos_r = new SVar(solver, ID(VarTag::BipedTorsoRP, node, tick, name + "_torso_rp"), node->graph->scale.pos_r);
+	var_torso_pos_r = new SVar (solver, ID(VarTag::BipedTorsoRP, node, tick, name + "_torso_rp"), node->graph->scale.pos_r);
 	var_torso_vel_t = new V2Var(solver, ID(VarTag::BipedTorsoTV, node, tick, name + "_torso_tv"), node->graph->scale.vel_t);
-	var_torso_vel_r = new SVar(solver, ID(VarTag::BipedTorsoRV, node, tick, name + "_torso_rv"), node->graph->scale.vel_r);
+	var_torso_vel_r = new SVar (solver, ID(VarTag::BipedTorsoRV, node, tick, name + "_torso_rv"), node->graph->scale.vel_r);
 
 	// foot position
 	var_foot_pos_t[0] = new V2Var(solver, ID(VarTag::BipedFootT, node, tick, name + "_foot_r_t"), node->graph->scale.pos_t);
-	var_foot_pos_r[0] = new SVar(solver, ID(VarTag::BipedFootR, node, tick, name + "_foot_r_r"), node->graph->scale.pos_r);
+	var_foot_pos_r[0] = new SVar (solver, ID(VarTag::BipedFootR, node, tick, name + "_foot_r_r"), node->graph->scale.pos_r);
 	var_foot_pos_t[1] = new V2Var(solver, ID(VarTag::BipedFootT, node, tick, name + "_foot_l_t"), node->graph->scale.pos_t);
-	var_foot_pos_r[1] = new SVar(solver, ID(VarTag::BipedFootR, node, tick, name + "_foot_l_r"), node->graph->scale.pos_r);
+	var_foot_pos_r[1] = new SVar (solver, ID(VarTag::BipedFootR, node, tick, name + "_foot_l_r"), node->graph->scale.pos_r);
 
 	// CoM position and velocity
 	var_com_pos = new V2Var(solver, ID(VarTag::BipedComP, node, tick, name + "_com_p"), node->graph->scale.pos_t);
 	var_com_vel = new V2Var(solver, ID(VarTag::BipedComV, node, tick, name + "_com_v"), node->graph->scale.vel_t);
 
 	// CoP position
-	var_cop_pos = new V2Var(solver, ID(VarTag::BipedCop, node, tick, name + "_cop"), node->graph->scale.pos_t);
+	var_cop_pos = new V2Var(solver, ID(VarTag::BipedCopP, node, tick, name + "_cop_p"), node->graph->scale.pos_t);
 
-	// step duration
-	var_duration = new SVar(solver, ID(VarTag::BipedDuration, node, tick, name + "_duration"), node->graph->scale.time);
 	// absolute time
 	var_time = new SVar(solver, ID(VarTag::BipedTime, node, tick, name + "_time"), node->graph->scale.time);
+
+	//
+	solver->AddStateVar(var_com_pos, tick->idx);
+	solver->AddStateVar(var_com_vel, tick->idx);
+	solver->AddStateVar(var_cop_pos, tick->idx);
+	solver->AddStateVar(var_time   , tick->idx);
+
+	if(next){
+		// CoP velocity
+		var_cop_vel  = new V2Var(solver, ID(VarTag::BipedCopV, node, tick, name + "_cop_v"), node->graph->scale.vel_t);
+
+		// step duration
+		var_duration = new SVar(solver, ID(VarTag::BipedDuration, node, tick, name + "_duration"), node->graph->scale.time);
+
+		solver->AddInputVar(var_cop_vel , tick->idx);
+		solver->AddInputVar(var_duration, tick->idx);
+	}
 }
 
 // register constraints for planning
@@ -56,6 +71,7 @@ void BipedLIPKey::AddCon(Solver* solver) {
 	if (next) {
 		con_lip_p = new BipedLipConP(solver, name + "_lip_p", this, node->graph->scale.pos_t);
 		con_lip_v = new BipedLipConV(solver, name + "_lip_v", this, node->graph->scale.vel_t);
+		con_lip_c = new BipedLipConC(solver, name + "_lip_c", this, node->graph->scale.pos_t);
 	}
 
 	con_foot_t[0][0] = new BipedFootConT(solver, name + "_foot_range_r_t", this, 0, vec2_t(1.0, 0.0), node->graph->scale.pos_t);
@@ -87,6 +103,7 @@ void BipedLIPKey::AddCon(Solver* solver) {
 
 	con_com_p = new BipedComConP(solver, name + "_com_p", this, node->graph->scale.pos_t);
 	con_com_v = new BipedComConV(solver, name + "_com_v", this, node->graph->scale.vel_t);
+
 }
 
 void BipedLIPKey::Prepare() {
@@ -403,8 +420,17 @@ void BipedLIP::Init() {
 		key->var_com_vel->val = (mt * key->var_torso_vel_t->val) / (mt + 2.0*mf);
 
 		if (phase[k] == Phase::R || phase[k] == Phase::RL)
-			key->var_cop_pos->val = key->var_foot_pos_t[0]->val;
+			 key->var_cop_pos->val = key->var_foot_pos_t[0]->val;
 		else key->var_cop_pos->val = key->var_foot_pos_t[1]->val;
+	}
+
+	// initial value of cop velocity
+	for (uint k = 0; k < graph->ticks.size(); k++) {
+		BipedLIPKey* key  = (BipedLIPKey*)traj.GetKeypoint(graph->ticks[k]);
+		BipedLIPKey* key1 = (BipedLIPKey*)key->next;
+		if(key1){
+			key->var_cop_vel->val = (key1->var_cop_pos->val - key->var_cop_pos->val) / key->var_duration->val;
+		}
 	}
 
 	// variables at waypoints are fixed
@@ -444,20 +470,20 @@ vec3_t BipedLIP::ComPos(real_t t) {
 
 	vec2_t pt;
 
-	if (key1) {
-		real_t T = param.T;
-		real_t dt = t - key0->var_time->val;
-		real_t tau = key0->var_duration->val;
-		vec2_t p0 = key0->var_com_pos->val;
-		vec2_t v0 = key0->var_com_vel->val;
-		vec2_t c0 = key0->var_cop_pos->val;
-		vec2_t c1 = key1->var_cop_pos->val;
+	if(key1 == key0->next){
+		real_t T   = param.T;
+		real_t dt  = t - key0->var_time->val;
+		vec2_t p0  = key0->var_com_pos->val;
+		vec2_t v0  = key0->var_com_vel->val;
+		vec2_t c0  = key0->var_cop_pos->val;
+		vec2_t cv0 = key0->var_cop_vel->val;
 
-		pt = c0 + (c1 - c0)*(dt / tau) + (p0 - c0)*cosh(dt / T) + T * (v0 - (c1 - c0) / tau)*sinh(dt / T);
+		pt = c0 + cv0*dt + cosh(dt/T)*(p0 - c0) + T*sinh(dt/T)*(v0 - cv0);
 	}
-	else {
+	else{
 		pt = key0->var_com_pos->val;
 	}
+	
 	/*
 	int n, n1;
 	real_t heightd;
@@ -486,21 +512,20 @@ vec3_t BipedLIP::ComVel(real_t t) {
 
 	vec2_t vt;
 
-	if (key1) {
-		real_t T = param.T;
-		real_t dt = t - key0->var_time->val;
-		real_t tau = key0->var_duration->val;
-		vec2_t p0 = key0->var_com_pos->val;
-		vec2_t v0 = key0->var_com_vel->val;
-		vec2_t c0 = key0->var_cop_pos->val;
-		vec2_t c1 = key1->var_cop_pos->val;
-
-		vt = (c1 - c0) / tau + (1 / T)*(p0 - c0)*sinh(dt / T) + (v0 - (c1 - c0) / tau)*cosh(dt / T);
+	if(key1 == key0->next){
+		real_t T   = param.T;
+		real_t dt  = t - key0->var_time->val;
+		vec2_t p0  = key0->var_com_pos->val;
+		vec2_t v0  = key0->var_com_vel->val;
+		vec2_t c0  = key0->var_cop_pos->val;
+		vec2_t cv0 = key0->var_cop_vel->val;
+		
+		vt = cv0 + (1/T)*sinh(dt/T)*(p0 - c0) + cosh(dt/T)*(v0 - cv0);
 	}
-	else {
+	else{
 		vt = key0->var_com_vel->val;
 	}
-
+	
 	return vec3_t(vt.x, vt.y, 0.0);
 }
 
@@ -510,22 +535,21 @@ vec3_t BipedLIP::ComAcc(real_t t) {
 
 	vec2_t at;
 
-	if (key1) {
-		real_t T = param.T;
-		real_t T2 = T * T;
-		real_t dt = t - key0->var_time->val;
-		real_t tau = key0->var_duration->val;
-		vec2_t p0 = key0->var_com_pos->val;
-		vec2_t v0 = key0->var_com_vel->val;
-		vec2_t c0 = key0->var_cop_pos->val;
-		vec2_t c1 = key1->var_cop_pos->val;
-
-		vec2_t at = (1 / T2)*(p0 - c0)*cosh(dt / T) + (1 / T)*(v0 - (c1 - c0) / tau)*sinh(dt / T);
+	if(key1 == key0->next){
+		real_t T   = param.T;
+		real_t T2  = T * T;
+		real_t dt  = t - key0->var_time->val;
+		vec2_t p0  = key0->var_com_pos->val;
+		vec2_t v0  = key0->var_com_vel->val;
+		vec2_t c0  = key0->var_cop_pos->val;
+		vec2_t cv0 = key0->var_cop_vel->val;
+	
+		at = (1/T2)*cosh(dt/T)*(p0 - c0) + (1/T)*sinh(dt/T)*(v0 - cv0);
 	}
-	else {
-		at.clear();
+	else{
+		at = vec2_t();
 	}
-
+	
 	return vec3_t(at.x, at.y, 0.0);
 }
 
@@ -535,7 +559,7 @@ real_t BipedLIP::TorsoOri(real_t t) {
 
 	real_t o;
 
-	if (key1) {
+	if (key1 == key0->next) {
 		real_t t0 = key0->var_time->val;
 		real_t t1 = key1->var_time->val;
 
@@ -562,7 +586,7 @@ real_t BipedLIP::TorsoAngVel(real_t t) {
 
 	real_t r;
 
-	if (key1) {
+	if (key1 == key0->next) {
 		real_t t0 = key0->var_time->val;
 		real_t t1 = key1->var_time->val;
 
@@ -589,7 +613,7 @@ real_t BipedLIP::TorsoAngAcc(real_t t) {
 
 	real_t a;
 
-	if (key1) {
+	if (key1 == key0->next) {
 		real_t t0 = key0->var_time->val;
 		real_t t1 = key1->var_time->val;
 
@@ -618,16 +642,22 @@ pose_t BipedLIP::FootPose(real_t t, int side) {
 	BipedLIPKey* key2  = 0;
 	BipedLIPKey* key3  = 0;
 
-	if(         key0 ->prev) keym1 = (BipedLIPKey*)key0 ->prev;
-	if(keym1 && keym1->prev) keym2 = (BipedLIPKey*)keym1->prev;
-	if(         key1 ->next) key2  = (BipedLIPKey*)key1 ->next;
-	if(key2  && key2 ->next) key3  = (BipedLIPKey*)key2 ->next;
-
 	pose_t pose;
 	vec2_t pos2;         //< pos x, y
 	real_t z     = 0.0;  //< pos z
 	real_t theta = 0.0;  //< pitch angle
 
+	if(key1 != key0->next){
+		pos2 = key0->var_foot_pos_t[side]->val;
+		pose.Pos() = vec3_t(pos2.x, pos2.y, z);
+		return pose;
+	}
+
+	if(         key0 ->prev) keym1 = (BipedLIPKey*)key0 ->prev;
+	if(keym1 && keym1->prev) keym2 = (BipedLIPKey*)keym1->prev;
+	if(         key1 ->next) key2  = (BipedLIPKey*)key1 ->next;
+	if(key2  && key2 ->next) key3  = (BipedLIPKey*)key2 ->next;
+		
 	// phase
 	int ph = phase[key0->tick->idx];
 
@@ -742,8 +772,6 @@ pose_t BipedLIP::FootPose(real_t t, int side) {
 			real_t a     = r.norm();
 			real_t alpha = atan2(r[1], r[0]);
 
-			DSTR << alpha << endl;
-
 			real_t ch = (a    )*(s   - sin(_2pi*s)/_2pi);
 			real_t cv = (a/5.0)*(1.0 - cos(_2pi*s))/2.0;
 			
@@ -759,8 +787,6 @@ pose_t BipedLIP::FootPose(real_t t, int side) {
 			real_t cv = 0.0;
 			if(keym1)
 				cv = std::max(0.0, key0->var_cop_pos->val.x - keym1->var_cop_pos->val.x) / (keym1->var_duration->val);
-
-			//DSTR << cv << " " << tau << endl;
 
 			theta  = std::max(0.0, (c0.x + cv*dt) - (p0.x + l0))/r0;		
 			pos2.x = p0.x + r0*(theta - sin(theta)) + l0*(1.0 - cos(theta));
@@ -783,8 +809,6 @@ pose_t BipedLIP::FootPose(real_t t, int side) {
 		pos2.y = p0.y + (p1.y - p0.y)*s;
 		pose.Pos() = vec3_t(pos2.x, pos2.y, z);
 		pose.Ori() = FromRollPitchYaw(vec3_t(0.0, theta, 0.0));
-		//pose.Ori() = quat_t();
-		//DSTR << z << " " << theta << endl;
 	}
 
 	return pose;
@@ -954,13 +978,13 @@ vec3_t BipedLIP::CopPos(real_t t) {
 
 	vec2_t ct;
 
-	if (key1) {
-		real_t dt = t - key0->var_time->val;
-		real_t tau = key0->var_duration->val;
-		vec2_t c0 = key0->var_cop_pos->val;
-		vec2_t c1 = key1->var_cop_pos->val;
+	if (key1 == key0->next) {
+		real_t dt  = t - key0->var_time->val;
+		vec2_t c0  = key0->var_cop_pos->val;
+		vec2_t cv0 = key0->var_cop_vel->val;
+		vec2_t c1  = key1->var_cop_pos->val;
 
-		ct = c0 + (c1 - c0)*(dt / tau);
+		ct = c0 + cv0*dt;
 	}
 	else {
 		ct = key0->var_cop_pos->val;
@@ -1155,22 +1179,31 @@ BipedLipCon::BipedLipCon(Solver* solver, int _tag, string _name, BipedLIPKey* _o
 BipedLipConP::BipedLipConP(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale) :
 	BipedLipCon(solver, ConTag::BipedLipP, _name, _obj, _scale) {
 
-	AddSLink(obj[1]->var_com_pos);
-	AddSLink(obj[1]->var_cop_pos);
-	AddSLink(obj[0]->var_com_pos);
-	AddSLink(obj[0]->var_com_vel);
-	AddSLink(obj[0]->var_cop_pos);
+	AddSLink (obj[1]->var_com_pos );
+	AddSLink (obj[0]->var_com_pos );
+	AddSLink (obj[0]->var_com_vel );
+	AddSLink (obj[0]->var_cop_pos );
+	AddSLink (obj[0]->var_cop_vel );
 	AddC2Link(obj[0]->var_duration);
 }
 
 BipedLipConV::BipedLipConV(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale) :
 	BipedLipCon(solver, ConTag::BipedLipV, _name, _obj, _scale) {
 
-	AddSLink(obj[1]->var_com_vel);
-	AddSLink(obj[1]->var_cop_pos);
-	AddSLink(obj[0]->var_com_pos);
-	AddSLink(obj[0]->var_com_vel);
-	AddSLink(obj[0]->var_cop_pos);
+	AddSLink (obj[1]->var_com_vel );
+	AddSLink (obj[0]->var_com_pos );
+	AddSLink (obj[0]->var_com_vel );
+	AddSLink (obj[0]->var_cop_pos );
+	AddSLink (obj[0]->var_cop_vel );
+	AddC2Link(obj[0]->var_duration);
+}
+
+BipedLipConC::BipedLipConC(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale) :
+	BipedLipCon(solver, ConTag::BipedLipC, _name, _obj, _scale) {
+
+	AddSLink (obj[1]->var_cop_pos );
+	AddSLink (obj[0]->var_cop_pos );
+	AddSLink (obj[0]->var_cop_vel );
 	AddC2Link(obj[0]->var_duration);
 }
 
@@ -1256,43 +1289,80 @@ BipedTimeCon::BipedTimeCon(Solver* solver, string _name, BipedLIPKey* _obj, real
 
 //-------------------------------------------------------------------------------------------------
 
+void BipedLipConP::CalcLhs() {
+	Prepare();
+
+}
+
+void BipedLipConV::CalcLhs() {
+	Prepare();
+	
+}
+
+void BipedLipConC::CalcLhs() {
+	Prepare();
+
+}
+
+Link* BipedLipConP::GetLhs() {
+	return links[0];
+}
+
+Link* BipedLipConV::GetLhs() {
+	return links[0];
+}
+
+Link* BipedLipConC::GetLhs() {
+	return links[0];
+}
+
+//-------------------------------------------------------------------------------------------------
+
 void BipedLipCon::Prepare() {
 	BipedLIP::Param& param = ((BipedLIP*)obj[0]->node)->param;
 
 	T = param.T;
-	T2 = T * T;
 	tau = obj[0]->var_duration->val;
-	tau2 = tau * tau;
 	C = cosh(tau / T);
 	S = sinh(tau / T);
-	p0 = obj[0]->var_com_pos->val;
-	v0 = obj[0]->var_com_vel->val;
-	c0 = obj[0]->var_cop_pos->val;
-	p1 = obj[1]->var_com_pos->val;
-	v1 = obj[1]->var_com_vel->val;
-	c1 = obj[1]->var_cop_pos->val;
+	p0  = obj[0]->var_com_pos->val;
+	v0  = obj[0]->var_com_vel->val;
+	c0  = obj[0]->var_cop_pos->val;
+	cv0 = obj[0]->var_cop_vel->val;
+	p1  = obj[1]->var_com_pos->val;
+	v1  = obj[1]->var_com_vel->val;
+	c1  = obj[1]->var_cop_pos->val;
 }
 
 void BipedLipConP::CalcCoef() {
 	Prepare();
 
-	((SLink*)links[0])->SetCoef(1.0);
-	((SLink*)links[1])->SetCoef(-1.0 + (T / tau)*S);
-	((SLink*)links[2])->SetCoef(-C);
-	((SLink*)links[3])->SetCoef(-T * S);
-	((SLink*)links[4])->SetCoef(C - (T / tau)*S);
-	((C2Link*)links[5])->SetCoef(-(S / T)*(p0 - c0) - C * (v0 - (c1 - c0) / tau) - (T*S)*(c1 - c0) / tau2);
+	((SLink *)links[0])->SetCoef( 1.0);
+	((SLink *)links[1])->SetCoef(-C);
+	((SLink *)links[2])->SetCoef(-T*S);
+	((SLink *)links[3])->SetCoef(-1.0 + C);
+	((SLink *)links[4])->SetCoef(-tau + T*S);
+	((C2Link*)links[5])->SetCoef(-cv0 - (S/T)*(p0 - c0) - C*(v0 - cv0));
 }
 
 void BipedLipConV::CalcCoef() {
 	Prepare();
 
-	((SLink*)links[0])->SetCoef(1.0);
-	((SLink*)links[1])->SetCoef((C - 1.0) / tau);
-	((SLink*)links[2])->SetCoef(-S / T);
-	((SLink*)links[3])->SetCoef(-C);
-	((SLink*)links[4])->SetCoef((1.0 - C) / tau + S / T);
-	((C2Link*)links[5])->SetCoef(-(C / T2)*(p0 - c0) - (S / T)*(v0 - (c1 - c0) / tau) + (1.0 - C)*(c1 - c0) / tau2);
+	((SLink *)links[0])->SetCoef( 1.0);
+	((SLink *)links[1])->SetCoef(-S/T);
+	((SLink *)links[2])->SetCoef(-C);
+	((SLink *)links[3])->SetCoef( S/T);
+	((SLink *)links[4])->SetCoef(-1.0 + C);
+	((C2Link*)links[5])->SetCoef(-(C/(T*T))*(p0 - c0) - (S/T)*(v0 - cv0));
+}
+
+void BipedLipConC::CalcCoef() {
+	Prepare();
+
+	((SLink *)links[0])->SetCoef( 1.0);
+	((SLink *)links[1])->SetCoef(-1.0);
+	((SLink *)links[2])->SetCoef(-tau);
+	((C2Link*)links[3])->SetCoef(-cv0);
 }
 
 /*
@@ -1388,13 +1458,19 @@ void BipedTimeCon::CalcCoef() {
 //-------------------------------------------------------------------------------------------------
 
 void BipedLipConP::CalcDeviation() {
-	vec2_t y2 = p1 - c1 - C * (p0 - c0) - (T*S)*(v0 - (c1 - c0) / tau);
+	vec2_t y2 = p1 - (c0 + cv0*tau + C*(p0 - c0) + (T*S)*(v0 - cv0));
 	y[0] = y2[0];
 	y[1] = y2[1];
 }
 
 void BipedLipConV::CalcDeviation() {
-	vec2_t y2 = v1 - (c1 - c0) / tau - (S / T)*(p0 - c0) - C * (v0 - (c1 - c0) / tau);
+	vec2_t y2 = v1 - (cv0 + (S/T)*(p0 - c0) + C*(v0 - cv0));
+	y[0] = y2[0];
+	y[1] = y2[1];
+}
+
+void BipedLipConC::CalcDeviation() {
+	vec2_t y2 = c1 - (c0 + cv0*tau);
 	y[0] = y2[0];
 	y[1] = y2[1];
 }
