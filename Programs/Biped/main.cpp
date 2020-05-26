@@ -41,24 +41,24 @@ public:
 	virtual void BuildScene() {
 		biped = new DiMP::BipedLIP(graph, "biped");
 		biped->param.gravity = 9.8;
-		biped->param.heightCoM = 0.496;
+		biped->param.heightCoM = 1.0;
 		biped->param.heightlow = 0.52;
 		biped->param.heighthigh = 0.54;
 		biped->param.heightmiddle = (biped->param.heightlow + biped->param.heighthigh)/2;
-		biped->param.torsoMass = 4.432*0.8;
-		biped->param.footMass = (4.432 - biped->param.torsoMass) / 2;
-		biped->param.durationMin[DiMP::BipedLIP::Phase::R] = 0.1;
+		biped->param.torsoMass = 3.578+28.054+2.0*14.023+13.877;
+		biped->param.footMass = 13.877/2;
+		biped->param.durationMin[DiMP::BipedLIP::Phase::R] = 0.5;
 		biped->param.durationMax[DiMP::BipedLIP::Phase::R] = 0.8;
-		biped->param.durationMin[DiMP::BipedLIP::Phase::L] = 0.1;
+		biped->param.durationMin[DiMP::BipedLIP::Phase::L] = 0.5;
 		biped->param.durationMax[DiMP::BipedLIP::Phase::L] = 0.8;
 		biped->param.durationMin[DiMP::BipedLIP::Phase::RL] = 0.1;
 		biped->param.durationMax[DiMP::BipedLIP::Phase::RL] = 0.2;
 		biped->param.durationMin[DiMP::BipedLIP::Phase::LR] = 0.1;
 		biped->param.durationMax[DiMP::BipedLIP::Phase::LR] = 0.2;
-		biped->param.footPosMin[0] = vec2_t(-0.20, -0.14);
-		biped->param.footPosMax[0] = vec2_t( 0.20, -0.07);
-		biped->param.footPosMin[1] = vec2_t(-0.20,  0.07);
-		biped->param.footPosMax[1] = vec2_t( 0.20,  0.14);
+		biped->param.footPosMin[0] = vec2_t(-0.40, -0.14);
+		biped->param.footPosMax[0] = vec2_t( 0.40, -0.07);
+		biped->param.footPosMin[1] = vec2_t(-0.40,  0.07);
+		biped->param.footPosMax[1] = vec2_t( 0.40,  0.14);
 		biped->param.footOriMin[0] = Rad(-15.0);
 		biped->param.footOriMax[0] = Rad(15.0);
 		biped->param.footOriMin[1] = Rad(-15.0);
@@ -66,8 +66,8 @@ public:
 		biped->param.swingHeight[0] = 0.050;
 		biped->param.swingHeight[1] = 0.025;
 		//biped->param.swingProfile = DiMP::BipedLIP::SwingProfile::Wedge;
-		//biped->param.swingProfile = DiMP::BipedLIP::SwingProfile::Cycloid;
-		biped->param.swingProfile = DiMP::BipedLIP::SwingProfile::HeelToe;
+		biped->param.swingProfile = DiMP::BipedLIP::SwingProfile::Cycloid;
+		//biped->param.swingProfile = DiMP::BipedLIP::SwingProfile::HeelToe;
 		biped->param.copPosMin    = vec2_t(-0.08, -0.04 );
 		biped->param.copPosMax    = vec2_t( 0.08,  0.04 );
 		biped->param.ankleToToe   = 0.05;
@@ -76,7 +76,7 @@ public:
 		biped->param.heelRadius   = 0.10;
 
 		const uint nstep = 20;
-		const uint nphase = 2 * nstep + 1;
+		const uint nphase = 2 * nstep + 2;
 
 		for (uint i = 0; i < nphase; i++)
 			new DiMP::Tick(graph, 0.0, "");
@@ -93,7 +93,7 @@ public:
 		}
 
 		real_t spacing = 0.1;
-		vec2_t goalPos(3.0, 0.0);
+		vec2_t goalPos(2.0, 0.0);
 		real_t goalOri = Rad(0);
 
 		biped->waypoints.resize(2);
@@ -139,11 +139,12 @@ public:
 
 		graph->solver->SetCorrection(ID(), 0.5);
 		graph->solver->param.numIter[0] = 20;
-		graph->solver->param.cutoffStepSize = 0.000001;
-		graph->solver->param.minStepSize = 0.0;
+		graph->solver->param.cutoffStepSize = 0.00001;
+		graph->solver->param.minStepSize = 0.0001;
 		graph->solver->param.maxStepSize = 1.0;
 		//graph->solver->param.methodMajor = Solver::Method::Major::Prioritized;
-		graph->solver->param.methodMajor = Solver::Method::Major::GaussNewton;
+		//graph->solver->param.methodMajor = Solver::Method::Major::GaussNewton;
+		graph->solver->param.methodMajor = Solver::Method::Major::DDP;
 		graph->solver->param.methodMinor = Solver::Method::Minor::Direct;
 		graph->solver->param.verbose = true;
 

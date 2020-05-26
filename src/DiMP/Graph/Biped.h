@@ -223,8 +223,7 @@ namespace DiMP {;
 		virtual void  CalcCoef();
 		virtual void  CalcDeviation();
 		virtual void  CalcLhs();
-		virtual Link* GetLhs();
-
+		
 		BipedLipConP(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale);
 	};
 
@@ -233,8 +232,7 @@ namespace DiMP {;
 		virtual void CalcCoef();
 		virtual void CalcDeviation();
 		virtual void CalcLhs();
-		virtual Link* GetLhs();
-
+		
 		BipedLipConV(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale);
 	};
 
@@ -243,8 +241,7 @@ namespace DiMP {;
 		virtual void CalcCoef();
 		virtual void CalcDeviation();
 		virtual void CalcLhs();
-		virtual Link* GetLhs();
-
+		
 		BipedLipConC(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale);
 	};
 
@@ -321,6 +318,7 @@ namespace DiMP {;
 		BipedLIPKey* obj[2];
 
 		virtual void CalcCoef();
+		virtual void CalcLhs ();
 
 		BipedTimeCon(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale);
 	};
