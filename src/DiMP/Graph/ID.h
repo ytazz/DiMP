@@ -33,6 +33,13 @@ struct VarTag{
 		BipedCop,
 		BipedDuration,
 		BipedTime,
+		CentroidComTP,
+		CentroidComRP,
+		CentroidComTV,
+		CentroidComRV,
+		CentroidEndTP,
+		CentroidVel,
+		CentroidForce,
 		NumTypes,
 	};
 };

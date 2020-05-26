@@ -4,6 +4,7 @@
 #include <DiMP/Graph/Object.h>
 #include <DiMP/Graph/Connector.h>
 #include <DiMP/Graph/Biped.h>
+#include <DiMP/Graph/Centroid.h>
 #include <DiMP/Graph/Geometry.h>
 #include <DiMP/Graph/Joint.h>
 #include <DiMP/Graph/Contact.h>

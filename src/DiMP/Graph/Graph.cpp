@@ -33,7 +33,13 @@ const char* VarNames[] = {
 	"biped_com_vel"    ,
 	"biped_cop"        ,
 	"biped_duration"   ,
-	"biped_time"       
+	"biped_time"       ,
+	"centroid_com_pos_t",
+	"centroid_com_pos_r",
+	"centroid_com_vel_t",
+	"centroid_com_vel_r",
+	"centroid_end_pos_t",
+	"centroid_force"
 };
 
 const char* ConNames[] = {

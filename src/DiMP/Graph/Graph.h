@@ -9,18 +9,20 @@
 
 namespace DiMP{;
 
-class Geometry  ;
-class TimeSlot  ;
-class Object    ;
-class BipedLIP  ;
-class Joint     ;
-class Task      ;
+class Geometry;
+class TimeSlot;
+class Object  ;
+class BipedLIP;
+class Centroid;
+class Joint   ;
+class Task    ;
 
 typedef ArrayBase<Geometry *>  Geometries;
 typedef ArrayBase<TimeSlot *>  TimeSlots ;
 typedef ArrayBase<Object   *>  Objects   ;
 typedef ArrayBase<Connector*>  Connectors;
 typedef ArrayBase<BipedLIP *>  Bipeds    ;
+typedef ArrayBase<Centroid *>  Centroids ;
 typedef ArrayBase<Joint    *>  Joints    ;
 typedef ArrayBase<Task     *>  Tasks     ;
 
@@ -71,6 +73,7 @@ public:
 	Objects			objects;		///< objects
 	Connectors      cons;
 	Bipeds			bipeds;         ///< bipeds
+	Centroids       centroids;      ///< centroids
 	Trees			trees;			///< trees
 	Joints			joints;			///< joints
 	Geometries		geos;			///< geometries
