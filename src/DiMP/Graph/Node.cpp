@@ -3,6 +3,8 @@
 #include <DiMP/Graph/Timing.h>
 #include <DiMP/Render/Config.h>
 
+#include <omp.h>
+
 namespace DiMP{;
 
 //-------------------------------------------------------------------------------------------------
@@ -45,6 +47,35 @@ Node::Node(Graph* g, const string& n){
 Node::~Node(){
 	graph->nodes.Remove(this);
 	graph->ready = false;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+void NodeArray::AddVar (){
+	for(Node* n : *this) n->AddVar ();
+}
+
+void NodeArray::AddCon (){
+	for(Node* n : *this) n->AddCon ();
+}
+
+void NodeArray::Init(){
+	for(Node* n : *this) n->Init();
+}
+
+void NodeArray::Prepare(){
+#pragma omp parallel for schedule(dynamic)
+	for(int i = 0; i < size(); i++){
+		at(i)->Prepare();
+	}
+}
+
+void NodeArray::Finish(){
+	for(Node* n : *this) n->Finish ();
+}
+
+void NodeArray::Draw(Render::Canvas* canvas, Render::Config* conf){
+	for(Node* n : *this) n->Draw(canvas, conf);
 }
 	
 //-------------------------------------------------------------------------------------------------

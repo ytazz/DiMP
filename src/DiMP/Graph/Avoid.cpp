@@ -7,6 +7,8 @@
 #include <Foundation/UTQPTimer.h>
 static UTQPTimer ptimer;
 
+#include <omp.h>
+
 namespace DiMP{;
 
 const real_t inf = numeric_limits<real_t>::max();
@@ -62,7 +64,8 @@ void AvoidKey::Prepare(){
 		GeometryPair* gpmax = 0;
 		real_t        dmax  = 0.0;
 
-		for(auto& gp : geoPairs){
+		for(int gp_idx = 0; gp_idx < geoPairs.size(); gp_idx++){
+			GeometryPair& gp = geoPairs[gp_idx];
 			// bsphere‚Å”»’è
 			real_t d    = (gp.info0->bsphereCenterAbs - gp.info1->bsphereCenterAbs).norm();
 			real_t rsum = gp.info0->geo->bsphereRadius + gp.info1->geo->bsphereRadius;
@@ -74,8 +77,8 @@ void AvoidKey::Prepare(){
 			// bbox‚Å”»’è
 			gp.cullBox = false;
 			for(int i = 0; i < 3; i++){
-				if( gp.info0->bbmin.x > gp.info1->bbmax.x + task->param.dmin || 
-					gp.info1->bbmin.x > gp.info0->bbmax.x + task->param.dmin ){
+				if( gp.info0->bbmin[i] > gp.info1->bbmax[i] + task->param.dmin || 
+					gp.info1->bbmin[i] > gp.info0->bbmax[i] + task->param.dmin ){
 					gp.cullBox = true;
 					break;
 				}

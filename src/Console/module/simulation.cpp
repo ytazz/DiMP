@@ -55,7 +55,7 @@ void SimulationManager::Func(){
 	while(true){
 		//int i = Event::Wait(&ev[0], (uint)ev.size(), (evPlanning.IsSet() ? 10 : 1000), false);
 		int i = evGroup.Wait(evPlanning.IsSet() ? 10 : 1000);
-		cout << "sim wait break " << i << endl;
+		//cout << "sim wait break " << i << endl;
 		if(i == -1){
 			if(evPlanning.IsSet()){
 				cout << "step plan" << endl;

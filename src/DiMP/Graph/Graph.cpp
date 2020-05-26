@@ -31,7 +31,8 @@ const char* VarNames[] = {
 	"biped_foot_r"     ,
 	"biped_com_pos"    ,
 	"biped_com_vel"    ,
-	"biped_cop"        ,
+	"biped_cop_pos"    ,
+	"biped_cop_vel"    ,
 	"biped_duration"   ,
 	"biped_time"       ,
 	"centroid_com_pos_t",
@@ -74,6 +75,7 @@ const char* ConNames[] = {
 	"avoid_v"            ,
 	"biped_lip_p"        ,
 	"biped_lip_v"        ,
+	"biped_lip_c"        ,
 	"biped_foot_range_t" ,
 	"biped_foot_range_r" ,
 	"biped_foot_match_t" ,
@@ -188,16 +190,19 @@ void Graph::Step(){
 	timer.CountUS();
 	Prepare();
 	uint TPrepare = timer.CountUS();
-	//DSTR << "Prepare: " << TPrepare << endl;
 	
 	timer.CountUS();
 	solver->Step();
 	uint TStep = timer.CountUS();
-	//DSTR << "Step: " << TStep << endl;
 
 	timer.CountUS();
 	Finish();
 	uint TFinish = timer.CountUS();
+
+	DSTR << " tpre: " << TPrepare;
+	DSTR << " tstp: " << TStep;
+	DSTR << " tfin: " << TFinish << endl;
+
 }
 
 void Graph::Draw(Render::Canvas* canvas, Render::Config* _conf){
