@@ -47,14 +47,16 @@ public:
 		biped->param.heightmiddle = (biped->param.heightlow + biped->param.heighthigh)/2;
 		biped->param.torsoMass = 3.578+28.054+2.0*14.023+13.877;
 		biped->param.footMass = 13.877/2;
-		biped->param.durationMin[DiMP::BipedLIP::Phase::R] = 0.5;
-		biped->param.durationMax[DiMP::BipedLIP::Phase::R] = 0.8;
-		biped->param.durationMin[DiMP::BipedLIP::Phase::L] = 0.5;
-		biped->param.durationMax[DiMP::BipedLIP::Phase::L] = 0.8;
+		biped->param.durationMin[DiMP::BipedLIP::Phase::R ] = 0.5;
+		biped->param.durationMax[DiMP::BipedLIP::Phase::R ] = 0.8;
+		biped->param.durationMin[DiMP::BipedLIP::Phase::L ] = 0.5;
+		biped->param.durationMax[DiMP::BipedLIP::Phase::L ] = 0.8;
 		biped->param.durationMin[DiMP::BipedLIP::Phase::RL] = 0.1;
 		biped->param.durationMax[DiMP::BipedLIP::Phase::RL] = 0.2;
 		biped->param.durationMin[DiMP::BipedLIP::Phase::LR] = 0.1;
 		biped->param.durationMax[DiMP::BipedLIP::Phase::LR] = 0.2;
+		biped->param.durationMin[DiMP::BipedLIP::Phase::D ] = 0.1;
+		biped->param.durationMax[DiMP::BipedLIP::Phase::D ] = 0.2;
 		biped->param.footPosMin[0] = vec2_t(-0.40, -0.14);
 		biped->param.footPosMax[0] = vec2_t( 0.40, -0.07);
 		biped->param.footPosMin[1] = vec2_t(-0.40,  0.07);
@@ -75,22 +77,28 @@ public:
 		biped->param.toeRadius    = 0.10;
 		biped->param.heelRadius   = 0.10;
 
+		/*
+		 D -> RL -> L -> LR -> R ... -> RL -> D
+
+		 */
 		const uint nstep = 20;
-		const uint nphase = 2 * nstep + 2;
+		const uint nphase = 2 * nstep + 3;
 
 		for (uint i = 0; i < nphase; i++)
 			new DiMP::Tick(graph, 0.0, "");
 
 		biped->phase.resize(nphase);
-
-		for (uint i = 0; i < nphase; i++) {
-			switch (i % 4) {
-			case 0: biped->phase[i] = DiMP::BipedLIP::Phase::RL; break;
-			case 1: biped->phase[i] = DiMP::BipedLIP::Phase::L; break;
-			case 2: biped->phase[i] = DiMP::BipedLIP::Phase::LR; break;
-			case 3: biped->phase[i] = DiMP::BipedLIP::Phase::R; break;
+		biped->phase[0] = DiMP::BipedLIP::Phase::D;
+		for (uint i = 1; i < nphase-2; i++) {
+			switch((i-1)%4){
+			case 0:	biped->phase[i] = DiMP::BipedLIP::Phase::RL; break;
+			case 1:	biped->phase[i] = DiMP::BipedLIP::Phase::L ; break;
+			case 2:	biped->phase[i] = DiMP::BipedLIP::Phase::LR; break;
+			case 3:	biped->phase[i] = DiMP::BipedLIP::Phase::R ; break;
 			}
 		}
+		biped->phase[nphase-2] = DiMP::BipedLIP::Phase::D;
+		biped->phase[nphase-1] = DiMP::BipedLIP::Phase::D;
 
 		real_t spacing = 0.1;
 		vec2_t goalPos(2.0, 0.0);
@@ -98,41 +106,45 @@ public:
 
 		biped->waypoints.resize(2);
 		
-		biped->waypoints[0].k = 0;
-		biped->waypoints[0].torso_pos_t = vec2_t(0.0, 0.0);
-		biped->waypoints[0].torso_pos_r = 0.0;
-		biped->waypoints[0].torso_vel_t = vec2_t(0.0, 0.0);
-		biped->waypoints[0].torso_vel_r = 0.0;
-		biped->waypoints[0].foot_pos_t[0] = vec2_t(0.0, -spacing);
-		biped->waypoints[0].foot_pos_r[0] = 0.0;
-		biped->waypoints[0].foot_pos_t[1] = vec2_t(0.0, spacing);
-		biped->waypoints[0].foot_pos_r[1] = 0.0;
-		biped->waypoints[0].fix_torso_pos_t = true;
-		biped->waypoints[0].fix_torso_pos_r = true;
-		biped->waypoints[0].fix_torso_vel_t = true;
-		biped->waypoints[0].fix_torso_vel_r = true;
+		biped->waypoints[0].k                 = 0;
+		biped->waypoints[0].torso_pos_t       = vec2_t(0.0, 0.0);
+		biped->waypoints[0].torso_pos_r       = 0.0;
+		biped->waypoints[0].torso_vel_t       = vec2_t(0.0, 0.0);
+		biped->waypoints[0].torso_vel_r       = 0.0;
+		biped->waypoints[0].foot_pos_t[0]     = vec2_t(0.0, -spacing);
+		biped->waypoints[0].foot_pos_r[0]     = 0.0;
+		biped->waypoints[0].foot_pos_t[1]     = vec2_t(0.0, spacing);
+		biped->waypoints[0].foot_pos_r[1]     = 0.0;
+		biped->waypoints[0].cop_pos           = vec2_t(0.0, 0.0);
+		biped->waypoints[0].fix_torso_pos_t   = true;
+		biped->waypoints[0].fix_torso_pos_r   = true;
+		biped->waypoints[0].fix_torso_vel_t   = true;
+		biped->waypoints[0].fix_torso_vel_r   = true;
 		biped->waypoints[0].fix_foot_pos_t[0] = true;
 		biped->waypoints[0].fix_foot_pos_r[0] = true;
 		biped->waypoints[0].fix_foot_pos_t[1] = true;
 		biped->waypoints[0].fix_foot_pos_r[1] = true;
+		biped->waypoints[0].fix_cop_pos       = true;
 
-		biped->waypoints[1].k = nphase - 1;
-		biped->waypoints[1].torso_pos_t = goalPos;
-		biped->waypoints[1].torso_pos_r = goalOri;
-		biped->waypoints[1].torso_vel_t = vec2_t(0.0, 0.0);
-		biped->waypoints[1].torso_vel_r = 0.0;
-		biped->waypoints[1].foot_pos_t[0] = goalPos + mat2_t::Rot(goalOri) * vec2_t(0.0, -spacing);
-		biped->waypoints[1].foot_pos_r[0] = goalOri;
-		biped->waypoints[1].foot_pos_t[1] = goalPos + mat2_t::Rot(goalOri) * vec2_t(0.0, spacing);
-		biped->waypoints[1].foot_pos_r[1] = goalOri;
-		biped->waypoints[1].fix_torso_pos_t = true;
-		biped->waypoints[1].fix_torso_pos_r = true;
-		biped->waypoints[1].fix_torso_vel_t = true;
-		biped->waypoints[1].fix_torso_vel_r = true;
+		biped->waypoints[1].k                 = nphase - 1;
+		biped->waypoints[1].torso_pos_t       = goalPos;
+		biped->waypoints[1].torso_pos_r       = goalOri;
+		biped->waypoints[1].torso_vel_t       = vec2_t(0.0, 0.0);
+		biped->waypoints[1].torso_vel_r       = 0.0;
+		biped->waypoints[1].foot_pos_t[0]     = goalPos + mat2_t::Rot(goalOri) * vec2_t(0.0, -spacing);
+		biped->waypoints[1].foot_pos_r[0]     = goalOri;
+		biped->waypoints[1].foot_pos_t[1]     = goalPos + mat2_t::Rot(goalOri) * vec2_t(0.0, spacing);
+		biped->waypoints[1].foot_pos_r[1]     = goalOri;
+		biped->waypoints[1].cop_pos           = goalPos;
+		biped->waypoints[1].fix_torso_pos_t   = true;
+		biped->waypoints[1].fix_torso_pos_r   = true;
+		biped->waypoints[1].fix_torso_vel_t   = true;
+		biped->waypoints[1].fix_torso_vel_r   = true;
 		biped->waypoints[1].fix_foot_pos_t[0] = true;
 		biped->waypoints[1].fix_foot_pos_r[0] = true;
 		biped->waypoints[1].fix_foot_pos_t[1] = true;
 		biped->waypoints[1].fix_foot_pos_r[1] = true;
+		biped->waypoints[1].fix_cop_pos       = true;
 
 		graph->scale.Set(1.0, 1.0, 1.0);
 		graph->Init();
@@ -143,8 +155,8 @@ public:
 		graph->solver->param.minStepSize = 0.0001;
 		graph->solver->param.maxStepSize = 1.0;
 		//graph->solver->param.methodMajor = Solver::Method::Major::Prioritized;
-		//graph->solver->param.methodMajor = Solver::Method::Major::GaussNewton;
-		graph->solver->param.methodMajor = Solver::Method::Major::DDP;
+		graph->solver->param.methodMajor = Solver::Method::Major::GaussNewton;
+		//graph->solver->param.methodMajor = Solver::Method::Major::DDP;
 		graph->solver->param.methodMinor = Solver::Method::Minor::Direct;
 		graph->solver->param.verbose = true;
 
