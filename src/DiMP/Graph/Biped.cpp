@@ -236,14 +236,16 @@ BipedLIP::Param::Param() {
 	swingProfile   = SwingProfile::Cycloid;
 	swingHeight[0] = 0.1; //0: maximum swing foot height
 	swingHeight[1] = 0.1; //1: swing foot height before landing (Wedge only)
-	durationMin[Phase::R] = 0.1; // duration minimum at single support
-	durationMax[Phase::R] = 0.8; // duration maximum at single support
-	durationMin[Phase::L] = 0.1;
-	durationMax[Phase::L] = 0.8;
+	durationMin[Phase::R ] = 0.1; // duration minimum at single support
+	durationMax[Phase::R ] = 0.8; // duration maximum at single support
+	durationMin[Phase::L ] = 0.1;
+	durationMax[Phase::L ] = 0.8;
 	durationMin[Phase::RL] = 0.1; // duration minimum at double support
 	durationMax[Phase::RL] = 0.2; // duration maximum at double support
 	durationMin[Phase::LR] = 0.1;
 	durationMax[Phase::LR] = 0.2;
+	durationMin[Phase::D ] = 0.1;
+	durationMax[Phase::D ] = 0.2;
 
 	// allowable range of foot position relative to com
 	footPosMin[0] = vec2_t(-0.2, -0.14);
@@ -270,25 +272,27 @@ BipedLIP::Param::Param() {
 //-------------------------------------------------------------------------------------------------
 // Waypoints
 BipedLIP::Waypoint::Waypoint() {
-	k = 0;
-	time = 0.0;
-	torso_pos_t = vec2_t();
-	torso_pos_r = 0.0;
-	torso_vel_t = vec2_t();
-	torso_vel_r = 0.0;
+	k             = 0;
+	time          = 0.0;
+	torso_pos_t   = vec2_t();
+	torso_pos_r   = 0.0;
+	torso_vel_t   = vec2_t();
+	torso_vel_r   = 0.0;
 	foot_pos_t[0] = vec2_t();
 	foot_pos_r[0] = 0.0;
 	foot_pos_t[1] = vec2_t();
 	foot_pos_r[1] = 0.0;
+	cop_pos       = vec2_t();
 
-	fix_torso_pos_t = false;
-	fix_torso_pos_r = false;
-	fix_torso_vel_t = false;
-	fix_torso_vel_r = false;
+	fix_torso_pos_t   = false;
+	fix_torso_pos_r   = false;
+	fix_torso_vel_t   = false;
+	fix_torso_vel_r   = false;
 	fix_foot_pos_t[0] = false;
 	fix_foot_pos_r[0] = false;
 	fix_foot_pos_t[1] = false;
 	fix_foot_pos_r[1] = false;
+	fix_cop_pos       = false;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -348,6 +352,8 @@ void BipedLIP::Init() {
 
 		key->var_time->val = t;
 
+		int ph = phase[key->tick->idx];
+			
 		if (!key->prev) {
 			// initial time is fixed
 			key->var_time->val = 0.0;
@@ -355,7 +361,6 @@ void BipedLIP::Init() {
 		}
 
 		if (key->next) {
-			int ph = phase[key->tick->idx];
 			key->con_foot_match_t[0]->enabled = (ph != BipedLIP::Phase::L);
 			key->con_foot_match_r[0]->enabled = (ph != BipedLIP::Phase::L);
 			key->con_foot_match_t[1]->enabled = (ph != BipedLIP::Phase::R);
@@ -393,6 +398,12 @@ void BipedLIP::Init() {
 		key->con_cop[1]->_min = param.copPosMin[1];
 		key->con_cop[0]->_max = param.copPosMax[0];
 		key->con_cop[1]->_max = param.copPosMax[1];
+
+		// cop is unconstrained for D phase to enable it to be inside the convex hull of both feet
+		if(ph == BipedLIP::Phase::D){
+			key->con_cop[0]->enabled = false;
+			key->con_cop[1]->enabled = false;
+		}
 
 		t += durationAve[phase[k]];
 	}
@@ -452,6 +463,7 @@ void BipedLIP::Init() {
 		key->var_com_pos->val = (mt * key->var_torso_pos_t->val + mf * (key->var_foot_pos_t[0]->val + key->var_foot_pos_t[1]->val)) / (mt + 2.0*mf);
 		key->var_com_vel->val = (mt * key->var_torso_vel_t->val) / (mt + 2.0*mf);
 
+		// cop is initialized by the foot position
 		if (phase[k] == Phase::R || phase[k] == Phase::RL)
 			 key->var_cop_pos->val = key->var_foot_pos_t[0]->val;
 		else key->var_cop_pos->val = key->var_foot_pos_t[1]->val;
@@ -475,6 +487,10 @@ void BipedLIP::Init() {
 		key->var_torso_pos_r->locked = wp.fix_torso_pos_r;
 		key->var_torso_vel_t->locked = wp.fix_torso_vel_t;
 		key->var_torso_vel_r->locked = wp.fix_torso_vel_r;
+		key->var_cop_pos    ->locked = wp.fix_cop_pos;
+
+		if(wp.fix_cop_pos)
+			key->var_cop_pos->val = wp.cop_pos;
 
 		for (uint j = 0; j < 2; j++) {
 			key->var_foot_pos_t[j]->locked = wp.fix_foot_pos_t[j];
@@ -702,7 +718,7 @@ pose_t BipedLIP::FootPose(real_t t, int side) {
 			
 	if (param.swingProfile == SwingProfile::Wedge) {
 		// double support
-		if(ph == Phase::LR || ph == Phase::RL){
+		if(ph == Phase::LR || ph == Phase::RL || ph == Phase::D){
 			pos2 = key0->var_foot_pos_t[side]->val;
 		}
 		// support foot of single support
@@ -726,7 +742,7 @@ pose_t BipedLIP::FootPose(real_t t, int side) {
 	}
 	if (param.swingProfile == SwingProfile::Cycloid){
 		// double support
-		if(ph == Phase::LR || ph == Phase::RL){
+		if(ph == Phase::LR || ph == Phase::RL || ph == Phase::D){
 			pos2 = key0->var_foot_pos_t[side]->val;
 		}
 		// support foot of single support

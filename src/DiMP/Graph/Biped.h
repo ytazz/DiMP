@@ -81,10 +81,11 @@ namespace DiMP {;
 		/// walking phase
 		struct Phase {
 			enum {
-				R,
-				L,
-				RL,
-				LR,
+				R ,  //< right support
+				L ,  //< left support
+				RL,  //< double support: transition from R to L
+				LR,  //< double support: trabsition from L to R
+				D ,  //< double support for starting and stopping
 				Num
 			};
 		};
@@ -137,6 +138,7 @@ namespace DiMP {;
 			real_t  torso_vel_r;
 			vec2_t  foot_pos_t[2];
 			real_t  foot_pos_r[2];
+			vec2_t  cop_pos;
 
 			bool    fix_time;
 			bool    fix_torso_pos_t;
@@ -145,6 +147,7 @@ namespace DiMP {;
 			bool    fix_torso_vel_r;
 			bool    fix_foot_pos_t[2];
 			bool    fix_foot_pos_r[2];
+			bool    fix_cop_pos;
 
 			Waypoint();
 		};
