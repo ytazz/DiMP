@@ -310,6 +310,7 @@ void Loader::LoadParam(XMLNode* node, Graph* graph){
 		node->Get(str, ".value");
 		if(str == "steepest_descent") graph->solver->param.methodMajor = Solver::Method::Major::SteepestDescent;
 		if(str == "gauss_newton"    ) graph->solver->param.methodMajor = Solver::Method::Major::GaussNewton;
+		if(str == "ddp"             ) graph->solver->param.methodMajor = Solver::Method::Major::DDP;
 		if(str == "prioritized"     ) graph->solver->param.methodMajor = Solver::Method::Major::Prioritized;
 	}
 	if(name == "method_minor"){

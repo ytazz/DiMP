@@ -182,10 +182,10 @@ bool MyModule::Build() {
 		}
 
 		//// 低優先度で関節速度を0にする
-		for (DiMP::Joint* jnt : robot[0]->joint) {
-			jnt->param.rmin_dp[0] = 0.0;
-			jnt->param.rmax_dp[0] = 0.0;
-		}
+		//for (DiMP::Joint* jnt : robot[0]->joint) {
+		//	jnt->param.rmin_dp[0] = 0.0;
+		//	jnt->param.rmax_dp[0] = 0.0;
+		//}
 
 		// 溶接点列を読み込み
 		CsvReader csv;
@@ -197,6 +197,15 @@ bool MyModule::Build() {
 			vec3_t p = 0.001 * vec3_t(csv.Get<real_t>(i, 0), csv.Get<real_t>(i, 1), csv.Get<real_t>(i, 2));
 			// 座標変換
 			weldingPoints[i] = conf.welding.mockupPos + conf.welding.mockupOri * p;
+		}
+	}
+	if(sceneSelect == Reaching2D){
+		DiMP::Tree* tree = new DiMP::Tree(graph, "tree");
+		tree->root = robot[0]->link[0];
+
+		for (DiMP::Joint* jnt : robot[0]->joint) {
+			jnt->param.rmin_v[0] = 0.0;
+			jnt->param.rmax_v[0] = 0.0;
 		}
 	}
 
@@ -404,12 +413,12 @@ bool MyModule::Set(DiMP::Render::Canvas* canvas, int attr, DiMP::Node* node){
 	if(attr == DiMP::Render::Item::ObjectPos){
 		canvas->SetPointColor("black");
 		canvas->SetPointSize(2.0f);
-		return false;
+		return true;
 	}
 	if(attr == DiMP::Render::Item::ObjectTrajectory){
 		canvas->SetLineColor("black");
 		canvas->SetLineWidth(1);
-		return false;
+		return true;
 	}
 	if(attr == DiMP::Render::Item::Avoid){
 		canvas->SetLineColor("red");
@@ -417,9 +426,9 @@ bool MyModule::Set(DiMP::Render::Canvas* canvas, int attr, DiMP::Node* node){
 		return false;
 	}
 	if(attr == DiMP::Render::Item::Geometry){
-		canvas->SetLineColor("cyan", 0, 0.05f);
+		canvas->SetLineColor("blue", 0, 0.5f);
 		canvas->SetLineWidth(1);
-		return false;
+		return true;
 	}
 	return false;
 }

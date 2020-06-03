@@ -13,7 +13,7 @@
     <box    name="box_base"    size="0.5  0.5 0.5" />
     <sphere name="sphere_hand" radius="0.1"/>
     
-    <body name="body_link0" dynamical="false">
+    <body name="body_link0" dynamical="false" auto_tree="true">
       <connector name="0"/>
       <connector name="1" trn="0 0.25 0"/>
     </body>
@@ -35,24 +35,19 @@
     <body name="body_link4">
       <connector name="0"/>
     </body>
-    <!--<body name="body_link5">
-      <connector name="0"/>
-    </body>-->
           
     <attach connector="body_link0/0" shape="box_base"    vmat="vmat_box"   />
     <attach connector="body_link1/0" shape="box_link"    vmat="vmat_box"   />
     <attach connector="body_link2/0" shape="box_link"    vmat="vmat_box"   />
     <attach connector="body_link3/0" shape="box_link"    vmat="vmat_box"   />
     <attach connector="body_link4/0" shape="sphere_hand" vmat="vmat_sphere"/>
-    <!--<attach connector="body_link5/0" shape="sphere_hand" vmat="vmat_sphere"/>-->
-
+    
     <!-- case(c) vrange=[-20,20] -->
     <hinge name="joint0" pos="0.0deg"  sock="body_link0/1" plug="body_link1/1"/>
     <hinge name="joint1" pos="0.0deg"  sock="body_link1/2" plug="body_link2/1"/>
     <hinge name="joint2" pos="0.0deg"  sock="body_link2/2" plug="body_link3/1"/>
     <hinge name="joint3" pos="0.0deg"  sock="body_link3/2" plug="body_link4/0"/>
-    <!--<hinge name="joint4" pos="0.0deg"                         sock="body_link2/0" plug="body_link5/0"/>-->
-
+    
   </namespace>
 
   <sphere name="sphere_target" radius="0.1"/>
@@ -68,27 +63,58 @@
   <attach connector="body_target0/0" shape="sphere_target" vmat="vmat_sphere"/>
   <attach connector="body_target1/0" shape="sphere_target" vmat="vmat_sphere"/>
 
-  <!-- DiMP2設定 -->
   <ticks time_begin="0.0" time_end="5.0" time_step="0.5"/>
+  
   <timeslot name="timeslot0" time_begin="2.45" time_end="2.55" locked="true"/>
   <timeslot name="timeslot1" time_begin="4.45" time_end="4.55" locked="true"/>
-  <task name="task0" type="match" obj0="workspace/robot0/body_link4" obj1="workspace/body_target0" timeslot="timeslot0"/>
-  <task name="task1" type="match" obj0="workspace/robot0/body_link4" obj1="workspace/body_target1" timeslot="timeslot1"/>
+  
+  <match name="match0" obj0="workspace/robot0/body_link4" obj1="workspace/body_target0" timeslot="timeslot0" match_tp="true" match_tv="false" match_rp="false" match_rv="false"/>
+  <match name="match1" obj0="workspace/robot0/body_link4" obj1="workspace/body_target1" timeslot="timeslot1" match_tp="true" match_tv="false" match_rp="false" match_rv="false"/>
 
   <scaling T="0.5" L="1.0" M="1.0"/>
-  <enable id="object_c1t"  enable="false"/>
-  <enable id="object_c1r"  enable="false"/>
-  <enable id="match_rp" enable="false"/>
-  <enable id="match_rv" enable="false"/>
+
+  <enable  id="object_c1t"     enable="false"/>
+  <enable  id="object_c1r"     enable="false"/>
+  <enable  id="joint_c0p"      enable="true"/>
+  <enable  id="joint_c0v"      enable="false"/>
+  <enable  id="joint_c1p"      enable="false"/>
+  <enable  id="joint_f"        enable="false"/>
+  <enable  id="joint_range_p"  enable="false"/>
+  <enable  id="joint_range_v"  enable="false"/>
+  <enable  id="joint_range_f"  enable="false"/>
+  <enable  id="joint_tp"       enable="true" />
+  <enable  id="joint_rp"       enable="true" />
+  <enable  id="joint_tv"       enable="false"/>
+  <enable  id="joint_rv"       enable="false"/>
+  <enable  id="force_t"        enable="false"/>
+  <enable  id="force_r"        enable="false"/>
+  <enable  id="match_tp"       enable="true" />
+  <enable  id="match_tv"       enable="false"/>
+  <enable  id="match_rp"       enable="false"/>
+  <enable  id="match_rv"       enable="false"/>
+  <enable  id="avoid_p"        enable="false" />
+  <enable  id="avoid_v"        enable="false" />
+
+  <!--
   <priority id="match_tp" target="task0" level="1"/>
   <priority id="match_tv" target="task0" level="1"/>
   <priority id="match_tp" target="task1" level="2"/>
   <priority id="match_tv" target="task1" level="2"/>
-  <iteration level="0" num="30"/>
-  <iteration level="1" num="30"/>
-  <iteration level="2" num="30"/>
-  <correction id="" rate="0.5" limit="1.0"/>
-  <correction id="match_tp" target="task0" rate="0.5" limit="0.05"/>
-  <correction id="match_tp" target="task1" rate="0.5" limit="0.05"/>
+  -->
+  
+  <correction rate="0.0001"/>
+  <constraint_weight weight="1.0" />
+  <constraint_weight weight="0.1" id="joint_range_v"/>
+  <variable_weight   weight="0.1"/>
+
+  <param name="max_step_size"    value="1.0" />
+  <param name="min_step_size"    value="0.1"/>
+  <param name="cutoff_step_size" value="0.1"/>
+  <!--
+  <param name="method_major"     value="gauss_newton"/>
+  -->
+  <param name="method_major"     value="ddp"/>
+  <param name="method_minor"     value="direct"/>
+  <param name="verbose"          value="false"/>
   
 </namespace>

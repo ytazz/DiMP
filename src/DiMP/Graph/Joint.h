@@ -68,11 +68,14 @@ public:
 	vector<vec3_t    > Jw          ;  ///< 
 	vector<SVar*     > pos         ;  ///< joint position
 	vector<SVar*     > vel         ;  ///< joint velocity
+	vector<SVar*     > acc         ;  ///< joint acceleration
 	vector<SVar*     > torque      ;  ///< joint torque
-	vector<C1ConS*   > con_c1      ;  ///< C1 constraint
+	vector<C0ConS*   > con_c0p     ;  ///< C0 constraint on joint position: constant joint velocity model
+	vector<C0ConS*   > con_c0v     ;  ///< C0 constraint on joint velocity: constant joint acceleration model
+	vector<C1ConS*   > con_c1p     ;  ///< C1 constraint on joint position: constant joint acceleration model
 	vector<JointConF*> con_force   ;  ///< force-torque mapping
 	vector<RangeConS*> con_range_p ;  ///< position range
-	vector<DiffConS* > con_range_dp;  ///< position change range
+	//vector<DiffConS* > con_range_dp;  ///< position change range
 	vector<RangeConS*> con_range_v ;  ///< velocity range
 	vector<RangeConS*> con_range_f ;  ///< torque range
 
@@ -93,17 +96,25 @@ public:
 		vector<real_t>	vel;
 	};
 
+	struct TrajectoryType{
+		enum{
+			C0 = 0,  //< constant velocity
+			C1 = 1,  //< constant acceleration
+		};
+	};
+
 	struct Param{
 		vector<real_t>	rmin_p;		///< joint angle lower bound
 		vector<real_t>	rmax_p;		///< joint angle upper bound
-		vector<real_t>	rmin_dp;	///< joint angle change lower bound
-		vector<real_t>	rmax_dp;	///< joint angle change upper bound
+		//vector<real_t>	rmin_dp;	///< joint angle change lower bound
+		//vector<real_t>	rmax_dp;	///< joint angle change upper bound
 		vector<real_t>	rmin_v;		///< joint velocity lower bound
 		vector<real_t>	rmax_v;		///< joint velocity upper bound
 		vector<real_t>	rmin_f;		///< joint torque lower bound
 		vector<real_t>	rmax_f;		///< joint torque upper bound
 		vector<real_t>	ini_p ;		///< initial angle position
 		vector<real_t>	ini_v ;		///< initial angle velocity
+		int             trajType;
 
 		void SetDof(uint dof);
 		Param();

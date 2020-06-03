@@ -17,6 +17,7 @@ struct VarTag{
 		ObjectRV,		///< object velocity: rotational
 		JointP,			///< joint position
 		JointV,			///< joint velocity
+		JointA,
 		JointF,			///< joint torque
 		ForceT,			///< joint force: translational
 		ForceR,			///< joint force: rotational
@@ -51,11 +52,12 @@ struct ConTag{
 		Any = 0,
 		ObjectC1T,			///< C^1 continuity of object position
 		ObjectC1R,			///< C^1 continuity of object orientation
-		JointC1,			///< C^1 continuity of joint position
-		JointC2,			///< C^2 continuity of joint position
+		JointC0P,			///< C^0 continuity of joint position
+		JointC0V,			///< C^0 continuity of joint velocity
+		JointC1P,			///< C^1 continuity of joint position
 		JointF,				///< mapping between joint torque and joint force/moment
 		JointRangeP,		///< joint position range
-		JointRangeDP,		///< joint position change range
+		//JointRangeDP,		///< joint position change range
 		JointRangeV,		///< joint velocity range
 		JointRangeF,		///< joint force range
 		JointTP,			///< kinematic constraint : position

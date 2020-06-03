@@ -58,7 +58,7 @@ void SimulationManager::Func(){
 		//cout << "sim wait break " << i << endl;
 		if(i == -1){
 			if(evPlanning.IsSet()){
-				cout << "step plan" << endl;
+				//cout << "step plan" << endl;
 				StepPlan();
 			}
 			continue;

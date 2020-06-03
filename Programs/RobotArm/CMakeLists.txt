@@ -1,10 +1,21 @@
 cmake_minimum_required(VERSION 2.8.12) # Default version on Ubuntu 14.04
 
+set_property(GLOBAL PROPERTY USE_FOLDERS ON) 
+set(CONF_FILES
+	../../bin/conf/robotarm/setting.xml
+	../../bin/conf/robotarm/welding.xml
+	../../bin/conf/robotarm/scene_reaching2d.xml
+	../../bin/conf/robotarm/scene_reaching3d.xml
+	../../bin/conf/robotarm/scene_welding.xml
+)
+source_group("conf" FILES ${CONF_FILES})
+
 add_executable(RobotArm
   main.cpp
   mymodule.cpp
   RobotArm.cpp
   Workspace.cpp
+  ${CONF_FILES}
 )
 
 set_target_properties(RobotArm PROPERTIES DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX})
@@ -25,8 +36,8 @@ target_link_libraries(RobotArm debug     ${SCENEBUILDER_DIMP_LIBRARY_DEBUG})
 target_link_libraries(RobotArm optimized ${SCENEBUILDER_DIMP_LIBRARY_RELEASE})
 target_link_libraries(RobotArm debug     ${SCENEBUILDER_SPRGRAPHICS_LIBRARY_DEBUG})
 target_link_libraries(RobotArm optimized ${SCENEBUILDER_SPRGRAPHICS_LIBRARY_RELEASE})
-target_link_libraries(RobotArm ${EXPAT_LIBRARIES})
-target_link_libraries(RobotArm ${LAPACK_LIBRARIES})
+target_link_libraries(RobotArm           ${EXPAT_LIBRARIES})
+target_link_libraries(RobotArm           ${LAPACK_LIBRARIES})
 #target_link_libraries(RobotArm lapacke)
 
 if(UNIX)
