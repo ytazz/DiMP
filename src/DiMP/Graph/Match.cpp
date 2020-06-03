@@ -21,6 +21,8 @@ MatchTaskKey::MatchTaskKey(){
 }
 
 void MatchTaskKey::AddCon(Solver* solver){
+	MatchTask::Param& param = ((MatchTask*)node)->param;
+
 	// create constraints
 	for(int i = 0; i < 3; i++){
 		if((i == Start && !next) || (i == End && !prev)){
@@ -36,6 +38,16 @@ void MatchTaskKey::AddCon(Solver* solver){
 			con_tv[i] = new MatchConTV(solver, name + "_tv" + ss.str(), this, i, node->graph->scale.vel_t);
 			con_rp[i] = new MatchConRP(solver, name + "_rp" + ss.str(), this, i, node->graph->scale.pos_r);
 			con_rv[i] = new MatchConRV(solver, name + "_rv" + ss.str(), this, i, node->graph->scale.vel_r);
+
+			solver->AddCostCon(con_tp[i], tick->idx);
+			solver->AddCostCon(con_tv[i], tick->idx);
+			solver->AddCostCon(con_rp[i], tick->idx);
+			solver->AddCostCon(con_rv[i], tick->idx);
+
+			con_tp[i]->enabled = param.match_tp;
+			con_tv[i]->enabled = param.match_tv;
+			con_rp[i]->enabled = param.match_rp;
+			con_rv[i]->enabled = param.match_rv;
 		}
 	}
 }
@@ -43,18 +55,11 @@ void MatchTaskKey::AddCon(Solver* solver){
 void MatchTaskKey::Prepare(){
 	TaskKey::Prepare();
 
-	MatchTask::Param& param = ((MatchTask*)node)->param;
-
 	// タイミング区間との関係に応じて拘束を有効化/無効化する
 	for(int i = 0; i < 3; i++){
 		if(i == Start && !next || i == End && !prev)
 			continue;
 		
-		con_tp[i]->enabled = param.match_tp;
-		con_tv[i]->enabled = param.match_tv;
-		con_rp[i]->enabled = param.match_rp;
-		con_rv[i]->enabled = param.match_rv;
-
 		// 暫定処置
 		if(i == Start || i == End){
 			con_tp[i]->active = false;

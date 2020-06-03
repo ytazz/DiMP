@@ -97,7 +97,7 @@ bool RequestManager::Parse(const vector<string>& tokens){
 				str += " ";
 				str += r->args[j]->name;
 			}
-			Message::Out("%s", str.c_str());
+			//Message::Out("%s", str.c_str());
 		}
 		return false;
 	}

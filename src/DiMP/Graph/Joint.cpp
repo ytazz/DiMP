@@ -19,11 +19,13 @@ void JointKey::AddVar(Solver* solver){
 	Jw          .resize(n);
 	pos         .resize(n);
 	vel         .resize(n);
+	acc         .resize(n);
 	torque      .resize(n);
-	con_c1      .resize(n);
+	con_c0p     .resize(n);
+	con_c0v     .resize(n);
+	con_c1p     .resize(n);
 	con_force   .resize(n);
 	con_range_p .resize(n);
-	con_range_dp.resize(n);
 	con_range_v .resize(n);
 	con_range_f .resize(n);
 
@@ -33,18 +35,36 @@ void JointKey::AddVar(Solver* solver){
 		 tree = (TreeKey*)jnt->tree->traj.GetKeypoint(tick);
 	else tree = 0;
 
-	force_t = new V3Var(solver, ID(VarTag::ForceT, node, tick, name + "_force_t"), jnt->graph->scale.force_t);
-	force_r = new V3Var(solver, ID(VarTag::ForceR, node, tick, name + "_force_r"), jnt->graph->scale.force_r);
-	
+	if(!tree){
+		force_t = new V3Var(solver, ID(VarTag::ForceT, node, tick, name + "_force_t"), jnt->graph->scale.force_t);
+		force_r = new V3Var(solver, ID(VarTag::ForceR, node, tick, name + "_force_r"), jnt->graph->scale.force_r);
+		solver->AddInputVar(force_t, tick->idx);
+		solver->AddInputVar(force_r, tick->idx);
+	}
+
 	// register joint position and velocity variables
 	for(uint i = 0; i < n; i++){
-		real_t sp = (jnt->IsRotational(i) ? jnt->graph->scale.pos_r   : jnt->graph->scale.pos_t);
-		real_t sv = (jnt->IsRotational(i) ? jnt->graph->scale.vel_r   : jnt->graph->scale.vel_t);
+		real_t sp = (jnt->IsRotational(i) ? jnt->graph->scale.pos_r   : jnt->graph->scale.pos_t  );
+		real_t sv = (jnt->IsRotational(i) ? jnt->graph->scale.vel_r   : jnt->graph->scale.vel_t  );
+		real_t sa = (jnt->IsRotational(i) ? jnt->graph->scale.acc_r   : jnt->graph->scale.acc_t  );
 		real_t sf = (jnt->IsRotational(i) ? jnt->graph->scale.force_r : jnt->graph->scale.force_t);
 
 		pos   [i] = new SVar(solver, ID(VarTag::JointP, node, tick, name + "_pos"   ), sp);
+		solver->AddStateVar(pos[i], tick->idx);
+
 		vel   [i] = new SVar(solver, ID(VarTag::JointV, node, tick, name + "_vel"   ), sv);
-		torque[i] = new SVar(solver, ID(VarTag::JointF, node, tick, name + "_torque"), sf);
+
+		if(jnt->param.trajType == Joint::TrajectoryType::C0){
+			solver->AddInputVar(vel[i], tick->idx);
+		}
+		if(jnt->param.trajType == Joint::TrajectoryType::C1){
+			solver->AddStateVar(vel[i], tick->idx);
+
+			acc   [i] = new SVar(solver, ID(VarTag::JointA, node, tick, name + "_acc"   ), sa);
+			torque[i] = new SVar(solver, ID(VarTag::JointF, node, tick, name + "_torque"), sf);
+			solver->AddInputVar(acc   [i], tick->idx);
+			solver->AddInputVar(torque[i], tick->idx);
+		}
 	}
 }
 
@@ -56,6 +76,10 @@ void JointKey::AddCon(Solver* solver){
 		con_tv = new JointConTV(solver, name + "_tv", this, node->graph->scale.vel_t);
 		con_rp = new JointConRP(solver, name + "_rp", this, node->graph->scale.pos_r);
 		con_rv = new JointConRV(solver, name + "_rv", this, node->graph->scale.vel_r);
+		solver->AddCostCon(con_tp, tick->idx);
+		solver->AddCostCon(con_tv, tick->idx);
+		solver->AddCostCon(con_rp, tick->idx);
+		solver->AddCostCon(con_rv, tick->idx);
 	}
 
 	for(int i = 0; i < jnt->dof; i++){
@@ -68,24 +92,38 @@ void JointKey::AddCon(Solver* solver){
 		// range constraint
 		con_range_p[i] = new RangeConS(solver, ID(ConTag::JointRangeP, node, tick, name + "_range_p" + ss.str()), pos[i]   , sp);
 		con_range_v[i] = new RangeConS(solver, ID(ConTag::JointRangeV, node, tick, name + "_range_v" + ss.str()), vel[i]   , sv);
+		solver->AddCostCon(con_range_p[i], tick->idx);
+		solver->AddCostCon(con_range_v[i], tick->idx);
 		
 		if(next){
 			JointKey* nextJnt = (JointKey*)next;
 			
 			// position change range constraint
-			con_range_dp[i] = new DiffConS(solver, ID(ConTag::JointRangeDP, node, tick, name + "_range_dp" + ss.str()), nextJnt->pos[i], pos[i], sp);
+			//con_range_dp[i] = new DiffConS(solver, ID(ConTag::JointRangeDP, node, tick, name + "_range_dp" + ss.str()), nextJnt->pos[i], pos[i], sp);
+			//solver->AddCostCon(con_range_dp[i], tick->idx);
 
-			// C1 continuity constraint
-			con_c1[i] = new C1ConS(solver, ID(ConTag::JointC1, node, tick, name + "_c1" + ss.str()),
-				pos[i], vel[i], nextJnt->pos[i], nextJnt->vel[i], sp);
-			con_c1[i]->h = hnext;
-
-			// force-torque constraint
-			if(!tree){
-				con_force[i] = new JointConF(solver, name + "_torque" + ss.str(), this, i, sf);
+			// continuity constraint
+			if(jnt->param.trajType == Joint::TrajectoryType::C0){
+				con_c0p[i] = new C0ConS(solver, ID(ConTag::JointC0P, node, tick, name + "_c0p" + ss.str()), pos[i], vel[i], nextJnt->pos[i], sp);
+				con_c0p[i]->h = hnext;
+				solver->AddTransitionCon(con_c0p[i], tick->idx);
 			}
-			// torque range constraint
-			con_range_f[i] = new RangeConS(solver, ID(ConTag::JointRangeF, node, tick, name + "_range_f" + ss.str()), torque[i], sf);
+			if(jnt->param.trajType == Joint::TrajectoryType::C1){
+				con_c0v[i] = new C0ConS(solver, ID(ConTag::JointC0V, node, tick, name + "_c0v" + ss.str()), vel[i], acc[i], nextJnt->vel[i], sv);
+				con_c0v[i]->h = hnext;
+				con_c1p[i] = new C1ConS(solver, ID(ConTag::JointC1P, node, tick, name + "_c1p" + ss.str()), pos[i], vel[i], acc[i], nextJnt->pos[i], sp);
+				con_c1p[i]->h = hnext;
+				solver->AddTransitionCon(con_c0v[i], tick->idx);
+				solver->AddTransitionCon(con_c1p[i], tick->idx);
+
+				// force-torque constraint
+				if(!tree){
+					con_force[i] = new JointConF(solver, name + "_torque" + ss.str(), this, i, sf);
+				}
+				// torque range constraint
+				con_range_f[i] = new RangeConS(solver, ID(ConTag::JointRangeF, node, tick, name + "_range_f" + ss.str()), torque[i], sf);
+
+			}
 		}
 	}
 }
@@ -128,13 +166,17 @@ void JointKey::Prepare(){
 	
 	// •Ï”
 	if(!(in && innext) && next){
-		force_t->val.clear();
-		force_r->val.clear();
-		force_t->Lock();
-		force_r->Lock();
-		for(int i = 0; i < jnt->dof; i++){
-			torque[i]->val = 0.0;
-			torque[i]->Lock();
+		if(!tree){
+			force_t->val.clear();
+			force_r->val.clear();
+			force_t->Lock();
+			force_r->Lock();
+		}
+		if(jnt->param.trajType == Joint::TrajectoryType::C1){
+			for(int i = 0; i < jnt->dof; i++){
+				torque[i]->val = 0.0;
+				torque[i]->Lock();
+			}
 		}
 	}
 	
@@ -148,11 +190,17 @@ void JointKey::Prepare(){
 
 	for(int i = 0; i < jnt->dof; i++){
 		if(next){
-			con_c1     [i]->active = in && innext;
-			con_range_f[i]->active = in && innext;
-			
-			if(!tree)
-				con_force[i]->active = in && innext;
+			if(jnt->param.trajType == Joint::TrajectoryType::C0){
+				con_c0p    [i]->active = in && innext;
+			}
+			if(jnt->param.trajType == Joint::TrajectoryType::C1){
+				con_c0v    [i]->active = in && innext;
+				con_c1p    [i]->active = in && innext;
+				con_range_f[i]->active = in && innext;
+				if(!tree){
+					con_force[i]->active = in && innext;
+				}
+			}
 		}
 		
 		con_range_p[i]->active = in && inprev;
@@ -217,8 +265,8 @@ void Joint::Param::SetDof(uint dof){
 	ini_v  .resize(dof);
 	rmin_p .resize(dof);
 	rmax_p .resize(dof);
-	rmin_dp.resize(dof);
-	rmax_dp.resize(dof);
+	//rmin_dp.resize(dof);
+	//rmax_dp.resize(dof);
 	rmin_v .resize(dof);
 	rmax_v .resize(dof);
 	rmin_f .resize(dof);
@@ -230,13 +278,15 @@ void Joint::Param::SetDof(uint dof){
 		ini_v  [i] =  0.0;
 		rmin_p [i] = -inf;
 		rmax_p [i] =  inf;
-		rmin_dp[i] = -inf;
-		rmax_dp[i] =  inf;
+		//rmin_dp[i] = -inf;
+		//rmax_dp[i] =  inf;
 		rmin_v [i] = -inf;
 		rmax_v [i] =  inf;
 		rmin_f [i] = -inf;
 		rmax_f [i] =  inf;
 	}
+
+	trajType = TrajectoryType::C0;
 }
 
 Joint::Joint(Connector* _sock, Connector* _plug, TimeSlot* _time, const string& n):ScheduledNode(_sock->graph, _time, n){
@@ -265,12 +315,6 @@ void Joint::Init(){
 	for(uint k = 0; k < graph->ticks.size(); k++){
 		JointKey* key = (JointKey*)traj.GetKeypoint(graph->ticks[k]);
 
-		// treeŽž‚É]‘®‚·‚é•Ï”‚Ílock‚·‚é
-		if(tree){
-			key->force_t->Lock();
-			key->force_r->Lock();
-		}
-
 		for(int i = 0; i < dof; i++){
 			// set initial values to positions and velocities
 			key->pos[i]->val = param.ini_p[i];
@@ -288,10 +332,12 @@ void Joint::Init(){
 			key->con_range_v[i]->_min = param.rmin_v[i];
 			key->con_range_v[i]->_max = param.rmax_v[i];
 			if(key->next){
-				key->con_range_dp[i]->_min = param.rmin_dp[i];
-				key->con_range_dp[i]->_max = param.rmax_dp[i];
-				key->con_range_f [i]->_min = param.rmin_f [i];
-				key->con_range_f [i]->_max = param.rmax_f [i];
+				//key->con_range_dp[i]->_min = param.rmin_dp[i];
+				//key->con_range_dp[i]->_max = param.rmax_dp[i];
+				if(param.trajType == TrajectoryType::C1){
+					key->con_range_f [i]->_min = param.rmin_f [i];
+					key->con_range_f [i]->_max = param.rmax_f [i];
+				}
 			}
 		}
 	}

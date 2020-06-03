@@ -48,19 +48,19 @@ public:
 		biped->param.torsoMass = 3.578+28.054+2.0*14.023+13.877;
 		biped->param.footMass = 13.877/2;
 		biped->param.durationMin[DiMP::BipedLIP::Phase::R ] = 0.5;
-		biped->param.durationMax[DiMP::BipedLIP::Phase::R ] = 0.8;
+		biped->param.durationMax[DiMP::BipedLIP::Phase::R ] = 0.6;
 		biped->param.durationMin[DiMP::BipedLIP::Phase::L ] = 0.5;
-		biped->param.durationMax[DiMP::BipedLIP::Phase::L ] = 0.8;
+		biped->param.durationMax[DiMP::BipedLIP::Phase::L ] = 0.6;
 		biped->param.durationMin[DiMP::BipedLIP::Phase::RL] = 0.1;
 		biped->param.durationMax[DiMP::BipedLIP::Phase::RL] = 0.2;
 		biped->param.durationMin[DiMP::BipedLIP::Phase::LR] = 0.1;
 		biped->param.durationMax[DiMP::BipedLIP::Phase::LR] = 0.2;
 		biped->param.durationMin[DiMP::BipedLIP::Phase::D ] = 0.1;
 		biped->param.durationMax[DiMP::BipedLIP::Phase::D ] = 0.2;
-		biped->param.footPosMin[0] = vec2_t(-0.40, -0.14);
-		biped->param.footPosMax[0] = vec2_t( 0.40, -0.07);
-		biped->param.footPosMin[1] = vec2_t(-0.40,  0.07);
-		biped->param.footPosMax[1] = vec2_t( 0.40,  0.14);
+		biped->param.footPosMin[0] = vec2_t(-0.40, -0.20);
+		biped->param.footPosMax[0] = vec2_t( 0.40, -0.00);
+		biped->param.footPosMin[1] = vec2_t(-0.40,  0.00);
+		biped->param.footPosMax[1] = vec2_t( 0.40,  0.20);
 		biped->param.footOriMin[0] = Rad(-15.0);
 		biped->param.footOriMax[0] = Rad(15.0);
 		biped->param.footOriMin[1] = Rad(-15.0);
@@ -70,8 +70,8 @@ public:
 		//biped->param.swingProfile = DiMP::BipedLIP::SwingProfile::Wedge;
 		biped->param.swingProfile = DiMP::BipedLIP::SwingProfile::Cycloid;
 		//biped->param.swingProfile = DiMP::BipedLIP::SwingProfile::HeelToe;
-		biped->param.copPosMin    = vec2_t(-0.08, -0.04 );
-		biped->param.copPosMax    = vec2_t( 0.08,  0.04 );
+		biped->param.copPosMin    = vec2_t(-0.10, -0.05 );
+		biped->param.copPosMax    = vec2_t( 0.10,  0.05 );
 		biped->param.ankleToToe   = 0.05;
 		biped->param.ankleToHeel  = 0.05;
 		biped->param.toeRadius    = 0.10;
@@ -81,7 +81,7 @@ public:
 		 D -> RL -> L -> LR -> R ... -> RL -> D
 
 		 */
-		const uint nstep = 20;
+		const uint nstep = 10;
 		const uint nphase = 2 * nstep + 3;
 
 		for (uint i = 0; i < nphase; i++)
@@ -100,8 +100,8 @@ public:
 		biped->phase[nphase-2] = DiMP::BipedLIP::Phase::D;
 		biped->phase[nphase-1] = DiMP::BipedLIP::Phase::D;
 
-		real_t spacing = 0.1;
-		vec2_t goalPos(2.0, 0.0);
+		real_t spacing = 0.25/2.0;
+		vec2_t goalPos(3.0, 0.0);
 		real_t goalOri = Rad(0);
 
 		biped->waypoints.resize(2);
