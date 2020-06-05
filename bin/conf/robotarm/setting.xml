@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 
 <!--
-<setting scene="reaching3d" />
+<setting scene="reaching2d" />
 <setting scene="welding" />
 -->
-<setting scene="reaching2d" />
+<setting scene="reaching3d" />
 

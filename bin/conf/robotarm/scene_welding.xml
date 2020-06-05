@@ -101,15 +101,15 @@
 
   <enable  id="object_c1t"     enable="false"/>
   <enable  id="object_c1r"     enable="false"/>
-  <enable  id="joint_c1"       enable="false"/>
-  <enable  id="joint_c2"       enable="false"/>
+  <enable  id="joint_c0p"      enable="true"/>
+  <enable  id="joint_c0v"      enable="false"/>
+  <enable  id="joint_c1p"      enable="false"/>
   <enable  id="joint_f"        enable="false"/>
   <enable  id="joint_range_p"  enable="false"/>
-  <enable  id="joint_range_dp" enable="true" />
-  <enable  id="joint_range_v"  enable="false"/>
+  <enable  id="joint_range_v"  enable="true"/>
   <enable  id="joint_range_f"  enable="false"/>
-  <enable  id="joint_tp"       enable="true" />
-  <enable  id="joint_rp"       enable="true" />
+  <enable  id="joint_tp"       enable="false" />
+  <enable  id="joint_rp"       enable="false" />
   <enable  id="joint_tv"       enable="false"/>
   <enable  id="joint_rv"       enable="false"/>
   <enable  id="force_t"        enable="false"/>
@@ -125,8 +125,8 @@
   <correction rate="0.5" id="joint_range_dp"/>
 
   <param name="max_step_size"    value="1.0" />
-  <param name="min_step_size"    value="0.05"/>
-  <param name="cutoff_step_size" value="0.05"/>
+  <param name="min_step_size"    value="1.0"/>
+  <param name="cutoff_step_size" value="1.0"/>
 
   <!--
   <param name="method_major"    value="prioritized"/>
@@ -134,9 +134,12 @@
   <param name="num_iter"        value="20" />
   -->
   <constraint_weight weight="1.0" />
-  <constraint_weight weight="0.1" id="joint_range_dp"/>
+  <constraint_weight weight="0.1" id="joint_range_v"/>
+  <!--
   <variable_weight   weight="0.1"/>
   <param name="method_major"    value="gauss_newton"/>
+  -->
+  <param name="method_major"    value="ddp"/>
   <param name="method_minor"    value="direct"/>
-  <param name="verbose"         value="false"/>
+  <param name="verbose"         value="true"/>
 </namespace>

@@ -15,6 +15,9 @@ add_executable(RobotArm
   mymodule.cpp
   RobotArm.cpp
   Workspace.cpp
+  mymodule.h
+  RobotArm.h
+  Workspace.h
   ${CONF_FILES}
 )
 

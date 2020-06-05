@@ -35,27 +35,30 @@
   <attach connector="body_target2/0" shape="cylinder_target" vmat="mat_target"/>
   
   <vmat name="mat_obstacle" colorname="lightpink"/>
-  <cylinder name="cylinder_obstacle" radius="0.2" height="0.5"/>
+  <cylinder name="cylinder_obstacle" radius="0.2" height="0.7"/>
   <body name="body_obstacle0" dynamical="false" trn="-0.05 0.25 0.6">
     <connector name="0" rot="90deg@x"/>
   </body>
   <attach connector="body_obstacle0/0" shape="cylinder_obstacle" vmat="mat_obstacle"/>
 
-  <ticks time_begin="0.0" time_step="0.25" time_end="5.0"/>
-  <timeslot name="timeslot0" time_begin="1.45" time_end="1.55" locked="true"/>
-  <timeslot name="timeslot1" time_begin="2.95" time_end="3.05" locked="true"/>
-  <timeslot name="timeslot2" time_begin="4.7"  time_end="4.8"  locked="true"/>
-  <task name="task0"  type="match" obj0="workspace/robot0/body_link6" obj1="workspace/body_target0"   timeslot="timeslot0" enable_pos="true" enable_ori="true" enable_vel="true" enable_angvel="true"/>
-  <task name="task1"  type="match" obj0="workspace/robot0/body_link6" obj1="workspace/body_target1"   timeslot="timeslot1" enable_pos="true" enable_ori="true" enable_vel="true" enable_angvel="true"/>
-  <task name="task2"  type="match" obj0="workspace/robot0/body_link6" obj1="workspace/body_target2"   timeslot="timeslot2" enable_pos="true" enable_ori="true" enable_vel="true" enable_angvel="true"/>
-  <task name="avoid0" type="avoid" obj0="workspace/robot0/body_link0" obj1="workspace/body_obstacle0"/>
-  <task name="avoid1" type="avoid" obj0="workspace/robot0/body_link1" obj1="workspace/body_obstacle0"/>
-  <task name="avoid2" type="avoid" obj0="workspace/robot0/body_link2" obj1="workspace/body_obstacle0"/>
-  <task name="avoid3" type="avoid" obj0="workspace/robot0/body_link3" obj1="workspace/body_obstacle0"/>
-  <task name="avoid4" type="avoid" obj0="workspace/robot0/body_link4" obj1="workspace/body_obstacle0"/>
-  <task name="avoid5" type="avoid" obj0="workspace/robot0/body_link5" obj1="workspace/body_obstacle0"/>
-  <task name="avoid6" type="avoid" obj0="workspace/robot0/body_link6" obj1="workspace/body_obstacle0"/>
+  <ticks time_begin="0.0" time_step="0.025" time_end="5.0"/>
+  <timeslot name="timeslot0"      time_begin="1.45" time_end="1.55" locked="true"/>
+  <timeslot name="timeslot1"      time_begin="2.95" time_end="3.05" locked="true"/>
+  <timeslot name="timeslot2"      time_begin="4.7"  time_end="4.8"  locked="true"/>
+  <timeslot name="timeslot_avoid" time_begin="0.0"  time_end="5.0"  locked="true"/>
+  <match name="task0"  obj0="workspace/robot0/body_link6" obj1="workspace/body_target0"   timeslot="timeslot0" match_tp="true" match_rp="true" match_tv="true" match_rv="true"/>
+  <match name="task1"  obj0="workspace/robot0/body_link6" obj1="workspace/body_target1"   timeslot="timeslot1" match_tp="true" match_rp="true" match_tv="true" match_rv="true"/>
+  <match name="task2"  obj0="workspace/robot0/body_link6" obj1="workspace/body_target2"   timeslot="timeslot2" match_tp="true" match_rp="true" match_tv="true" match_rv="true"/>
+  <avoid name="avoid0" obj0="workspace/robot0/body_link0" obj1="workspace/body_obstacle0" timeslot="timeslot_avoid" avoid_p="true" avoid_v="false" dmin="0.01"/>
+  <avoid name="avoid1" obj0="workspace/robot0/body_link1" obj1="workspace/body_obstacle0" timeslot="timeslot_avoid" avoid_p="true" avoid_v="false" dmin="0.01"/>
+  <avoid name="avoid2" obj0="workspace/robot0/body_link2" obj1="workspace/body_obstacle0" timeslot="timeslot_avoid" avoid_p="true" avoid_v="false" dmin="0.01"/>
+  <avoid name="avoid3" obj0="workspace/robot0/body_link3" obj1="workspace/body_obstacle0" timeslot="timeslot_avoid" avoid_p="true" avoid_v="false" dmin="0.01"/>
+  <avoid name="avoid4" obj0="workspace/robot0/body_link4" obj1="workspace/body_obstacle0" timeslot="timeslot_avoid" avoid_p="true" avoid_v="false" dmin="0.01"/>
+  <avoid name="avoid5" obj0="workspace/robot0/body_link5" obj1="workspace/body_obstacle0" timeslot="timeslot_avoid" avoid_p="true" avoid_v="false" dmin="0.01"/>
+  <avoid name="avoid6" obj0="workspace/robot0/body_link6" obj1="workspace/body_obstacle0" timeslot="timeslot_avoid" avoid_p="true" avoid_v="false" dmin="0.01"/>
   <scaling T="0.25" L="0.5" M="1.0"/>
+  
+  <!--
   <enable   id="object_c1t" enable="false"/>
   <enable   id="object_c1r" enable="false"/>
   <priority id="avoid_p"    level="1"/>
@@ -77,5 +80,51 @@
   <correction id="match_tv"   rate="0.5"  limit="1.0" />
   <correction id="match_rv"   rate="0.5"  limit="1.0" />
   <correction id="joint_range_v" rate="0.05" limit="0.05"/>
+  -->
+
+
+  <enable  id="object_c1t"     enable="false"/>
+  <enable  id="object_c1r"     enable="false"/>
+  <enable  id="joint_c0p"      enable="true"/>
+  <enable  id="joint_c0v"      enable="false"/>
+  <enable  id="joint_c1p"      enable="false"/>
+  <enable  id="joint_f"        enable="false"/>
+  <enable  id="joint_range_p"  enable="false"/>
+  <enable  id="joint_range_v"  enable="true"/>
+  <enable  id="joint_range_f"  enable="false"/>
+  <enable  id="joint_tp"       enable="true" />
+  <enable  id="joint_rp"       enable="true" />
+  <enable  id="joint_tv"       enable="false"/>
+  <enable  id="joint_rv"       enable="false"/>
+  <enable  id="force_t"        enable="false"/>
+  <enable  id="force_r"        enable="false"/>
+  <enable  id="match_tp"       enable="true" />
+  <enable  id="match_tv"       enable="false"/>
+  <enable  id="match_rp"       enable="false"/>
+  <enable  id="match_rv"       enable="false"/>
+  <enable  id="avoid_p"        enable="true" />
+  <enable  id="avoid_v"        enable="false"/>
+
+  <!--
+  <priority id="match_tp" target="task0" level="1"/>
+  <priority id="match_tv" target="task0" level="1"/>
+  <priority id="match_tp" target="task1" level="2"/>
+  <priority id="match_tv" target="task1" level="2"/>
+  -->
+
+  <correction rate="0.5"/>
+  <constraint_weight weight="1.0" />
+  <constraint_weight weight="0.1" id="joint_range_v"/>
+  <variable_weight   weight="0.1"/>
+
+  <param name="max_step_size"    value="1.0" />
+  <param name="min_step_size"    value="1.0"/>
+  <param name="cutoff_step_size" value="1.0"/>
+  <!--
+  <param name="method_major"     value="gauss_newton"/>
+  -->
+  <param name="method_major"     value="ddp"/>
+  <param name="method_minor"     value="direct"/>
+  <param name="verbose"          value="true"/>
 
 </namespace>

@@ -10,19 +10,19 @@
   <vmat name="mat_body"  colorname="darkturquoise"/>
   <vmat name="mat_cover" colorname="white"/>
     
-  <mesh name="mesh_base"      scale="0.01" filename="base_binary.stl"      collision="false" mass="false" visual="true"/>
-  <mesh name="mesh_link1"     scale="0.01" filename="link1_binary.stl"     collision="false" mass="false" visual="true"/>
-  <mesh name="mesh_link1_cap" scale="0.01" filename="link1_cap_binary.stl" collision="false" mass="false" visual="true"/>
-  <mesh name="mesh_link2a"    scale="0.01" filename="link2a_binary.stl"    collision="false" mass="false" visual="true"/>
-  <mesh name="mesh_link2b"    scale="0.01" filename="link2b_binary.stl"    collision="false" mass="false" visual="true"/>
-  <mesh name="mesh_link3"     scale="0.01" filename="link3_binary.stl"     collision="false" mass="false" visual="true"/>
-  <mesh name="mesh_link3_cap" scale="0.01" filename="link3_cap_binary.stl" collision="false" mass="false" visual="true"/>
-  <mesh name="mesh_link4a"    scale="0.01" filename="link4a_binary.stl"    collision="false" mass="false" visual="true"/>
-  <mesh name="mesh_link4b"    scale="0.01" filename="link4b_binary.stl"    collision="false" mass="false" visual="true"/>
-  <mesh name="mesh_link5"     scale="0.01" filename="link5_binary.stl"     collision="false" mass="false" visual="true"/>
-  <mesh name="mesh_link5_cap" scale="0.01" filename="link5_cap_binary.stl" collision="false" mass="false" visual="true"/>
-  <mesh name="mesh_link6"     scale="0.01" filename="link6_binary.stl"     collision="false" mass="false" visual="true"/>
-  <sphere name="sphere_link6" radius="0.1" visual="false" collision="true"/>
+  <mesh name="mesh_base"      scale="0.01" filename="base_binary.stl"      collision="true" mass="false" visual="true"/>
+  <mesh name="mesh_link1"     scale="0.01" filename="link1_binary.stl"     collision="true" mass="false" visual="true"/>
+  <mesh name="mesh_link1_cap" scale="0.01" filename="link1_cap_binary.stl" collision="true" mass="false" visual="true"/>
+  <mesh name="mesh_link2a"    scale="0.01" filename="link2a_binary.stl"    collision="true" mass="false" visual="true"/>
+  <mesh name="mesh_link2b"    scale="0.01" filename="link2b_binary.stl"    collision="true" mass="false" visual="true"/>
+  <mesh name="mesh_link3"     scale="0.01" filename="link3_binary.stl"     collision="true" mass="false" visual="true"/>
+  <mesh name="mesh_link3_cap" scale="0.01" filename="link3_cap_binary.stl" collision="true" mass="false" visual="true"/>
+  <mesh name="mesh_link4a"    scale="0.01" filename="link4a_binary.stl"    collision="true" mass="false" visual="true"/>
+  <mesh name="mesh_link4b"    scale="0.01" filename="link4b_binary.stl"    collision="true" mass="false" visual="true"/>
+  <mesh name="mesh_link5"     scale="0.01" filename="link5_binary.stl"     collision="true" mass="false" visual="true"/>
+  <mesh name="mesh_link5_cap" scale="0.01" filename="link5_cap_binary.stl" collision="true" mass="false" visual="true"/>
+  <mesh name="mesh_link6"     scale="0.01" filename="link6_binary.stl"     collision="true" mass="false" visual="true"/>
+  <sphere name="sphere_link6" radius="0.1" visual="true" collision="true"/>
     
   <body name="body_link0" dynamical="false">
     <connector name="mesh"                rot="-90deg@x"/>

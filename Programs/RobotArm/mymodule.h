@@ -24,7 +24,8 @@ public:
 			struct Segment{
 				string           timeslotName;
 				DiMP::TimeSlot*  timeslot;
-				vvec_t           posture;
+				vvec_t           startPosture;
+				vvec_t           endPosture;
 				int              startIndex;
 				int              endIndex;
 				
