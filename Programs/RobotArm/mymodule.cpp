@@ -48,7 +48,8 @@ void MyModule::Read(XML& xml) {
 			node->Get(seg.startIndex            , ".start_index"  );
 			node->Get(seg.endIndex              , ".end_index"    );
 			node->Get(seg.timeslotName          , ".timeslot"     );
-			node->Get(seg.posture               , ".posture"      );
+			node->Get(seg.startPosture          , ".start_posture");
+			node->Get(seg.endPosture            , ".end_posture"  );
 			
 			conf.welding.segments.push_back(seg);
 		}
@@ -199,7 +200,7 @@ bool MyModule::Build() {
 			weldingPoints[i] = conf.welding.mockupPos + conf.welding.mockupOri * p;
 		}
 	}
-	if(sceneSelect == Reaching2D){
+	if(sceneSelect == Reaching2D || sceneSelect == Reaching3D){
 		DiMP::Tree* tree = new DiMP::Tree(graph, "tree");
 		tree->root = robot[0]->link[0];
 
@@ -216,11 +217,6 @@ bool MyModule::Build() {
 	if (sceneSelect == Reaching2D) {
 	}
 	if (sceneSelect == Reaching3D) {
-		// 低優先度で関節速度を0にする
-		for (uint i = 0; i < robot[0]->joint.size(); i++) {
-			robot[0]->joint[i]->param.rmin_v[0] = 0.0;
-			robot[0]->joint[i]->param.rmax_v[0] = 0.0;
-		}
 	}
 	if (sceneSelect == Toss3D) {
 		// 低優先度で関節速度を0にする
@@ -265,14 +261,18 @@ bool MyModule::Build() {
 		for(DiMP::Tick* tick : graph->ticks){
 			real_t t = tick->time;
 
-			for(Config::Welding::Segment& seg : conf.welding.segments){
-				if(seg.timeslot->param.ts_ini <= t && t <= seg.timeslot->param.te_ini){				
-					for(int i = 0; i < (int)robot[0]->joint.size(); i++){
-						DiMP::Joint* jnt = robot[0]->joint[i];
-						// 関節jの時刻kのキーポイント
-						DiMP::JointKey* key = (DiMP::JointKey*)jnt->traj.GetKeypoint(tick);
-						if(jnt->dof > 0)
-							key->pos[0]->val = seg.posture[i];
+			for(int i = 0; i < (int)robot[0]->joint.size(); i++){
+				DiMP::Joint*    jnt = robot[0]->joint[i];
+				DiMP::JointKey* key = (DiMP::JointKey*)jnt->traj.GetKeypoint(tick);
+				if(jnt->dof == 0)
+					continue;
+
+				for(Config::Welding::Segment& seg : conf.welding.segments){
+					real_t ts = seg.timeslot->param.ts_ini;
+					real_t te = seg.timeslot->param.te_ini;
+					if(ts <= t && t <= te){
+						key->pos[0]->val = seg.startPosture[i] + (seg.endPosture[i] - seg.startPosture[i])*(t - ts)/(te - ts);
+						key->vel[0]->val = (seg.endPosture[i] - seg.startPosture[i])/(te - ts);
 					}
 				}
 			}

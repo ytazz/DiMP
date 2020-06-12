@@ -187,7 +187,7 @@ bool Module::OnRequest(){
 
 	bool ret = false;
 	
-	cout << "req: " << name << " " << (args.empty() ? "" : args[0].str) << endl;
+	//cout << "req: " << name << " " << (args.empty() ? "" : args[0].str) << endl;
 
 	if(name == "q" || name == "quit"){
 		Message::Out("exiting...");

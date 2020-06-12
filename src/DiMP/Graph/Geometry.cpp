@@ -92,8 +92,9 @@ void Cylinder::CalcBSphere(){
 vec3_t Cylinder::CalcSupport(const vec3_t& dir){
 	const real_t eps = 1.0e-10;
 	real_t dnorm = sqrt(dir.x*dir.x + dir.y*dir.y);
-	if(dnorm < eps)
-		return vec3_t(radius, 0.0, 0.0);
+	if(dnorm < eps){
+		return vec3_t(0.0, 0.0, (dir.z == 0.0 ? 0.0 : (dir.z > 0.0 ? +1.0 : -1.0)*(0.5*length)));
+	}
 
 	return vec3_t((radius/dnorm) * dir.x, (radius/dnorm) * dir.y, (dir.z == 0.0 ? 0.0 : (dir.z > 0.0 ? +1.0 : -1.0)*(0.5*length)) );
 }

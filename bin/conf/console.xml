@@ -9,7 +9,7 @@
     console_pos_x         = "0"
     console_pos_y         = "0"
     console_width         = "110"
-    console_height        = "55"
+    console_height        = "80"
     console_message_row   = "0"
     console_message_col   = "55"
     console_message_depth = "50"

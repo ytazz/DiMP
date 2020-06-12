@@ -43,18 +43,22 @@ void AvoidKey::AddCon(Solver* solver){
 	}
 	con_p = new AvoidConP(solver, name + "_p", this, 0, node->graph->scale.pos_t);
 	con_v = new AvoidConV(solver, name + "_v", this, 0, node->graph->scale.vel_t);
+	solver->AddCostCon(con_p, tick->idx);
+	solver->AddCostCon(con_v, tick->idx);
+
+	con_p->enabled = task->param.avoid_p;
+	con_v->enabled = task->param.avoid_v;
+
 }
 
 void AvoidKey::Prepare(){
 	TaskKey::Prepare();
 
-	AvoidTask* task = (AvoidTask*)node;
-	con_p->enabled = task->param.avoid_p;
-	con_v->enabled = task->param.avoid_v;
-
 	if(!con_p->enabled && !con_v->enabled)
 		return;
 
+	AvoidTask* task = (AvoidTask*)node;
+	
 	if( relation == Inside ){
 		ptimer.CountUS();
 		int nsphere  = 0;
