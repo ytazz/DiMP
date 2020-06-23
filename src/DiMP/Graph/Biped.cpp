@@ -854,6 +854,12 @@ pose_t BipedLIP::FootPose(real_t t, int side) {
 			pos2.x = p0.x + r1*(theta - sin(theta)) - l1*(1.0 - cos(theta));
 			z      =        r1*(1.0   - cos(theta)) - l1*sin(theta);
 		}
+		// double support
+		if(ph == Phase::D){
+			theta  = 0.0;
+			pos2.x = p0.x;
+			z      = 0.0;
+		}
 
 		pos2.y = p0.y + (p1.y - p0.y)*s;
 		pose.Pos() = vec3_t(pos2.x, pos2.y, z);

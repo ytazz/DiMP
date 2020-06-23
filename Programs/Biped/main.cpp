@@ -41,7 +41,7 @@ public:
 	virtual void BuildScene() {
 		biped = new DiMP::BipedLIP(graph, "biped");
 		biped->param.gravity = 9.8;
-		biped->param.heightCoM = 1.0;
+		biped->param.heightCoM = 1.05;
 		biped->param.heightlow = 0.52;
 		biped->param.heighthigh = 0.54;
 		biped->param.heightmiddle = (biped->param.heightlow + biped->param.heighthigh)/2;
@@ -68,14 +68,14 @@ public:
 		biped->param.swingHeight[0] = 0.050;
 		biped->param.swingHeight[1] = 0.025;
 		//biped->param.swingProfile = DiMP::BipedLIP::SwingProfile::Wedge;
-		biped->param.swingProfile = DiMP::BipedLIP::SwingProfile::Cycloid;
-		//biped->param.swingProfile = DiMP::BipedLIP::SwingProfile::HeelToe;
-		biped->param.copPosMin    = vec2_t(-0.10, -0.05 );
-		biped->param.copPosMax    = vec2_t( 0.10,  0.05 );
-		biped->param.ankleToToe   = 0.05;
+		//biped->param.swingProfile = DiMP::BipedLIP::SwingProfile::Cycloid;
+		biped->param.swingProfile = DiMP::BipedLIP::SwingProfile::HeelToe;
+		biped->param.copPosMin    = vec2_t(-0.05, -0.05 );
+		biped->param.copPosMax    = vec2_t( 0.15,  0.05 );
+		biped->param.ankleToToe   = 0.10;
 		biped->param.ankleToHeel  = 0.05;
 		biped->param.toeRadius    = 0.10;
-		biped->param.heelRadius   = 0.10;
+		biped->param.heelRadius   = 0.50;
 
 		/*
 		 D -> RL -> L -> LR -> R ... -> RL -> D

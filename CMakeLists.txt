@@ -10,6 +10,7 @@ endif()
 
 set(SPRINGHEAD_DIR           "" CACHE PATH "root directory of Springhead")
 set(SCENEBUILDER_INCLUDE_DIR "" CACHE PATH "Scenebuilder include directory")
+set(MKL_INCLUDE_DIR          "" CACHE PATH "MKL include directory")
 
 set(BUILD_EXAMPLES false CACHE BOOL "build example projects or not")
 set(BUILD_PROGRAMS false CACHE BOOL "build program projects or not")
@@ -59,7 +60,6 @@ if(BUILD_PROGRAMS OR BUILD_EXAMPLES)
 	set(SCENEBUILDER_LIBRARY_RELEASE             "" CACHE FILEPATH "path to Scenebuilder release library")
 	set(DIMP_LIBRARY_DEBUG                       "" CACHE FILEPATH "path to DiMP debug   library")
 	set(DIMP_LIBRARY_RELEASE                     "" CACHE FILEPATH "path to DiMP release library")
-	set(MKL_INCLUDE_DIR                          "" CACHE PATH "MKL include directory")
 	set(MKL_LIB_DIR                              "" CACHE PATH "path to MKL lib directory")
 	
 	link_directories(${SPRINGHEAD_DIR}/core/lib)
