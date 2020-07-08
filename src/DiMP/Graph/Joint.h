@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <DiMP/Graph/Node.h>
 //#include <DiMP/Solver/Constraint.h>
@@ -167,7 +167,7 @@ public:
 	real_t	Vel(uint i, real_t t, int type = Interpolate::Quadratic);
 	real_t	Acc(uint i, real_t t, int type = Interpolate::Quadratic);
 
-	/// t‚Å‚ÌS‘©Œë·‚ğŒvZi•]‰¿—pj
+	/// æ™‚åˆ»tã§ã®æ‹˜æŸèª¤å·®ã‚’è¨ˆç®—ï¼ˆè©•ä¾¡ç”¨ï¼‰
 	void CalcDeviation(real_t t, vec3_t& pos_dev, vec3_t& ori_dev);
 
 	/// draw joint for given joint angle. to be overridden by derived classes
@@ -377,7 +377,7 @@ public:
 	JointConRV(Solver* solver, const string& _name, JointKey* _jnt, real_t _scale);
 };
 
-/// ŠÖßÀ•W•\Œ»‚Å‚Ì‰^“®•û’ö®S‘©
+/// é–¢ç¯€åº§æ¨™è¡¨ç¾ã§ã®é‹å‹•æ–¹ç¨‹å¼æ‹˜æŸ
 class JointConDense{
 
 };

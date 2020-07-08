@@ -1,4 +1,4 @@
-#include <DiMP/Graph/Match.h>
+ï»¿#include <DiMP/Graph/Match.h>
 #include <DiMP/Graph/Timing.h>
 #include <DiMP/Graph/Object.h>
 #include <DiMP/Graph/Graph.h>
@@ -55,12 +55,12 @@ void MatchTaskKey::AddCon(Solver* solver){
 void MatchTaskKey::Prepare(){
 	TaskKey::Prepare();
 
-	// ƒ^ƒCƒ~ƒ“ƒO‹æŠÔ‚Æ‚ÌŠÖŒW‚É‰‚¶‚ÄS‘©‚ğ—LŒø‰»/–³Œø‰»‚·‚é
+	// ã‚¿ã‚¤ãƒŸãƒ³ã‚°åŒºé–“ã¨ã®é–¢ä¿‚ã«å¿œã˜ã¦æ‹˜æŸã‚’æœ‰åŠ¹åŒ–/ç„¡åŠ¹åŒ–ã™ã‚‹
 	for(int i = 0; i < 3; i++){
 		if(i == Start && !next || i == End && !prev)
 			continue;
 		
-		// b’èˆ’u
+		// æš«å®šå‡¦ç½®
 		if(i == Start || i == End){
 			con_tp[i]->active = false;
 			con_tv[i]->active = false;
@@ -246,7 +246,7 @@ void MatchConTP::CalcCoef(){
 		s2 = s*s;
 		s3 = s2*s;
 
-		// ŒW”
+		// ä¿‚æ•°
 		real_t k_p0, k_v0, k_p1, k_v1;
 
 		if(task->param.spline){
@@ -330,7 +330,7 @@ void MatchConTV::CalcCoef(){
 		s  = dt/h;
 		s2 = s*s;
 
-		// ŒW”
+		// ä¿‚æ•°
 		real_t k_p0, k_v0, k_p1, k_v1;
 
 		if(task->param.spline){
@@ -438,22 +438,22 @@ void MatchConTP::CalcDeviation(){
 
 	MatchTask* task = (MatchTask*)key->node;
 
-	// ƒ‚[ƒh–ˆ‚ÉŒë·‚ğŒvZ
+	// ãƒ¢ãƒ¼ãƒ‰æ¯ã«èª¤å·®ã‚’è¨ˆç®—
 	real_t t;
 	int type = Interpolate::Quadratic;
 
-	// ƒL[ƒ|ƒCƒ“ƒgã‚ÌŒë·
+	// ã‚­ãƒ¼ãƒã‚¤ãƒ³ãƒˆä¸Šã®èª¤å·®
 	if(mode == MatchTaskKey::Inside){
 		y = key->obj0->pos_t->val - key->obj1->pos_t->val;
 	}
-	// n“_ã‚ÌŒë·
+	// å§‹ç‚¹æ™‚åˆ»ä¸Šã®èª¤å·®
 	else if(mode == MatchTaskKey::Start){
 		if(task->time)
 			 t = task->time->time_s->val;
 		else t = task->key_s->tick->time;
 		y = task->obj0->Pos(t, type) - task->obj1->Pos(t, type);
 	}
-	// I“_ã‚ÌŒë·
+	// çµ‚ç‚¹æ™‚åˆ»ä¸Šã®èª¤å·®
 	else if(mode == MatchTaskKey::End){
 		if(task->time)
 			 t = task->time->time_e->val;
@@ -468,22 +468,22 @@ void MatchConTV::CalcDeviation(){
 
 	MatchTask* task = (MatchTask*)key->node;
 
-	// ƒ‚[ƒh–ˆ‚ÉŒë·‚ğŒvZ
+	// ãƒ¢ãƒ¼ãƒ‰æ¯ã«èª¤å·®ã‚’è¨ˆç®—
 	real_t t;
 	int type = Interpolate::Quadratic;
 
-	// ƒL[ƒ|ƒCƒ“ƒgã‚ÌŒë·
+	// ã‚­ãƒ¼ãƒã‚¤ãƒ³ãƒˆä¸Šã®èª¤å·®
 	if(mode == MatchTaskKey::Inside){
 		y = key->obj0->vel_t->val - key->obj1->vel_t->val;
 	}
-	// n“_ã‚ÌŒë·
+	// å§‹ç‚¹æ™‚åˆ»ä¸Šã®èª¤å·®
 	else if(mode == MatchTaskKey::Start){
 		if(task->time)
 			 t = task->time->time_s->val;
 		else t = task->key_s->tick->time;
 		y = task->obj0->Vel(t, type) - task->obj1->Vel(t, type);
 	}
-	// I“_ã‚ÌŒë·
+	// çµ‚ç‚¹æ™‚åˆ»ä¸Šã®èª¤å·®
 	else if(mode == MatchTaskKey::End){
 		if(task->time)
 			 t = task->time->time_e->val;

@@ -1,4 +1,4 @@
-#include <DiMP/Graph/Object.h>
+ï»¿#include <DiMP/Graph/Object.h>
 #include <DiMP/Graph/Geometry.h>
 #include <DiMP/Graph/Joint.h>
 #include <DiMP/Graph/Graph.h>
@@ -269,7 +269,7 @@ void Object::Init(){
 	for(Tick* tick : graph->ticks){
 		ObjectKey* key = (ObjectKey*)traj.GetKeypoint(tick);
 		
-		// treeŽž‚É]‘®‚·‚é•Ï”‚Ílock‚·‚é
+		// treeæ™‚ã«å¾“å±žã™ã‚‹å¤‰æ•°ã¯lockã™ã‚‹
 		if(tree){
 			key->pos_t->Lock();
 			key->pos_r->Lock();

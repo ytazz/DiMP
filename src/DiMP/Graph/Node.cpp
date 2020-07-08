@@ -1,4 +1,4 @@
-#include <DiMP/Graph/Node.h>
+ï»¿#include <DiMP/Graph/Node.h>
 #include <DiMP/Graph/Graph.h>
 #include <DiMP/Graph/Timing.h>
 #include <DiMP/Render/Config.h>
@@ -174,7 +174,7 @@ ScheduledKey::ScheduledKey(){
 }
 
 void ScheduledKey::CalcRelation(){
-	// ƒ^ƒCƒ€ƒXƒƒbƒg–¢Žw’èi‘S‹æŠÔj‚È‚çInside”»’è
+	// ã‚¿ã‚¤ãƒ ã‚¹ãƒ­ãƒƒãƒˆæœªæŒ‡å®šï¼ˆå…¨åŒºé–“ï¼‰ãªã‚‰Insideåˆ¤å®š
 	if(!((ScheduledNode*)node)->time){
 		relation = Inside;
 		return;
@@ -201,11 +201,11 @@ ScheduledNode::ScheduledNode(Graph* g, TimeSlot* _time, const string& n):Traject
 
 void ScheduledNode::Prepare(){
 	if(time){
-		// ŠJŽnŽž‚ÌŽè‘O‚Ì“_
+		// é–‹å§‹æ™‚åˆ»ã®æ‰‹å‰ã®ç‚¹
 		KeyPair kp;
 		kp    = traj.GetSegment(time->time_s->val);
 		key_s = (ScheduledKey*)kp.first;
-		// I—¹Žž‚ÌŽŸ‚Ì“_
+		// çµ‚äº†æ™‚åˆ»ã®æ¬¡ã®ç‚¹
 		kp    = traj.GetSegment(time->time_e->val);
 		key_e = (ScheduledKey*)kp.second;
 	}

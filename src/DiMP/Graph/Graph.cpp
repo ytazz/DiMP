@@ -1,4 +1,4 @@
-#include <DiMP/Graph/Graph.h>
+ï»¿#include <DiMP/Graph/Graph.h>
 #include <DiMP/Graph/Object.h>
 #include <DiMP/Graph/Joint.h>
 #include <DiMP/Render/Config.h>
@@ -137,7 +137,7 @@ void Graph::Init(){
 	// create keypoints of trajectory nodes
 	trajNodes.AddKeypoints();
 
-	// ƒcƒŠ[\‘¢’Šo
+	// ãƒ„ãƒªãƒ¼æ§‹é€ æŠ½å‡º
 	trees.Extract();
 	
 	// register variables to solver
@@ -180,7 +180,7 @@ void Graph::Prepare(){
 void Graph::Finish(){
 	nodes.Finish();
 
-	// ƒcƒŠ[‚É‚Â‚¢‚Ä‡ƒLƒlŒvZ
+	// ãƒ„ãƒªãƒ¼ã«ã¤ã„ã¦é †ã‚­ãƒè¨ˆç®—
 	trees.ForwardKinematics();
 }
 

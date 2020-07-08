@@ -1,8 +1,8 @@
-#pragma once
+ï»¿#pragma once
 
 /**
-	DiMPƒTƒ“ƒvƒ‹ƒvƒƒOƒ‰ƒ€‹¤—pƒAƒvƒŠƒP[ƒVƒ‡ƒ“ƒNƒ‰ƒX
-	- Springhead2 SampleApp‚ğ—¬—p
+	DiMPã‚µãƒ³ãƒ—ãƒ«ãƒ—ãƒ­ã‚°ãƒ©ãƒ å…±ç”¨ã‚¢ãƒ—ãƒªã‚±ãƒ¼ã‚·ãƒ§ãƒ³ã‚¯ãƒ©ã‚¹
+	- Springhead2 SampleAppã‚’æµç”¨
  **/
 
 #include <DiMP/Types.h>
@@ -19,43 +19,43 @@ class Graph;
 
 class App : public Spr::FWApp{
 public:
-	/** ƒƒjƒ…[ID
+	/** ãƒ¡ãƒ‹ãƒ¥ãƒ¼ID
 	 */
 	enum MenuID{
-		MENU_ALWAYS		= 0,			///< ‚¢‚Â‚Å‚à—LŒø‚Èƒƒjƒ…[
-		MENU_USER		= 1,			///< ƒAƒvƒŠŒÅ—Lƒƒjƒ…[
-		MENU_COMMON		= 2,            ///< ‹¤—Lƒƒjƒ…[@ƒ^ƒu‚ÅØ‚è‘Ö‚¦
-		MENU_CONFIG = MENU_COMMON,		///<  ƒpƒ‰ƒ[ƒ^İ’èŒn
-		MENU_STATE,						///<  “à•”ó‘Ô•\¦
-		MENU_DRAW,						///<  •`‰æİ’èŒn
+		MENU_ALWAYS		= 0,			///< ã„ã¤ã§ã‚‚æœ‰åŠ¹ãªãƒ¡ãƒ‹ãƒ¥ãƒ¼
+		MENU_USER		= 1,			///< ã‚¢ãƒ—ãƒªå›ºæœ‰ãƒ¡ãƒ‹ãƒ¥ãƒ¼
+		MENU_COMMON		= 2,            ///< å…±æœ‰ãƒ¡ãƒ‹ãƒ¥ãƒ¼ã€€ã‚¿ãƒ–ã§åˆ‡ã‚Šæ›¿ãˆ
+		MENU_CONFIG = MENU_COMMON,		///<  ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿è¨­å®šç³»
+		MENU_STATE,						///<  å†…éƒ¨çŠ¶æ…‹è¡¨ç¤º
+		MENU_DRAW,						///<  æç”»è¨­å®šç³»
 		MENU_COMMON_LAST,
 	};
 
-	/// ƒAƒNƒVƒ‡ƒ“ID
-	/// í‚É‚Â‚©‚¦‚éƒAƒNƒVƒ‡ƒ“
+	/// ã‚¢ã‚¯ã‚·ãƒ§ãƒ³ID
+	/// å¸¸ã«ã¤ã‹ãˆã‚‹ã‚¢ã‚¯ã‚·ãƒ§ãƒ³
 	enum ActionAlways{
-		ID_EXIT,					///< I—¹
-		ID_RUN,						///< ƒVƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“‚ÌŠJn‚Æ’â~
-		ID_STEP,					///< ƒXƒeƒbƒvÀs
-		ID_PLAY,					///< ‹O“¹Ä¶‚ÌŠJn‚Æ’â~
-		ID_LOG,						///< ƒƒOæ‚è‚ÌŠJn‚Æ’â~
-		ID_SVG,						///< SVG‘‚«o‚µ
+		ID_EXIT,					///< çµ‚äº†
+		ID_RUN,						///< ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³ã®é–‹å§‹ã¨åœæ­¢
+		ID_STEP,					///< ã‚¹ãƒ†ãƒƒãƒ—å®Ÿè¡Œ
+		ID_PLAY,					///< è»Œé“å†ç”Ÿã®é–‹å§‹ã¨åœæ­¢
+		ID_LOG,						///< ãƒ­ã‚°å–ã‚Šã®é–‹å§‹ã¨åœæ­¢
+		ID_SVG,						///< SVGæ›¸ãå‡ºã—
 	};
 	
-	/// •¨—ƒVƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“‚Ìİ’è
+	/// ç‰©ç†ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³ã®è¨­å®š
 	enum ActionConfig{
-		ID_TIMER_PERIOD,			///< ƒ^ƒCƒ}üŠú
-		ID_NUM_ITERATION,			///< ”½•œ‰ñ”‚ğ‘‚â‚·
+		ID_TIMER_PERIOD,			///< ã‚¿ã‚¤ãƒå‘¨æœŸ
+		ID_NUM_ITERATION,			///< åå¾©å›æ•°ã‚’å¢—ã‚„ã™
 	};
 	
-	/// •`‰æ‚Ìİ’è
+	/// æç”»ã®è¨­å®š
 	enum ActionDraw{
 		ID_SOLID,
 		ID_WIRE,
 		ID_CAMERA,
 	};
 
-	/// ƒwƒ‹ƒv‚Ì•`‰æ‘®«
+	/// ãƒ˜ãƒ«ãƒ—ã®æç”»å±æ€§
 	struct Metric{
 		enum{
 			MarginY = 15,
@@ -67,31 +67,31 @@ public:
 		};
 	};
 	
-	/// ƒAƒNƒVƒ‡ƒ“î•ñ
+	/// ã‚¢ã‚¯ã‚·ãƒ§ãƒ³æƒ…å ±
 	struct Action{
-		/// ƒAƒNƒVƒ‡ƒ“í—Ş
+		/// ã‚¢ã‚¯ã‚·ãƒ§ãƒ³ç¨®é¡
 		enum{
-			NoValue,	///< Às‚·‚é‚Ì‚İ
-			Boolean,	///< On, Off‚ÌØ‚è‘Ö‚¦
-			Integer,	///< ®”’l‚Ì‘Œ¸
-			Real,		///< À”’l‚Ì‘Œ¸
+			NoValue,	///< å®Ÿè¡Œã™ã‚‹ã®ã¿
+			Boolean,	///< On, Offã®åˆ‡ã‚Šæ›¿ãˆ
+			Integer,	///< æ•´æ•°å€¤ã®å¢—æ¸›
+			Real,		///< å®Ÿæ•°å€¤ã®å¢—æ¸›
 		};
-		int			id;							///< ƒAƒNƒVƒ‡ƒ“ID
-		int			type;						///< ƒAƒNƒVƒ‡ƒ“í—Ş
-		bool		boolean;					///< “ñ’l
-		int			integer;					///< ®”’l
-		int			intStep;					///< ®”’l‚Ì•ÏX•
-		int			intMin;						///< ®”’l‚ÌÅ¬’l
-		int			intMax;						///< ®”’l‚ÌÅ‘å’l
-		double		real;						///< À”’l
-		double		realStep;					///< À”’l‚Ì•ÏX•
-		double		realMin;					///< À”’l‚ÌÅ¬’l
-		double		realMax;					///< À”’l‚ÌÅ‘å’l
+		int			id;							///< ã‚¢ã‚¯ã‚·ãƒ§ãƒ³ID
+		int			type;						///< ã‚¢ã‚¯ã‚·ãƒ§ãƒ³ç¨®é¡
+		bool		boolean;					///< äºŒå€¤
+		int			integer;					///< æ•´æ•°å€¤
+		int			intStep;					///< æ•´æ•°å€¤ã®å¤‰æ›´å¹…
+		int			intMin;						///< æ•´æ•°å€¤ã®æœ€å°å€¤
+		int			intMax;						///< æ•´æ•°å€¤ã®æœ€å¤§å€¤
+		double		real;						///< å®Ÿæ•°å€¤
+		double		realStep;					///< å®Ÿæ•°å€¤ã®å¤‰æ›´å¹…
+		double		realMin;					///< å®Ÿæ•°å€¤ã®æœ€å°å€¤
+		double		realMax;					///< å®Ÿæ•°å€¤ã®æœ€å¤§å€¤
 		
-		vector< pair<int, string> > keys;		///< ƒL[‚Æ‘ã‘ÖƒeƒLƒXƒg
-		string	desc;						    ///< à–¾
+		vector< pair<int, string> > keys;		///< ã‚­ãƒ¼ã¨ä»£æ›¿ãƒ†ã‚­ã‚¹ãƒˆ
+		string	desc;						    ///< èª¬æ˜
 
-		/// ƒAƒNƒVƒ‡ƒ“‚ÆƒL[‚Ì‘Î‰
+		/// ã‚¢ã‚¯ã‚·ãƒ§ãƒ³ã¨ã‚­ãƒ¼ã®å¯¾å¿œ
 		Action* AddHotKey(int key, string alt = "");
 
 		Action* SetType    (int t)   { type = t; return this;     }
@@ -112,32 +112,32 @@ public:
 	};
 
 	struct Menu{
-		string	        brief;       ///< ƒƒjƒ…[‚Ìà–¾
+		string	        brief;       ///< ãƒ¡ãƒ‹ãƒ¥ãƒ¼ã®èª¬æ˜
 		vector<Action>  actions;
 		
-		int Query(int key);  ///< ƒL[‚É‘Î‰‚·‚éƒAƒNƒVƒ‡ƒ“ID‚ğ•Ô‚·
+		int Query(int key);  ///< ã‚­ãƒ¼ã«å¯¾å¿œã™ã‚‹ã‚¢ã‚¯ã‚·ãƒ§ãƒ³IDã‚’è¿”ã™
 	};
 
-	/// ‘®«: ”h¶ƒNƒ‰ƒX‚ªƒRƒ“ƒXƒgƒ‰ƒNƒ^‚Åİ’è‚·‚é
-	string					appName;		///< ƒTƒ“ƒvƒ‹–¼
-	Vec4f					clearColor;		///< ”wŒiF
-	Vec4f					textColor;		///< •¶šF
-	bool					zAxisUp;		///< Z²‚ğã‚É‚µ‚Ä•`‰æ
+	/// å±æ€§: æ´¾ç”Ÿã‚¯ãƒ©ã‚¹ãŒã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ã§è¨­å®šã™ã‚‹
+	string					appName;		///< ã‚µãƒ³ãƒ—ãƒ«å
+	Vec4f					clearColor;		///< èƒŒæ™¯è‰²
+	Vec4f					textColor;		///< æ–‡å­—è‰²
+	bool					zAxisUp;		///< Zè»¸ã‚’ä¸Šã«ã—ã¦æç”»
 
-	/// ƒƒjƒ…[ŠÖŒW
-	vector<Menu>			menus;				///< ƒƒjƒ…[
-	int						dispMenu;			///< •\¦’†‚Ì‹¤—Lƒƒjƒ…[
-	int						focusMenu;			///< ƒtƒH[ƒJƒX’†‚Ìƒƒjƒ…[
-	int                     focusAction;		///< ƒtƒH[ƒJƒX’†‚ÌƒAƒNƒVƒ‡ƒ“
+	/// ãƒ¡ãƒ‹ãƒ¥ãƒ¼é–¢ä¿‚
+	vector<Menu>			menus;				///< ãƒ¡ãƒ‹ãƒ¥ãƒ¼
+	int						dispMenu;			///< è¡¨ç¤ºä¸­ã®å…±æœ‰ãƒ¡ãƒ‹ãƒ¥ãƒ¼
+	int						focusMenu;			///< ãƒ•ã‚©ãƒ¼ã‚«ã‚¹ä¸­ã®ãƒ¡ãƒ‹ãƒ¥ãƒ¼
+	int                     focusAction;		///< ãƒ•ã‚©ãƒ¼ã‚«ã‚¹ä¸­ã®ã‚¢ã‚¯ã‚·ãƒ§ãƒ³
 	stringstream			ss;
-	string					message;			///< ˆêsƒƒbƒZ[ƒW
+	string					message;			///< ä¸€è¡Œãƒ¡ãƒƒã‚»ãƒ¼ã‚¸
 	
-	/// ƒ^ƒCƒ}
+	/// ã‚¿ã‚¤ãƒ
 	UTTimerIf*				timerDraw;		///< timer for rendering
 	UTTimerIf*				timerPlan;		///< timer for planning
 	UTQPTimer               ptimer;
 	
-	/// DiMPƒIƒuƒWƒFƒNƒg
+	/// DiMPã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ
 	UTRef<Graph>	          graph;			///< reference to DiMP graph
 	Render::Config*           conf;
 	UTRef<Render::CanvasGL >  canvasGL;
@@ -148,37 +148,37 @@ public:
 	double  deltaNorm;
 	double  compTime;
 	
-	/// ó‘Ô
-	bool    showHelp;		///< ƒwƒ‹ƒv•\¦
+	/// çŠ¶æ…‹
+	bool    showHelp;		///< ãƒ˜ãƒ«ãƒ—è¡¨ç¤º
 	bool    running;		///< running the planner
 	bool    logging;		///< taking error log
 	bool    playing;		///< playing the trajectory
 	bool    renderMode;		///< render in solid or wireframe
 
 public:
-	void    AddMenu  (int mid, string brief);        ///< ƒƒjƒ…[‚Ì“o˜^
-	Action* AddAction(int mid, int aid, string desc); ///< ƒAƒNƒVƒ‡ƒ“‚Ì“o˜^
-	Action* GetAction(int mid, int aid);              ///< ƒAƒNƒVƒ‡ƒ“æ“¾
-	void    HitAction(int mid, int aid, bool on);     ///< ƒAƒNƒVƒ‡ƒ“Às
+	void    AddMenu  (int mid, string brief);        ///< ãƒ¡ãƒ‹ãƒ¥ãƒ¼ã®ç™»éŒ²
+	Action* AddAction(int mid, int aid, string desc); ///< ã‚¢ã‚¯ã‚·ãƒ§ãƒ³ã®ç™»éŒ²
+	Action* GetAction(int mid, int aid);              ///< ã‚¢ã‚¯ã‚·ãƒ§ãƒ³å–å¾—
+	void    HitAction(int mid, int aid, bool on);     ///< ã‚¢ã‚¯ã‚·ãƒ§ãƒ³å®Ÿè¡Œ
 	
-	void    DrawText (GRRenderIf* render, Vec2f pos, string str, bool bold); ///< ƒeƒLƒXƒg•`‰æ
-	void    DrawState(GRRenderIf* render, Vec2f& offset);                    ///< “®ìŒv‰æ‚Ì“à•”ó‘Ô‚Ì•\¦
-	void    DrawMenu (GRRenderIf* render, int mid, Vec2f& offset);            ///< ƒƒjƒ…[‚Ì•\¦
-	void    DrawHelp (GRRenderIf* render);                                   ///< •t‰Áî•ñ‚Ì•\¦
+	void    DrawText (GRRenderIf* render, Vec2f pos, string str, bool bold); ///< ãƒ†ã‚­ã‚¹ãƒˆæç”»
+	void    DrawState(GRRenderIf* render, Vec2f& offset);                    ///< å‹•ä½œè¨ˆç”»ã®å†…éƒ¨çŠ¶æ…‹ã®è¡¨ç¤º
+	void    DrawMenu (GRRenderIf* render, int mid, Vec2f& offset);            ///< ãƒ¡ãƒ‹ãƒ¥ãƒ¼ã®è¡¨ç¤º
+	void    DrawHelp (GRRenderIf* render);                                   ///< ä»˜åŠ æƒ…å ±ã®è¡¨ç¤º
 
 	void    SaveSVG  ();
 	
-public: /** ”h¶ƒNƒ‰ƒX‚ªÀ‘•‚·‚éŠÖ” **/
+public: /** æ´¾ç”Ÿã‚¯ãƒ©ã‚¹ãŒå®Ÿè£…ã™ã‚‹é–¢æ•° **/
 
-	virtual void BuildScene(){}                  ///< ƒV[ƒ“\’z‚ğs‚¤D
-	virtual void OnStep    ();                   ///< 1ƒXƒeƒbƒv‚ÌƒVƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“
-	virtual void OnDraw    (GRRenderIf* render); ///< •`‰æ
-	virtual void OnAction  (int menu, int id);   ///< ƒAƒNƒVƒ‡ƒ“ˆ—
+	virtual void BuildScene(){}                  ///< ã‚·ãƒ¼ãƒ³æ§‹ç¯‰ã‚’è¡Œã†ï¼
+	virtual void OnStep    ();                   ///< 1ã‚¹ãƒ†ãƒƒãƒ—ã®ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³
+	virtual void OnDraw    (GRRenderIf* render); ///< æç”»
+	virtual void OnAction  (int menu, int id);   ///< ã‚¢ã‚¯ã‚·ãƒ§ãƒ³å‡¦ç†
 	
-public: /** FWApp‚ÌÀ‘• **/
+public: /** FWAppã®å®Ÿè£… **/
 	virtual void Init     (int argc, char* argv[]);
-	virtual void TimerFunc(int id);                 ///< ƒ^ƒCƒ}ƒR[ƒ‹ƒoƒbƒNŠÖ”Dƒ^ƒCƒ}üŠú‚ÅŒÄ‚Î‚ê‚é
-	virtual void Display  ();                       ///< •`‰æŠÖ”D•`‰æ—v‹‚ª—ˆ‚½‚Æ‚«‚ÉŒÄ‚Î‚ê‚é
+	virtual void TimerFunc(int id);                 ///< ã‚¿ã‚¤ãƒã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°ï¼ã‚¿ã‚¤ãƒå‘¨æœŸã§å‘¼ã°ã‚Œã‚‹
+	virtual void Display  ();                       ///< æç”»é–¢æ•°ï¼æç”»è¦æ±‚ãŒæ¥ãŸã¨ãã«å‘¼ã°ã‚Œã‚‹
 	virtual void Keyboard (int key, int x, int y);
 
     App();

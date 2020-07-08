@@ -1,4 +1,4 @@
-#include <DiMP/App/App.h>
+ï»¿#include <DiMP/App/App.h>
 #include <DiMP/Graph/Graph.h>
 #include <DiMP/Render/Config.h>
 #include <DiMP/Render/Canvas.h>
@@ -52,7 +52,7 @@ App::App(){
 	showHelp  = true;
 	appName	  = "untitled";
 		
-	/// ‚¢‚Â‚Å‚à—LŒøŒn
+	/// ã„ã¤ã§ã‚‚æœ‰åŠ¹ç³»
 	AddMenu(MENU_ALWAYS, "");
 	AddAction(MENU_ALWAYS, ID_EXIT, "exit"            )->AddHotKey(DVKeyCode::ESC, "ESC")->AddHotKey('q')->AddHotKey('Q');
 	AddAction(MENU_ALWAYS, ID_RUN , "simulation timer")->AddHotKey(' ', "space")->SetType(Action::Boolean)->SetBool(false);
@@ -61,23 +61,23 @@ App::App(){
 	AddAction(MENU_ALWAYS, ID_LOG , "logging"         )->AddHotKey('l')->SetType(Action::Boolean)->SetBool(false);
 	AddAction(MENU_ALWAYS, ID_SVG , "save svg"        )->AddHotKey('v');
 
-	/// ‹¤—LƒRƒ}ƒ“ƒh‚ÍƒV[ƒ“ƒRƒ}ƒ“ƒh‚Æ‚ÌÕ“Ë‰ñ”ğ‚Ì‚½‚ß‚É‘å•¶š‚ğŠ„‚è“–‚Ä‚é
-	/// ƒVƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“İ’è
+	/// å…±æœ‰ã‚³ãƒãƒ³ãƒ‰ã¯ã‚·ãƒ¼ãƒ³ã‚³ãƒãƒ³ãƒ‰ã¨ã®è¡çªå›é¿ã®ãŸã‚ã«å¤§æ–‡å­—ã‚’å‰²ã‚Šå½“ã¦ã‚‹
+	/// ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³è¨­å®š
 	AddMenu(MENU_CONFIG, "< simulation settings >");
 	AddAction(MENU_CONFIG, ID_TIMER_PERIOD , "timer interval"     )->SetType(Action::Integer)->SetIntStep(10)->SetIntMin(10)->SetIntMax(100);
 	AddAction(MENU_CONFIG, ID_NUM_ITERATION, "number of iteration")->SetType(Action::Integer)->SetIntStep(1)->SetIntMin(1)->SetIntMax(20);
 
-	/// “®ìŒv‰æ‚Ì“à•”ó‘Ô•\¦
-	///  ƒƒjƒ…[“o˜^‚·‚é‚¾‚¯‚Å•`‰æ‚Í“Á•Êˆ—‚·‚é
+	/// å‹•ä½œè¨ˆç”»ã®å†…éƒ¨çŠ¶æ…‹è¡¨ç¤º
+	///  ãƒ¡ãƒ‹ãƒ¥ãƒ¼ç™»éŒ²ã™ã‚‹ã ã‘ã§æç”»ã¯ç‰¹åˆ¥å‡¦ç†ã™ã‚‹
 	AddMenu(MENU_STATE, "< internal states >");
 
-	/// •`‰æİ’èŒn
+	/// æç”»è¨­å®šç³»
 	AddMenu(MENU_DRAW, "< drawing setting >");
 	AddAction(MENU_DRAW, ID_SOLID , "solid rendering"         )->SetType(Action::Boolean);
 	AddAction(MENU_DRAW, ID_WIRE  , "wireframe rendering"     )->SetType(Action::Boolean);
 	AddAction(MENU_DRAW, ID_CAMERA, "camera perspective|ortho")->SetType(Action::Boolean)->SetBool(false);
 
-	// ‰Šúó‘Ôİ’è
+	// åˆæœŸçŠ¶æ…‹è¨­å®š
 	appName		= "DiMP sample application";
 	clearColor	= Vec4f(1.0f, 1.0f, 1.0f, 1.0f);
 	textColor	= Vec4f(0.0f, 0.0f, 0.0f, 1.0f);
@@ -116,7 +116,7 @@ App::Action* App::GetAction(int mid, int aid){
 void App::HitAction(int mid, int aid, bool on){
 	Action* act = GetAction(mid, aid);
 
-	// í—Ş‚É‰‚¶‚Ä’l‚ğ•ÏX
+	// ç¨®é¡ã«å¿œã˜ã¦å€¤ã‚’å¤‰æ›´
 	if(act->type == Action::NoValue){
 		message = act->desc + " is executed.";
 	}
@@ -145,7 +145,7 @@ void App::HitAction(int mid, int aid, bool on){
 		ss << act->desc << " is now " << act->real;
 		message = ss.str();
 	}
-	// ƒnƒ“ƒhƒ‰‚ğŒÄ‚Ô
+	// ãƒãƒ³ãƒ‰ãƒ©ã‚’å‘¼ã¶
 	OnAction(mid, aid);
 }
 
@@ -170,7 +170,7 @@ void App::DrawState(GRRenderIf* render, Vec2f& offset){
 	DrawValue(render, offset, "comp. time:" , compTime        );
 	DrawValue(render, offset, "delta. norm:", deltaNorm       );
 		
-	// S‘©í•Ê‚ÌŒë·
+	// æ‹˜æŸç¨®åˆ¥ã®èª¤å·®
 	if(!graph->solver->conInfoType.empty()){
 		for(int i = 0; i < (int)graph->solver->conInfoType.size(); i++)
 			DrawValue(render, offset, DiMP::ConNames[i], graph->solver->conInfoType[i].error);
@@ -178,7 +178,7 @@ void App::DrawState(GRRenderIf* render, Vec2f& offset){
 
 	offset.y += (float)Metric::LineY;
 
-	// S‘©í•Ê‚ÌŒë·
+	// æ‹˜æŸç¨®åˆ¥ã®èª¤å·®
 	if(!graph->solver->conInfoLevel.empty()){
 		for(int i = 0; i < (int)graph->solver->conInfoLevel.size(); i++){
 			ss.str("");
@@ -195,19 +195,19 @@ void App::DrawMenu(GRRenderIf* render, int mid, Vec2f& offset){
 	render->DrawFont(pos + offset, menu.brief);
 	pos.y += (float)Metric::LineY;
 
-	// “à•”ó‘Ô•\¦‚Ìê‡
+	// å†…éƒ¨çŠ¶æ…‹è¡¨ç¤ºã®å ´åˆ
 	if(mid == MENU_STATE){
 		offset += pos;
 		DrawState(render, offset);
 		return;
 	}
-	// ‚»‚êˆÈŠO‚ÍƒAƒNƒVƒ‡ƒ“ˆê——‚ğ•\¦
+	// ãã‚Œä»¥å¤–ã¯ã‚¢ã‚¯ã‚·ãƒ§ãƒ³ä¸€è¦§ã‚’è¡¨ç¤º
 	for(int aid = 0; aid < (int)menu.actions.size(); aid++){
 		bool focus = ((mid == focusMenu || (focusMenu == MENU_COMMON && mid == dispMenu)) && aid == focusAction);
 
 		Action* act = GetAction(mid, aid);
 
-		// ƒzƒbƒgƒL[
+		// ãƒ›ãƒƒãƒˆã‚­ãƒ¼
 		pos.x = (float)Metric::KeyX;
 		ss.str("");
 			
@@ -219,11 +219,11 @@ void App::DrawMenu(GRRenderIf* render, int mid, Vec2f& offset){
 		}
 		DrawText(render, pos + offset, ss.str(), focus);
 			
-		// à–¾
+		// èª¬æ˜
 		pos.x = (float)Metric::DescX;
 		DrawText(render, pos + offset, act->desc, focus);
 			
-		// ó‘Ô
+		// çŠ¶æ…‹
 		pos.x = (float)Metric::ValueX;
 		if(act->type == Action::NoValue){
 		}
@@ -253,7 +253,7 @@ void App::DrawHelp(GRRenderIf* render){
 
 	Vec2f pos((float)Metric::MarginX, (float)Metric::MarginY);
 
-	// ƒwƒ‹ƒv‚É‚Â‚¢‚Ä
+	// ãƒ˜ãƒ«ãƒ—ã«ã¤ã„ã¦
 	if(showHelp){
 		render->DrawFont(pos, "hit \'h\' to hide help"            ); pos.y += (float)Metric::LineY;
 		render->DrawFont(pos, "hit TAB to switch menu"            ); pos.y += (float)Metric::LineY;
@@ -270,7 +270,7 @@ void App::DrawHelp(GRRenderIf* render){
 		pos.y += (float)Metric::LineY;
 	}
 
-	// ƒƒbƒZ[ƒW
+	// ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸
 	render->DrawFont(pos, message);
 
 	render->LeaveScreenCoordinate();
@@ -316,7 +316,7 @@ void App::OnStep(){
 		
 	iterCount++;
 		
-	// •Ï”•Ï‰»—Ê‚Ìƒmƒ‹ƒ€
+	// å¤‰æ•°å¤‰åŒ–é‡ã®ãƒãƒ«ãƒ 
 	deltaNorm = 0.0;
 	int nvar = (int)graph->solver->vars.size();
 	for(int i = 0; i < nvar; i++)
@@ -325,11 +325,11 @@ void App::OnStep(){
 }
 
 void App::OnDraw(GRRenderIf* render){
-	// ƒfƒtƒHƒ‹ƒgˆ—
-	// - ƒ‰ƒCƒeƒBƒ“ƒO‚ğ–³Œø‰»‚µ‚Ä‹O“¹‚ğ•`‰æ‚µC‹O“¹Ä¶‚ÌƒXƒiƒbƒvƒVƒ‡ƒbƒg‚ğ•`‰æ
+	// ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆå‡¦ç†
+	// - ãƒ©ã‚¤ãƒ†ã‚£ãƒ³ã‚°ã‚’ç„¡åŠ¹åŒ–ã—ã¦è»Œé“ã‚’æç”»ã—ï¼Œè»Œé“å†ç”Ÿæ™‚åˆ»ã®ã‚¹ãƒŠãƒƒãƒ—ã‚·ãƒ§ãƒƒãƒˆã‚’æç”»
 	render->SetLighting(false);
 
-	// ƒfƒtƒHƒ‹ƒg‚Åy²‚ªã‚¾‚ªz²‚ğã‚É•`‰æ‚µ‚½‚¢ê‡‚à‚ ‚é
+	// ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã§yè»¸ãŒä¸Šã ãŒzè»¸ã‚’ä¸Šã«æç”»ã—ãŸã„å ´åˆã‚‚ã‚ã‚‹
 	if(zAxisUp){
 		render->PushModelMatrix();
 		render->MultModelMatrix(Affinef::Rot((float)Rad(-90.0), 'x'));
@@ -347,7 +347,7 @@ void App::OnDraw(GRRenderIf* render){
 }
 
 void App::OnAction(int menu, int id){
-	/// ‚¢‚Â‚Å‚à—LŒøƒAƒNƒVƒ‡ƒ“
+	/// ã„ã¤ã§ã‚‚æœ‰åŠ¹ã‚¢ã‚¯ã‚·ãƒ§ãƒ³
 	Action* act = GetAction(menu, id);
 	if(menu == MENU_ALWAYS){
 		if(id == ID_EXIT)
@@ -385,22 +385,22 @@ void App::Init(int argc, char* argv[]){
 	windowDesc.title = appName;
 	CreateWin(windowDesc);
 
-	// ƒgƒ‰ƒbƒNƒ{[ƒ‹İ’è
+	// ãƒˆãƒ©ãƒƒã‚¯ãƒœãƒ¼ãƒ«è¨­å®š
 	HITrackballIf* tb = GetCurrentWin()->GetTrackball();
 	tb->SetDistanceRange(0.1f, 100.0f);
 	tb->SetDistance(3.0f);
 	tb->SetLatitudeRange((float)Rad(-90.0), (float)Rad(90.0));
 		
-	// •¶šF
+	// æ–‡å­—è‰²
 	GRRenderIf* render = GetCurrentWin()->GetRender();
 	GRFont font;
 	font.color = (int)(0xff * textColor[0]) << 16 | (int)(0xff * textColor[1]) << 8 | (int)(0xff * textColor[2]);
 	render->SetFont(font);
 
-	// ƒV[ƒ“\’z
+	// ã‚·ãƒ¼ãƒ³æ§‹ç¯‰
 	BuildScene();
 		
-	// ƒ^ƒCƒ}
+	// ã‚¿ã‚¤ãƒ
 	timerDraw = CreateTimer(UTTimerIf::FRAMEWORK);
 	timerDraw->SetInterval(50);
 
@@ -415,14 +415,14 @@ void App::TimerFunc(int id) {
 		OnStep();			
 	}
 	if(timerDraw && id == timerDraw->GetID()){
-		// Ä¶‚ği‚ß‚é
+		// å†ç”Ÿæ™‚åˆ»ã‚’é€²ã‚ã‚‹
 		if(GetAction(MENU_ALWAYS, ID_PLAY)->GetBool() && !graph->ticks.empty()){
-			// Ä¶‘¬“x x0.5
+			// å†ç”Ÿé€Ÿåº¦ x0.5
 			playTime += 0.5 * ((double)timerDraw->GetInterval() * 0.001);
 			if(playTime > graph->ticks.back()->time)
 				playTime = 0.0;
 		}
-		// Ä•`‰æ—v‹
+		// å†æç”»è¦æ±‚
 		PostRedisplay();
 	}
 }
@@ -431,12 +431,12 @@ void App::Display() {
 	FWWinIf* win = GetCurrentWin();
 	GRRenderIf *render = win->GetRender();
 
-	// ”wŒiƒNƒŠƒA
+	// èƒŒæ™¯ã‚¯ãƒªã‚¢
 	render->SetClearColor(clearColor);
 	render->ClearBuffer();
 	render->BeginScene();
 
-	// ‹“_İ’è
+	// è¦–ç‚¹è¨­å®š
 	const float fov = 0.3f;
 	Vec2f vpSize = render->GetViewportSize();
 	float aspect = vpSize.y / vpSize.x;
@@ -455,7 +455,7 @@ void App::Display() {
 	render->SetCamera(camera);
 	render->SetViewMatrix(win->GetTrackball()->GetAffine().inv());
 
-	// ŒõŒ¹İ’è
+	// å…‰æºè¨­å®š
 	GRLightDesc ld;
 	ld.diffuse  = Vec4f(0.6f, 0.6f, 0.6f, 1.0f);
 	ld.specular = Vec4f(0.0f, 0.0f, 0.0f, 1.0f);
@@ -463,10 +463,10 @@ void App::Display() {
 	ld.position = Vec4f( 20.0f, 50.0f,  20.0f, 1.0f);
 	render->PushLight(ld);
 
-	// •`‰æ
+	// æç”»
 	OnDraw(render);
 
-	// ƒwƒ‹ƒv•`‰æ
+	// ãƒ˜ãƒ«ãƒ—æç”»
 	DrawHelp(render);
 
 	render->PopLight();
@@ -476,36 +476,36 @@ void App::Display() {
 }
 
 void App::Keyboard(int key, int x, int y) {
-	// 'h' : ƒwƒ‹ƒv‚Ì•\¦Ø‚è‘Ö‚¦
+	// 'h' : ãƒ˜ãƒ«ãƒ—ã®è¡¨ç¤ºåˆ‡ã‚Šæ›¿ãˆ
 	if(key == 'h' || key == 'H'){
 		showHelp = !showHelp;
 		return;
 	}
 
-	// TAB : ƒƒjƒ…[Ø‚è‘Ö‚¦
+	// TAB : ãƒ¡ãƒ‹ãƒ¥ãƒ¼åˆ‡ã‚Šæ›¿ãˆ
 	if(showHelp){
 		if(key == '\t'){
 			if(++dispMenu == MENU_COMMON_LAST)
 				dispMenu = MENU_COMMON;
-			// ‹¤—Lƒƒjƒ…[‚ªƒtƒH[ƒJƒX‚³‚ê‚Ä‚¢‚éê‡CV‚µ‚¢ƒƒjƒ…[‚Ì1‚Â–Ú‚ÌƒAƒNƒVƒ‡ƒ“‚ÉƒtƒH[ƒJƒX
+			// å…±æœ‰ãƒ¡ãƒ‹ãƒ¥ãƒ¼ãŒãƒ•ã‚©ãƒ¼ã‚«ã‚¹ã•ã‚Œã¦ã„ã‚‹å ´åˆï¼Œæ–°ã—ã„ãƒ¡ãƒ‹ãƒ¥ãƒ¼ã®1ã¤ç›®ã®ã‚¢ã‚¯ã‚·ãƒ§ãƒ³ã«ãƒ•ã‚©ãƒ¼ã‚«ã‚¹
 			if(focusMenu == MENU_COMMON)
 				focusAction = 0;
 		}
-		/* ã‰ºƒL[ : ‘I‘ğƒAƒNƒVƒ‡ƒ“Ø‚è‘Ö‚¦
-			íƒƒjƒ…[Cƒ†[ƒUŒÅ—Lƒƒjƒ…[C‹¤—Lƒƒjƒ…[iTABØ‚è‘Ö‚¦j‚Ì‡‚Éã‚©‚ç•À‚Ô
+		/* ä¸Šä¸‹ã‚­ãƒ¼ : é¸æŠã‚¢ã‚¯ã‚·ãƒ§ãƒ³åˆ‡ã‚Šæ›¿ãˆ
+			å¸¸æ™‚ãƒ¡ãƒ‹ãƒ¥ãƒ¼ï¼Œãƒ¦ãƒ¼ã‚¶å›ºæœ‰ãƒ¡ãƒ‹ãƒ¥ãƒ¼ï¼Œå…±æœ‰ãƒ¡ãƒ‹ãƒ¥ãƒ¼ï¼ˆTABåˆ‡ã‚Šæ›¿ãˆï¼‰ã®é †ã«ä¸Šã‹ã‚‰ä¸¦ã¶
 			*/
 		if(key == DVKeyCode::UP || key == DVKeyCode::DOWN){
 			bool up = (key == DVKeyCode::UP);
 
-			// ƒtƒH[ƒJƒX’†ƒƒjƒ…[
+			// ãƒ•ã‚©ãƒ¼ã‚«ã‚¹ä¸­ãƒ¡ãƒ‹ãƒ¥ãƒ¼
 			Menu* m = (focusMenu == MENU_COMMON ? &menus[dispMenu] : &menus[focusMenu]);
 					
-			// ƒtƒH[ƒJƒXƒAƒNƒVƒ‡ƒ“‚Ìã‰º
-			// ƒƒjƒ…[‚Ì’[‚Ü‚Å‚¢‚Á‚½‚çŸ‚Ìƒƒjƒ…[‚Ö
+			// ãƒ•ã‚©ãƒ¼ã‚«ã‚¹ã‚¢ã‚¯ã‚·ãƒ§ãƒ³ã®ä¸Šä¸‹
+			// ãƒ¡ãƒ‹ãƒ¥ãƒ¼ã®ç«¯ã¾ã§ã„ã£ãŸã‚‰æ¬¡ã®ãƒ¡ãƒ‹ãƒ¥ãƒ¼ã¸
 			if(up){
 				if(focusAction == 0){
 					if(focusMenu == MENU_ALWAYS){
-						/// ˆê”Ôã‚È‚Ì‚Å“®‚©‚³‚È‚¢
+						/// ä¸€ç•ªä¸Šãªã®ã§å‹•ã‹ã•ãªã„
 					}
 					else{
 						focusMenu--;
@@ -517,7 +517,7 @@ void App::Keyboard(int key, int x, int y) {
 			else{
 				if(focusAction == m->actions.size()-1){
 					if(focusMenu == MENU_COMMON){
-						///< ˆê”Ô‰º‚È‚Ì‚Å“®‚©‚³‚È‚¢
+						///< ä¸€ç•ªä¸‹ãªã®ã§å‹•ã‹ã•ãªã„
 					}
 					else{
 						focusMenu++;
@@ -527,7 +527,7 @@ void App::Keyboard(int key, int x, int y) {
 				else focusAction++;
 			}
 		}
-		// ¶‰EƒL[ : ‘I‘ğƒAƒNƒVƒ‡ƒ“Às
+		// å·¦å³ã‚­ãƒ¼ : é¸æŠã‚¢ã‚¯ã‚·ãƒ§ãƒ³å®Ÿè¡Œ
 		if(key == DVKeyCode::LEFT || key == DVKeyCode::RIGHT){
 			int mid = focusMenu == MENU_COMMON ? dispMenu : focusMenu;
 			int aid = focusAction;
@@ -537,18 +537,18 @@ void App::Keyboard(int key, int x, int y) {
 		}
 	}
 
-	// ƒL[‚É‘Î‰‚·‚éƒAƒNƒVƒ‡ƒ“‚ğÀs
+	// ã‚­ãƒ¼ã«å¯¾å¿œã™ã‚‹ã‚¢ã‚¯ã‚·ãƒ§ãƒ³ã‚’å®Ÿè¡Œ
 	int id;
 	message = "";
-	// í•\¦ƒƒjƒ…[
+	// å¸¸æ™‚è¡¨ç¤ºãƒ¡ãƒ‹ãƒ¥ãƒ¼
 	id = menus[MENU_ALWAYS].Query(key);
 	if(id != -1)
 		HitAction(MENU_ALWAYS, id, true);
-	// ƒV[ƒ“ƒƒjƒ…[
+	// ã‚·ãƒ¼ãƒ³ãƒ¡ãƒ‹ãƒ¥ãƒ¼
 	id = menus[MENU_USER].Query(key);
 	if(id != -1)
 		HitAction(MENU_USER, id, true);
-	// ‹¤—Lƒƒjƒ…[
+	// å…±æœ‰ãƒ¡ãƒ‹ãƒ¥ãƒ¼
 	id = menus[dispMenu].Query(key);
 	if(id != -1)
 		HitAction(dispMenu, id, true);

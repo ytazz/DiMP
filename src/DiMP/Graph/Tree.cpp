@@ -1,4 +1,4 @@
-#include <DiMP/Graph/Tree.h>
+ï»¿#include <DiMP/Graph/Tree.h>
 #include <DiMP/Graph/Object.h>
 #include <DiMP/Graph/Joint.h>
 #include <DiMP/Graph/Graph.h>
@@ -45,7 +45,7 @@ void TreeKey::AddCon(Solver* solver){
 void TreeKey::Prepare(){
 	Tree* tree = (Tree*)node;
 
-	// ƒ„ƒRƒrƒAƒ“
+	// ãƒ¤ã‚³ãƒ“ã‚¢ãƒ³
 	int i = 0, j, j2;
 	for(ObjectKey* obj : objects){
 		j  = 0;
@@ -138,7 +138,7 @@ void Tree::Extract(){
 	}
 	while(updated);
 
-	// ˆË‘¶ŠÖŒW
+	// ä¾å­˜é–¢ä¿‚
 	uint nobj = (uint)objects.size();
 	uint njnt = (uint)joints .size();
 	dependent.resize(nobj);

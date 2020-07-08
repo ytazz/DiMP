@@ -1,4 +1,4 @@
-#include <DiMP/Graph/Geometry.h>
+ï»¿#include <DiMP/Graph/Geometry.h>
 #include <DiMP/Graph/Graph.h>
 #include <DiMP/Render/Config.h>
 #include <DiMP/Render/Canvas.h>
@@ -260,17 +260,17 @@ void Mesh::Draw(Render::Canvas* canvas, Render::Config* conf){
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /* 
 def func(Sd, o)
-  o‚ğSd‚ğŠÜ‚Ş•”•ª‹óŠÔ‚ÉË‰e -> p
-  if p‚ªSd‚Ì“à•”
-    if p‚ªo‚É\•ª‹ß‚¢
-      return p‚©‚çSd-1,i‚Ö‚ÌÅ’Z‹——£‚ÌÅ¬’l (Œğ·‚·‚éj
+  oã‚’Sdã‚’å«ã‚€éƒ¨åˆ†ç©ºé–“ã«å°„å½± -> p
+  if pãŒSdã®å†…éƒ¨
+    if pãŒoã«ååˆ†è¿‘ã„
+      return pã‹ã‚‰Sd-1,iã¸ã®æœ€çŸ­è·é›¢ã®æœ€å°å€¤ (äº¤å·®ã™ã‚‹ï¼‰
     else
-      return p‚Æo‚Ì‹——£
+      return pã¨oã®è·é›¢
   else
     for each Sd-1,i
       call func(Sd-1, o)
     end
-    return ã‚ÌÅ¬’l
+    return ä¸Šã®æœ€å°å€¤
 end
 */
 

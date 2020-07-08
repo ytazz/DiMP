@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <DiMP/Graph/Joint.h>
 
@@ -10,7 +10,7 @@ class  ComplConS;
 
 /**
 	Contact
-	- •½–Ê‚Æ“_‚ÌÚGS‘©
+	- å¹³é¢ã¨ç‚¹ã®æ¥è§¦æ‹˜æŸ
 
  */
 class ContactKey : public JointKey{
@@ -26,12 +26,12 @@ public:
 
 class Contact : public Joint{
 public:
-	/// ÚGƒ‚[ƒh
+	/// æ¥è§¦ãƒ¢ãƒ¼ãƒ‰
 	struct Mode{
 		enum{
-			Float,		///< ”ñÚG
-			Stick,		///< ÚGC‚·‚×‚è‚È‚µ
-			Slip,		///< ÚGC‚·‚×‚è‚ ‚è
+			Float,		///< éæ¥è§¦
+			Stick,		///< æ¥è§¦ï¼Œã™ã¹ã‚Šãªã—
+			Slip,		///< æ¥è§¦ï¼Œã™ã¹ã‚Šã‚ã‚Š
 		};
 	};
 	struct ModeSetting{
@@ -41,8 +41,8 @@ public:
 		ModeSetting(real_t _ts, real_t _te, int _mode):ts(_ts), te(_te), mode(_mode){}
 	};
 	struct Param{
-		real_t mu;		///< Ã~–€CŒW”
-		real_t margin;	///< ”ñÚG‚Ìƒ}[ƒWƒ“
+		real_t mu;		///< é™æ­¢æ‘©æ“¦ä¿‚æ•°
+		real_t margin;	///< éæ¥è§¦æ™‚ã®ãƒãƒ¼ã‚¸ãƒ³
 
 		vector<ModeSetting>	setting;
 
@@ -60,7 +60,7 @@ public:
 };
 
 /*
-	–€C—Í
+	æ‘©æ“¦åŠ›
  */
 class FrictionCon : public Constraint{
 public:
