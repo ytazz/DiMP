@@ -187,6 +187,7 @@ namespace DiMP {;
 		real_t TorsoAngVel(real_t t);
 		real_t TorsoAngAcc(real_t t);
 		pose_t FootPose   (real_t t, int side);
+		void   FootVel    (real_t t, int side, vec3_t& v, vec3_t& w);
 		vec3_t CopPos     (real_t t);
 		//vec3_t FootPos(real_t t, int side);
 		//quat_t FootOri(real_t t, int side);
@@ -194,6 +195,7 @@ namespace DiMP {;
 
 
 		vec3_t TorsoPos(const vec3_t& pcom, const vec3_t& psup, const vec3_t& pswg);
+		vec3_t TorsoVel(const vec3_t& vcom, const vec3_t& vsup, const vec3_t& vswg);
 
 		void CreateSnapshot(real_t t, Snapshot& s);
 		void CalcTrajectory();

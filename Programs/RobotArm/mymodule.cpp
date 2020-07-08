@@ -212,6 +212,8 @@ bool MyModule::Build() {
 
 	// ‰Šú‰»
 	graph->Init();
+	graph->Clear();
+	graph->Init();
 
 	// InitŒã‚Ìˆ—
 	if (sceneSelect == Reaching2D) {

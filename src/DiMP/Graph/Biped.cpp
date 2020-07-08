@@ -1027,6 +1027,24 @@ real_t BipedLIP::AnklePitch(real_t t, int side) {
 }
 */
 
+void BipedLIP::FootVel(real_t t, int side, vec3_t& v, vec3_t& w){
+	// calculate velocity by forward difference
+	const real_t dt = 0.001;
+	const real_t dtinv = 1.0/dt;
+
+	pose_t P0 = FootPose(t     , side);
+	pose_t P1 = FootPose(t + dt, side);
+
+	v = (P1.Pos() - P0.Pos())*dtinv;
+	
+	quat_t dp = P0.Ori().Conjugated() * P1.Ori();
+	vec3_t axis   = dp.Axis ();
+	real_t theta  = dp.Theta();
+	if(theta > pi)
+		theta -= 2*pi;
+	w = (P0.Ori() * (theta * axis))*dtinv;
+}
+
 vec3_t BipedLIP::CopPos(real_t t) {
 	BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;
 	BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;
@@ -1053,6 +1071,13 @@ vec3_t BipedLIP::TorsoPos(const vec3_t& pcom, const vec3_t& psup, const vec3_t& 
 	real_t mf = param.footMass;
 	vec3_t pt = ((mt + 2.0*mf)*pcom - mf * (psup + pswg)) / mt;
 	return pt;
+}
+
+vec3_t BipedLIP::TorsoVel(const vec3_t& vcom, const vec3_t& vsup, const vec3_t& vswg) {
+	real_t mt = param.torsoMass;
+	real_t mf = param.footMass;
+	vec3_t vt = ((mt + 2.0*mf)*vcom - mf * (vsup + vswg)) / mt;
+	return vt;
 }
 
 //------------------------------------------------------------------------------------------------
