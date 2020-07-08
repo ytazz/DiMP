@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <DiMP/Types.h>
 
@@ -35,6 +35,13 @@ struct VarTag{
 		BipedCopV,
 		BipedDuration,
 		BipedTime,
+		CentroidComTP,
+		CentroidComRP,
+		CentroidComTV,
+		CentroidComRV,
+		CentroidEndTP,
+		CentroidVel,
+		CentroidForce,
 		NumTypes,
 	};
 };

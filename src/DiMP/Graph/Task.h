@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <DiMP/Graph/Node.h>
 
@@ -12,12 +12,12 @@ class TimeSlot;
 class Task;
 
 /** atomic task
-	- Šî–{ƒ^ƒXƒN
-	- 2‚Â‚Ì„‘Ì‚Ìó‘Ô—Ê‚ğŠ’è‚ÌŠÔ‹æŠÔ‚É‚¨‚¢‚Äˆê’v‚³‚¹‚é‚Æ‚¢‚¤Œ`®
+	- åŸºæœ¬ã‚¿ã‚¹ã‚¯
+	- 2ã¤ã®å‰›ä½“ã®çŠ¶æ…‹é‡ã‚’æ‰€å®šã®æ™‚é–“åŒºé–“ã«ãŠã„ã¦ä¸€è‡´ã•ã›ã‚‹ã¨ã„ã†å½¢å¼
  **/
 class TaskKey : public ScheduledKey{
 public:
-	// S‘©‘ÎÛƒIƒuƒWƒFƒNƒg‚ÌƒL[ƒ|ƒCƒ“ƒg
+	// æ‹˜æŸå¯¾è±¡ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®ã‚­ãƒ¼ãƒã‚¤ãƒ³ãƒˆ
 	ObjectKey*		obj0;
 	ObjectKey*		obj1;
 
@@ -30,7 +30,7 @@ public:
 
 class Task : public ScheduledNode{
 public:
-	// S‘©‘ÎÛƒIƒuƒWƒFƒNƒg
+	// æ‹˜æŸå¯¾è±¡ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ
 	Object*		obj0;
 	Object*		obj1;
 	//Connector*  con0;

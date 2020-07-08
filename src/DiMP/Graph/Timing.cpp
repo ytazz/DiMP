@@ -1,4 +1,4 @@
-#include <DiMP/Graph/Timing.h>
+﻿#include <DiMP/Graph/Timing.h>
 #include <DiMP/Graph/Graph.h>
 #include <DiMP/Render/Config.h>
 
@@ -14,7 +14,7 @@ TimeSlot::Param::Param(){
 	te_max =  inf;
 	T_min  =  0.0;
 	T_max  =  inf;
-	lock   =  false;
+	lock   =  true;
 }
 
 TimeSlot::TimeSlot(Graph* g, real_t ts, real_t te, bool lock, const string& n):Node(g, n){

@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <DiMP/Types.h>
 #include <DiMP/Render/Canvas.h>
@@ -81,7 +81,7 @@ public:
 };
 
 /**
-	tick : ‹O“¹‚ğ•\Œ»‚·‚éƒXƒvƒ‰ƒCƒ“‹Èü‚Ì—£U
+	tick : è»Œé“ã‚’è¡¨ç¾ã™ã‚‹ã‚¹ãƒ—ãƒ©ã‚¤ãƒ³æ›²ç·šã®é›¢æ•£æ™‚åˆ»
  */
 class Tick : public Node{
 public:
@@ -233,12 +233,12 @@ class TimeSlot;
 class ScheduledNode;
 class ScheduledKey : public Keypoint{
 public:
-	/// ƒ^ƒXƒNÀs‹æŠÔ‚Æ‚±‚ÌƒL[ƒ|ƒCƒ“ƒg‚Ì‚ÌŠÖŒW
+	/// ã‚¿ã‚¹ã‚¯å®Ÿè¡ŒåŒºé–“ã¨ã“ã®ã‚­ãƒ¼ãƒã‚¤ãƒ³ãƒˆã®æ™‚åˆ»ã®é–¢ä¿‚
 	enum{
-		Start,		///< n“_‚Ìè‘O
-		Inside,		///< ‹æŠÔ‚Ì“à•”
-		End,		///< I“_‚ÌŸ
-		Outside,	///< ‹æŠÔ‚ÌŠO•”
+		Start,		///< å§‹ç‚¹ã®æ‰‹å‰
+		Inside,		///< åŒºé–“ã®å†…éƒ¨
+		End,		///< çµ‚ç‚¹ã®æ¬¡
+		Outside,	///< åŒºé–“ã®å¤–éƒ¨
 	};
 	int	 relation;
 

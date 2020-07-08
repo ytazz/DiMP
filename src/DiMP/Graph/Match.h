@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <DiMP/Graph/Task.h>
 //#include <DiMP/Solver/Constraint.h>
@@ -13,12 +13,12 @@ class MatchConRV;
 
 class MatchTaskKey : public TaskKey{
 public:	
-	/** �ʒu/���x�̕��i/��]�����ɑ΂���S��
-		- ���ꂼ��ɂ���Start, Inside, End��3������
-		- Start�͂��̃L�[�|�C���g�Ƃ��̎��̊ԂɃ^�C�~���O�n�_���܂܂��Ƃ�
-		- End�͂��̃L�[�|�C���g�Ƃ��̎��̊ԂɃ^�C�~���O�I�_���܂܂��Ƃ�
-		- Inside�͂��̃L�[�|�C���g���^�C�~���O��ԂɊ܂܂��Ƃ�
-		�ɗL���ƂȂ�
+	/** 位置/速度の並進/回転成分に対する拘束
+		- それぞれについてStart, Inside, Endの3つがある
+		- Startはこのキーポイントとその次の間にタイミング始点が含まれるとき
+		- Endはこのキーポイントとその次の間にタイミング終点が含まれるとき
+		- Insideはこのキーポイントがタイミング区間に含まれるとき
+		に有効となる
 	 **/
 	MatchConTP*	 con_tp[3];
 	MatchConTV*	 con_tv[3];
@@ -34,8 +34,8 @@ public:
 	MatchTaskKey();
 };
 
-/** �|�W�V�����}�b�`���O�^�X�N
-	- 2�̍��̂̈ʒu����v������
+/** ポジションマッチングタスク
+	- 2つの剛体の位置を一致させる
  **/
 class MatchTask : public Task{
 public:

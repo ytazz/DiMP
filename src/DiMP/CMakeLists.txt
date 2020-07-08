@@ -10,6 +10,7 @@ set(DIMP_HEADERS_APP
 set(DIMP_HEADERS_GRAPH
 	Graph/Avoid.h
 	Graph/Biped.h
+	Graph/Centroid.h
 	Graph/Connector.h
 	Graph/Contact.h
 	Graph/Geometry.h
@@ -38,6 +39,7 @@ set(DIMP_SOURCES_APP
 set(DIMP_SOURCES_GRAPH
 	Graph/Avoid.cpp
 	Graph/Biped.cpp
+	Graph/Centroid.cpp
 	Graph/Connector.cpp
 	Graph/Contact.cpp
 	Graph/Geometry.cpp

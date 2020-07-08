@@ -1,4 +1,4 @@
-#include <DiMP/Graph/Joint.h>
+ï»¿#include <DiMP/Graph/Joint.h>
 #include <DiMP/Graph/Object.h>
 #include <DiMP/Graph/Graph.h>
 #include <DiMP/Render/Config.h>
@@ -158,13 +158,13 @@ void JointKey::Prepare(){
 		wrel += Jw[i] * vel[i]->val;
 	}
 
-	// ƒ^ƒCƒ€ƒXƒƒbƒg‚ÆƒL[ƒ|ƒCƒ“ƒg‚ÌˆÊ’uŠÖŒW‚É‰‚¶‚ÄS‘©‚Æ•Ï”‚ğİ’è
+	// ã‚¿ã‚¤ãƒ ã‚¹ãƒ­ãƒƒãƒˆã¨ã‚­ãƒ¼ãƒã‚¤ãƒ³ãƒˆã®ä½ç½®é–¢ä¿‚ã«å¿œã˜ã¦æ‹˜æŸã¨å¤‰æ•°ã‚’è¨­å®š
 	bool in, inprev, innext;
 	in     = (relation != Outside);
 	inprev = prev && (((ScheduledKey*)prev)->relation != Outside);
 	innext = next && (((ScheduledKey*)next)->relation != Outside);
 	
-	// •Ï”
+	// å¤‰æ•°
 	if(!(in && innext) && next){
 		if(!tree){
 			force_t->val.clear();
@@ -180,7 +180,7 @@ void JointKey::Prepare(){
 		}
 	}
 	
-	// S‘©
+	// æ‹˜æŸ
 	if(!tree){
 		con_tp->active = (in && inprev);
 		con_rp->active = (in && inprev);
@@ -224,7 +224,7 @@ void JointKey::Draw(Render::Canvas* canvas, Render::Config* conf){
 	Joint* jnt = (Joint*)node;
 	Vec3f p0, p1;
 	
-	// S‘©—Í‚Ìì—p“_
+	// æ‹˜æŸåŠ›ã®ä½œç”¨ç‚¹
 	Vec3f pf = sockObj->pos_t->val + r[0] + q[0] * rrel;
 
 	// joint force
@@ -631,7 +631,7 @@ void Balljoint::CalcJacobian(real_t* pos, vec3_t* Jv, vec3_t* Jw){
 	real_t yaw   = pos[0];
 	real_t pitch = pos[1];
 
-	// s—ñ‚Ìê‡‚ÆsE—ñ‚ÌƒCƒ“ƒfƒbƒNƒX‡‚ª‹t‚È‚Ì‚Å’ˆÓ
+	// è¡Œåˆ—ã®å ´åˆã¨è¡Œãƒ»åˆ—ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹é †ãŒé€†ãªã®ã§æ³¨æ„
 	Jw[0][0] = -sin(yaw) * sin(pitch);
 	Jw[0][1] =  cos(yaw) * sin(pitch);
 	Jw[0][2] =  1.0 - cos(pitch);

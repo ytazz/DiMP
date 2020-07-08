@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <DiMP/Graph/Node.h>
 #include <DiMP/Graph/Connector.h>
@@ -46,7 +46,7 @@ public:
 	};
 
 	typedef vector< pair<JointKey*, bool> >	JointKeys;
-	JointKeys	joints;		///< Ú‘±‚µ‚Ä‚¢‚éJoint‚ÌKeypoint, ƒ\ƒPƒbƒg‘¤true
+	JointKeys	joints;		///< æ¥ç¶šã—ã¦ã„ã‚‹Jointã®Keypoint, ã‚½ã‚±ãƒƒãƒˆå´true
 	TreeKey*	tree;
 
 	vector<GeometryInfo>  geoInfos;
@@ -66,7 +66,7 @@ public:
 	ForceConT*		con_force_t;	/// sum of force constraint
 	ForceConR*		con_force_r;	/// sum of moment constraint
 
-	/* ƒcƒŠ[‚É‘®‚µ‚Ä‚¢‚é‚©‚ğl—¶‚µ‚ÄƒŠƒ“ƒN‚ÆŒW”‚ğİ’è‚·‚é
+	/* ãƒ„ãƒªãƒ¼ã«å±ã—ã¦ã„ã‚‹ã‹ã‚’è€ƒæ…®ã—ã¦ãƒªãƒ³ã‚¯ã¨ä¿‚æ•°ã‚’è¨­å®šã™ã‚‹
 		t_or_r : translational or rotational
 		p_or_v : position or velocity
 		s_or_r : v3 constraint or scalar constraint
@@ -87,7 +87,7 @@ public:
 
 class Object : public TrajectoryNode{
 public:
-	// •¨—‘®«
+	// ç‰©ç†å±æ€§
 	struct Param{
 		real_t			mass;			///< mass
 		real_t			inertia;		///< inertia (approximated as a scalar)

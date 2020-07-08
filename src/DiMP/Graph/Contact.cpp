@@ -1,4 +1,4 @@
-#include <DiMP/Graph/Contact.h>
+ï»¿#include <DiMP/Graph/Contact.h>
 #include <DiMP/Graph/Graph.h>
 #include <DiMP/Render/Config.h>
 
@@ -34,11 +34,11 @@ void ContactKey::AddCon(Solver* solver){
 void ContactKey::Prepare(){
 	JointKey::Prepare();
 	
-	// ‰ñ“]‚ÍS‘©‚µ‚È‚¢‚Ì‚Å–³Œø‰»
+	// å›è»¢ã¯æ‹˜æŸã—ãªã„ã®ã§ç„¡åŠ¹åŒ–
 	con_rp->enabled = false;
 	con_rv->enabled = false;
 
-	// ƒ‚[ƒhæ“¾
+	// ãƒ¢ãƒ¼ãƒ‰å–å¾—
 	mode = Contact::Mode::Stick;
 	for(uint i = 0; i < ((Contact*)node)->con_param.setting.size(); i++){
 		Contact::ModeSetting& s = ((Contact*)node)->con_param.setting[i];

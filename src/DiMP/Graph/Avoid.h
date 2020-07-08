@@ -1,10 +1,10 @@
-#pragma once
+ï»¿#pragma once
 
 #include <DiMP/Graph/Task.h>
 //#include <DiMP/Solver/Constraint.h>
 
 /** Collision avoidance
-	- 2‚Â‚Ì„‘ÌŠÔ‚Ì‹——£‚ªˆê’è’lˆÈ‰º‚É‚È‚ç‚È‚¢‚æ‚¤‚É‚·‚é
+	- 2ã¤ã®å‰›ä½“é–“ã®è·é›¢ãŒä¸€å®šå€¤ä»¥ä¸‹ã«ãªã‚‰ãªã„ã‚ˆã†ã«ã™ã‚‹
  */
 
 namespace DiMP{;
@@ -55,7 +55,7 @@ public:
 	struct Param{
 		bool	avoid_p;
 		bool	avoid_v;
-		real_t	dmin;		///< Å¬Ú‹ß‹——£
+		real_t	dmin;		///< æœ€å°æ¥è¿‘è·é›¢
 
 		Param();
 	} param;

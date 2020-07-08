@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <sbtypes.h>
 #include <sbconverter.h>

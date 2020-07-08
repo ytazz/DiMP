@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <DiMP/Graph/Node.h>
 //#include <DiMP/Solver/Constraint.h>
@@ -33,11 +33,11 @@ public:
 class Tree : public TrajectoryNode{
 public:
 	Object*					root;
-	vector<Object*>			objects;	///< ƒcƒŠ[‚É‘®‚·‚éObject
-	vector<Joint*>			joints;		///< ƒcƒŠ[‚É‘®‚·‚éJoint
+	vector<Object*>			objects;	///< ãƒ„ãƒªãƒ¼ã«å±žã™ã‚‹Object
+	vector<Joint*>			joints;		///< ãƒ„ãƒªãƒ¼ã«å±žã™ã‚‹Joint
 	vector<int>             parObject;	///< 
 	vector<int>             parJoint;	///< 
-	vector< vector<bool> >	dependent;	///< object-i‚ªjoint-j‚Ì‰º—¬‚É‚ ‚é‚È‚çtrue
+	vector< vector<bool> >	dependent;	///< object-iãŒjoint-jã®ä¸‹æµã«ã‚ã‚‹ãªã‚‰true
 
 	bool	IsDependent(int i, int j);
 	

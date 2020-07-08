@@ -1,4 +1,4 @@
-#include <DiMP/Graph/Avoid.h>
+ï»¿#include <DiMP/Graph/Avoid.h>
 #include <DiMP/Graph/Geometry.h>
 #include <DiMP/Graph/Object.h>
 #include <DiMP/Graph/Graph.h>
@@ -70,7 +70,7 @@ void AvoidKey::Prepare(){
 
 		for(int gp_idx = 0; gp_idx < geoPairs.size(); gp_idx++){
 			GeometryPair& gp = geoPairs[gp_idx];
-			// bsphere‚Å”»’è
+			// bsphereã§åˆ¤å®š
 			real_t d    = (gp.info0->bsphereCenterAbs - gp.info1->bsphereCenterAbs).norm();
 			real_t rsum = gp.info0->geo->bsphereRadius + gp.info1->geo->bsphereRadius;
 			gp.cullSphere = (d - rsum > task->param.dmin);
@@ -78,7 +78,7 @@ void AvoidKey::Prepare(){
 				nsphere++;
 				continue;
 			}
-			// bbox‚Å”»’è
+			// bboxã§åˆ¤å®š
 			gp.cullBox = false;
 			for(int i = 0; i < 3; i++){
 				if( gp.info0->bbmin[i] > gp.info1->bbmax[i] + task->param.dmin || 
@@ -143,7 +143,7 @@ void AvoidKey::Draw(Render::Canvas* canvas, Render::Config* conf){
 	
 	if(relation == Inside && conf->Set(canvas, Render::Item::Avoid, node)){
 		for(auto& gp : geoPairs){
-			// bsphere‚Å}Š ‚è‚³‚ê‚Ä‚¨‚ç‚¸C‚©‚ÂŒğ·‚à‚µ‚Ä‚¢‚È‚¢ê‡‚Ésupport point‚ğŒ‹‚Ôü‚ğ•`‰æ
+			// bsphereã§æåˆˆã‚Šã•ã‚Œã¦ãŠã‚‰ãšï¼Œã‹ã¤äº¤å·®ã‚‚ã—ã¦ã„ãªã„å ´åˆã«support pointã‚’çµã¶ç·šã‚’æç”»
 			if(!gp.cullSphere && !gp.cullBox && !gp.cullGjk){
 				p0 = gp.sup0;
 				p1 = gp.sup1;

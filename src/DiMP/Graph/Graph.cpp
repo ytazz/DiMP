@@ -1,4 +1,4 @@
-#include <DiMP/Graph/Graph.h>
+ï»¿#include <DiMP/Graph/Graph.h>
 #include <DiMP/Graph/Object.h>
 #include <DiMP/Graph/Joint.h>
 #include <DiMP/Render/Config.h>
@@ -35,7 +35,13 @@ const char* VarNames[] = {
 	"biped_cop_pos"    ,
 	"biped_cop_vel"    ,
 	"biped_duration"   ,
-	"biped_time"       
+	"biped_time"       ,
+	"centroid_com_pos_t",
+	"centroid_com_pos_r",
+	"centroid_com_vel_t",
+	"centroid_com_vel_r",
+	"centroid_end_pos_t",
+	"centroid_force"
 };
 
 const char* ConNames[] = {
@@ -131,7 +137,7 @@ void Graph::Init(){
 	// create keypoints of trajectory nodes
 	trajNodes.AddKeypoints();
 
-	// ƒcƒŠ[\‘¢’Šo
+	// ãƒ„ãƒªãƒ¼æ§‹é€ æŠ½å‡º
 	trees.Extract();
 	
 	// register variables to solver
@@ -174,7 +180,7 @@ void Graph::Prepare(){
 void Graph::Finish(){
 	nodes.Finish();
 
-	// ƒcƒŠ[‚É‚Â‚¢‚Ä‡ƒLƒlŒvZ
+	// ãƒ„ãƒªãƒ¼ã«ã¤ã„ã¦é †ã‚­ãƒè¨ˆç®—
 	trees.ForwardKinematics();
 }
 
