@@ -53,12 +53,18 @@ void ObjectKey::AddCon(Solver* solver){
 	geoInfos.clear();
 	for(Connector* con : obj->cons){
 		for(Geometry* geo : con->geos){
-			GeometryInfo info;
-			info.con = con;
-			info.geo = geo;
-			geoInfos.push_back(info);
+			geoInfos .push_back(GeometryInfo(con, geo));
 		}
 	}
+	
+	edgeInfos.resize(2*geoInfos.size());
+	
+	//octtree = new OcttreeNode();
+	//octtree->depth =  0;
+	//octtree->id    =  0;
+	//octtree->bbmin =  obj->graph->param.bbmin;
+	//octtree->bbmax =  obj->graph->param.bbmax;
+
 }
 
 void ObjectKey::AddLinks(Constraint* con, const ObjectKey::OptionS& opt){
@@ -203,6 +209,26 @@ void ObjectKey::PrepareGeometry(){
 			info.bbmax[j]  = info.poseAbs.Pos()[j] + dir_local * info.geo->CalcSupport( dir_local);
 		}
 	}
+
+	// update octtree
+	/*
+	static vector<GeometryInfo*> tmp;
+	tmp.resize(geoInfos.size());
+	copy(geoInfos.begin(), geoInfos.end(), tmp.begin());
+	octtree->Assign(tmp);
+	*/
+
+	// calc and sort edges
+	for(int i = 0; i < geoInfos.size(); i++){
+		edgeInfos[2*i+0].geoInfo = &geoInfos[i];
+		edgeInfos[2*i+1].geoInfo = &geoInfos[i];
+		edgeInfos[2*i+0].side    = 0;
+		edgeInfos[2*i+1].side    = 1;
+		edgeInfos[2*i+0].val     = geoInfos[i].bbmin.x;
+		edgeInfos[2*i+1].val     = geoInfos[i].bbmax.x;
+	}
+	sort(edgeInfos.begin(), edgeInfos.end());
+
 }
 
 void ObjectKey::Prepare(){

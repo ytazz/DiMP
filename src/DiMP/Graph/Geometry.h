@@ -100,6 +100,19 @@ public:
 	Triangle(Graph* g, const string& n = "");
 };
 
+class Point : public Geometry{
+public:
+	real_t radius;
+	vec3_t position;
+
+public:
+	virtual void   Draw       (Render::Canvas* canvas, Render::Config* conf);
+	virtual void   CalcBSphere();
+	virtual vec3_t CalcSupport(const vec3_t& dir);
+
+	Point(Graph* g, const string& n = "");
+};
+
 /** mesh
  */
 class Mesh : public Geometry{

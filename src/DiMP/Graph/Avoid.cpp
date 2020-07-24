@@ -14,17 +14,6 @@ namespace DiMP{;
 const real_t inf = numeric_limits<real_t>::max();
 
 //-------------------------------------------------------------------------------------------------
-// GeometryPair
-
-AvoidKey::GeometryPair::GeometryPair(){
-	info0 = 0;
-	info1 = 0;
-	dmin  = inf; 
-	dmax  = inf;
-	dist  = inf;
-}
-
-//-------------------------------------------------------------------------------------------------
 // AvoidKey
 
 AvoidKey::AvoidKey(){
@@ -35,12 +24,14 @@ AvoidKey::AvoidKey(){
 void AvoidKey::AddCon(Solver* solver){
 	AvoidTask* task = (AvoidTask*)node;
 	
-	for(auto& g0 : obj0->geoInfos) for(auto& g1 : obj1->geoInfos){
-		GeometryPair gp;
-		gp.info0 = &g0;
-		gp.info1 = &g1;
-		geoPairs.push_back(gp);
-	}
+	/*int ngeo0 = obj0->geoInfos.size();
+	int ngeo1 = obj1->geoInfos.size();
+	geoPairs.resize(ngeo0 * ngeo1);
+	for(int i0 = 0; i0 < ngeo0; i0++)for(int i1 = 0; i1 < ngeo1; i1++){
+		GeometryPair& gp = geoPairs[ngeo1*i0 + i1];
+		gp.info0 = &obj0->geoInfos[i0];
+		gp.info1 = &obj1->geoInfos[i1];
+	}*/
 	con_p = new AvoidConP(solver, name + "_p", this, 0, node->graph->scale.pos_t);
 	con_v = new AvoidConV(solver, name + "_v", this, 0, node->graph->scale.vel_t);
 	solver->AddCostCon(con_p, tick->idx);
@@ -61,6 +52,7 @@ void AvoidKey::Prepare(){
 	
 	if( relation == Inside ){
 		ptimer.CountUS();
+		int nocttree = 0;
 		int nsphere  = 0;
 		int nbox     = 0;
 		int ngjk     = 0;
@@ -68,8 +60,23 @@ void AvoidKey::Prepare(){
 		GeometryPair* gpmax = 0;
 		real_t        dmax  = 0.0;
 
+		ExtractGeometryPairs(
+			obj0->geoInfos, obj0->edgeInfos,
+			obj1->geoInfos, obj1->edgeInfos,
+			geoPairs);
+
+		DSTR << "geo0: " << obj0->geoInfos.size() << " geo1: " << obj1->geoInfos.size() << " geo pair: " << geoPairs.size() << endl;
+
 		for(int gp_idx = 0; gp_idx < geoPairs.size(); gp_idx++){
 			GeometryPair& gp = geoPairs[gp_idx];
+	
+			// octtreeで判定
+			//if( !gp.info0->octNode->IsAncestor(gp.info1->octNode) ){
+			//	gp.cullOcttree = true;
+			//	nocttree++;
+			//	continue;
+			//}
+
 			// bsphereで判定
 			real_t d    = (gp.info0->bsphereCenterAbs - gp.info1->bsphereCenterAbs).norm();
 			real_t rsum = gp.info0->geo->bsphereRadius + gp.info1->geo->bsphereRadius;
@@ -129,8 +136,11 @@ void AvoidKey::Prepare(){
 
 		int timeGjk = ptimer.CountUS();
 
-		//DSTR << "bsphere: " << nsphere << " bbox: " << nbox << " gjk: " << ngjk << " active: " << nactive << endl;
-		//DSTR << "tgjk: " << timeGjk << endl;
+		DSTR << "bsphere: " << nsphere << " bbox: " << nbox << " gjk: " << ngjk << " active: " << nactive << endl;
+		if(gpmax){
+			DSTR << " dist: " << gpmax->dist << " normal: " << gpmax->normal << endl;
+		}
+		DSTR << "tgjk: " << timeGjk << endl;
 	}
 	else{
 		con_p->active = false;
@@ -174,12 +184,12 @@ void AvoidTask::Prepare(){
 //-------------------------------------------------------------------------------------------------
 // constructors
 
-AvoidCon::AvoidCon(Solver* solver, ID id, AvoidKey* _key, AvoidKey::GeometryPair* _gp, real_t _scale):Constraint(solver, 1, id, _scale){
+AvoidCon::AvoidCon(Solver* solver, ID id, AvoidKey* _key, GeometryPair* _gp, real_t _scale):Constraint(solver, 1, id, _scale){
 	key = _key;
 	gp  = _gp;
 }
 
-AvoidConP::AvoidConP(Solver* solver, const string& _name, AvoidKey* _key, AvoidKey::GeometryPair* _gp, real_t _scale):
+AvoidConP::AvoidConP(Solver* solver, const string& _name, AvoidKey* _key, GeometryPair* _gp, real_t _scale):
 	AvoidCon(solver, ID(ConTag::AvoidP, _key->node, _key->tick, _name), _key, _gp, _scale){
 	// translational, position, scalar constraint
 	ObjectKey::OptionS opt;
@@ -191,7 +201,7 @@ AvoidConP::AvoidConP(Solver* solver, const string& _name, AvoidKey* _key, AvoidK
 	key->obj1->AddLinks(this, opt);
 }
 
-AvoidConV::AvoidConV(Solver* solver, const string& _name, AvoidKey* _key, AvoidKey::GeometryPair* _gp, real_t _scale):
+AvoidConV::AvoidConV(Solver* solver, const string& _name, AvoidKey* _key, GeometryPair* _gp, real_t _scale):
 	AvoidCon(solver, ID(ConTag::AvoidV, _key->node, _key->tick, _name), _key, _gp, _scale){
 	// translational, velocity, scalar constraint
 	ObjectKey::OptionS opt;

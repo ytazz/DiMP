@@ -8,9 +8,13 @@
 
   <sphere name="sphere_target" radius="20"/>
   
+  <!--
   <mesh name="mesh_mockup" scale="0.001" filename="pa10welding/lowlowres/mockup.stl" binary="true" convex="false" collision="true"  mass="false" visual="true"/>
-  <mesh name="mesh_gadai"  scale="0.001" filename="pa10welding/lowlowres/gadai.stl"  binary="true" convex="false" collision="false" mass="false" visual="true"/>
-
+  <mesh name="mesh_mockup" scale="1.0"   filename="pa10welding/mockup_b.pcd"         binary="true" convex="false" points="true" collision="true"  mass="false" visual="true"/>
+  -->
+  <mesh name="mesh_mockup" scale="1.0"   filename="pa10welding/pc_low.pcd"           binary="true" convex="false" points="true" collision="true"  mass="false" visual="true"/>
+  <mesh name="mesh_gadai"  scale="0.001" filename="pa10welding/lowlowres/gadai.stl"  binary="true" convex="false"               collision="false" mass="false" visual="true"/>
+  
   <vmat name="mat_mockup"   colorname="lightgray"     alpha="1.0"/>
   <vmat name="mat_gadai"    colorname="darkturquoise" alpha="1.0"/>
 
@@ -28,7 +32,10 @@
   -->
   
   <body name="body_obstacle0" dynamical="false">
+    <!--
     <connector name="c_mockup" trn="1240 489.5 0" rot="0deg@z"/>
+    -->
+    <connector name="c_mockup" trn="1500 0 -800" rot="0deg@z"/>
     <connector name="c_gadai" />
   </body>
 
@@ -46,7 +53,9 @@
   -->
   
   <attach connector="body_obstacle0/c_mockup" shape="mesh_mockup" vmat="mat_mockup"/>
+  <!--
   <attach connector="body_obstacle0/c_gadai"  shape="mesh_gadai" vmat="mat_gadai"/>
+  -->
 
   <ticks time_begin="0.0" time_end="1.0" time_step="0.1"/>
   <ticks time_begin="1.0" time_end="2.0" time_step="0.1"/>
@@ -67,6 +76,8 @@
   <match name="match2"  obj0="workspace/robot0/body_link12" obj1="workspace/body_target0" timeslot="timeslot3" match_tp="true" match_tv="false" match_rp="false" match_rv="false"/>
   <match name="match3"  obj0="workspace/robot0/body_link12" obj1="workspace/body_target0" timeslot="timeslot4" match_tp="true" match_tv="false" match_rp="false" match_rv="false"/>
   
+  <!--
+  -->
   <avoid name="avoid0"  obj0="workspace/robot0/body_link8"  obj1="workspace/body_obstacle0" timeslot="timeslot1" avoid_p="true" avoid_v="false" dmin="0.01"/>
   <avoid name="avoid1"  obj0="workspace/robot0/body_link8"  obj1="workspace/body_obstacle0" timeslot="timeslot2" avoid_p="true" avoid_v="false" dmin="0.01"/>
   <avoid name="avoid2"  obj0="workspace/robot0/body_link8"  obj1="workspace/body_obstacle0" timeslot="timeslot3" avoid_p="true" avoid_v="false" dmin="0.01"/>
@@ -81,12 +92,13 @@
   <avoid name="avoid9"  obj0="workspace/robot0/body_link10" obj1="workspace/body_obstacle0" timeslot="timeslot2" avoid_p="true" avoid_v="false" dmin="0.01"/>
   <avoid name="avoid10" obj0="workspace/robot0/body_link10" obj1="workspace/body_obstacle0" timeslot="timeslot3" avoid_p="true" avoid_v="false" dmin="0.01"/>
   <avoid name="avoid11" obj0="workspace/robot0/body_link10" obj1="workspace/body_obstacle0" timeslot="timeslot4" avoid_p="true" avoid_v="false" dmin="0.01"/>
-
+  
   <avoid name="avoid12" obj0="workspace/robot0/body_link11" obj1="workspace/body_obstacle0" timeslot="timeslot1" avoid_p="true" avoid_v="false" dmin="0.01"/>
   <avoid name="avoid13" obj0="workspace/robot0/body_link11" obj1="workspace/body_obstacle0" timeslot="timeslot2" avoid_p="true" avoid_v="false" dmin="0.01"/>
   <avoid name="avoid14" obj0="workspace/robot0/body_link11" obj1="workspace/body_obstacle0" timeslot="timeslot3" avoid_p="true" avoid_v="false" dmin="0.01"/>
   <avoid name="avoid15" obj0="workspace/robot0/body_link11" obj1="workspace/body_obstacle0" timeslot="timeslot4" avoid_p="true" avoid_v="false" dmin="0.01"/>
 
+  <!--
   <avoid name="avoid16"  obj0="workspace/robot0/body_link4"  obj1="workspace/body_obstacle0" timeslot="timeslot1" avoid_p="true" avoid_v="false" dmin="0.01"/>
   <avoid name="avoid17"  obj0="workspace/robot0/body_link4"  obj1="workspace/body_obstacle0" timeslot="timeslot2" avoid_p="true" avoid_v="false" dmin="0.01"/>
   <avoid name="avoid18"  obj0="workspace/robot0/body_link4"  obj1="workspace/body_obstacle0" timeslot="timeslot3" avoid_p="true" avoid_v="false" dmin="0.01"/>
@@ -96,20 +108,21 @@
   <avoid name="avoid21"  obj0="workspace/robot0/body_link6"  obj1="workspace/body_obstacle0" timeslot="timeslot2" avoid_p="true" avoid_v="false" dmin="0.01"/>
   <avoid name="avoid22"  obj0="workspace/robot0/body_link6"  obj1="workspace/body_obstacle0" timeslot="timeslot3" avoid_p="true" avoid_v="false" dmin="0.01"/>
   <avoid name="avoid23"  obj0="workspace/robot0/body_link6"  obj1="workspace/body_obstacle0" timeslot="timeslot4" avoid_p="true" avoid_v="false" dmin="0.01"/>
-
+  -->
+  
   <scaling T="1.0" L="1.0" M="1.0"/>
 
   <enable  id="object_c1t"     enable="false"/>
   <enable  id="object_c1r"     enable="false"/>
-  <enable  id="joint_c0p"      enable="true"/>
+  <enable  id="joint_c0p"      enable="true" />
   <enable  id="joint_c0v"      enable="false"/>
   <enable  id="joint_c1p"      enable="false"/>
   <enable  id="joint_f"        enable="false"/>
   <enable  id="joint_range_p"  enable="false"/>
   <enable  id="joint_range_v"  enable="true"/>
   <enable  id="joint_range_f"  enable="false"/>
-  <enable  id="joint_tp"       enable="false" />
-  <enable  id="joint_rp"       enable="false" />
+  <enable  id="joint_tp"       enable="false"/>
+  <enable  id="joint_rp"       enable="false"/>
   <enable  id="joint_tv"       enable="false"/>
   <enable  id="joint_rv"       enable="false"/>
   <enable  id="force_t"        enable="false"/>
@@ -118,11 +131,11 @@
   <enable  id="match_tv"       enable="false"/>
   <enable  id="match_rp"       enable="false"/>
   <enable  id="match_rv"       enable="false"/>
-  <enable  id="avoid_p"        enable="false" />
-  <enable  id="avoid_v"        enable="false" />
+  <enable  id="avoid_p"        enable="true" />
+  <enable  id="avoid_v"        enable="false"/>
   
   <correction rate="0.5"/>
-  <correction rate="0.5" id="joint_range_dp"/>
+  <correction rate="0.5" id="joint_range_v"/>
 
   <param name="max_step_size"    value="1.0" />
   <param name="min_step_size"    value="1.0"/>
@@ -137,9 +150,9 @@
   <constraint_weight weight="0.1" id="joint_range_v"/>
   <!--
   <variable_weight   weight="0.1"/>
-  <param name="method_major"    value="gauss_newton"/>
-  -->
   <param name="method_major"    value="ddp"/>
+  -->
+  <param name="method_major"    value="gauss_newton"/>
   <param name="method_minor"    value="direct"/>
   <param name="verbose"         value="true"/>
 </namespace>

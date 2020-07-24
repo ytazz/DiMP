@@ -41,6 +41,7 @@ const char* VarNames[] = {
 	"centroid_com_vel_t",
 	"centroid_com_vel_r",
 	"centroid_end_pos_t",
+	"centroid_vel"      ,
 	"centroid_force"
 };
 
@@ -53,7 +54,6 @@ const char* ConNames[] = {
 	"joint_c1p"          ,
 	"joint_f"            ,
 	"joint_range_p"      ,
-	//"joint_range_dp"     ,
 	"joint_range_v"      ,
 	"joint_range_f"      ,
 	"joint_tp"           ,
@@ -89,6 +89,8 @@ const char* ConNames[] = {
 	"biped_time"         
 };
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
 Graph::Scale::Scale(){
 	Set(1.0, 1.0, 1.0);
 }
@@ -112,6 +114,15 @@ void Graph::Scale::Set(real_t T, real_t L, real_t M){
 	force_r = (M*L*L)/(T*T);	force_r_inv = 1.0 / force_r;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+Graph::Param::Param(){
+	gravity      = vec3_t( 0.0,  0.0,  0.0);
+	bbmin        = vec3_t(-1.0, -1.0, -1.0);
+	bbmax        = vec3_t( 1.0,  1.0,  1.0);
+	octtreeDepth = 8;
+}
+
 //////////////////////////////////////////////////////////////////////////////////////
 
 Graph::Graph(){
@@ -128,6 +139,7 @@ void Graph::SetScaling(real_t T, real_t L, real_t M){
 
 void Graph::Init(){
 	//omp_set_num_threads(1);
+
 	sort(nodes    .begin(), nodes    .end(), Node::CompareByType());
 	sort(trajNodes.begin(), trajNodes.end(), Node::CompareByType());
 	

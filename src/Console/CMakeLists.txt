@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.8.12) # Default version on Ubuntu 14.04
 
+find_package(glwin)
+
 add_library(console
 	module/manager.cpp
 	module/module.cpp
@@ -7,4 +9,6 @@ add_library(console
 	module/request.cpp
 	module/simulation.cpp
 )
+target_link_libraries(console glwin)
+target_link_libraries(console Scenebuilder)
 

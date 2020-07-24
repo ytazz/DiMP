@@ -2,7 +2,7 @@
 
 #include <DiMP/Graph/Node.h>
 #include <DiMP/Graph/Connector.h>
-//#include <DiMP/Solver/Constraint.h>
+#include <DiMP/Graph/Octtree.h>
 #include <DiMP/Render/Canvas.h>
 #include <DiMP/Render/Config.h>
 
@@ -15,6 +15,7 @@ class  TreeKey;
 class  Joint;
 class  JointKey;
 class  Geometry;
+class  OcttreeNode;
 
 class  ForceConT;
 class  ForceConR;
@@ -23,16 +24,6 @@ class  ObjectConC1R;
 /**
 	object (rigid body)
  */
-
-class GeometryInfo{
-public:
-	Connector* con;
-	Geometry*  geo;
-	pose_t     poseAbs;
-	vec3_t     bsphereCenterAbs;
-	vec3_t     bbmin;
-	vec3_t     bbmax;
-};
 
 class ObjectKey : public Keypoint{
 public:
@@ -49,7 +40,10 @@ public:
 	JointKeys	joints;		///< 接続しているJointのKeypoint, ソケット側true
 	TreeKey*	tree;
 
-	vector<GeometryInfo>  geoInfos;
+	GeometryInfos  geoInfos;
+	EdgeInfos      edgeInfos;
+
+	//UTRef<OcttreeNode>             octtree;
 
 	/// variables
 	V3Var*		pos_t;				///< position

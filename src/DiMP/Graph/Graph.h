@@ -3,6 +3,7 @@
 #include <DiMP/Graph/ID.h>
 #include <DiMP/Graph/Node.h>
 #include <DiMP/Graph/Tree.h>
+#include <DiMP/Graph/Geometry.h>
 #include <DiMP/Graph/Connector.h>
 #include <DiMP/Render/Canvas.h>
 #include <DiMP/Render/Config.h>
@@ -33,11 +34,12 @@ class Graph : public UTRefCount{
 public:
 	/// physical parameters
 	struct Param{
-		vec3_t			gravity;		///< gravity
+		vec3_t	 gravity;  ///< gravity
+		vec3_t   bbmin;    ///< range of global bounding box
+		vec3_t   bbmax;
+		int      octtreeDepth;
 
-		Param(){
-			gravity   = vec3_t(0.0, 0.0, 0.0);
-		}
+		Param();
 	};
 
 	/// scaling factors
@@ -79,7 +81,7 @@ public:
 	Geometries		geos;			///< geometries
 	TimeSlots		timeslots;		///< time slots
 	Tasks			tasks;			///< tasks
-	
+
 	UTRef<Solver>	       solver;	///< internal solver
 	UTRef<Render::Config>  conf;	///< default draw configuration
 

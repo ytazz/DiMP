@@ -8,6 +8,7 @@
   <gravity accel="0 0 0"/>
 
   <vmat name="mat_body"  colorname="darkturquoise"/>
+  <vmat name="mat_body2"  colorname="magenta"/>
   <vmat name="mat_cover" colorname="white"/>
 
   <!--
@@ -165,18 +166,18 @@
   <attach connector="body_link5/c_cylinder_e2_3" shape="cylinder_e2"   vmat="mat_body"/>
   <attach connector="body_link6/c_cylinder_w1"   shape="cylinder_w1"   vmat="mat_body"/>
   <attach connector="body_link7/c_sphere_w2"     shape="sphere_w2"     vmat="mat_body"/>
-  <attach connector="body_link8/c_cylinder_y1_1" shape="cylinder_y1_1" vmat="mat_body"/>
-  <attach connector="body_link8/c_cylinder_y1_2" shape="cylinder_y1_2" vmat="mat_body"/>
-  <attach connector="body_link8/c_box_y1"        shape="box_y1"        vmat="mat_body"/>
-  <attach connector="body_link8/c_capsule_y1_1"  shape="capsule_y1_1"  vmat="mat_body"/>
-  <attach connector="body_link8/c_capsule_y1_2"  shape="capsule_y1_2"  vmat="mat_body"/>
-  <attach connector="body_link8/c_capsule_y1_3"  shape="capsule_y1_3"  vmat="mat_body"/>
-  <attach connector="body_link8/c_capsule_y1_4"  shape="capsule_y1_4"  vmat="mat_body"/>
-  <attach connector="body_link9/c_sphere_y2"     shape="sphere_y2"     vmat="mat_body"/>
-  <attach connector="body_link10/c_box_y3_1"     shape="box_y3_1"      vmat="mat_body"/>
-  <attach connector="body_link10/c_box_y3_2"     shape="box_y3_2"      vmat="mat_body"/>
-  <attach connector="body_link11/c_box_y4"       shape="box_y4"        vmat="mat_body"/>
-  <attach connector="body_link11/c_capsule_y4"   shape="capsule_y4"    vmat="mat_body"/>
+  <attach connector="body_link8/c_cylinder_y1_1" shape="cylinder_y1_1" vmat="mat_body2"/>
+  <attach connector="body_link8/c_cylinder_y1_2" shape="cylinder_y1_2" vmat="mat_body2"/>
+  <attach connector="body_link8/c_box_y1"        shape="box_y1"        vmat="mat_body2"/>
+  <attach connector="body_link8/c_capsule_y1_1"  shape="capsule_y1_1"  vmat="mat_body2"/>
+  <attach connector="body_link8/c_capsule_y1_2"  shape="capsule_y1_2"  vmat="mat_body2"/>
+  <attach connector="body_link8/c_capsule_y1_3"  shape="capsule_y1_3"  vmat="mat_body2"/>
+  <attach connector="body_link8/c_capsule_y1_4"  shape="capsule_y1_4"  vmat="mat_body2"/>
+  <attach connector="body_link9/c_sphere_y2"     shape="sphere_y2"     vmat="mat_body2"/>
+  <attach connector="body_link10/c_box_y3_1"     shape="box_y3_1"      vmat="mat_body2"/>
+  <attach connector="body_link10/c_box_y3_2"     shape="box_y3_2"      vmat="mat_body2"/>
+  <attach connector="body_link11/c_box_y4"       shape="box_y4"        vmat="mat_body2"/>
+  <attach connector="body_link11/c_capsule_y4"   shape="capsule_y4"    vmat="mat_body2"/>
 
   <hinge    name="joint0"  sock="body_link0/sock"  plug="body_link1/plug"  pos="0.0deg" range="-180deg 180deg"/>
   <hinge    name="joint1"  sock="body_link1/sock"  plug="body_link2/plug"  pos="0.0deg" range="-90deg   90deg"/>

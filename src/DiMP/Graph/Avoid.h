@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <DiMP/Graph/Task.h>
+#include <DiMP/Graph/Octtree.h>
 //#include <DiMP/Solver/Constraint.h>
 
 /** Collision avoidance
@@ -12,31 +13,13 @@ namespace DiMP{;
 class Connector;
 class Geometry;
 class GeometryInfo;
+class GeometryPair;
 class AvoidTask;
 class AvoidConP;
 class AvoidConV;
 
 class AvoidKey : public TaskKey{
 public:
-	struct GeometryPair{
-		GeometryInfo* info0;
-		GeometryInfo* info1;
-		real_t        dmin;   //< distance lower bound 
-		real_t        dmax;   //< distance upper bound
-		real_t        dist;   //< distance between objects: dist > 0 if apart, dist < 0 if intersect
-		vec3_t        sup0;   //< nearest point
-		vec3_t        sup1;
-		vec3_t        normal; //< contact normal
-		bool          cullSphere;  //< culled by bsphere
-		bool          cullBox;     //< culled by bbox
-		bool          cullGjk;     //< culled by gjk
-
-		//AvoidConP*	  con_p;
-		//AvoidConV*	  con_v;
-
-		GeometryPair();
-	};
-	typedef vector<GeometryPair> GeometryPairs;
 	GeometryPairs geoPairs;
 
 	AvoidConP*	  con_p;
@@ -71,9 +54,9 @@ public:
 class AvoidCon : public Constraint{
 public:
 	AvoidKey*  key;
-	AvoidKey::GeometryPair* gp;
+	GeometryPair* gp;
 
-	AvoidCon(Solver* solver, ID id, AvoidKey* _key, AvoidKey::GeometryPair* _gp, real_t _scale);
+	AvoidCon(Solver* solver, ID id, AvoidKey* _key, GeometryPair* _gp, real_t _scale);
 	virtual ~AvoidCon(){}
 };
 
@@ -83,7 +66,7 @@ public:
 	virtual void CalcDeviation();
 	virtual void Project(real_t& l, uint k);
 
-	AvoidConP(Solver* solver, const string& _name, AvoidKey* _key, AvoidKey::GeometryPair* _gp, real_t _scale);
+	AvoidConP(Solver* solver, const string& _name, AvoidKey* _key, GeometryPair* _gp, real_t _scale);
 	virtual ~AvoidConP(){}
 };
 
@@ -93,7 +76,7 @@ public:
 	virtual void CalcDeviation();
 	virtual void Project(real_t& l, uint k);
 
-	AvoidConV(Solver* solver, const string& _name, AvoidKey* _key, AvoidKey::GeometryPair* _gp, real_t _scale);
+	AvoidConV(Solver* solver, const string& _name, AvoidKey* _key, GeometryPair* _gp, real_t _scale);
 	virtual ~AvoidConV(){}
 };
 

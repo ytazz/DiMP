@@ -336,5 +336,5 @@ void Loader::LoadParam(XMLNode* node, Graph* graph){
 		node->Get(graph->solver->param.cutoffStepSize, ".value");
 	}
 }
-
+	
 }

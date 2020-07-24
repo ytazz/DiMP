@@ -28,7 +28,7 @@ public:
 	void LoadConstraintWeight(XMLNode* node, Graph* graph);
 	void LoadVariableWeight  (XMLNode* node, Graph* graph);
 	void LoadParam           (XMLNode* node, Graph* graph);
-	
+
 	Loader();
 };
 

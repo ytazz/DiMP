@@ -167,8 +167,9 @@ bool MyModule::Build() {
 		avoidTask.push_back((DiMP::AvoidTask*)task);
 	}
 
-	adaptorSprGR.ShowSolid(true);
-	adaptorSprGR.ShowWireframe(true);
+	adaptorSprGR.ShowSolid     (true);
+	adaptorSprGR.ShowWireframe (true);
+	adaptorSprGR.ShowPointcloud(true);
 
 	// Init‘O‚Ìˆ—
 	if (sceneSelect == Welding) {
@@ -183,10 +184,10 @@ bool MyModule::Build() {
 		}
 
 		//// ’á—Dæ“x‚ÅŠÖß‘¬“x‚ð0‚É‚·‚é
-		//for (DiMP::Joint* jnt : robot[0]->joint) {
-		//	jnt->param.rmin_dp[0] = 0.0;
-		//	jnt->param.rmax_dp[0] = 0.0;
-		//}
+		for (DiMP::Joint* jnt : robot[0]->joint) {
+			jnt->param.rmin_v[0] = 0.0;
+			jnt->param.rmax_v[0] = 0.0;
+		}
 
 		// —nÚ“_—ñ‚ð“Ç‚Ýž‚Ý
 		CsvReader csv;
@@ -211,8 +212,6 @@ bool MyModule::Build() {
 	}
 
 	// ‰Šú‰»
-	graph->Init();
-	graph->Clear();
 	graph->Init();
 
 	// InitŒã‚Ìˆ—
@@ -425,10 +424,10 @@ bool MyModule::Set(DiMP::Render::Canvas* canvas, int attr, DiMP::Node* node){
 	if(attr == DiMP::Render::Item::Avoid){
 		canvas->SetLineColor("red");
 		canvas->SetLineWidth(1);
-		return false;
+		return true;
 	}
 	if(attr == DiMP::Render::Item::Geometry){
-		canvas->SetLineColor("blue", 0, 0.5f);
+		canvas->SetLineColor("blue", 0, 0.1f);
 		canvas->SetLineWidth(1);
 		return true;
 	}

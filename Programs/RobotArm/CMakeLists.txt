@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 2.8.12) # Default version on Ubuntu 14.04
 
+find_package(glwin)
+find_package(sbdimp)
+find_package(sbsprgraphics)
+
 set_property(GLOBAL PROPERTY USE_FOLDERS ON) 
 set(CONF_FILES
 	../../bin/conf/robotarm/setting.xml
@@ -29,16 +33,11 @@ set_target_properties(RobotArm PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY    ${BIN
 target_link_libraries(RobotArm console)
 target_link_libraries(RobotArm debug     ${SPRINGHEAD_LIBRARY_DEBUG})
 target_link_libraries(RobotArm optimized ${SPRINGHEAD_LIBRARY_RELEASE})
-target_link_libraries(RobotArm debug     ${GLWIN_LIBRARY_DEBUG})
-target_link_libraries(RobotArm optimized ${GLWIN_LIBRARY_RELEASE})
-target_link_libraries(RobotArm debug     ${DIMP_LIBRARY_DEBUG})
-target_link_libraries(RobotArm optimized ${DIMP_LIBRARY_RELEASE})
-target_link_libraries(RobotArm debug     ${SCENEBUILDER_LIBRARY_DEBUG})
-target_link_libraries(RobotArm optimized ${SCENEBUILDER_LIBRARY_RELEASE})
-target_link_libraries(RobotArm debug     ${SCENEBUILDER_DIMP_LIBRARY_DEBUG})
-target_link_libraries(RobotArm optimized ${SCENEBUILDER_DIMP_LIBRARY_RELEASE})
-target_link_libraries(RobotArm debug     ${SCENEBUILDER_SPRGRAPHICS_LIBRARY_DEBUG})
-target_link_libraries(RobotArm optimized ${SCENEBUILDER_SPRGRAPHICS_LIBRARY_RELEASE})
+target_link_libraries(RobotArm glwin)
+target_link_libraries(RobotArm dimp)
+target_link_libraries(RobotArm Scenebuilder)
+target_link_libraries(RobotArm sbdimp)
+target_link_libraries(RobotArm sbsprgraphics)
 target_link_libraries(RobotArm           ${EXPAT_LIBRARIES})
 target_link_libraries(RobotArm           ${LAPACK_LIBRARIES})
 #target_link_libraries(RobotArm lapacke)

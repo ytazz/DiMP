@@ -57,7 +57,6 @@ struct ConTag{
 		JointC1P,			///< C^1 continuity of joint position
 		JointF,				///< mapping between joint torque and joint force/moment
 		JointRangeP,		///< joint position range
-		//JointRangeDP,		///< joint position change range
 		JointRangeV,		///< joint velocity range
 		JointRangeF,		///< joint force range
 		JointTP,			///< kinematic constraint : position
@@ -70,8 +69,6 @@ struct ConTag{
 		ContactV,			///< contact: velocity
 		ContactFN,			///< contact: normal force
 		ContactFT,			///< contact: tangential force
-		//ContactPF,			///< contact: complementarity between position and force
-		//ContactVF,			///< contact: complementarity between velocity and force
 		TimeStartRange,		///< task starting time range
 		TimeEndRange,		///< task ending time range
 		TimeDurationRange,	///< task duration range

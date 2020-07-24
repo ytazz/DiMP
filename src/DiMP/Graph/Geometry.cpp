@@ -191,6 +191,31 @@ void Triangle::Draw(Render::Canvas* canvas, Render::Config* conf){
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+Point::Point(Graph* g, const string& n):Geometry(g, n){
+	radius = 0.0;
+}
+
+void Point::CalcBSphere(){
+	bsphereCenter = position;
+	bsphereRadius = radius;
+}
+
+vec3_t Point::CalcSupport(const vec3_t& dir){
+	const real_t eps = 1.0e-10;
+	real_t dnorm = dir.norm();
+	if(dnorm < eps)
+		return radius * vec3_t(1.0, 0.0, 0.0);
+
+	return position + (radius/dnorm) * dir;
+	//return position;
+}
+
+void Point::Draw(Render::Canvas* canvas, Render::Config* conf){
+
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
 Mesh::Mesh(Graph* g, const string& n):Geometry(g, n){
 	ntheta = 50;
 	nphi   = 50;
@@ -258,6 +283,23 @@ void Mesh::Draw(Render::Canvas* canvas, Render::Config* conf){
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+/*Pointcloud::Pointcloud(Graph* g, const string& n):Geometry(g, n){
+}
+
+void Pointcloud::CalcBSphere(){
+
+}
+
+vec3_t Pointcloud::CalcSupport(const vec3_t& dir){
+	return vec3_t();
+}
+
+void Pointcloud::Draw(Render::Canvas* canvas, Render::Config* conf){
+}*/
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
 /* 
 def func(Sd, o)
   oをSdを含む部分空間に射影 -> p
