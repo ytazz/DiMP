@@ -5,27 +5,29 @@
 #include <DiMP/Graph/Tree.h>
 #include <DiMP/Graph/Geometry.h>
 #include <DiMP/Graph/Connector.h>
+#include <DiMP/Graph/Octtree.h>
 #include <DiMP/Render/Canvas.h>
 #include <DiMP/Render/Config.h>
 
 namespace DiMP{;
 
-class Geometry;
-class TimeSlot;
-class Object  ;
-class BipedLIP;
-class Centroid;
-class Joint   ;
-class Task    ;
+class Geometry ;
+class TimeSlot ;
+class Object   ;
+class BipedLIP ;
+class Centroid ;
+class Joint    ;
+class Task     ;
+class AvoidTask;
 
-typedef ArrayBase<Geometry *>  Geometries;
-typedef ArrayBase<TimeSlot *>  TimeSlots ;
-typedef ArrayBase<Object   *>  Objects   ;
-typedef ArrayBase<Connector*>  Connectors;
-typedef ArrayBase<BipedLIP *>  Bipeds    ;
-typedef ArrayBase<Centroid *>  Centroids ;
-typedef ArrayBase<Joint    *>  Joints    ;
-typedef ArrayBase<Task     *>  Tasks     ;
+typedef NodeArray<Geometry >  Geometries;
+typedef NodeArray<TimeSlot >  TimeSlots ;
+typedef NodeArray<Object   >  Objects   ;
+typedef NodeArray<BipedLIP >  Bipeds    ;
+typedef NodeArray<Centroid >  Centroids ;
+typedef NodeArray<Joint    >  Joints    ;
+typedef NodeArray<Task     >  Tasks     ;
+typedef NodeArray<AvoidTask>  Avoids    ;
 
 /**
 	graph structure expressing a Multi-body System
@@ -35,9 +37,9 @@ public:
 	/// physical parameters
 	struct Param{
 		vec3_t	 gravity;  ///< gravity
-		vec3_t   bbmin;    ///< range of global bounding box
-		vec3_t   bbmax;
-		int      octtreeDepth;
+		//vec3_t   bbmin;    ///< range of global bounding box
+		//vec3_t   bbmax;
+		//int      octtreeDepth;
 
 		Param();
 	};
@@ -68,7 +70,7 @@ public:
 	bool			ready;				///< ready flag
 
 	/// nodes of different types
-	NodeArray            nodes;
+	NodeArray<Node>      nodes;
 	TrajectoryNodeArray  trajNodes;
 
 	Ticks			ticks;			///< ticks
@@ -81,6 +83,7 @@ public:
 	Geometries		geos;			///< geometries
 	TimeSlots		timeslots;		///< time slots
 	Tasks			tasks;			///< tasks
+	Avoids          avoids;         ///< avoid tasks
 
 	UTRef<Solver>	       solver;	///< internal solver
 	UTRef<Render::Config>  conf;	///< default draw configuration
@@ -88,6 +91,7 @@ public:
 	Param		 param;
 	Scale		 scale;
 	
+	void ExtractGeometryPairs();
 	void Prepare();
 	void Finish ();
 

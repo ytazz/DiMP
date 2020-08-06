@@ -41,7 +41,7 @@ public:
 	TreeKey*	tree;
 
 	GeometryInfos  geoInfos;
-	EdgeInfos      edgeInfos;
+	EdgeInfos      edgeInfos[3];
 
 	//UTRef<OcttreeNode>             octtree;
 
@@ -85,16 +85,18 @@ public:
 	struct Param{
 		real_t			mass;			///< mass
 		real_t			inertia;		///< inertia (approximated as a scalar)
-		bool			dynamical;		///<
+		bool			dynamical;		///< not affected by force
+		bool            stationary;     ///< does not move
 		vec3_t			iniPos;
 		quat_t			iniOri;
 		vec3_t			iniVel;
 		vec3_t			iniAngvel;
 
 		Param(){
-			mass      = 1.0;
-			inertia   = 1.0;
-			dynamical = true;
+			mass       = 1.0;
+			inertia    = 1.0;
+			dynamical  = true;
+			stationary = false;
 		}
 	};
 
@@ -113,9 +115,12 @@ public:
 	Connectors	cons;
 
 	real_t		bsphere;		///< bounding sphere radius
+	//EdgeInfos   edgeInfos[3];   ///< edge infos for all keypoints merged in x,y,z
 
 	Tree*		tree;			///< a tree this object belongs to
 	int         treeIndex;      ///< index of this object in the tree
+
+	int         objIndex;       ///< serial id of this object
 
 public:	
 	void	CalcBSphere();

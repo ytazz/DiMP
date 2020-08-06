@@ -1,10 +1,15 @@
 ﻿#include <DiMP/Graph/Graph.h>
 #include <DiMP/Graph/Object.h>
 #include <DiMP/Graph/Joint.h>
+#include <DiMP/Graph/Avoid.h>
 #include <DiMP/Render/Config.h>
 #include <DiMP/Render/Canvas.h>
 
 #include <Foundation/UTQPTimer.h>
+
+#include <set>
+#include <unordered_map>
+using namespace std;
 
 #include <omp.h>
 
@@ -118,9 +123,9 @@ void Graph::Scale::Set(real_t T, real_t L, real_t M){
 
 Graph::Param::Param(){
 	gravity      = vec3_t( 0.0,  0.0,  0.0);
-	bbmin        = vec3_t(-1.0, -1.0, -1.0);
-	bbmax        = vec3_t( 1.0,  1.0,  1.0);
-	octtreeDepth = 8;
+	//bbmin        = vec3_t(-1.0, -1.0, -1.0);
+	//bbmax        = vec3_t( 1.0,  1.0,  1.0);
+	//octtreeDepth = 8;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -171,7 +176,9 @@ void Graph::Clear(){
 	trajNodes.clear();
 	ticks    .clear();
 	objects  .clear();
+	cons     .clear();
 	bipeds   .clear();
+	centroids.clear();
 	trees    .clear();
 	joints   .clear();
 	geos     .clear();
@@ -186,7 +193,218 @@ void Graph::Reset(){
 }
 
 void Graph::Prepare(){
-	nodes.Prepare();
+	objects  .Prepare();
+	cons     .Prepare();
+	bipeds   .Prepare();
+	centroids.Prepare();
+	trees    .Prepare();
+	joints   .Prepare();
+	geos     .Prepare();
+	timeslots.Prepare();
+
+	ExtractGeometryPairs();
+
+	tasks    .Prepare();
+
+	//nodes.Prepare();
+}
+
+struct GPTableEntry{
+	GeometryInfo* info[2];
+	uint8_t       intersect;
+
+	GPTableEntry(){
+		info[0]   = 0;
+		info[1]   = 0;
+		intersect = 0;
+	}
+};
+
+template<typename T>
+class Table : public vector<T>{
+public:
+	int nrow;
+	int ncol;
+
+	void Resize(int _nrow, int _ncol, T _val = T()){
+		resize(_nrow*_ncol, _val);
+		nrow = _nrow;
+		ncol = _ncol;
+	}
+
+	T& operator()(int r, int c){
+		return at(ncol*r + c);
+	}
+};
+
+class GPTable : public Table<GPTableEntry>{
+
+};
+
+class AvoidTable : public Table<AvoidTask*>{
+
+};
+
+void Graph::ExtractGeometryPairs(){
+	static Spr::UTQPTimer timer2;
+
+	static EdgeInfos                       edgeInfos[3];   ///< edge infos of all objects in x,y,z
+	static AvoidTable                      avoidTable;
+	static vector< set<GeometryInfo*> >    queue[3];
+	static GPTable                         gpTable;
+	
+	// create table
+	int nobj = objects.size();
+	if(avoidTable.empty()){
+		// assign serial index to objects
+		for(int i = 0; i < nobj; i++){
+			objects[i]->objIndex = i;
+		}
+
+		int geoIndex[2] = {0, 0};
+
+		avoidTable.Resize(nobj, nobj, (AvoidTask*)0);
+		for(AvoidTask* avoid : avoids){
+			// register avoid to table
+			avoidTable(avoid->obj0->objIndex, avoid->obj1->objIndex) = avoid;
+
+			// assign serial index to geoinfos
+			for(Tick* tick : ticks){
+				ObjectKey* key0 = (ObjectKey*)avoid->obj0->traj.GetKeypoint(tick);
+				ObjectKey* key1 = (ObjectKey*)avoid->obj1->traj.GetKeypoint(tick);
+
+				for(GeometryInfo& geo0 : key0->geoInfos){
+					if(geo0.geoIndex[0] == -1)
+						geo0.geoIndex[0] = geoIndex[0]++;
+				}
+				for(GeometryInfo& geo1 : key1->geoInfos){
+					if(geo1.geoIndex[1] == -1)
+						geo1.geoIndex[1] = geoIndex[1]++;
+				}
+
+			}
+		}
+		gpTable.Resize(geoIndex[0], geoIndex[1]);
+	}
+	
+	timer2.CountUS();
+	// for each dimension: merge edgeinfos of all objects and ticks, and sort it
+	for(int dir = 0; dir < 3; dir++){
+		edgeInfos[dir].clear();
+		for(Object* obj : objects){
+			for(Tick* tick : ticks){
+				ObjectKey* key = (ObjectKey*)obj->traj.GetKeypoint(tick);
+				edgeInfos[dir].insert(edgeInfos[dir].end(), key->edgeInfos[dir].begin(), key->edgeInfos[dir].end());
+			}
+		}
+		sort(edgeInfos[dir].begin(), edgeInfos[dir].end());
+	}
+	int timeSort = timer2.CountUS();
+	
+	int szmax = 0;
+	
+	// sweep sorted edge info and mark candidate geopairs in the table
+	timer2.CountUS();
+	int numInt[3] = {0, 0, 0};
+	// reset table
+	for(GPTableEntry& gp : gpTable)
+		gp.intersect = 0;
+
+	for(int dir = 0; dir < 3; dir++){
+		queue[dir].resize(nobj);
+		for(int i = 0; i < nobj; i++)
+			queue[dir][i].clear();
+
+		for(vector<EdgeInfo>::iterator it = edgeInfos[dir].begin(); it != edgeInfos[dir].end(); it++){
+			EdgeInfo& e = *it;
+			//DSTR << e.val << " " << e.side << endl;
+
+			GeometryInfo* geo0 = e.geoInfo;
+			Object*       obj0 = geo0->con->obj;
+			if(e.side == 0){	
+				for(int i = 0; i < nobj; i++){
+					Object* obj1 = objects[i];
+
+					AvoidTask* avoid[2];
+					avoid[0] = avoidTable(obj0->objIndex, obj1->objIndex);
+					avoid[1] = avoidTable(obj1->objIndex, obj0->objIndex);
+					if(!avoid[0] && !avoid[1])
+						continue;
+
+					for(GeometryInfo* geo1 : queue[dir][i]){
+						// geos should be associated with the same tick
+						// or either object should be stationary
+						if( !obj0->param.stationary &&
+							!obj1->param.stationary &&
+							geo0->tick != geo1->tick )
+							continue;
+
+						if(avoid[0]){
+							GPTableEntry& gp = gpTable(geo0->geoIndex[0], geo1->geoIndex[1]);
+							gp.info[0] = geo0;
+							gp.info[1] = geo1;
+							gp.intersect |= (1 << dir);
+							numInt[dir]++;
+						}
+						if(avoid[1]){
+							GPTableEntry& gp = gpTable(geo1->geoIndex[0], geo0->geoIndex[1]);
+							gp.info[0] = geo1;
+							gp.info[1] = geo0;
+							gp.intersect |= (1 << dir);
+							numInt[dir]++;
+						}
+					}
+				}
+
+				queue[dir][obj0->objIndex].insert(e.geoInfo);
+				szmax = std::max(szmax, (int)queue[dir][obj0->objIndex].size());
+			}
+			else{
+				queue[dir][obj0->objIndex].erase(e.geoInfo);
+			}
+		}
+	}
+	int timeEnum = timer2.CountUS();
+
+	timer2.CountUS();
+
+	for(AvoidTask* avoid : avoids){
+		for(Tick* tick : ticks){
+			AvoidKey* key = (AvoidKey*)avoid->traj.GetKeypoint(tick);
+			key->geoPairs.clear();
+		}
+	}
+
+	int numIntAll = 0;
+	for(GPTableEntry& gp : gpTable){
+		if( gp.intersect != 0b111 )
+			continue;
+
+		GeometryInfo* geo0 = gp.info[0];
+		GeometryInfo* geo1 = gp.info[1];
+		Object*       obj0 = geo0->con->obj;
+		Object*       obj1 = geo1->con->obj;
+		Tick* tick = (!obj0->param.stationary ? geo0->tick : geo1->tick);
+	
+		AvoidTask* avoid = avoidTable(obj0->objIndex, obj1->objIndex);
+		AvoidKey*  key   = (AvoidKey*)avoid->traj.GetKeypoint(tick);
+		
+		GeometryPair geoPair;
+		geoPair.info0 = geo0;
+		geoPair.info1 = geo1;
+		key->geoPairs.push_back(geoPair);
+
+		numIntAll++;
+	}
+	int timeInt = timer2.CountUS();
+
+	DSTR << " tsort: "    << timeSort
+		 << " tenum: "    << timeEnum 
+		 << " tint: "     << timeInt
+		 << " queuemax: " << szmax
+		 << " numint: " << numInt[0] << " " << numInt[1] << " " << numInt[2] << " " << numIntAll
+		 << endl;
+
 }
 
 void Graph::Finish(){

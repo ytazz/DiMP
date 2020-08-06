@@ -47,8 +47,8 @@ public:
 	virtual Keypoint*	CreateKeypoint(){ return new AvoidKey(); }
 	virtual void Prepare();
 	
-	AvoidTask(Object* _obj0, Object* _obj1, TimeSlot* _time, const string& n);
-
+	 AvoidTask(Object* _obj0, Object* _obj1, TimeSlot* _time, const string& n);
+	~AvoidTask();
 };
 
 class AvoidCon : public Constraint{

@@ -9,10 +9,13 @@
   <sphere name="sphere_target" radius="20"/>
   
   <!--
-  <mesh name="mesh_mockup" scale="0.001" filename="pa10welding/lowlowres/mockup.stl" binary="true" convex="false" collision="true"  mass="false" visual="true"/>
   <mesh name="mesh_mockup" scale="1.0"   filename="pa10welding/mockup_b.pcd"         binary="true" convex="false" points="true" collision="true"  mass="false" visual="true"/>
-  -->
+  <mesh name="mesh_mockup" scale="1.0"   filename="pa10welding/pc_very_high.pcd"           binary="true" convex="false" points="true" collision="true"  mass="false" visual="true"/>
   <mesh name="mesh_mockup" scale="1.0"   filename="pa10welding/pc_low.pcd"           binary="true" convex="false" points="true" collision="true"  mass="false" visual="true"/>
+  <mesh name="mesh_mockup" scale="1.0"   filename="pa10welding/pc_mid.pcd"           binary="true" convex="false" points="true" collision="true"  mass="false" visual="true"/>
+  <mesh name="mesh_mockup" scale="0.001" filename="pa10welding/lowlowres/mockup.stl" binary="true" convex="false" collision="true"  mass="false" visual="true"/>
+  -->
+  <mesh name="mesh_mockup" scale="1.0"   filename="pa10welding/pc_high.pcd"           binary="true" convex="false" points="true" collision="true"  mass="false" visual="true"/>
   <mesh name="mesh_gadai"  scale="0.001" filename="pa10welding/lowlowres/gadai.stl"  binary="true" convex="false"               collision="false" mass="false" visual="true"/>
   
   <vmat name="mat_mockup"   colorname="lightgray"     alpha="1.0"/>
@@ -31,7 +34,7 @@
   <body name="body_target9" dynamical="false" trn="1038     32.1  555.4" rot="125.9deg@z*-82.3deg@y*50.6deg@x" ><connector name="0"/></body>
   -->
   
-  <body name="body_obstacle0" dynamical="false">
+  <body name="body_obstacle0" dynamical="false" stationary="true">
     <!--
     <connector name="c_mockup" trn="1240 489.5 0" rot="0deg@z"/>
     -->
@@ -150,9 +153,10 @@
   <constraint_weight weight="0.1" id="joint_range_v"/>
   <!--
   <variable_weight   weight="0.1"/>
-  <param name="method_major"    value="ddp"/>
-  -->
   <param name="method_major"    value="gauss_newton"/>
+  -->
+  <param name="method_major"    value="ddp"/>
   <param name="method_minor"    value="direct"/>
   <param name="verbose"         value="true"/>
+  <param name="regularization"  value="0.1"/>
 </namespace>

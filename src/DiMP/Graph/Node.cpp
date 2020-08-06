@@ -51,35 +51,6 @@ Node::~Node(){
 
 //-------------------------------------------------------------------------------------------------
 
-void NodeArray::AddVar (){
-	for(Node* n : *this) n->AddVar ();
-}
-
-void NodeArray::AddCon (){
-	for(Node* n : *this) n->AddCon ();
-}
-
-void NodeArray::Init(){
-	for(Node* n : *this) n->Init();
-}
-
-void NodeArray::Prepare(){
-#pragma omp parallel for schedule(dynamic)
-	for(int i = 0; i < size(); i++){
-		at(i)->Prepare();
-	}
-}
-
-void NodeArray::Finish(){
-	for(Node* n : *this) n->Finish ();
-}
-
-void NodeArray::Draw(Render::Canvas* canvas, Render::Config* conf){
-	for(Node* n : *this) n->Draw(canvas, conf);
-}
-	
-//-------------------------------------------------------------------------------------------------
-
 void Trajectory::Update(){
 	for(Keypoint* key : *this){
 		if(key->prev) key->hprev = key->tick->time - key->prev->tick->time;

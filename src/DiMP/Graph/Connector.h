@@ -27,6 +27,6 @@ public:
 	virtual ~Connector();
 };	
 
-typedef ArrayBase<Connector*>  Connectors;
+typedef NodeArray<Connector>  Connectors;
 
 }

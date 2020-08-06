@@ -70,14 +70,29 @@ public:
 	}
 };
 
-class NodeArray : public ArrayBase< Node* >{
+template<class T>
+class NodeArray : public ArrayBase< T* >{
 public:
-	void AddVar ();
-	void AddCon ();
-	void Init   ();
-	void Prepare();
-	void Finish ();
-	void Draw(Render::Canvas* canvas, Render::Config* conf);
+	void AddVar (){
+		for(T* n : *this) ((Node*)n)->AddVar ();
+	}
+	void AddCon (){
+		for(T* n : *this) ((Node*)n)->AddCon ();
+	}
+	void Init(){
+		for(T* n : *this) ((Node*)n)->Init();
+	}
+	void Prepare(){
+		for(T* n : *this) ((Node*)n)->Prepare();
+	}
+
+	void Finish(){
+		for(T* n : *this) ((Node*)n)->Finish ();
+	}
+
+	void Draw(Render::Canvas* canvas, Render::Config* conf){
+		for(T* n : *this) ((Node*)n)->Draw(canvas, conf);
+	}
 };
 
 /**
@@ -99,7 +114,7 @@ public:
 	Tick(Graph* g, real_t t, const string& n = "");
 };
 
-class Ticks : public ArrayBase<Tick*>{
+class Ticks : public NodeArray<Tick>{
 	void	AssignIndices();
 public:
 	void	Add   (Tick* tick);

@@ -50,15 +50,7 @@ void ObjectKey::AddCon(Solver* solver){
 		}
 	}
 
-	geoInfos.clear();
-	for(Connector* con : obj->cons){
-		for(Geometry* geo : con->geos){
-			geoInfos .push_back(GeometryInfo(con, geo));
-		}
-	}
-	
-	edgeInfos.resize(2*geoInfos.size());
-	
+
 	//octtree = new OcttreeNode();
 	//octtree->depth =  0;
 	//octtree->id    =  0;
@@ -192,6 +184,19 @@ void ObjectKey::CalcCoef(Constraint* con, const ObjectKey::OptionV3& opt, uint& 
 }
 
 void ObjectKey::PrepareGeometry(){
+	Object* obj = (Object*)node;
+	
+	if(geoInfos.empty()){
+		for(Connector* con : obj->cons){
+			for(Geometry* geo : con->geos){
+				geoInfos .push_back(GeometryInfo(tick, con, geo));
+			}
+		}
+		edgeInfos[0].resize(2*geoInfos.size());
+		edgeInfos[1].resize(2*geoInfos.size());
+		edgeInfos[2].resize(2*geoInfos.size());
+	}
+
 	// absolute pose of geometries
 	for(GeometryInfo& info : geoInfos){
 		info.poseAbs = pose_t(pos_t->val, pos_r->val) * info.con->pose;
@@ -218,16 +223,18 @@ void ObjectKey::PrepareGeometry(){
 	octtree->Assign(tmp);
 	*/
 
-	// calc and sort edges
-	for(int i = 0; i < geoInfos.size(); i++){
-		edgeInfos[2*i+0].geoInfo = &geoInfos[i];
-		edgeInfos[2*i+1].geoInfo = &geoInfos[i];
-		edgeInfos[2*i+0].side    = 0;
-		edgeInfos[2*i+1].side    = 1;
-		edgeInfos[2*i+0].val     = geoInfos[i].bbmin.x;
-		edgeInfos[2*i+1].val     = geoInfos[i].bbmax.x;
+	// calc edges
+	for(int dir = 0; dir < 3; dir++){
+		for(int i = 0; i < geoInfos.size(); i++){
+			edgeInfos[dir][2*i+0].geoInfo = &geoInfos[i];
+			edgeInfos[dir][2*i+1].geoInfo = &geoInfos[i];
+			edgeInfos[dir][2*i+0].side    = 0;
+			edgeInfos[dir][2*i+1].side    = 1;
+			edgeInfos[dir][2*i+0].val     = geoInfos[i].bbmin[dir];
+			edgeInfos[dir][2*i+1].val     = geoInfos[i].bbmax[dir];
+		}
 	}
-	sort(edgeInfos.begin(), edgeInfos.end());
+	//sort(edgeInfos.begin(), edgeInfos.end());
 
 }
 
@@ -237,7 +244,7 @@ void ObjectKey::Prepare(){
 	fext_t = obj->param.mass * obj->graph->param.gravity;
 	fext_r.clear();
 
-	if(obj->param.dynamical)
+	if( obj->param.dynamical && !obj->param.stationary )
 		PrepareGeometry();
 }
 
@@ -309,8 +316,8 @@ void Object::Init(){
 		key->vel_t->val = param.iniVel;
 		key->vel_r->val = param.iniAngvel;
 
-		// lock position and velocity if this keypoint is the first one, or the object is non-dynamical
-		if(!param.dynamical || !key->prev){
+		// lock position and velocity if this keypoint is the first one, or the object is non-dynamical or stationary
+		if( (!param.dynamical || param.stationary) || !key->prev){
 			key->pos_t->Lock();
 			key->pos_r->Lock();
 			key->vel_t->Lock();
@@ -318,13 +325,17 @@ void Object::Init(){
 		}
 		
 		// for non-dynamical objects, sum-of-force constraint is disabled
-		if(!tree && !param.dynamical && key->next){
+		if(!tree && (!param.dynamical || param.stationary) && key->next){
 			key->con_force_t->enabled = false;
 			key->con_force_r->enabled = false;
 		}
 
-		key->PrepareGeometry();
+		// for non-dynamical object, PrepareGeometry is called here
+		// for stationary object, PrepareGeometry is called for first keypoint only
+		if( !param.dynamical && ( !param.stationary || tick->idx == 0) )
+			key->PrepareGeometry();
 	}
+
 }
 
 void Object::Prepare(){

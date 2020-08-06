@@ -36,7 +36,7 @@
   
   <vmat name="mat_obstacle" colorname="lightpink"/>
   <cylinder name="cylinder_obstacle" radius="0.2" height="0.7"/>
-  <body name="body_obstacle0" dynamical="false" trn="-0.05 0.25 0.6">
+  <body name="body_obstacle0" dynamical="false" stationary="true" trn="-0.05 0.25 0.6">
     <connector name="0" rot="90deg@x"/>
   </body>
   <attach connector="body_obstacle0/0" shape="cylinder_obstacle" vmat="mat_obstacle"/>

@@ -335,6 +335,9 @@ void Loader::LoadParam(XMLNode* node, Graph* graph){
 	if(name == "cutoff_step_size"){
 		node->Get(graph->solver->param.cutoffStepSize, ".value");
 	}
+	if(name == "regularization"){
+		node->Get(graph->solver->param.regularization, ".value");
+	}
 }
 	
 }

@@ -51,7 +51,6 @@ void AvoidKey::Prepare(){
 	AvoidTask* task = (AvoidTask*)node;
 	
 	if( relation == Inside ){
-		ptimer.CountUS();
 		int nocttree = 0;
 		int nsphere  = 0;
 		int nbox     = 0;
@@ -60,13 +59,16 @@ void AvoidKey::Prepare(){
 		GeometryPair* gpmax = 0;
 		real_t        dmax  = 0.0;
 
+		/*ptimer.CountUS();
 		ExtractGeometryPairs(
 			obj0->geoInfos, obj0->edgeInfos,
 			obj1->geoInfos, obj1->edgeInfos,
 			geoPairs);
-
+		int timeExtract = ptimer.CountUS();
+		*/
 		DSTR << "geo0: " << obj0->geoInfos.size() << " geo1: " << obj1->geoInfos.size() << " geo pair: " << geoPairs.size() << endl;
 
+		ptimer.CountUS();
 		for(int gp_idx = 0; gp_idx < geoPairs.size(); gp_idx++){
 			GeometryPair& gp = geoPairs[gp_idx];
 	
@@ -122,6 +124,7 @@ void AvoidKey::Prepare(){
 				}
 			}
 		}
+		int timeEnum = ptimer.CountUS();
 
 		if(gpmax){
 			con_p->gp     = gpmax;
@@ -134,13 +137,12 @@ void AvoidKey::Prepare(){
 			con_v->active = false;
 		}
 
-		int timeGjk = ptimer.CountUS();
-
+		
 		DSTR << "bsphere: " << nsphere << " bbox: " << nbox << " gjk: " << ngjk << " active: " << nactive << endl;
 		if(gpmax){
 			DSTR << " dist: " << gpmax->dist << " normal: " << gpmax->normal << endl;
 		}
-		DSTR << "tgjk: " << timeGjk << endl;
+		//DSTR << "timeExtract: " << timeExtract << " timeEnum: " << timeEnum << endl;
 	}
 	else{
 		con_p->active = false;
@@ -175,9 +177,22 @@ AvoidTask::Param::Param(){
 AvoidTask::AvoidTask(Object* _obj0, Object* _obj1, TimeSlot* _time, const string& n)
 	:Task(_obj0, _obj1, _time, n){
 	
+	graph->avoids.Add(this);
+}
+
+AvoidTask::~AvoidTask(){
+	graph->avoids.Remove(this);
 }
 
 void AvoidTask::Prepare(){
+	// if either object is stationary, broad-phase collision detection is executed here
+	//ptimer.CountUS();
+	//ExtractGeometryPairs(
+	//	obj0->geoInfos, obj0->edgeInfos,
+	//	obj1->geoInfos, obj1->edgeInfos,
+	//	geoPairs);
+	//int timeExtract = ptimer.CountUS();
+
 	Task::Prepare();
 }
 

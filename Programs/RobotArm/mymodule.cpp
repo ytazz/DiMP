@@ -423,13 +423,14 @@ bool MyModule::Set(DiMP::Render::Canvas* canvas, int attr, DiMP::Node* node){
 	}
 	if(attr == DiMP::Render::Item::Avoid){
 		canvas->SetLineColor("red");
+		canvas->SetPointSize(3);
 		canvas->SetLineWidth(1);
 		return true;
 	}
 	if(attr == DiMP::Render::Item::Geometry){
 		canvas->SetLineColor("blue", 0, 0.1f);
 		canvas->SetLineWidth(1);
-		return true;
+		return false;
 	}
 	return false;
 }

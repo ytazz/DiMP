@@ -53,7 +53,7 @@ public:
 	virtual ~Tree();
 };
 
-class Trees : public ArrayBase<Tree*>{
+class Trees : public NodeArray<Tree>{
 public:
 	void Extract          ();
 	void ForwardKinematics();
