@@ -710,8 +710,10 @@ pose_t BipedLIP::FootPose(real_t t, int side) {
 	// phase
 	int ph = phase[key0->tick->idx];
 
-	real_t dt  = t - key0->var_time->val;  //< elapsed time since phase change
+	real_t t0  = key0->var_time->val;
 	real_t tau = key0->var_duration->val;  //< phase duration
+	real_t t1  = t0 + tau;
+	real_t dt  = t - t0;                   //< elapsed time since phase change
 	real_t s   = dt/tau;                   //< normalized time
 	vec2_t p0  = key0->var_foot_pos_t[side]->val;
 	vec2_t p1  = key1->var_foot_pos_t[side]->val;
@@ -802,31 +804,50 @@ pose_t BipedLIP::FootPose(real_t t, int side) {
 			real_t cv2    = 0.0;  //< cop velocity of next single support phase
 			real_t theta0 = 0.0;  //< foot angle at lift-off
 			real_t theta1 = 0.0;  //< foot angle at landing
+			real_t omega0 = 0.0;  //< foot rotation speed at lift-off
+			real_t omega1 = 0.0;  //< foot rotation speed at landing
 
 			if(keym2 && keym1) cvm2 = std::max(0.0, keym1->var_cop_pos->val.x - keym2->var_cop_pos->val.x) / (keym2->var_duration->val);
 			if(key2  && key3 ) cv2  = std::max(0.0, key3 ->var_cop_pos->val.x - key2 ->var_cop_pos->val.x) / (key2 ->var_duration->val);
 						
-			if(keym1) theta0 = std::max(0.0, (keym1->var_cop_pos->val.x + cvm2*keym1->var_duration->val) - (p0.x + l0))/r0;
-			if(key2 ) theta1 = std::min(0.0, (key2 ->var_cop_pos->val.x - cv2 *key1 ->var_duration->val) - (p1.x - l1))/r1;
+			if(keym1){
+				theta0 = std::max(0.0, (keym1->var_cop_pos->val.x + cvm2*keym1->var_duration->val) - (p0.x + l0))/r0;
+				omega0 = cvm2/r0;
+			}
+			if(key2 ){
+				theta1 = std::min(0.0, (key2 ->var_cop_pos->val.x - cv2 *key1 ->var_duration->val) - (p1.x - l1))/r1;
+				omega1 = cv2/r1;
+			}
 
 			// foot position at lift-off
 			real_t p00x = p0.x + r0*(theta0 - sin( theta0)) + l0*(1.0 - cos(theta0));
-			real_t p00z =        r0*(1 - cos(theta0))       + l0*sin(theta0);
+			real_t p00z =        r0*(1.0 - cos(theta0))     + l0*sin(theta0);
+			// foot velocity at lift-off
+			real_t v00x = (r0*(1.0 - cos(theta0)) + l0*sin(theta0))*omega0;
+			real_t v00z = (r0*sin(theta0)         + l0*cos(theta0))*omega0;
 
 			// foot position at landing
-			real_t p11x = p1.x + r1*(theta1 - sin(theta1)) - l1*(1 - cos(theta1));
+			real_t p11x = p1.x + r1*(theta1 - sin(theta1)) - l1*(1.0 - cos(theta1));
 			real_t p11z =        r1*(1.0 - cos(theta1))    - l1*sin(theta1);
-		
-			vec2_t r(p11x - p00x, p11z - p00z);
-			real_t a     = r.norm();
-			real_t alpha = atan2(r[1], r[0]);
+			// foot velocity at landing
+			real_t v11x = (r1*(1.0 - cos(theta1)) - l1*sin(theta1))*omega1;
+			real_t v11z = (r1*sin(theta1)         - l1*cos(theta1))*omega1;
 
-			real_t ch = (a    )*(s   - sin(_2pi*s)/_2pi);
-			real_t cv = (a/5.0)*(1.0 - cos(_2pi*s))/2.0;
-			
-			theta  = theta0 + (theta1 - theta0)*s;
-			pos2.x = p00x + cos(alpha)*ch - sin(alpha)*cv;
-			z      = p00z + sin(alpha)*ch + cos(alpha)*cv;
+			// interpolate between endpoints with cubic polynomial
+			pos2.x = InterpolatePos(t, t0, p00x  , v00x  , t1, p11x  , v11x  , Spr::Interpolate::Cubic);
+			z      = InterpolatePos(t, t0, p00z  , v00z  , t1, p11z  , v11z  , Spr::Interpolate::Cubic);
+			theta  = InterpolatePos(t, t0, theta0, omega0, t1, theta1, omega1, Spr::Interpolate::Cubic);
+		
+			//vec2_t r(p11x - p00x, p11z - p00z);
+			//real_t a     = r.norm();
+			//real_t alpha = atan2(r[1], r[0]);
+			//
+			//real_t ch = (a    )*(s   - sin(_2pi*s)/_2pi);
+			//real_t cv = (a/5.0)*(1.0 - cos(_2pi*s))/2.0;
+			//
+			//theta  = theta0 + (theta1 - theta0)*s;
+			//pos2.x = p00x + cos(alpha)*ch - sin(alpha)*cv;
+			//z      = p00z + sin(alpha)*ch + cos(alpha)*cv;
 		}
 		// lifting-off foot of double support phase
 		if ( (ph == Phase::RL && side == 0) ||
@@ -868,164 +889,6 @@ pose_t BipedLIP::FootPose(real_t t, int side) {
 
 	return pose;
 }
-
-/*
-real_t BipedLIP::AnklePitch(real_t t, int side) {
-	BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;
-	BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;
-	real_t       t0 = key0->tick->time;
-	real_t       t1 = key1->tick->time;
-	real_t       h = t1 - t0;
-	
-	real_t theta = 0.0;
-	real_t theta0 =  30*pi/180;
-	real_t theta1 = -30*pi/180;
-	real_t theta_ds;
-	int thetad;
-
-	real_t l0 = 0.08;
-	real_t l1 = 0.08;
-	real_t L = 0.20;
-	real_t r0 = 0.03;
-	real_t r1 = 0.03;
-
-	if (key0->prev) {
-		real_t dt = t - key0->var_time->val;
-		real_t tau = key0->var_duration->val;
-		vec2_t p0 = key0->var_foot_pos_t[side]->val;
-		vec2_t p1 = key1->var_foot_pos_t[side]->val;
-		vec2_t c0 = key0->var_cop_pos->val;
-		vec2_t c1 = key1->var_cop_pos->val;
-		int ph = phase[key0->tick->idx];
-		//foot_shape_change
-		if (param.swingProfile == SwingProfile::HeelToe){
-			real_t _2pi = 2.0*M_PI;
-			real_t tau = (t - t0) / h;
-			real_t c = c0.x + (c1.x - c0.x)*tau;
-
-			if(ph == Phase::L && side == 0){
-				if(thetad == 0){
-					theta = 0;
-				}
-				else{
-					theta = theta0 + tau*(theta1 - theta0);
-				}
-			}
-			else if (ph == Phase::RL && side == 0){
-				if(thetad == 0){
-	 				theta = 0;
-	 			}
-	 			else{
-	 				theta_ds = (c0.x - p1.x - l0)/r0;
-	 				theta = theta_ds + (theta0 - theta_ds)*tau;
-	 			}
-			}
-			else if (ph == Phase::LR && side == 0) { 
-				if(thetad == 0){
-					theta = 0;
-				}
-				else{
-					theta_ds = (p1.x - c1.x - l1)/r1;
-					theta = theta1 - (theta_ds + theta1)*tau;
-				}
-			}
-			else if (ph == Phase::R && side == 0){
-				if(((c0.x - p1.x) < -l1) && ((c1.x - p1.x) > l0)){
-				    if(c < p1.x - l1){
-					    if(thetad==0){
-					        theta = 0;
-						}
-						else{
-							theta = -(p1.x - c - l1)/r1;
-						}
-					}
-					else if(c > p1.x + l0){
-						theta = (c - p1.x - l0)/r0;
-					}
-					else{
-					theta = 0;
-					}
-				}
-				else{
-					if(c < p1.x - l1){
-						if(thetad == 0){
-							theta = 0;
-						}
-						else{
-							theta = -(p1.x - c - l1)/r1;
-						}
-					}
-					else{
-						theta = 0;
-					}
-			    }
-			}
-			else if (ph == Phase::R && side == 1){
-				if(thetad == 0){
-					theta = 0;
-				}
-				else{
-					theta = theta0 + tau*(theta1 - theta0);
-				}
-			}
-			else if (ph == Phase::LR && side == 1){
-				if(thetad == 0){
-	 				theta = 0;
-	 			}
-	 			else{
-	 				theta_ds = (c0.x - p1.x - l0)/r0;
-	 				theta = theta_ds + (theta0 - theta_ds)*tau;
-	 			}
-			}
-			else if (ph == Phase::RL && side == 1) {
-				if(thetad == 0){
-					theta = 0;
-				}
-				else{
-					theta_ds = (p1.x - c1.x -l1)/r1;
-					theta = theta1 - (theta_ds + theta1)*tau;
-				}
-			}
-			else if(ph == Phase::L && side == 1){
-				if( (c0.x - p1.x < -l1) &&
-					(c1.x - p1.x >  l0)){
-					if(c < p1.x - l1){
-						if(thetad==0){
-							theta = 0;
-						}
-						else{
-							theta = -(p1.x - c - l1)/r1;
-						}
-					}
-					else if(c > (p1.x + l0)){
-						theta = (c - p1.x - l0)/r0;
-					}
-					else{
-						theta = 0;
-					}
-				}
-				else{
-					if(c < p1.x - l1){
-						if(thetad==0){
-							theta = 0;
-						}
-						else{
-							theta = -(p1.x - c - l1)/r1;
-						}
-					}
-					else{
-						theta = 0;
-					}
-			    }
-			}
-		}
-	}
-	else {
-		theta=0;
-	}
-	return theta;
-}
-*/
 
 void BipedLIP::FootVel(real_t t, int side, vec3_t& v, vec3_t& w){
 	// calculate velocity by forward difference

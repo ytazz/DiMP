@@ -57,25 +57,25 @@ public:
 		biped->param.durationMax[DiMP::BipedLIP::Phase::LR] = 0.2;
 		biped->param.durationMin[DiMP::BipedLIP::Phase::D ] = 0.1;
 		biped->param.durationMax[DiMP::BipedLIP::Phase::D ] = 0.2;
-		biped->param.footPosMin[0] = vec2_t(-0.40, -0.20);
-		biped->param.footPosMax[0] = vec2_t( 0.40, -0.00);
-		biped->param.footPosMin[1] = vec2_t(-0.40,  0.00);
-		biped->param.footPosMax[1] = vec2_t( 0.40,  0.20);
+		biped->param.footPosMin[0] = vec2_t(-0.45, -0.20);
+		biped->param.footPosMax[0] = vec2_t( 0.45, -0.00);
+		biped->param.footPosMin[1] = vec2_t(-0.45,  0.00);
+		biped->param.footPosMax[1] = vec2_t( 0.45,  0.20);
 		biped->param.footOriMin[0] = Rad(-15.0);
 		biped->param.footOriMax[0] = Rad(15.0);
 		biped->param.footOriMin[1] = Rad(-15.0);
 		biped->param.footOriMax[1] = Rad(15.0);
-		biped->param.swingHeight[0] = 0.050;
-		biped->param.swingHeight[1] = 0.025;
+		biped->param.swingHeight[0] = 0.010;
+		biped->param.swingHeight[1] = 0.010;
 		//biped->param.swingProfile = DiMP::BipedLIP::SwingProfile::Wedge;
 		//biped->param.swingProfile = DiMP::BipedLIP::SwingProfile::Cycloid;
 		biped->param.swingProfile = DiMP::BipedLIP::SwingProfile::HeelToe;
-		biped->param.copPosMin    = vec2_t(-0.04, -0.05 );
-		biped->param.copPosMax    = vec2_t( 0.10,  0.05 );
-		biped->param.ankleToToe   = 0.0287;
-		biped->param.ankleToHeel  = 0.055;
-		biped->param.toeRadius    = 0.20;
-		biped->param.heelRadius   = 0.051;
+		biped->param.copPosMin    = vec2_t(-0.05, -0.05 );
+		biped->param.copPosMax    = vec2_t( 0.12,  0.05 );
+		biped->param.ankleToToe   = 0.100;
+		biped->param.ankleToHeel  = 0.070;
+		biped->param.toeRadius    = 0.100;
+		biped->param.heelRadius   = 0.100;
 
 		/*
 		 D -> RL -> L -> LR -> R ... -> RL -> D
@@ -100,8 +100,8 @@ public:
 		biped->phase[nphase-2] = DiMP::BipedLIP::Phase::D;
 		biped->phase[nphase-1] = DiMP::BipedLIP::Phase::D;
 
-		real_t spacing = 0.25/2.0;
-		vec2_t goalPos(3.0, 0.0);
+		real_t spacing = 0.23/2;
+		vec2_t goalPos(4.0, 0.0);
 		real_t goalOri = Rad(0);
 
 		biped->waypoints.resize(2);
