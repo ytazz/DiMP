@@ -9,10 +9,8 @@ set_target_properties(Contact PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY    ${BIN_
 
 target_link_libraries(Contact debug     ${SPRINGHEAD_LIBRARY_DEBUG})
 target_link_libraries(Contact optimized ${SPRINGHEAD_LIBRARY_RELEASE})
-target_link_libraries(Contact debug     ${DIMP_LIBRARY_DEBUG})
-target_link_libraries(Contact optimized ${DIMP_LIBRARY_RELEASE})
-target_link_libraries(Contact debug     ${SCENEBUILDER_LIBRARY_DEBUG})
-target_link_libraries(Contact optimized ${SCENEBUILDER_LIBRARY_RELEASE})
+target_link_libraries(Contact dimp)
+target_link_libraries(Contact Scenebuilder)
 target_link_libraries(Contact           ${EXPAT_LIBRARIES})
 target_link_libraries(Contact           ${GLUT_LIBRARIES})
 target_link_libraries(Contact           ${GLEW_LIBRARIES})

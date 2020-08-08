@@ -9,10 +9,8 @@ set_target_properties(Balljoint PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY    ${BI
 
 target_link_libraries(Balljoint debug     ${SPRINGHEAD_LIBRARY_DEBUG})
 target_link_libraries(Balljoint optimized ${SPRINGHEAD_LIBRARY_RELEASE})
-target_link_libraries(Balljoint debug     ${DIMP_LIBRARY_DEBUG})
-target_link_libraries(Balljoint optimized ${DIMP_LIBRARY_RELEASE})
-target_link_libraries(Balljoint debug     ${SCENEBUILDER_LIBRARY_DEBUG})
-target_link_libraries(Balljoint optimized ${SCENEBUILDER_LIBRARY_RELEASE})
+target_link_libraries(Balljoint dimp)
+target_link_libraries(Balljoint Scenebuilder)
 target_link_libraries(Balljoint           ${EXPAT_LIBRARIES})
 target_link_libraries(Balljoint           ${GLUT_LIBRARIES})
 target_link_libraries(Balljoint           ${GLEW_LIBRARIES})

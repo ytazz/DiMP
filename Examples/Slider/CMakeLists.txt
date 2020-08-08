@@ -9,10 +9,8 @@ set_target_properties(Slider PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY    ${BIN_D
 
 target_link_libraries(Slider debug     ${SPRINGHEAD_LIBRARY_DEBUG})
 target_link_libraries(Slider optimized ${SPRINGHEAD_LIBRARY_RELEASE})
-target_link_libraries(Slider debug     ${DIMP_LIBRARY_DEBUG})
-target_link_libraries(Slider optimized ${DIMP_LIBRARY_RELEASE})
-target_link_libraries(Slider debug     ${SCENEBUILDER_LIBRARY_DEBUG})
-target_link_libraries(Slider optimized ${SCENEBUILDER_LIBRARY_RELEASE})
+target_link_libraries(Slider dimp)
+target_link_libraries(Slider Scenebuilder)
 target_link_libraries(Slider           ${EXPAT_LIBRARIES})
 target_link_libraries(Slider           ${GLUT_LIBRARIES})
 target_link_libraries(Slider           ${GLEW_LIBRARIES})

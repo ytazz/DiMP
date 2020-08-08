@@ -9,10 +9,8 @@ set_target_properties(Hinge PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY    ${BIN_DI
 
 target_link_libraries(Hinge debug     ${SPRINGHEAD_LIBRARY_DEBUG})
 target_link_libraries(Hinge optimized ${SPRINGHEAD_LIBRARY_RELEASE})
-target_link_libraries(Hinge debug     ${DIMP_LIBRARY_DEBUG})
-target_link_libraries(Hinge optimized ${DIMP_LIBRARY_RELEASE})
-target_link_libraries(Hinge debug     ${SCENEBUILDER_LIBRARY_DEBUG})
-target_link_libraries(Hinge optimized ${SCENEBUILDER_LIBRARY_RELEASE})
+target_link_libraries(Hinge dimp)
+target_link_libraries(Hinge Scenebuilder)
 target_link_libraries(Hinge           ${EXPAT_LIBRARIES})
 target_link_libraries(Hinge           ${GLUT_LIBRARIES})
 target_link_libraries(Hinge           ${GLEW_LIBRARIES})

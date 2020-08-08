@@ -9,10 +9,8 @@ set_target_properties(Planejoint PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY    ${B
 
 target_link_libraries(Planejoint debug     ${SPRINGHEAD_LIBRARY_DEBUG})
 target_link_libraries(Planejoint optimized ${SPRINGHEAD_LIBRARY_RELEASE})
-target_link_libraries(Planejoint debug     ${DIMP_LIBRARY_DEBUG})
-target_link_libraries(Planejoint optimized ${DIMP_LIBRARY_RELEASE})
-target_link_libraries(Planejoint debug     ${SCENEBUILDER_LIBRARY_DEBUG})
-target_link_libraries(Planejoint optimized ${SCENEBUILDER_LIBRARY_RELEASE})
+target_link_libraries(Planejoint dimp)
+target_link_libraries(Planejoint Scenebuilder)
 target_link_libraries(Planejoint           ${EXPAT_LIBRARIES})
 target_link_libraries(Planejoint           ${GLUT_LIBRARIES})
 target_link_libraries(Planejoint           ${GLEW_LIBRARIES})
