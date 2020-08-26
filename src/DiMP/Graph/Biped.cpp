@@ -133,7 +133,6 @@ void BipedLIPKey::AddCon(Solver* solver) {
 	con_com_v = new BipedComConV(solver, name + "_com_v", this, node->graph->scale.vel_t);
 	solver->AddCostCon(con_com_p, tick->idx);
 	solver->AddCostCon(con_com_v, tick->idx);
-
 }
 
 void BipedLIPKey::Prepare() {
@@ -267,6 +266,8 @@ BipedLIP::Param::Param() {
 	ankleToHeel = 0.07;
 	toeRadius   = 0.03;
 	heelRadius  = 0.03;
+
+	smoothingWeight = 0.01;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -463,10 +464,11 @@ void BipedLIP::Init() {
 		key->var_com_pos->val = (mt * key->var_torso_pos_t->val + mf * (key->var_foot_pos_t[0]->val + key->var_foot_pos_t[1]->val)) / (mt + 2.0*mf);
 		key->var_com_vel->val = (mt * key->var_torso_vel_t->val) / (mt + 2.0*mf);
 
-		// cop is initialized by the foot position
+		// cop is initialized to be at the center of the support region
+		vec2_t c = (param.copPosMin + param.copPosMax)/2.0;
 		if (phase[k] == Phase::R || phase[k] == Phase::RL)
-			 key->var_cop_pos->val = key->var_foot_pos_t[0]->val;
-		else key->var_cop_pos->val = key->var_foot_pos_t[1]->val;
+			 key->var_cop_pos->val = key->var_foot_pos_t[0]->val + mat2_t::Rot(key->var_foot_pos_r[0]->val)*c;
+		else key->var_cop_pos->val = key->var_foot_pos_t[1]->val + mat2_t::Rot(key->var_foot_pos_r[1]->val)*c;
 	}
 
 	// initial value of cop velocity
@@ -837,6 +839,9 @@ pose_t BipedLIP::FootPose(real_t t, int side) {
 			pos2.x = InterpolatePos(t, t0, p00x  , v00x  , t1, p11x  , v11x  , Spr::Interpolate::Cubic);
 			z      = InterpolatePos(t, t0, p00z  , v00z  , t1, p11z  , v11z  , Spr::Interpolate::Cubic);
 			theta  = InterpolatePos(t, t0, theta0, omega0, t1, theta1, omega1, Spr::Interpolate::Cubic);
+
+			// add cycloid movement to z to avoid scuffing the ground
+			z += param.swingHeight[0]*(1 - cos(_2pi*s))/2.0;
 		
 			//vec2_t r(p11x - p00x, p11z - p00z);
 			//real_t a     = r.norm();

@@ -65,17 +65,18 @@ public:
 		biped->param.footOriMax[0] = Rad(15.0);
 		biped->param.footOriMin[1] = Rad(-15.0);
 		biped->param.footOriMax[1] = Rad(15.0);
-		biped->param.swingHeight[0] = 0.010;
-		biped->param.swingHeight[1] = 0.010;
+		biped->param.swingHeight[0] = 0.050;
+		biped->param.swingHeight[1] = 0.050;
 		//biped->param.swingProfile = DiMP::BipedLIP::SwingProfile::Wedge;
 		//biped->param.swingProfile = DiMP::BipedLIP::SwingProfile::Cycloid;
 		biped->param.swingProfile = DiMP::BipedLIP::SwingProfile::HeelToe;
-		biped->param.copPosMin    = vec2_t(-0.050, -0.05 );
-		biped->param.copPosMax    = vec2_t( 0.100,  0.05 );
+		biped->param.copPosMin    = vec2_t(-0.040, -0.05 );
+		biped->param.copPosMax    = vec2_t( 0.110,  0.05 );
 		biped->param.ankleToToe   = 0.100;
 		biped->param.ankleToHeel  = 0.070;
 		biped->param.toeRadius    = 0.100;
 		biped->param.heelRadius   = 0.100;
+		biped->param.smoothingWeight = 0.00000001;
 
 		/*
 		 D -> RL -> L -> LR -> R ... -> RL -> D
@@ -116,10 +117,10 @@ public:
 		biped->waypoints[0].foot_pos_t[1]     = vec2_t(0.0, spacing);
 		biped->waypoints[0].foot_pos_r[1]     = 0.0;
 		biped->waypoints[0].cop_pos           = vec2_t(0.0, 0.0);
-		biped->waypoints[0].fix_torso_pos_t   = true;
-		biped->waypoints[0].fix_torso_pos_r   = true;
-		biped->waypoints[0].fix_torso_vel_t   = true;
-		biped->waypoints[0].fix_torso_vel_r   = true;
+		biped->waypoints[0].fix_torso_pos_t   = false;
+		biped->waypoints[0].fix_torso_pos_r   = false;
+		biped->waypoints[0].fix_torso_vel_t   = false;
+		biped->waypoints[0].fix_torso_vel_r   = false;
 		biped->waypoints[0].fix_foot_pos_t[0] = true;
 		biped->waypoints[0].fix_foot_pos_r[0] = true;
 		biped->waypoints[0].fix_foot_pos_t[1] = true;
@@ -136,10 +137,10 @@ public:
 		biped->waypoints[1].foot_pos_t[1]     = goalPos + mat2_t::Rot(goalOri) * vec2_t(0.0, spacing);
 		biped->waypoints[1].foot_pos_r[1]     = goalOri;
 		biped->waypoints[1].cop_pos           = goalPos;
-		biped->waypoints[1].fix_torso_pos_t   = true;
-		biped->waypoints[1].fix_torso_pos_r   = true;
-		biped->waypoints[1].fix_torso_vel_t   = true;
-		biped->waypoints[1].fix_torso_vel_r   = true;
+		biped->waypoints[1].fix_torso_pos_t   = false;
+		biped->waypoints[1].fix_torso_pos_r   = false;
+		biped->waypoints[1].fix_torso_vel_t   = false;
+		biped->waypoints[1].fix_torso_vel_r   = false;
 		biped->waypoints[1].fix_foot_pos_t[0] = true;
 		biped->waypoints[1].fix_foot_pos_r[0] = true;
 		biped->waypoints[1].fix_foot_pos_t[1] = true;

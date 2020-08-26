@@ -62,7 +62,7 @@ namespace DiMP {;
 
 		MatchConV2*      con_foot_match_t[2];
 		MatchConS *      con_foot_match_r[2];
-
+		
 		//CoMConR  *  con_com_r[2];      ///< range constraint on angular acceleration at beginning and end of step
 		//CoPConR  *  con_cop_r[2];      ///< range constraint on turning angle of CoM
 
@@ -125,6 +125,8 @@ namespace DiMP {;
 			real_t  ankleToHeel;
 			real_t  toeRadius  ;
 			real_t  heelRadius ;
+
+			real_t  smoothingWeight;       ///< weight on zero-com-acceleration constraint
 
 			Param();
 		};
