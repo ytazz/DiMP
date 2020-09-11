@@ -2,7 +2,7 @@
 
 <!--
 <setting scene="reaching2d" />
-<setting scene="reaching3d" />
--->
 <setting scene="welding" />
+-->
+<setting scene="reaching3d" />
 

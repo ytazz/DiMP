@@ -24,6 +24,7 @@ struct Item{
 		Geometry,			///< geometry
 		BipedCom,           ///< biped CoM trajectory
 		BipedCop,           ///< biped CoP
+		BipedCmp,
 		BipedFoot,         ///< biped swing foot trajectory
 		BipedTorso,         ///< biped torso trajectory
 		Avoid,
