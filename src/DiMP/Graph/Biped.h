@@ -7,9 +7,12 @@ namespace DiMP {;
 
 	class  BipedLIP;
 
-	struct BipedLipConP;
-	struct BipedLipConV;
-	struct BipedLipConC;
+	struct BipedLipPosCon;
+	struct BipedLipVelCon;
+	struct BipedLipAccCon;
+	struct BipedLipCopCon;
+	struct BipedLipCmpCon;
+	struct BipedLipMomCon;
 
 	//struct CoMConR;
 
@@ -35,9 +38,16 @@ namespace DiMP {;
 
 		V2Var*		var_com_pos;        ///< position of CoM
 		V2Var*		var_com_vel;        ///< velocity of CoM
+		V2Var*      var_com_acc;        ///< acceleration of CoM
+
+		V2Var*      var_mom;            ///< angular momentum around CoM
+		                                ///< it is actually normalized momentum L/mg
 
 		V2Var*		var_cop_pos;        ///< position of CoP
 		V2Var*      var_cop_vel;        ///< velocity of CoP
+
+		V2Var*      var_cmp_pos;        ///< CMP offset
+		V2Var*      var_cmp_vel;        ///< CMP offset time derivative
 
 		V2Var*      var_foot_pos_t[2];  ///< position    of foot, R/L
 		SVar*       var_foot_pos_r[2];  ///< orientation of foot, R/L
@@ -45,12 +55,15 @@ namespace DiMP {;
 		SVar*       var_time;           ///< time
 		SVar*		var_duration;       ///< duration
 
-		BipedLipConP*    con_lip_p;          ///< LIP position constraint
-		BipedLipConV*    con_lip_v;          ///< LIP velocity constraint
-		BipedLipConC*    con_lip_c;          ///< LIP cop constraint
+		BipedLipPosCon*    con_lip_pos;     ///< LIP position constraint
+		BipedLipVelCon*    con_lip_vel;     ///< LIP velocity constraint
+		BipedLipAccCon*    con_lip_acc;     ///< match constraint between com and cop (+ cmp offset)
+		BipedLipCopCon*    con_lip_cop;     ///< LIP cop constraint
+		BipedLipCmpCon*    con_lip_cmp;     ///< LIP cmp constraint
+		BipedLipMomCon*    con_lip_mom;     ///< LIP angular momentum constraint
 
-		BipedComConP*    con_com_p;          ///< CoM position constraint
-		BipedComConV*    con_com_v;          ///< CoM velocity constraint
+		BipedComConP*    con_com_pos;          ///< CoM position constraint
+		BipedComConV*    con_com_vel;          ///< CoM velocity constraint
 
 		BipedFootConT*   con_foot_t[2][2];   ///< range constraint on foot position relative to torso, [r|l][x|y]
 		BipedFootConR*   con_foot_r[2];      ///< range constraint on foot orientation relative to torso, [r|l]
@@ -63,9 +76,8 @@ namespace DiMP {;
 		MatchConV2*      con_foot_match_t[2];
 		MatchConS *      con_foot_match_r[2];
 
-		//CoMConR  *  con_com_r[2];      ///< range constraint on angular acceleration at beginning and end of step
-		//CoPConR  *  con_cop_r[2];      ///< range constraint on turning angle of CoM
-
+		FixConV2*        con_mom_zero;       ///< fix momentum to zero
+		
 	public:
 		virtual void AddVar(Solver* solver);
 		virtual void AddCon(Solver* solver);
@@ -126,6 +138,9 @@ namespace DiMP {;
 			real_t  toeRadius  ;
 			real_t  heelRadius ;
 
+			real_t  accWeight;       ///< weight on com-cop difference. bigger weight means smaller com acceleration
+			real_t  momWeight;       ///< weight on cmp. bigger weight means smaller angular momentum change
+
 			Param();
 		};
 
@@ -148,6 +163,8 @@ namespace DiMP {;
 			bool    fix_foot_pos_t[2];
 			bool    fix_foot_pos_r[2];
 			bool    fix_cop_pos;
+			bool    fix_cmp_pos;
+			bool    fix_mom;
 
 			Waypoint();
 		};
@@ -160,6 +177,7 @@ namespace DiMP {;
 			vec3_t  foot_pos_t[2];
 			quat_t  foot_pos_r[2];
 			vec3_t  cop_pos;
+			vec3_t  cmp_pos;
 
 			Snapshot();
 		};
@@ -189,6 +207,8 @@ namespace DiMP {;
 		pose_t FootPose   (real_t t, int side);
 		void   FootVel    (real_t t, int side, vec3_t& v, vec3_t& w);
 		vec3_t CopPos     (real_t t);
+		vec3_t CmpPos     (real_t t);
+		vec3_t Momentum   (real_t t);
 		//vec3_t FootPos(real_t t, int side);
 		//quat_t FootOri(real_t t, int side);
 		//real_t AnklePitch(real_t t, int side);
@@ -210,44 +230,75 @@ namespace DiMP {;
 	struct BipedLipCon : Constraint {
 		BipedLIPKey* obj[2];
 
-		real_t tau;
+		//real_t m;
+		//real_t g;
 		real_t T;
+		mat2_t H;
+		real_t tau;
+		real_t C, S;
 		vec2_t p0, p1;
 		vec2_t v0, v1;
 		vec2_t c0, c1;
+		vec2_t cm0, cm1;
+		vec2_t L0, L1;
+		vec2_t cmv0;
 		vec2_t cv0;
-		real_t C, S;
-
+		
 		void Prepare();
 
 		BipedLipCon(Solver* solver, int _tag, string _name, BipedLIPKey* _obj, real_t _scale);
 	};
 
 	/// CoM position constraint based on LIP model
-	struct BipedLipConP : BipedLipCon {
+	struct BipedLipPosCon : BipedLipCon {
 		virtual void  CalcCoef();
 		virtual void  CalcDeviation();
 		virtual void  CalcLhs();
 		
-		BipedLipConP(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale);
+		BipedLipPosCon(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale);
 	};
 
 	/// CoM velocity constraint based on LIP model
-	struct BipedLipConV : BipedLipCon {
+	struct BipedLipVelCon : BipedLipCon {
 		virtual void CalcCoef();
 		virtual void CalcDeviation();
 		virtual void CalcLhs();
 		
-		BipedLipConV(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale);
+		BipedLipVelCon(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale);
+	};
+
+	/// CoM acceleration constraint based on LIP model
+	struct BipedLipAccCon : BipedLipCon {
+		virtual void CalcCoef();
+		virtual void CalcDeviation();
+		
+		BipedLipAccCon(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale);
 	};
 
 	/// CoP constraint based on LIP model
-	struct BipedLipConC : BipedLipCon {
+	struct BipedLipCopCon : BipedLipCon {
 		virtual void CalcCoef();
 		virtual void CalcDeviation();
 		virtual void CalcLhs();
 		
-		BipedLipConC(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale);
+		BipedLipCopCon(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale);
+	};
+
+	/// CMP constraint based on LIP model
+	struct BipedLipCmpCon : BipedLipCon {
+		virtual void CalcCoef();
+		virtual void CalcDeviation();
+		virtual void CalcLhs();
+		
+		BipedLipCmpCon(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale);
+	};
+
+	struct BipedLipMomCon : BipedLipCon {
+		virtual void  CalcCoef();
+		virtual void  CalcDeviation();
+		virtual void  CalcLhs();
+
+		BipedLipMomCon(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale);
 	};
 
 	/// CoM position constraint (com position is constrained to weighted average of torso and feet position)

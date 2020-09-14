@@ -9,6 +9,8 @@
 #include <DiMP/Render/Canvas.h>
 #include <DiMP/Render/Config.h>
 
+#include <set>
+
 namespace DiMP{;
 
 class Geometry ;
@@ -90,6 +92,43 @@ public:
 
 	Param		 param;
 	Scale		 scale;
+
+	/// variables used for broad phase collision detection
+	struct GPTableEntry{
+		GeometryInfo* info[2];
+		uint8_t       intersect;
+
+		GPTableEntry(){
+			info[0]   = 0;
+			info[1]   = 0;
+			intersect = 0;
+		}
+	};
+
+	template<typename T>
+	class Table : public vector<T>{
+	public:
+		int nrow;
+		int ncol;
+
+		void Resize(int _nrow, int _ncol, T _val = T()){
+			resize(_nrow*_ncol, _val);
+			nrow = _nrow;
+			ncol = _ncol;
+		}
+
+		T& operator()(int r, int c){
+			return at(ncol*r + c);
+		}
+	};
+
+	class GPTable    : public Table<GPTableEntry>{};
+	class AvoidTable : public Table<AvoidTask*>{};
+
+	EdgeInfos                          edgeInfos[3];   ///< edge infos of all objects in x,y,z
+	AvoidTable                         avoidTable;
+	vector< std::set<GeometryInfo*> >  queue[3];
+	GPTable                            gpTable;
 	
 	void ExtractGeometryPairs();
 	void Prepare();

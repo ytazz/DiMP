@@ -7,10 +7,6 @@
 
 #include <Foundation/UTQPTimer.h>
 
-#include <set>
-#include <unordered_map>
-using namespace std;
-
 #include <omp.h>
 
 namespace DiMP{;
@@ -37,8 +33,11 @@ const char* VarNames[] = {
 	"biped_foot_r"     ,
 	"biped_com_pos"    ,
 	"biped_com_vel"    ,
+	"biped_mom"        ,
 	"biped_cop_pos"    ,
 	"biped_cop_vel"    ,
+	"biped_cmp_pos"    ,
+	"biped_cmp_vel"    ,
 	"biped_duration"   ,
 	"biped_time"       ,
 	"centroid_com_pos_t",
@@ -80,9 +79,12 @@ const char* ConNames[] = {
 	"match_rv"           ,
 	"avoid_p"            ,
 	"avoid_v"            ,
-	"biped_lip_p"        ,
-	"biped_lip_v"        ,
-	"biped_lip_c"        ,
+	"biped_lip_pos"      ,
+	"biped_lip_vel"      ,
+	"biped_lip_acc"      ,
+	"biped_lip_cop"      ,
+	"biped_lip_cmp"      ,
+	"biped_lip_mom"      ,
 	"biped_foot_range_t" ,
 	"biped_foot_range_r" ,
 	"biped_foot_match_t" ,
@@ -209,50 +211,9 @@ void Graph::Prepare(){
 	//nodes.Prepare();
 }
 
-struct GPTableEntry{
-	GeometryInfo* info[2];
-	uint8_t       intersect;
-
-	GPTableEntry(){
-		info[0]   = 0;
-		info[1]   = 0;
-		intersect = 0;
-	}
-};
-
-template<typename T>
-class Table : public vector<T>{
-public:
-	int nrow;
-	int ncol;
-
-	void Resize(int _nrow, int _ncol, T _val = T()){
-		resize(_nrow*_ncol, _val);
-		nrow = _nrow;
-		ncol = _ncol;
-	}
-
-	T& operator()(int r, int c){
-		return at(ncol*r + c);
-	}
-};
-
-class GPTable : public Table<GPTableEntry>{
-
-};
-
-class AvoidTable : public Table<AvoidTask*>{
-
-};
-
 void Graph::ExtractGeometryPairs(){
 	static Spr::UTQPTimer timer2;
 
-	static EdgeInfos                       edgeInfos[3];   ///< edge infos of all objects in x,y,z
-	static AvoidTable                      avoidTable;
-	static vector< set<GeometryInfo*> >    queue[3];
-	static GPTable                         gpTable;
-	
 	// create table
 	int nobj = objects.size();
 	if(avoidTable.empty()){
