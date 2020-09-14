@@ -11,4 +11,6 @@ add_library(console
 )
 target_link_libraries(console glwin)
 target_link_libraries(console Scenebuilder)
+target_link_libraries(console SDL2::SDL2)
+target_link_libraries(console SDL2_ttf::SDL2_ttf)
 
