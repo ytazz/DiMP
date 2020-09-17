@@ -34,7 +34,7 @@ namespace DiMP {;
 		V2Var*      var_torso_pos_t;    ///< position         of torso
 		SVar*       var_torso_pos_r;    ///< orientation      of torso
 		V2Var*      var_torso_vel_t;    ///< velocity         of torso
-		SVar*       var_torso_vel_r;    ///< angular velocity of torso
+		//SVar*       var_torso_vel_r;    ///< angular velocity of torso
 
 		V2Var*		var_com_pos;        ///< position of CoM
 		V2Var*		var_com_vel;        ///< velocity of CoM
@@ -150,7 +150,7 @@ namespace DiMP {;
 			vec2_t  torso_pos_t;
 			vec2_t  torso_vel_t;
 			real_t  torso_pos_r;
-			real_t  torso_vel_r;
+			//real_t  torso_vel_r;
 			vec2_t  foot_pos_t[2];
 			real_t  foot_pos_r[2];
 			vec2_t  cop_pos;
@@ -159,7 +159,7 @@ namespace DiMP {;
 			bool    fix_torso_pos_t;
 			bool    fix_torso_pos_r;
 			bool    fix_torso_vel_t;
-			bool    fix_torso_vel_r;
+			//bool    fix_torso_vel_r;
 			bool    fix_foot_pos_t[2];
 			bool    fix_foot_pos_r[2];
 			bool    fix_cop_pos;

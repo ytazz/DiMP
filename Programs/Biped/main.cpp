@@ -112,7 +112,7 @@ public:
 		biped->waypoints[0].torso_pos_t       = vec2_t(0.0, 0.0);
 		biped->waypoints[0].torso_pos_r       = 0.0;
 		biped->waypoints[0].torso_vel_t       = vec2_t(0.0, 0.0);
-		biped->waypoints[0].torso_vel_r       = 0.0;
+		//biped->waypoints[0].torso_vel_r       = 0.0;
 		biped->waypoints[0].foot_pos_t[0]     = vec2_t(0.0, -spacing);
 		biped->waypoints[0].foot_pos_r[0]     = 0.0;
 		biped->waypoints[0].foot_pos_t[1]     = vec2_t(0.0, spacing);
@@ -121,7 +121,7 @@ public:
 		biped->waypoints[0].fix_torso_pos_t   = true;
 		biped->waypoints[0].fix_torso_pos_r   = true;
 		biped->waypoints[0].fix_torso_vel_t   = true;
-		biped->waypoints[0].fix_torso_vel_r   = true;
+		//biped->waypoints[0].fix_torso_vel_r   = true;
 		biped->waypoints[0].fix_foot_pos_t[0] = true;
 		biped->waypoints[0].fix_foot_pos_r[0] = true;
 		biped->waypoints[0].fix_foot_pos_t[1] = true;
@@ -134,7 +134,7 @@ public:
 		biped->waypoints[1].torso_pos_t       = goalPos;
 		biped->waypoints[1].torso_pos_r       = goalOri;
 		biped->waypoints[1].torso_vel_t       = vec2_t(0.0, 0.0);
-		biped->waypoints[1].torso_vel_r       = 0.0;
+		//biped->waypoints[1].torso_vel_r       = 0.0;
 		biped->waypoints[1].foot_pos_t[0]     = goalPos + mat2_t::Rot(goalOri) * vec2_t(0.0, -spacing);
 		biped->waypoints[1].foot_pos_r[0]     = goalOri;
 		biped->waypoints[1].foot_pos_t[1]     = goalPos + mat2_t::Rot(goalOri) * vec2_t(0.0, spacing);
@@ -143,7 +143,7 @@ public:
 		biped->waypoints[1].fix_torso_pos_t   = true;
 		biped->waypoints[1].fix_torso_pos_r   = true;
 		biped->waypoints[1].fix_torso_vel_t   = true;
-		biped->waypoints[1].fix_torso_vel_r   = true;
+		//biped->waypoints[1].fix_torso_vel_r   = true;
 		biped->waypoints[1].fix_foot_pos_t[0] = true;
 		biped->waypoints[1].fix_foot_pos_r[0] = true;
 		biped->waypoints[1].fix_foot_pos_t[1] = true;

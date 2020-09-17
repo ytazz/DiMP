@@ -29,15 +29,15 @@ void BipedLIPKey::AddVar(Solver* solver) {
 	var_torso_pos_t = new V2Var(solver, ID(VarTag::BipedTorsoTP, node, tick, name + "_torso_tp"), node->graph->scale.pos_t);
 	var_torso_pos_r = new SVar (solver, ID(VarTag::BipedTorsoRP, node, tick, name + "_torso_rp"), node->graph->scale.pos_r);
 	var_torso_vel_t = new V2Var(solver, ID(VarTag::BipedTorsoTV, node, tick, name + "_torso_tv"), node->graph->scale.vel_t);
-	var_torso_vel_r = new SVar (solver, ID(VarTag::BipedTorsoRV, node, tick, name + "_torso_rv"), node->graph->scale.vel_r);
+	//var_torso_vel_r = new SVar (solver, ID(VarTag::BipedTorsoRV, node, tick, name + "_torso_rv"), node->graph->scale.vel_r);
 	solver->AddInputVar(var_torso_pos_t, tick->idx);
 	solver->AddInputVar(var_torso_pos_r, tick->idx);
 	solver->AddInputVar(var_torso_vel_t, tick->idx);
-	solver->AddInputVar(var_torso_vel_r, tick->idx);
+	//solver->AddInputVar(var_torso_vel_r, tick->idx);
 	var_torso_pos_t->weight = eps;
 	var_torso_pos_r->weight = eps;
 	var_torso_vel_t->weight = eps;
-	var_torso_vel_r->weight = eps;
+	//var_torso_vel_r->weight = eps;
 
 	// foot position
 	var_foot_pos_t[0] = new V2Var(solver, ID(VarTag::BipedFootT, node, tick, name + "_foot_r_t"), node->graph->scale.pos_t);
@@ -300,7 +300,7 @@ BipedLIP::Waypoint::Waypoint() {
 	torso_pos_t   = vec2_t();
 	torso_pos_r   = 0.0;
 	torso_vel_t   = vec2_t();
-	torso_vel_r   = 0.0;
+	//torso_vel_r   = 0.0;
 	foot_pos_t[0] = vec2_t();
 	foot_pos_r[0] = 0.0;
 	foot_pos_t[1] = vec2_t();
@@ -310,7 +310,7 @@ BipedLIP::Waypoint::Waypoint() {
 	fix_torso_pos_t   = false;
 	fix_torso_pos_r   = false;
 	fix_torso_vel_t   = false;
-	fix_torso_vel_r   = false;
+	//fix_torso_vel_r   = false;
 	fix_foot_pos_t[0] = false;
 	fix_foot_pos_r[0] = false;
 	fix_foot_pos_t[1] = false;
@@ -429,7 +429,7 @@ void BipedLIP::Init() {
 	Curved  curve_torso_r, curve_foot_r[2];
 
 	curve_torso_t  .SetType(Interpolate::Cubic);
-	curve_torso_r  .SetType(Interpolate::Cubic);
+	curve_torso_r  .SetType(Interpolate::LinearDiff);
 	curve_foot_t[0].SetType(Interpolate::Cubic);
 	curve_foot_r[0].SetType(Interpolate::Cubic);
 	curve_foot_t[1].SetType(Interpolate::Cubic);
@@ -446,7 +446,7 @@ void BipedLIP::Init() {
 
 		curve_torso_r.AddPoint(t);
 		curve_torso_r.SetPos(i, wp.torso_pos_r);
-		curve_torso_r.SetVel(i, wp.torso_vel_r);
+		//curve_torso_r.SetVel(i, wp.torso_vel_r);
 
 		for (uint j = 0; j < 2; j++) {
 			curve_foot_t[j].AddPoint(t);
@@ -467,7 +467,7 @@ void BipedLIP::Init() {
 		key->var_torso_pos_r->val = curve_torso_r.CalcPos(t);
 
 		key->var_torso_vel_t->val = curve_torso_t.CalcVel(t);
-		key->var_torso_vel_r->val = curve_torso_r.CalcVel(t);
+		//key->var_torso_vel_r->val = curve_torso_r.CalcVel(t);
 
 		for (uint j = 0; j < 2; j++) {
 			key->var_foot_pos_t[j]->val = curve_foot_t[j].CalcPos(t);
@@ -510,7 +510,7 @@ void BipedLIP::Init() {
 		key->var_torso_pos_t->locked = wp.fix_torso_pos_t;
 		key->var_torso_pos_r->locked = wp.fix_torso_pos_r;
 		key->var_torso_vel_t->locked = wp.fix_torso_vel_t;
-		key->var_torso_vel_r->locked = wp.fix_torso_vel_r;
+		//key->var_torso_vel_r->locked = wp.fix_torso_vel_r;
 		key->var_cop_pos    ->locked = wp.fix_cop_pos;
 		key->var_cmp_pos    ->locked = wp.fix_cmp_pos;
 		key->var_mom        ->locked = wp.fix_mom;
@@ -655,11 +655,15 @@ real_t BipedLIP::TorsoOri(real_t t) {
 			t,
 			t0,
 			key0->var_torso_pos_r->val,
-			key0->var_torso_vel_r->val,
+			//key0->var_torso_vel_r->val,
+			0.0,
 			t1,
 			key1->var_torso_pos_r->val,
-			key1->var_torso_vel_r->val,
-			Interpolate::Cubic);
+			//key1->var_torso_vel_r->val,
+			0.0,
+			//Interpolate::Cubic
+			Interpolate::LinearDiff
+		);
 	}
 	else {
 		o = key0->var_torso_pos_r->val;
@@ -682,14 +686,19 @@ real_t BipedLIP::TorsoAngVel(real_t t) {
 			t,
 			t0,
 			key0->var_torso_pos_r->val,
-			key0->var_torso_vel_r->val,
+			//key0->var_torso_vel_r->val,
+			0.0,
 			t1,
 			key1->var_torso_pos_r->val,
-			key1->var_torso_vel_r->val,
-			Interpolate::Cubic);
+			//key1->var_torso_vel_r->val,
+			0.0,
+			//Interpolate::Cubic
+			Interpolate::LinearDiff
+		);
 	}
 	else {
-		r = key0->var_torso_vel_r->val;
+		//r = key0->var_torso_vel_r->val;
+		r = 0.0;
 	}
 
 	return r;
@@ -700,7 +709,8 @@ real_t BipedLIP::TorsoAngAcc(real_t t) {
 	BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;
 
 	real_t a;
-
+	a = 0.0;
+	/*
 	if (key1 == key0->next) {
 		real_t t0 = key0->var_time->val;
 		real_t t1 = key1->var_time->val;
@@ -718,7 +728,7 @@ real_t BipedLIP::TorsoAngAcc(real_t t) {
 	else {
 		a = 0.0;
 	}
-
+	*/
 	return a;
 }
 
