@@ -38,13 +38,13 @@ struct VarTag{
 		BipedCmpV,
 		BipedDuration,
 		BipedTime,
-		CentroidComTP,
-		CentroidComRP,
-		CentroidComTV,
-		CentroidComRV,
+		CentroidTP,
+		CentroidRP,
+		CentroidTV,
+		CentroidRV,
 		CentroidEndTP,
-		CentroidVel,
-		CentroidForce,
+		CentroidEndTV,
+		CentroidEndTF,
 		NumTypes,
 	};
 };
@@ -96,6 +96,13 @@ struct ConTag{
 		BipedCop,
 		BipedDuration,
 		BipedTime,
+		CentroidPosT,
+		CentroidPosR,
+		CentroidVelT,
+		CentroidVelR,
+		CentroidEndRange,
+		CentroidEndVel,
+		CentroidEndForce,
 		NumTypes,
 	};
 };
