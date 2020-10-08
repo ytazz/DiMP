@@ -4,8 +4,8 @@
 #include <DiMP/Graph/Graph.h>
 #include <DiMP/Render/Config.h>
 
-#include <Foundation/UTQPTimer.h>
-static UTQPTimer ptimer;
+#include <sbtimer.h>
+static Timer timer;
 
 #include <omp.h>
 
@@ -68,7 +68,7 @@ void AvoidKey::Prepare(){
 		*/
 		DSTR << "geo0: " << obj0->geoInfos.size() << " geo1: " << obj1->geoInfos.size() << " geo pair: " << geoPairs.size() << endl;
 
-		ptimer.CountUS();
+		timer.CountUS();
 		for(int gp_idx = 0; gp_idx < geoPairs.size(); gp_idx++){
 			GeometryPair& gp = geoPairs[gp_idx];
 	
@@ -124,7 +124,7 @@ void AvoidKey::Prepare(){
 				}
 			}
 		}
-		int timeEnum = ptimer.CountUS();
+		int timeEnum = timer.CountUS();
 
 		if(gpmax){
 			con_p->gp     = gpmax;

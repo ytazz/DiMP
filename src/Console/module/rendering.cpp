@@ -4,8 +4,8 @@
 
 #include <sbconsole.h>
 
-#include <Foundation/UTQPTimer.h>
-static UTQPTimer ptimer;
+#include <sbtimer.h>
+static Timer timer;
 
 RenderingManager::RenderingManager(){
 	timerPeriod	        = 100;
@@ -111,7 +111,7 @@ void RenderingManager::Handle(){
 		SDL_GL_SwapWindow(sdlWindow);
 
 		// コンソールに情報出力
-		ptimer.CountUS();
+		timer.CountUS();
 		infoLines.clear();
 		mod->OnPrint(infoLines);
 		
@@ -123,7 +123,7 @@ void RenderingManager::Handle(){
 			Scenebuilder::Console::Write(consoleMessageCol, consoleMessageRow + i, msgLines[i]); 
 
 		Scenebuilder::Console::Refresh(0, consoleInputRow);
-		timeText = ptimer.CountUS();
+		timeText = timer.CountUS();
 	}
 	if(evUpdate.IsSet()){
 		//cout << "ren update" << endl;

@@ -8,8 +8,6 @@ if(NOT CMAKE_DEBUG_POSTFIX)
   set(CMAKE_DEBUG_POSTFIX d)
 endif()
 
-set(SPRINGHEAD_DIR           "" CACHE PATH "root directory of Springhead")
-#set(SCENEBUILDER_INCLUDE_DIR "" CACHE PATH "Scenebuilder include directory")
 set(MKL_INCLUDE_DIR          "" CACHE PATH "MKL include directory")
 
 set(BUILD_EXAMPLES false CACHE BOOL "build example projects or not")
@@ -29,6 +27,7 @@ find_package(GLEW)
 find_package(EXPAT)
 find_package(LAPACK)
 find_package(Freetype)
+find_package(Springhead)
 find_package(Scenebuilder)
 find_package(SDL2     REQUIRED COMPONENTS SDL2::SDL2)
 find_package(SDL2_ttf REQUIRED COMPONENTS SDL2_ttf::SDL2_ttf)
@@ -43,8 +42,6 @@ add_definitions(-DFREEGLUT_LIB_PRAGMAS=0)
 
 include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_SOURCE_DIR}/src/Console)
-include_directories(${SPRINGHEAD_DIR}/core/include)
-include_directories(${SPRINGHEAD_DIR}/core/src)
 include_directories(${GLUT_INCLUDE_DIR})
 include_directories(${MKL_INCLUDE_DIR})
 
@@ -55,11 +52,7 @@ foreach(_variableName ${_variableNames})
 endforeach()
 
 if(BUILD_PROGRAMS OR BUILD_EXAMPLES)
-	set(SPRINGHEAD_LIBRARY_DEBUG                 "" CACHE FILEPATH "path to Springhead debug   library")
-	set(SPRINGHEAD_LIBRARY_RELEASE               "" CACHE FILEPATH "path to Springhead release library")
 	set(MKL_LIB_DIR                              "" CACHE PATH "path to MKL lib directory")
-	
-	link_directories(${SPRINGHEAD_DIR}/core/lib)
 endif()
 
 if(BUILD_PROGRAMS)

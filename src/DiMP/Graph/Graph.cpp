@@ -5,7 +5,7 @@
 #include <DiMP/Render/Config.h>
 #include <DiMP/Render/Canvas.h>
 
-#include <Foundation/UTQPTimer.h>
+#include <sbtimer.h>
 
 #include <omp.h>
 
@@ -212,7 +212,7 @@ void Graph::Prepare(){
 }
 
 void Graph::ExtractGeometryPairs(){
-	static Spr::UTQPTimer timer2;
+	static Timer timer2;
 
 	// create table
 	int nobj = objects.size();
@@ -379,7 +379,7 @@ void Graph::Step(){
 	if(!ready)
 		Init();
 
-	static Spr::UTQPTimer timer;
+	static Timer timer;
 	timer.CountUS();
 	Prepare();
 	uint TPrepare = timer.CountUS();

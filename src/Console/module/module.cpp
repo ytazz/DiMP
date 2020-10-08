@@ -3,9 +3,9 @@
 #include <module/simulation.h>
 #include <module/module.h>
 
-#include <Foundation/UTQPTimer.h>
-static UTQPTimer ptimer;
-static UTQPTimer ptimer1;
+#include <sbtimer.h>
+static Timer timer;
+static Timer timer1;
 
 #if defined __unix__
 # include <unistd.h>
@@ -13,7 +13,7 @@ static UTQPTimer ptimer1;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-Uint32 TimerCallback(Uint32 interval, void *param){
+Uint32 ModuleTimerCallback(Uint32 interval, void *param){
 	SDL_Event ev;
 	ev.type = SDL_USEREVENT;
 	ev.user.code = (int)param;
@@ -127,8 +127,8 @@ bool Module::Init(int argc, char* argv[]){
 	simManager->Run();
 	
 	// ƒ^ƒCƒ}‰Šú‰»
-	SDL_AddTimer(renManager->timerPeriod, TimerCallback, (void*)renManager);
-	SDL_AddTimer(simManager->timerPeriod, TimerCallback, (void*)simManager);
+	SDL_AddTimer(renManager->timerPeriod, ModuleTimerCallback, (void*)renManager);
+	SDL_AddTimer(simManager->timerPeriod, ModuleTimerCallback, (void*)simManager);
 	
 	return true;
 }
@@ -212,9 +212,9 @@ bool Module::OnRequest(){
 }
 
 void Module::OnStep(){
-	ptimer.CountUS();
+	timer.CountUS();
 	graph->Step();
-	compTime       = ptimer.CountUS();
+	compTime       = timer.CountUS();
 	compTimeTotal += compTime;
 		
 	iterCount++;

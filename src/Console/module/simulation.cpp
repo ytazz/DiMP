@@ -2,9 +2,8 @@
 #include <module/rendering.h>
 #include <module/module.h>
 
-#include <Foundation/UTQPTimer.h>
-
-UTQPTimer ptimer;
+#include <sbtimer.h>
+Timer timer;
 
 SimulationManager::SimulationManager(){
 	timerPeriod	= 100;

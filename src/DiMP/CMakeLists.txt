@@ -74,6 +74,8 @@ add_library(dimp
 	${DIMP_HEADERS_LOAD}
 	${DIMP_HEADERS_RENDER}
 	)
+
+target_link_libraries(dimp Springhead::Springhead)
 target_link_libraries(dimp Scenebuilder)
 
 install(TARGETS dimp
