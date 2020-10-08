@@ -52,11 +52,14 @@ public:
 		centroid->param.ends[1].rangeMax = vec3_t( 1.0,  1.0,  1.0);
 
 		centroid->param.faces.resize(1);
-		centroid->param.faces[0].pos      = vec3_t();
-		centroid->param.faces[0].ori      = quat_t();
-		centroid->param.faces[0].normal   = vec3_t(0.0, 0.0, 1.0);
-		centroid->param.faces[0].rangeMin = vec2_t(-10.0, -10.0);
-		centroid->param.faces[0].rangeMax = vec2_t( 10.0,  10.0);
+		DiMP::Centroid::Param::Face& f = centroid->param.faces[0];
+		f.pos      = vec3_t();
+		f.normal   = vec3_t(0.0, 0.0, 1.0);
+		f.edges.resize(4);
+		f.edges[0].normal = vec3_t( 1.0,  0.0, 0.0); f.edges[0].offset = 1.0;
+		f.edges[1].normal = vec3_t(-1.0,  0.0, 0.0); f.edges[1].offset = 1.0;
+		f.edges[2].normal = vec3_t( 0.0,  1.0, 0.0); f.edges[2].offset = 1.0;
+		f.edges[3].normal = vec3_t( 0.0, -1.0, 0.0); f.edges[2].offset = 1.0;
 		
 		const int N = 10;
 		for(int i = 0; i < N; i++)
@@ -67,24 +70,24 @@ public:
 
 		centroid->waypoints.resize(2);
 		centroid->waypoints[0].k = 0;
-		centroid->waypoints[0].com_pos_t = vec3_t(0.0, 0.0, 0.0);
-		centroid->waypoints[0].com_pos_r = quat_t();
-		centroid->waypoints[0].com_vel_t = vec3_t(0.0, 0.0, 0.0);
-		centroid->waypoints[0].com_vel_r = vec3_t(0.0, 0.0, 0.0);
-		centroid->waypoints[0].fix_com_pos_t = true;
-		centroid->waypoints[0].fix_com_pos_r = true;
-		centroid->waypoints[0].fix_com_vel_t = true;
-		centroid->waypoints[0].fix_com_vel_r = true;
+		centroid->waypoints[0].pos_t = vec3_t(0.0, 0.0, 0.0);
+		centroid->waypoints[0].pos_r = quat_t();
+		centroid->waypoints[0].vel_t = vec3_t(0.0, 0.0, 0.0);
+		centroid->waypoints[0].vel_r = vec3_t(0.0, 0.0, 0.0);
+		centroid->waypoints[0].fix_pos_t = true;
+		centroid->waypoints[0].fix_pos_r = true;
+		centroid->waypoints[0].fix_vel_t = true;
+		centroid->waypoints[0].fix_vel_r = true;
 
 		centroid->waypoints[1].k = 10;
-		centroid->waypoints[1].com_pos_t = goalPos;
-		centroid->waypoints[1].com_pos_r = goalOri;
-		centroid->waypoints[1].com_vel_t = vec3_t(0.0, 0.0, 0.0);
-		centroid->waypoints[1].com_vel_r = vec3_t(0.0, 0.0, 0.0);
-		centroid->waypoints[1].fix_com_pos_t = true;
-		centroid->waypoints[1].fix_com_pos_r = true;
-		centroid->waypoints[1].fix_com_vel_t = true;
-		centroid->waypoints[1].fix_com_vel_r = true;
+		centroid->waypoints[1].pos_t = goalPos;
+		centroid->waypoints[1].pos_r = goalOri;
+		centroid->waypoints[1].vel_t = vec3_t(0.0, 0.0, 0.0);
+		centroid->waypoints[1].vel_r = vec3_t(0.0, 0.0, 0.0);
+		centroid->waypoints[1].fix_pos_t = true;
+		centroid->waypoints[1].fix_pos_r = true;
+		centroid->waypoints[1].fix_vel_t = true;
+		centroid->waypoints[1].fix_vel_r = true;
 
 		graph->scale.Set(1.0, 1.0, 1.0);
 		graph->Init();
