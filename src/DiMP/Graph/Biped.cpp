@@ -356,6 +356,7 @@ void BipedLIP::Init() {
 	for (uint k = 0; k < graph->ticks.size(); k++) {
 		BipedLIPKey* key = (BipedLIPKey*)traj.GetKeypoint(graph->ticks[k]);
 
+		key->tick->time    = t;
 		key->var_time->val = t;
 
 		int ph = phase[key->tick->idx];
@@ -732,7 +733,7 @@ real_t BipedLIP::TorsoAngAcc(real_t t) {
 	return a;
 }
 
-pose_t BipedLIP::FootPose(real_t t, int side) {
+void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& angvel, vec3_t& acc, vec3_t& angacc) {
 	BipedLIPKey* keym2 = 0;
 	BipedLIPKey* keym1 = 0;
 	BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;
@@ -740,17 +741,22 @@ pose_t BipedLIP::FootPose(real_t t, int side) {
 	BipedLIPKey* key2  = 0;
 	BipedLIPKey* key3  = 0;
 
-	pose_t pose;
-	vec2_t pos2;         //< pos x, y
-	real_t z     = 0.0;  //< pos z
-	real_t pitch = 0.0;  //< pitch angle
-	real_t yaw   = 0.0;
+	vec2_t pos2, vel2, acc2;                         //< pos x, y
+	real_t z     = 0.0, vz     = 0.0, az     = 0.0;  //< pos z
+	real_t pitch = 0.0, vpitch = 0.0, apitch = 0.0;  //< pitch angle
+	real_t yaw   = 0.0, vyaw   = 0.0, ayaw   = 0.0;  //< yaw angle
 
 	if(key1 != key0->next){
 		pos2 = key0->var_foot_pos_t[side]->val;
 		pose.Pos() = vec3_t(pos2.x, pos2.y, z);
 		pose.Ori() = FromRollPitchYaw(vec3_t(0.0, 0.0, key0->var_foot_pos_r[side]->val));
-		return pose;
+		
+		vel   .clear();
+		angvel.clear();
+		acc   .clear();
+		angacc.clear();
+
+		return;
 	}
 
 	if(         key0 ->prev) keym1 = (BipedLIPKey*)key0 ->prev;
@@ -764,46 +770,49 @@ pose_t BipedLIP::FootPose(real_t t, int side) {
 	real_t t0   = key0->var_time->val;
 	real_t tau  = key0->var_duration->val;  //< phase duration
 	real_t t1   = t0 + tau;
-	real_t dt   = t - t0;                   //< elapsed time since phase change
+	real_t dt   = std::max(t - t0, 0.0);    //< elapsed time since phase change
 	real_t s    = dt/tau;                   //< normalized time
 	vec2_t p0   = key0->var_foot_pos_t[side]->val;
 	vec2_t p1   = key1->var_foot_pos_t[side]->val;
 	real_t yaw0 = key0->var_foot_pos_r[side]->val;
 	real_t yaw1 = key1->var_foot_pos_r[side]->val;
+	real_t h0   = param.swingHeight[0];
+	real_t h1   = param.swingHeight[1];
 			
 	if (param.swingProfile == SwingProfile::Wedge) {
 		// double support
 		if(ph == Phase::LR || ph == Phase::RL || ph == Phase::D){
-			pos2 = key0->var_foot_pos_t[side]->val;
+			pos2 = p0;
 		}
 		// support foot of single support
 		if( (ph == Phase::R && side == 0) ||
 		    (ph == Phase::L && side == 1) ){
-			pos2 = key0->var_foot_pos_t[side]->val;
+			pos2 = p0;
 		}
 		// swing foot of single support
 		if( (ph == Phase::R && side == 1) ||
 		    (ph == Phase::L && side == 0) ){
 			if (dt < tau/2.0) {
-				z = param.swingHeight[0];
+				z  = h0;
 			}
 			else{
 				real_t a = dt/(tau/2.0) - 1.0;
-				z = (1 - a)*param.swingHeight[0] + a*param.swingHeight[1];
+				z  = (1 - a)*h0 + a*h1;
+				vz = (h1 - h0)/(tau/2.0);
 			}
 			pos2 = p0 + (p1 - p0)*s;
+			vel2 = (p1 - p0)/tau;
 		}
-		pose.Pos() = vec3_t(pos2.x, pos2.y, z);
 	}
 	if (param.swingProfile == SwingProfile::Cycloid){
 		// double support
 		if(ph == Phase::LR || ph == Phase::RL || ph == Phase::D){
-			pos2 = key0->var_foot_pos_t[side]->val;
+			pos2 = p0;
 		}
 		// support foot of single support
 		if( (ph == Phase::R && side == 0) ||
 		    (ph == Phase::L && side == 1) ){
-			pos2 = key0->var_foot_pos_t[side]->val;
+			pos2 = p0;
 		}
 		// swing foot of single support
 		if( (ph == Phase::R && side == 1) ||
@@ -812,9 +821,14 @@ pose_t BipedLIP::FootPose(real_t t, int side) {
 			real_t cv = (1 - cos(_2pi*s))/2.0;
 				
 			pos2 = p0 + (p1 - p0)*ch;
-			z    = param.swingHeight[0]*cv;
+			z    = h0*cv;
+
+			vel2 = ((p1 - p0)/tau)*(1.0 - cos(_2pi*s));
+			vz   = (h0/(2.0*tau))*_2pi*sin(_2pi*s);
+
+			acc2 = ((p1 - p0)/(tau*tau))*_2pi*sin(_2pi*s);
+			az   = (h0/(2.0*tau*tau))*(_2pi*_2pi)*cos(_2pi*s);
 		}
-		pose.Pos() = vec3_t(pos2.x, pos2.y, z);
 	}
 	if(param.swingProfile == SwingProfile::HeelToe){
 		real_t l0 = param.ankleToToe ;
@@ -825,6 +839,7 @@ pose_t BipedLIP::FootPose(real_t t, int side) {
 		vec2_t c0 = key0->var_cop_pos->val;
 		vec2_t c1 = key1->var_cop_pos->val;
 		real_t ct = c0.x + (c1.x - c0.x)*s;
+		real_t vc = (c1.x - c0.x)/tau;
 		
 		// support foot of single support phase
 		if( (ph == Phase::R && side == 0) ||
@@ -835,18 +850,24 @@ pose_t BipedLIP::FootPose(real_t t, int side) {
 				pitch  = (ct - (p0.x - l1))/r1;
 				pos2.x = p0.x + r1*(pitch - sin(pitch)) - l1*(1-cos(pitch));
 				z      =        r1*(1.0   - cos(pitch)) - l1*sin(pitch);
+
+				vpitch = vc/r1;
+				vel2.x = (r1*(1.0 - cos(pitch)) - l1*sin(pitch))*vpitch;
+				vz     = (r1*sin(pitch) - l1*cos(pitch))*vpitch;
 			}
 			// current cop is on toe
 			else if(ct > p0.x + l0){
 				pitch  = (ct - (p0.x + l0))/r0;
 				pos2.x = p0.x + r0*(pitch - sin(pitch)) + l0*(1 - cos(pitch));
 				z      =        r0*(1.0   - cos(pitch)) + l0*sin(pitch);
+
+				vpitch = vc/r0;
+				vel2.x = (r0*(1.0 - cos(pitch)) + l0*sin(pitch))*vpitch;
+				vz     = (r0*sin(pitch) + l0*cos(pitch))*vpitch;
 			}
 			// current cop is in the middle
 			else{
-				pitch  = 0.0;
 				pos2.x = p0.x;
-				z      = 0.0;
 			}
 		}
 		// swing foot of single support phase
@@ -891,8 +912,18 @@ pose_t BipedLIP::FootPose(real_t t, int side) {
 			z      = InterpolatePos(t, t0, p00z  , v00z  , t1, p11z  , v11z  , Spr::Interpolate::Cubic);
 			pitch  = InterpolatePos(t, t0, theta0, omega0, t1, theta1, omega1, Spr::Interpolate::Cubic);
 
+			vel2.x = InterpolateVel(t, t0, p00x  , v00x  , t1, p11x  , v11x  , Spr::Interpolate::Cubic);
+			vz     = InterpolateVel(t, t0, p00z  , v00z  , t1, p11z  , v11z  , Spr::Interpolate::Cubic);
+			vpitch = InterpolateVel(t, t0, theta0, omega0, t1, theta1, omega1, Spr::Interpolate::Cubic);
+
+			acc2.x = InterpolateAcc(t, t0, p00x  , v00x  , t1, p11x  , v11x  , Spr::Interpolate::Cubic);
+			az     = InterpolateAcc(t, t0, p00z  , v00z  , t1, p11z  , v11z  , Spr::Interpolate::Cubic);
+			apitch = InterpolateAcc(t, t0, theta0, omega0, t1, theta1, omega1, Spr::Interpolate::Cubic);
+
 			// add cycloid movement to z to avoid scuffing the ground
-			z += param.swingHeight[0]*(1 - cos(_2pi*s))/2.0;
+			z  += h0*(1 - cos(_2pi*s))/2.0;
+			vz += (h0/(2.0*tau))*_2pi*sin(_2pi*s);
+			az += (h0/(2.0*tau*tau))*(_2pi*_2pi)*cos(_2pi*s);
 		
 			//vec2_t r(p11x - p00x, p11z - p00z);
 			//real_t a     = r.norm();
@@ -917,6 +948,13 @@ pose_t BipedLIP::FootPose(real_t t, int side) {
 			pitch  = std::max(0.0, (c0.x + cv*dt) - (p0.x + l0))/r0;		
 			pos2.x = p0.x + r0*(pitch - sin(pitch)) + l0*(1.0 - cos(pitch));
 			z      =        r0*(1.0   - cos(pitch)) + l0*sin(pitch);
+
+			if( pitch > 0.0 )
+				 vpitch = cv/r0;
+			else vpitch = 0.0;
+			
+			vel2.x = (r0*(1.0 - cos(pitch)) + l0*sin(pitch))*vpitch;
+			vz     = (r0*sin(pitch) + l0*cos(pitch))*vpitch;
 		}
 		// landed foot of double support phase
 		if( (ph == Phase::LR && side == 0)||
@@ -930,6 +968,13 @@ pose_t BipedLIP::FootPose(real_t t, int side) {
 			pitch  = std::min(0.0, (c1.x - cv*(tau - dt)) - (p0.x - l1))/r1;
 			pos2.x = p0.x + r1*(pitch - sin(pitch)) - l1*(1.0 - cos(pitch));
 			z      =        r1*(1.0   - cos(pitch)) - l1*sin(pitch);
+
+			if( pitch < 0.0)
+				 vpitch = cv/r1;
+			else vpitch = 0.0;
+			
+			vel2.x = (r1*(1.0 - cos(pitch)) - l1*sin(pitch))*vpitch;
+			vz     = (r1*sin(pitch) - l1*cos(pitch))*vpitch;
 		}
 		// double support
 		if(ph == Phase::D){
@@ -939,18 +984,26 @@ pose_t BipedLIP::FootPose(real_t t, int side) {
 		}
 
 		pos2.y = p0.y + (p1.y - p0.y)*s;
-		pose.Pos() = vec3_t(pos2.x, pos2.y, z);
+		vel2.y = (p1.y - p0.y)*tau;
 	}
 
 	// yaw angle: linear interpolation
-	yaw = (1.0-s)*yaw0 + s*yaw1;
+	yaw  = (1.0-s)*yaw0 + s*yaw1;
+	vyaw = (yaw1 - yaw0)/tau;
+	ayaw = 0.0;
 
+	pose.Pos() = vec3_t(pos2.x, pos2.y, z);
 	pose.Ori() = FromRollPitchYaw(vec3_t(0.0, pitch, yaw));
 
-	return pose;
+	vel    = vec3_t(vel2.x, vel2.y, vz);
+	angvel = vec3_t(0.0, vpitch, vyaw);
+
+	acc    = vec3_t(acc2.x, acc2.y, az);
+	angacc = vec3_t(0.0, apitch, ayaw);
 }
 
-void BipedLIP::FootVel(real_t t, int side, vec3_t& v, vec3_t& w){
+/*
+void BipedLIP::FootVel(real_t t, int side, vec3_t& vel, vec3_t& angvel){
 	// calculate velocity by forward difference
 	const real_t dt = 0.001;
 	const real_t dtinv = 1.0/dt;
@@ -958,15 +1011,31 @@ void BipedLIP::FootVel(real_t t, int side, vec3_t& v, vec3_t& w){
 	pose_t P0 = FootPose(t     , side);
 	pose_t P1 = FootPose(t + dt, side);
 
-	v = (P1.Pos() - P0.Pos())*dtinv;
+	vel = (P1.Pos() - P0.Pos())*dtinv;
 	
 	quat_t dp = P0.Ori().Conjugated() * P1.Ori();
 	vec3_t axis   = dp.Axis ();
 	real_t theta  = dp.Theta();
 	if(theta > pi)
 		theta -= 2*pi;
-	w = (P0.Ori() * (theta * axis))*dtinv;
+	angvel = (P0.Ori() * (theta * axis))*dtinv;
 }
+*/
+/*
+void BipedLIP::FootAcc(real_t t, int side, vec3_t& acc, vec3_t& angacc){
+	// calculate velocity by forward difference
+	const real_t dt = 0.001;
+	const real_t dtinv = 1.0/dt;
+
+	vec3_t v0, w0;
+	vec3_t v1, w1;
+	FootVel(t     , side, v0, w0);
+	FootVel(t + dt, side, v1, w1);
+
+	acc    = (v1 - v0)*dtinv;
+	angacc = (w1 - w0)*dtinv;
+}
+*/
 
 vec3_t BipedLIP::CopPos(real_t t) {
 	BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;
@@ -1024,6 +1093,13 @@ vec3_t BipedLIP::TorsoVel(const vec3_t& vcom, const vec3_t& vsup, const vec3_t& 
 	real_t mf = param.footMass;
 	vec3_t vt = ((mt + 2.0*mf)*vcom - mf * (vsup + vswg)) / mt;
 	return vt;
+}
+
+vec3_t BipedLIP::TorsoAcc(const vec3_t& acom, const vec3_t& asup, const vec3_t& aswg) {
+	real_t mt = param.torsoMass;
+	real_t mf = param.footMass;
+	vec3_t at = ((mt + 2.0*mf)*acom - mf * (asup + aswg)) / mt;
+	return at;
 }
 
 //------------------------------------------------------------------------------------------------
@@ -1113,13 +1189,14 @@ void BipedLIP::Draw(Render::Canvas* canvas, Render::Config* conf) {
 
 void BipedLIP::CreateSnapshot(real_t t, BipedLIP::Snapshot& s){
 	pose_t pose;
+	vec3_t vel, angvel, acc, angacc;
 
 	s.t = t;
 	s.com_pos = ComPos(t);
-	pose = FootPose(t, 0);
+	FootPose(t, 0, pose, vel, angvel, acc, angacc);
 	s.foot_pos_t[0] = pose.Pos();
 	s.foot_pos_r[0] = pose.Ori();
-	pose = FootPose(t, 1);
+	FootPose(t, 1, pose, vel, angvel, acc, angacc);
 	s.foot_pos_t[1] = pose.Pos();
 	s.foot_pos_r[1] = pose.Ori();
 	s.torso_pos_t = TorsoPos(s.com_pos, s.foot_pos_t[0], s.foot_pos_t[1]);
@@ -1183,11 +1260,18 @@ void BipedLIP::Save(const char* filename) {
 
 	real_t dt = 0.0001;
 	real_t tf = traj.back()->tick->time;
-	for (real_t t = 0.0; t <= tf; t += dt) {
 
+	pose_t pose;
+	vec3_t vel, angvel, acc, angacc;
+	for (real_t t = 0.0; t <= tf; t += dt) {
 		vec3_t com_p   = ComPos(t);
-		vec3_t lfoot_p = FootPose(t, 1).Pos();
-		vec3_t rfoot_p = FootPose(t, 0).Pos();
+
+		FootPose(t, 1, pose, vel, angvel, acc, angacc);
+		vec3_t lfoot_p = pose.Pos();
+
+		FootPose(t, 0, pose, vel, angvel, acc, angacc);
+		vec3_t rfoot_p = pose.Pos();
+
 		vec3_t cop_p   = CopPos(t);
 
 		fprintf(file, "%3.4lf,", t);
