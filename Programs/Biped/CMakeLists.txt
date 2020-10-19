@@ -8,8 +8,7 @@ set_target_properties(Biped PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BIN_IN
 set_target_properties(Biped PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY    ${BIN_DIR})
 
 target_link_libraries(Biped console)
-target_link_libraries(Biped debug     ${SPRINGHEAD_LIBRARY_DEBUG})
-target_link_libraries(Biped optimized ${SPRINGHEAD_LIBRARY_RELEASE})
+target_link_libraries(Biped Springhead::Springhead)
 target_link_libraries(Biped dimp)
 target_link_libraries(Biped Scenebuilder)
 target_link_libraries(Biped SDL2::SDL2)

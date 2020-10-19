@@ -8,9 +8,11 @@ struct CentroidPosConT;
 struct CentroidPosConR;
 struct CentroidVelConT;
 struct CentroidVelConR;
-struct CentroidEndRangeCon;
-struct CentroidEndVelCon;
-struct CentroidEndForceCon;
+struct CentroidRangeCon;
+struct CentroidGapCon;
+struct CentroidVelCon;
+struct CentroidFrictionCon;
+struct CmplCon;
 
 /**
 	centroidal dynamics model
@@ -27,19 +29,34 @@ public:
 	CentroidVelConT*  con_vel_t;
 	CentroidVelConR*  con_vel_r;
 
-	struct End{
-		V3Var*                 var_pos_t;
-		V3Var*                 var_force_t;
-		
-		CentroidEndRangeCon*   con_range[3];
-		CentroidEndVelCon*     con_vel;
-		CentroidEndForceCon*   con_force;
+	struct Face{
+		SVar*                  var_force[3];
+		SVar*                  var_gap;
+		SVar*                  var_gap_cmpl;
+		SVar*                  var_vel_cmpl;
+
+		CentroidGapCon*        con_gap;
+		CentroidFrictionCon*   con_fric;
+		CmplCon*               con_gap_cmpl[2];
+		CmplCon*               con_vel_cmpl[2];
 
 		vec3_t  pc;
-		mat3_t  Rc;
-	};
+		mat3_t  R;
+		real_t  mu;
 
-	vector<End>  ends;
+		vec3_t f();
+	};
+	struct End{
+		V3Var*                 var_pos;
+		SVar*                  var_vel;
+		
+		CentroidRangeCon*      con_range[3];
+		CentroidVelCon*        con_vel;
+
+		vector<Face>  faces;
+	};
+	
+	vector<End>      ends;
 
 public:
 	virtual void AddVar(Solver* solver);
@@ -58,22 +75,23 @@ public:
 			vec3_t  rangeMax;
 		};
 		struct Edge{
-			vec3_t  normal;
-			real_t  offset;
+			vec3_t  n;
+			vec3_t  v[2];
 		};
 		struct Face{
 			vec3_t  origin;
 			mat3_t  R;
-
+			real_t  mu;
+		
 			vector<vec3_t>  vertices;
 			vector<Edge>    edges;
+
+			void CalcNearest(const vec3_t& p, vec3_t& pc);
 		};
 
 		real_t	mass;
 		vec3_t	gravity;
-		real_t  mu;
-		real_t  gamma;
-
+		
 		vector<End>   ends;
 		vector<Face>  faces;
 
@@ -117,8 +135,6 @@ public:
 	virtual Keypoint*	CreateKeypoint() { return new CentroidKey(); }
 	virtual void		Init();
 	virtual void		Prepare();
-
-	void CalcNearest(const vec3_t& p, vec3_t& _pc, mat3_t& _Rc);
 
 	vec3_t ComPos   (real_t t, int type = Interpolate::Quadratic);
 	vec3_t ComVel   (real_t t, int type = Interpolate::Quadratic);
@@ -175,35 +191,78 @@ struct CentroidVelConR : CentroidCon{
 	CentroidVelConR(Solver* solver, int _tag, string _name, CentroidKey* _obj, real_t _scale);
 };
 
-struct CentroidEndRangeCon : Constraint{
+struct CentroidRangeCon : Constraint{
 	CentroidKey* obj;
 	int          iend;
 	int          dir;
+	vec3_t       n;
+	vec3_t       nabs;
+	vec3_t       p;
+	quat_t       q;
+	vec3_t       pend;
+	vec3_t       dp;
+
+	void Prepare();
 
 	virtual void  CalcCoef();
 	virtual void  CalcDeviation();
 
-	CentroidEndRangeCon(Solver* solver, int _tag, string _name, CentroidKey* _obj, int _iend, int _dir, real_t _scale);
+	CentroidRangeCon(Solver* solver, int _tag, string _name, CentroidKey* _obj, int _iend, int _dir, real_t _scale);
 };
 
-struct CentroidEndVelCon : Constraint{
+struct CentroidVelCon : Constraint{
 	CentroidKey* obj[2];
 	int          iend;
+	vec3_t       p0;
+	vec3_t       p1;
+	vec3_t       dp;
+	vec3_t       dpn;
+	
+	void Prepare();
 
 	virtual void  CalcCoef();
 	virtual void  CalcDeviation();
 
-	CentroidEndVelCon(Solver* solver, int _tag, string _name, CentroidKey* _obj, int _iend, real_t _scale);
+	CentroidVelCon(Solver* solver, int _tag, string _name, CentroidKey* _obj, int _iend, real_t _scale);
 };
 
-struct CentroidEndForceCon : Constraint{
+struct CentroidGapCon : Constraint{
 	CentroidKey* obj;
 	int          iend;
+	int          iface;
+	vec3_t       p;
+	vec3_t       pc;
+	vec3_t       dp;
+	vec3_t       dpn;
+	
+	void Prepare();
+	
+	virtual void  CalcCoef();
+	virtual void  CalcDeviation();
+
+	CentroidGapCon(Solver* solver, int _tag, string _name, CentroidKey* _obj, int _iend, int _iface, real_t _scale);
+};
+
+struct CentroidFrictionCon : Constraint{
+	CentroidKey* obj;
+	int          iend;
+	int          iface;
 
 	virtual void  CalcCoef();
 	virtual void  CalcDeviation();
 
-	CentroidEndForceCon(Solver* solver, int _tag, string _name, CentroidKey* _obj, int _iend, real_t _scale);
+	CentroidFrictionCon(Solver* solver, int _tag, string _name, CentroidKey* _obj, int _iend, int _nface, real_t _scale);
+};
+
+struct CmplCon : Constraint{
+	SVar*  var;
+	SVar*  var_slack;
+	bool   side;
+
+	virtual void  CalcCoef();
+	virtual void  CalcDeviation();
+
+	CmplCon(Solver* solver, ID _id, SVar* _var, SVar* _var_slack, int _side, real_t _scale);
 };
 
 }

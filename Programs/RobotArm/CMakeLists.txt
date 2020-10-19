@@ -31,8 +31,7 @@ set_target_properties(RobotArm PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BIN
 set_target_properties(RobotArm PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY    ${BIN_DIR})
 
 target_link_libraries(RobotArm console)
-target_link_libraries(RobotArm debug     ${SPRINGHEAD_LIBRARY_DEBUG})
-target_link_libraries(RobotArm optimized ${SPRINGHEAD_LIBRARY_RELEASE})
+target_link_libraries(RobotArm Springhead::Springhead)
 target_link_libraries(RobotArm glwin)
 target_link_libraries(RobotArm dimp)
 target_link_libraries(RobotArm Scenebuilder)

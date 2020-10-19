@@ -7,8 +7,7 @@ set_target_properties(Balljoint PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG   ${BI
 set_target_properties(Balljoint PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BIN_INSTALL_DIR})
 set_target_properties(Balljoint PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY    ${BIN_DIR})
 
-target_link_libraries(Balljoint debug     ${SPRINGHEAD_LIBRARY_DEBUG})
-target_link_libraries(Balljoint optimized ${SPRINGHEAD_LIBRARY_RELEASE})
+target_link_libraries(Balljoint Springhead::Springhead)
 target_link_libraries(Balljoint dimp)
 target_link_libraries(Balljoint Scenebuilder)
 target_link_libraries(Balljoint           ${EXPAT_LIBRARIES})

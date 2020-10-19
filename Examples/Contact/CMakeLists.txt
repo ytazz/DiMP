@@ -7,8 +7,7 @@ set_target_properties(Contact PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG   ${BIN_
 set_target_properties(Contact PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BIN_INSTALL_DIR})
 set_target_properties(Contact PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY    ${BIN_DIR})
 
-target_link_libraries(Contact debug     ${SPRINGHEAD_LIBRARY_DEBUG})
-target_link_libraries(Contact optimized ${SPRINGHEAD_LIBRARY_RELEASE})
+target_link_libraries(Contact Springhead::Springhead)
 target_link_libraries(Contact dimp)
 target_link_libraries(Contact Scenebuilder)
 target_link_libraries(Contact           ${EXPAT_LIBRARIES})

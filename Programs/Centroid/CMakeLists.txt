@@ -8,8 +8,7 @@ set_target_properties(Centroid PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BIN
 set_target_properties(Centroid PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY    ${BIN_DIR})
 
 target_link_libraries(Centroid console)
-target_link_libraries(Centroid debug     ${SPRINGHEAD_LIBRARY_DEBUG})
-target_link_libraries(Centroid optimized ${SPRINGHEAD_LIBRARY_RELEASE})
+target_link_libraries(Centroid Springhead::Springhead)
 target_link_libraries(Centroid dimp)
 target_link_libraries(Centroid Scenebuilder)
 target_link_libraries(Centroid SDL2::SDL2)

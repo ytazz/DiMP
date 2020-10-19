@@ -7,8 +7,7 @@ set_target_properties(Hinge PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG   ${BIN_IN
 set_target_properties(Hinge PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BIN_INSTALL_DIR})
 set_target_properties(Hinge PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY    ${BIN_DIR})
 
-target_link_libraries(Hinge debug     ${SPRINGHEAD_LIBRARY_DEBUG})
-target_link_libraries(Hinge optimized ${SPRINGHEAD_LIBRARY_RELEASE})
+target_link_libraries(Hinge Springhead::Springhead)
 target_link_libraries(Hinge dimp)
 target_link_libraries(Hinge Scenebuilder)
 target_link_libraries(Hinge           ${EXPAT_LIBRARIES})

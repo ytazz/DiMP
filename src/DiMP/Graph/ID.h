@@ -100,9 +100,10 @@ struct ConTag{
 		CentroidPosR,
 		CentroidVelT,
 		CentroidVelR,
-		CentroidEndRange,
-		CentroidEndVel,
-		CentroidEndForce,
+		CentroidRange,
+		CentroidVel,
+		CentroidGap,
+		CentroidFriction,
 		NumTypes,
 	};
 };

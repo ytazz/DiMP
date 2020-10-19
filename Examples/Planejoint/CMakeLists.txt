@@ -7,8 +7,7 @@ set_target_properties(Planejoint PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG   ${B
 set_target_properties(Planejoint PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BIN_INSTALL_DIR})
 set_target_properties(Planejoint PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY    ${BIN_DIR})
 
-target_link_libraries(Planejoint debug     ${SPRINGHEAD_LIBRARY_DEBUG})
-target_link_libraries(Planejoint optimized ${SPRINGHEAD_LIBRARY_RELEASE})
+target_link_libraries(Planejoint Springhead::Springhead)
 target_link_libraries(Planejoint dimp)
 target_link_libraries(Planejoint Scenebuilder)
 target_link_libraries(Planejoint           ${EXPAT_LIBRARIES})

@@ -98,9 +98,10 @@ const char* ConNames[] = {
 	"centroid_pos_r"     ,
 	"centroid_vel_t"     ,
 	"centroid_vel_r"     ,
-	"centroid_end_range" ,
-	"centroid_end_vel"   ,
-	"centroid_end_force" 
+	"centroid_range"     ,
+	"centroid_vel"       ,
+	"centroid_gap"       ,
+	"centroid_fric" 
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

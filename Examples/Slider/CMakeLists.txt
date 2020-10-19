@@ -7,8 +7,7 @@ set_target_properties(Slider PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG   ${BIN_I
 set_target_properties(Slider PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BIN_INSTALL_DIR})
 set_target_properties(Slider PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY    ${BIN_DIR})
 
-target_link_libraries(Slider debug     ${SPRINGHEAD_LIBRARY_DEBUG})
-target_link_libraries(Slider optimized ${SPRINGHEAD_LIBRARY_RELEASE})
+target_link_libraries(Slider Springhead::Springhead)
 target_link_libraries(Slider dimp)
 target_link_libraries(Slider Scenebuilder)
 target_link_libraries(Slider           ${EXPAT_LIBRARIES})
