@@ -118,17 +118,18 @@ public:
 		Waypoint();
 	};
 
-	struct TrajPoint {
+	struct Snapshot{
 		real_t  t;
 		vec3_t  pos;
 		vector<vec3_t>  end_pos;
 		
-		TrajPoint();
+		Snapshot();
 	};
 
 	Param	            param;
 	vector<Waypoint>    waypoints;
-	vector<TrajPoint>   trajectory;
+	Snapshot            snapshot;
+	vector<Snapshot>    trajectory;
 	bool                trajReady;
 
 	real_t              Inorm;  //< normalized inertia
@@ -137,6 +138,10 @@ public:
 	virtual Keypoint*	CreateKeypoint() { return new CentroidKey(); }
 	virtual void		Init();
 	virtual void		Prepare();
+	virtual void        Finish ();
+	virtual void        CreateSnapshot(real_t time);
+	virtual void        DrawSnapshot  (Render::Canvas* canvas, Render::Config* conf);
+	virtual void        Draw          (Render::Canvas* canvas, Render::Config* conf);
 
 	vec3_t ComPos   (real_t t, int type = Interpolate::Quadratic);
 	vec3_t ComVel   (real_t t, int type = Interpolate::Quadratic);
@@ -145,12 +150,9 @@ public:
 	vec3_t EndPos   (real_t t, int index, int type = Interpolate::LinearDiff);
 	vec3_t EndVel   (real_t t, int index, int type = Interpolate::LinearDiff);
 
+	void CreateSnapshot(real_t t, Snapshot& s);
 	void CalcTrajectory();
-	void Draw(Render::Canvas* canvas, Render::Config* conf);
-	void DrawSnapshot(real_t time, Render::Canvas* canvas, Render::Config* conf);
-	void Save();
-	void Print();
-
+	
 public:
 	         Centroid(Graph* g, string n);
 	virtual ~Centroid();

@@ -187,7 +187,7 @@ Centroid::Waypoint::Waypoint() {
 
 //-------------------------------------------------------------------------------------------------
 
-Centroid::TrajPoint::TrajPoint() {
+Centroid::Snapshot::Snapshot() {
 	t = 0.0;
 }
 
@@ -287,6 +287,10 @@ void Centroid::Prepare() {
 	trajReady = false;
 }
 
+void Centroid::Finish(){
+	TrajectoryNode::Finish();
+}
+
 vec3_t Centroid::ComPos(real_t t, int type) {
 	if(traj.empty())
 		return vec3_t();
@@ -383,15 +387,9 @@ void Centroid::CalcTrajectory() {
 
 	trajectory.clear();
 	for (real_t t = 0.0; t <= tf; t += dt) {
-		TrajPoint tp;
-		tp.t = t;
-		tp.pos = ComPos(t);
-
-		tp.end_pos.resize(param.ends.size());
-		for(int i = 0; i < param.ends.size(); i++)
-			tp.end_pos[i] = EndPos(t, i);
-
-		trajectory.push_back(tp);
+		Snapshot s;
+		CreateSnapshot(t, s);
+		trajectory.push_back(s);
 	}
 
 	trajReady = true;
@@ -427,8 +425,8 @@ void Centroid::Draw(Render::Canvas* canvas, Render::Config* conf) {
 			canvas->SetLineWidth(1.0f);
 			canvas->BeginPath();
 			canvas->MoveTo(trajectory[0].end_pos[i]);
-			for (uint i = 1; i < trajectory.size(); i++) {
-				canvas->LineTo(trajectory[i].end_pos[i]);
+			for (int k = 1; k < trajectory.size(); k++) {
+				canvas->LineTo(trajectory[k].end_pos[i]);
 			}
 			canvas->EndPath();
 			canvas->EndLayer();
@@ -451,9 +449,27 @@ void Centroid::Draw(Render::Canvas* canvas, Render::Config* conf) {
 	}
 }
 
-void Centroid::DrawSnapshot(real_t time, Render::Canvas* canvas, Render::Config* conf) {
+void Centroid::CreateSnapshot(real_t t, Centroid::Snapshot& s){
+	s.t = t;
+	s.pos = ComPos(t);
+
+	s.end_pos.resize(param.ends.size());
+	for(int i = 0; i < param.ends.size(); i++)
+		s.end_pos[i] = EndPos(t, i);
+}
+
+void Centroid::CreateSnapshot(real_t t){
+	CreateSnapshot(t, snapshot);
+}
+
+void Centroid::DrawSnapshot(Render::Canvas* canvas, Render::Config* conf) {
+	// lines connecting com and feet
 	canvas->SetLineWidth(2.0f);
 	canvas->BeginPath();
+	for(int i = 0; i < param.ends.size(); i++){
+		canvas->MoveTo(snapshot.pos);
+		canvas->LineTo(snapshot.end_pos[i]);
+	}
 	canvas->EndPath();
 }
 

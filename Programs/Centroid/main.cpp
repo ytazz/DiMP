@@ -53,15 +53,17 @@ public:
 
 		centroid->param.faces.resize(1);
 		DiMP::Centroid::Param::Face& f = centroid->param.faces[0];
+		const real_t d = 10.0;
 		f.vertices.resize(4);
-		f.vertices[0] = vec3_t( 1.0,  1.0, 0.0);
-		f.vertices[1] = vec3_t(-1.0,  1.0, 0.0);
-		f.vertices[2] = vec3_t(-1.0, -1.0, 0.0);
-		f.vertices[3] = vec3_t( 1.0, -1.0, 0.0);
+		f.vertices[0] = vec3_t( 10.0,  10.0, 0.0);
+		f.vertices[1] = vec3_t(-10.0,  10.0, 0.0);
+		f.vertices[2] = vec3_t(-10.0, -10.0, 0.0);
+		f.vertices[3] = vec3_t( 10.0, -10.0, 0.0);
 		
 		const int N = 10;
-		for(int i = 0; i <= N; i++)
-			new DiMP::Tick(graph, 0.0, "");
+		const real_t dt = 0.1;
+		for(int k = 0; k <= N; k++)
+			new DiMP::Tick(graph, k*dt, "");
 
 		vec3_t goalPos(2.0, 0.0, 0.0);
 		quat_t goalOri = quat_t();

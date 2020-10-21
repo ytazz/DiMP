@@ -76,7 +76,7 @@ public:
 		biped->param.ankleToHeel  = 0.070;
 		biped->param.toeRadius    = 0.100;
 		biped->param.heelRadius   = 0.100;
-		biped->param.accWeight    = 100.0;
+		biped->param.accWeight    = 1.0;
 		biped->param.momWeight    = 0.0;
 
 		/*
@@ -103,7 +103,7 @@ public:
 		biped->phase[nphase-1] = DiMP::BipedLIP::Phase::D;
 
 		real_t spacing = 0.23/2;
-		vec2_t goalPos(3.0, 0.0);
+		vec2_t goalPos(2.0, 0.0);
 		real_t goalOri = Rad(0);
 
 		biped->waypoints.resize(2);

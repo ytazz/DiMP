@@ -182,13 +182,10 @@ void BipedLIPKey::AddCon(Solver* solver) {
 }
 
 void BipedLIPKey::Prepare() {
-	BipedLIP* obj = (BipedLIP*)node;
-
+	
 }
 
 void BipedLIPKey::Finish(){
-	BipedLIP* obj = (BipedLIP*)node;
-	
 	// tick's time is updated from time variable
 	tick->time = var_time->val;
 
@@ -1288,8 +1285,7 @@ void BipedLIP::Save(const char* filename) {
 	fclose(file);
 }
 
-void BipedLIP::Print()
-{
+void BipedLIP::Print(){
 	real_t dt = 0.0001;
 	real_t tf = traj.back()->tick->time;
 	for (real_t t = 0.0; t <= tf; t += dt) {
