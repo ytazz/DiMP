@@ -44,9 +44,10 @@ const char* VarNames[] = {
 	"centroid_pos_r"    ,
 	"centroid_vel_t"    ,
 	"centroid_vel_r"    ,
-	"centroid_end_pos_t",
-	"centroid_end_vel_t",
-	"centroid_end_force_t"
+	"centroid_end_pos"  ,
+	"centroid_end_vel"  ,
+	"centroid_face_gap" , 
+	"centroid_face_force"
 };
 
 const char* ConNames[] = {

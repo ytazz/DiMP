@@ -19,6 +19,10 @@ vec3_t CentroidKey::Face::f(){
 }
 
 CentroidKey::CentroidKey() {
+	
+}
+
+void CentroidKey::AddVar(Solver* solver) {
 	Centroid* obj = (Centroid*)node;
 
 	int nend  = (int)obj->param.ends .size();
@@ -27,10 +31,6 @@ CentroidKey::CentroidKey() {
 	for(int i = 0; i < nend; i++){
 		ends[i].faces.resize(nface);
 	}
-}
-
-void CentroidKey::AddVar(Solver* solver) {
-	Centroid* obj = (Centroid*)node;
 
 	// position and velocity
 	var_pos_t = new V3Var(solver, ID(VarTag::CentroidTP, node, tick, name + "_tp"), node->graph->scale.pos_t);
@@ -38,20 +38,25 @@ void CentroidKey::AddVar(Solver* solver) {
 	var_vel_t = new V3Var(solver, ID(VarTag::CentroidTV, node, tick, name + "_tv"), node->graph->scale.vel_t);
 	var_vel_r = new V3Var(solver, ID(VarTag::CentroidRV, node, tick, name + "_rv"), node->graph->scale.vel_r);
 
-	int nend  = (int)obj->param.ends .size();
-	int nface = (int)obj->param.faces.size();
-	
 	stringstream ss;
 	for(int i = 0; i < nend; i++){
 		ss.str("");
 		ss << name << "_end" << i << "_pos";
-		ends[i].var_pos = new V3Var(solver, ID(VarTag::CentroidEndTP, node, tick, ss.str()), node->graph->scale.pos_t);
+		ends[i].var_pos = new V3Var(solver, ID(VarTag::CentroidEndPos, node, tick, ss.str()), node->graph->scale.pos_t);
+
+		ss.str("");
+		ss << name << "_end" << i << "_vel";
+		ends[i].var_vel = new SVar(solver, ID(VarTag::CentroidEndVel, node, tick, ss.str()), node->graph->scale.vel_t);
 	
 		for(int j = 0; j < nface; j++){
+			ss.str("");
+			ss << name << "_end" << i << "_face" << j << "gap";
+			ends[i].faces[j].var_gap = new SVar(solver, ID(VarTag::CentroidFaceGap, node, tick, ss.str()), node->graph->scale.pos_t);
+
 			for(int k = 0; k < 3; k++){
 				ss.str("");
 				ss << name << "_end" << i << "_face" << j << "_force" << k;
-				ends[i].faces[j].var_force[k] = new SVar(solver, ID(VarTag::CentroidEndTF, node, tick, ss.str()), node->graph->scale.force_t);
+				ends[i].faces[j].var_force[k] = new SVar(solver, ID(VarTag::CentroidFaceForce, node, tick, ss.str()), node->graph->scale.force_t);
 			}
 		}
 	}
@@ -79,18 +84,20 @@ void CentroidKey::AddCon(Solver* solver) {
 			ends[i].con_range[j] = new CentroidRangeCon(solver, ConTag::CentroidRange, ss.str(), this, i, j, node->graph->scale.pos_t);
 		}
 
-		ss.str("");
-		ss << name << "_end" << i << "_vel";
-		ends[i].con_vel = new CentroidVelCon(solver, ConTag::CentroidVel, ss.str(), this, i, node->graph->scale.vel_t);
+		if(next){
+			ss.str("");
+			ss << name << "_end" << i << "_vel";
+			ends[i].con_vel = new CentroidVelCon(solver, ConTag::CentroidVel, ss.str(), this, i, node->graph->scale.vel_t);
 
-		for(int j = 0; j < nface; j++){
-			ss.str("");
-			ss << name << "_end" << i << "_face" << j << "_gap";
-			ends[i].faces[j].con_gap = new CentroidGapCon(solver, ConTag::CentroidGap, ss.str(), this, i, j, node->graph->scale.force_t);
+			for(int j = 0; j < nface; j++){
+				ss.str("");
+				ss << name << "_end" << i << "_face" << j << "_gap";
+				ends[i].faces[j].con_gap = new CentroidGapCon(solver, ConTag::CentroidGap, ss.str(), this, i, j, node->graph->scale.force_t);
 			
-			ss.str("");
-			ss << name << "_end" << i << "_face" << j << "_fric";
-			ends[i].faces[j].con_fric = new CentroidFrictionCon(solver, ConTag::CentroidFriction, ss.str(), this, i, j, node->graph->scale.force_t);
+				ss.str("");
+				ss << name << "_end" << i << "_face" << j << "_fric";
+				ends[i].faces[j].con_fric = new CentroidFrictionCon(solver, ConTag::CentroidFriction, ss.str(), this, i, j, node->graph->scale.force_t);
+			}
 		}
 	}
 }		
@@ -101,7 +108,7 @@ void CentroidKey::Prepare() {
 	// calculate contact activity
 	for(End& end : ends){
 		for(int i = 0; i < end.faces.size(); i++){
-			obj->param.faces[i].CalcNearest(end.var_pos->val, end.faces[i].pc);
+			obj->param.faces[i].CalcNearest(end.var_pos->val, end.faces[i].pc, end.faces[i].iedge, end.faces[i].ivtx);
 		}
 	}
 }
@@ -126,7 +133,10 @@ Centroid::Param::Param() {
 	mass     = 1.0;
 }
 
-void Centroid::Param::Face::CalcNearest(const vec3_t& p, vec3_t& pc){
+void Centroid::Param::Face::CalcNearest(const vec3_t& p, vec3_t& pc, int& iedge, int& ivtx){
+	iedge = -1;
+	ivtx  = -1;
+
 	bool inside = true;
 	for(Edge& e : edges){
 		if(e.n*(p - e.v[0]) > 0.0)
@@ -140,23 +150,28 @@ void Centroid::Param::Face::CalcNearest(const vec3_t& p, vec3_t& pc){
 		return;
 	}
 
-	for(Edge& e : edges){
+	for(int i = 0; i < edges.size(); i++){
+		Edge& e = edges[i];
 		vec3_t d = e.v[1] - e.v[0];
 		real_t s = ((p - e.v[0])*d)/(d.square());
 		if( 0.0 <= s && s <= 1.0 ){
 			pc = e.v[0] + s*d;
+			iedge = i;
 			return;
 		}
 	}
 
 	real_t d2min = inf;
 	vec3_t vmin;
-	for(Edge& e : edges){
-		for(int i = 0; i < 2; i++){
-			real_t d2 = (p - e.v[i]).square();
+	for(int i = 0; i < edges.size(); i++){
+		Edge& e = edges[i];
+		for(int j = 0; j < 2; j++){
+			real_t d2 = (p - e.v[j]).square();
 			if(d2 < d2min){
 				d2min = d2;
-				vmin  = e.v[i];
+				vmin  = e.v[j];
+				iedge = i;
+				ivtx  = j;
 			}
 		}
 	}
@@ -372,6 +387,10 @@ void Centroid::CalcTrajectory() {
 		tp.t = t;
 		tp.pos = ComPos(t);
 
+		tp.end_pos.resize(param.ends.size());
+		for(int i = 0; i < param.ends.size(); i++)
+			tp.end_pos[i] = EndPos(t, i);
+
 		trajectory.push_back(tp);
 	}
 
@@ -569,8 +588,12 @@ void CentroidVelCon::Prepare(){
 }
 
 void CentroidGapCon::Prepare(){
-	p  = obj->ends[iend].var_pos->val;
-	pc = obj->ends[iend].faces[iface].pc;
+	Centroid* cen = (Centroid*)obj->node;
+	CentroidKey::End&  end  = obj->ends[iend];
+	CentroidKey::Face& face = end.faces[iface];
+
+	p  = end.var_pos->val;
+	pc = face.pc;
 	dp = p - pc;
 
 	real_t n = dp.norm();
@@ -578,6 +601,29 @@ void CentroidGapCon::Prepare(){
 	if(n > eps)
 		 dpn = dp/n;
 	else dpn.clear();
+
+	if(face.iedge == -1 && face.ivtx == -1){
+		vec3_t nf = face.R.col(2);
+		
+		dpn = (nf*dpn)*nf;
+	}
+	if(face.iedge != -1 && face.ivtx == -1){
+		vec3_t nf = face.R.col(2);
+		vec3_t ne = cen->param.faces[iface].edges[face.iedge].n;
+
+		dpn = (nf*dpn)*nf + (ne*dpn)*ne;
+	}
+	if(face.iedge != -1 && face.ivtx != -1){
+	
+	}
+}
+
+void CentroidFrictionCon::Prepare(){
+	Centroid* cen = (Centroid*)obj->node;
+
+	mu  = cen->param.faces[iface].mu;
+	f   = obj->ends[iend].faces[iface].f();
+	ftn = vec2_t(f.x, f.y).norm();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -632,7 +678,7 @@ void CentroidVelConR::CalcCoef(){
 		}
 		((X3Link*)links[i++])->SetCoef(Iinv*fsum);
 
-		vec3_t r = obj[0]->ends[i].var_pos->val - obj[0]->var_pos_t->val;
+		vec3_t r = end.var_pos->val - obj[0]->var_pos_t->val;
 		for(CentroidKey::Face& face : end.faces){
 			for(int k = 0; k < 3; k++){
 				((C3Link*)links[i++])->SetCoef( -Iinv*(r % face.R.col(k)) );
@@ -665,9 +711,17 @@ void CentroidGapCon::CalcCoef(){
 void CentroidFrictionCon::CalcCoef(){
 	int i = 0;
 
-	//((SLink*)links[i++])->SetCoef( mu   );
-	//((SLink*)links[i++])->SetCoef(-ftn.x);
-	//((SLink*)links[i++])->SetCoef(-ftn.y);
+	((SLink*)links[i++])->SetCoef(mu);
+
+	const real_t eps = 1.0e-10;
+	if(ftn < eps){
+		((SLink*)links[i++])->SetCoef( 0.0);
+		((SLink*)links[i++])->SetCoef( 0.0);
+	}
+	else{
+		((SLink*)links[i++])->SetCoef(-f.x/ftn);
+		((SLink*)links[i++])->SetCoef(-f.y/ftn);
+	}
 }
 
 void CmplCon::CalcCoef(){
@@ -683,7 +737,7 @@ void CentroidPosConT::CalcDeviation(){
 void CentroidPosConR::CalcDeviation(){
 	quat_t q0     = obj[0]->var_pos_r->val;
 	quat_t q1     = obj[1]->var_pos_r->val;
-	quat_t q      = q0*quat_t(q0.Conjugated()*obj[0]->var_vel_r->val);
+	quat_t q      = q0*quat_t::Rot(q0.Conjugated()*obj[0]->var_vel_r->val);
 	quat_t qerror = q.Conjugated()*q1;
 	vec3_t axis   = qerror.Axis ();
 	real_t theta  = qerror.Theta();
@@ -740,7 +794,10 @@ void CentroidVelCon::CalcDeviation(){
 }
 
 void CentroidGapCon::CalcDeviation(){
+	CentroidKey::End&  end  = obj->ends[iend];
+	CentroidKey::Face& face = end.faces[iface];
 
+	y[0] = face.var_gap->val - (end.var_pos->val - face.pc).norm();
 }
 
 void CentroidFrictionCon::CalcDeviation(){

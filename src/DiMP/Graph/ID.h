@@ -42,9 +42,10 @@ struct VarTag{
 		CentroidRP,
 		CentroidTV,
 		CentroidRV,
-		CentroidEndTP,
-		CentroidEndTV,
-		CentroidEndTF,
+		CentroidEndPos,
+		CentroidEndVel,
+		CentroidFaceGap,
+		CentroidFaceForce,
 		NumTypes,
 	};
 };
