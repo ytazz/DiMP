@@ -40,7 +40,9 @@ public:
 		CmplCon*               con_gap_cmpl[2];
 		CmplCon*               con_vel_cmpl[2];
 
-		vec3_t  pc;
+		int     iedge; //< index to nearest edge
+		int     ivtx;  //< index to nearest vertex
+		vec3_t  pc;    //< nearest point to end
 		mat3_t  R;
 		real_t  mu;
 
@@ -86,7 +88,7 @@ public:
 			vector<vec3_t>  vertices;
 			vector<Edge>    edges;
 
-			void CalcNearest(const vec3_t& p, vec3_t& pc);
+			void CalcNearest(const vec3_t& p, vec3_t& pc, int& iedge, int& ivtx);
 		};
 
 		real_t	mass;
@@ -247,6 +249,11 @@ struct CentroidFrictionCon : Constraint{
 	CentroidKey* obj;
 	int          iend;
 	int          iface;
+	real_t       mu;
+	vec3_t       f;
+	real_t       ftn;
+
+	void Prepare();
 
 	virtual void  CalcCoef();
 	virtual void  CalcDeviation();

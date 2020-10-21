@@ -60,7 +60,7 @@ public:
 		f.vertices[3] = vec3_t( 1.0, -1.0, 0.0);
 		
 		const int N = 10;
-		for(int i = 0; i < N; i++)
+		for(int i = 0; i <= N; i++)
 			new DiMP::Tick(graph, 0.0, "");
 
 		vec3_t goalPos(2.0, 0.0, 0.0);
@@ -77,7 +77,7 @@ public:
 		centroid->waypoints[0].fix_vel_t = true;
 		centroid->waypoints[0].fix_vel_r = true;
 
-		centroid->waypoints[1].k = 10;
+		centroid->waypoints[1].k = N;
 		centroid->waypoints[1].pos_t = goalPos;
 		centroid->waypoints[1].pos_r = goalOri;
 		centroid->waypoints[1].vel_t = vec3_t(0.0, 0.0, 0.0);
