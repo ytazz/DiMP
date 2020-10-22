@@ -35,8 +35,11 @@ void CentroidKey::AddVar(Solver* solver) {
 	// position and velocity
 	var_pos_t = new V3Var(solver, ID(VarTag::CentroidTP, node, tick, name + "_tp"), node->graph->scale.pos_t);
 	var_pos_r = new QVar (solver, ID(VarTag::CentroidRP, node, tick, name + "_rp"), node->graph->scale.pos_r);
-	var_vel_t = new V3Var(solver, ID(VarTag::CentroidTV, node, tick, name + "_tv"), node->graph->scale.vel_t);
-	var_vel_r = new V3Var(solver, ID(VarTag::CentroidRV, node, tick, name + "_rv"), node->graph->scale.vel_r);
+
+	if(next){
+		var_vel_t = new V3Var(solver, ID(VarTag::CentroidTV, node, tick, name + "_tv"), node->graph->scale.vel_t);
+		var_vel_r = new V3Var(solver, ID(VarTag::CentroidRV, node, tick, name + "_rv"), node->graph->scale.vel_r);
+	}
 
 	stringstream ss;
 	for(int i = 0; i < nend; i++){
@@ -108,7 +111,14 @@ void CentroidKey::Prepare() {
 	// calculate contact activity
 	for(End& end : ends){
 		for(int i = 0; i < end.faces.size(); i++){
+			ends[i].con_vel->enabled = false;
+
 			obj->param.faces[i].CalcNearest(end.var_pos->val, end.faces[i].pc, end.faces[i].iedge, end.faces[i].ivtx);
+
+			for(Face& face : end.faces){
+				face.con_gap ->enabled = false;
+				face.con_fric->enabled = false;
+			}
 		}
 	}
 }
@@ -234,11 +244,6 @@ void Centroid::Init() {
 		}
 	}
 
-	real_t t = 0.0;
-	for (uint k = 0; k < graph->ticks.size(); k++) {
-		CentroidKey* key = (CentroidKey*)traj.GetKeypoint(graph->ticks[k]);
-	}
-
 	Curve3d          curve_t;
 	QuatCurved       curve_r;
 	vector<Curve3d>  curve_end;
@@ -249,7 +254,8 @@ void Centroid::Init() {
 	for (uint i = 0; i < waypoints.size(); i++) {
 		Waypoint& wp = waypoints[i];
 		CentroidKey* key = (CentroidKey*)traj.GetKeypoint(graph->ticks[wp.k]);
-		
+		real_t t = key->tick->time;
+
 		curve_t.AddPoint(t);
 		curve_t.SetPos(i, wp.pos_t);
 		curve_t.SetVel(i, wp.vel_t);
@@ -266,8 +272,16 @@ void Centroid::Init() {
 		key->var_pos_t->val = curve_t.CalcPos(t);
 		key->var_pos_r->val = curve_r.CalcPos(t);
 
-		key->var_vel_t->val = curve_t.CalcVel(t);
-		key->var_vel_r->val = curve_r.CalcVel(t);
+		if(key->next){
+			// set normalized velocity
+			real_t dt = graph->ticks[k+1]->time - t;
+			key->var_vel_t->val = curve_t.CalcVel(t)*dt;
+			key->var_vel_r->val = curve_r.CalcVel(t)*dt;
+		}
+
+		for(int i = 0; i < key->ends.size(); i++){
+			key->ends[i].var_pos->val = key->var_pos_t->val + key->var_pos_r->val * (0.5*(param.ends[i].rangeMin + param.ends[i].rangeMax));
+		}
 	}
 
 	// 経由点上の変数を固定

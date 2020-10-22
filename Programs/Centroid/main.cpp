@@ -46,14 +46,14 @@ public:
 		centroid->param.mass    = 1.0;
 
 		centroid->param.ends.resize(2);
-		centroid->param.ends[0].rangeMin = vec3_t(-1.0, -1.0, -1.0);
-		centroid->param.ends[0].rangeMax = vec3_t( 1.0,  1.0,  1.0);
-		centroid->param.ends[1].rangeMin = vec3_t(-1.0, -1.0, -1.0);
-		centroid->param.ends[1].rangeMax = vec3_t( 1.0,  1.0,  1.0);
+		centroid->param.ends[0].rangeMin = vec3_t(-0.5, -0.3, -1.0);
+		centroid->param.ends[0].rangeMax = vec3_t( 0.5,  0.0, -0.9);
+		centroid->param.ends[1].rangeMin = vec3_t(-0.5,  0.0, -1.0);
+		centroid->param.ends[1].rangeMax = vec3_t( 0.5,  0.3, -0.9);
 
 		centroid->param.faces.resize(1);
 		DiMP::Centroid::Param::Face& f = centroid->param.faces[0];
-		const real_t d = 10.0;
+		const real_t d = 3.0;
 		f.vertices.resize(4);
 		f.vertices[0] = vec3_t( 10.0,  10.0, 0.0);
 		f.vertices[1] = vec3_t(-10.0,  10.0, 0.0);
@@ -65,13 +65,15 @@ public:
 		for(int k = 0; k <= N; k++)
 			new DiMP::Tick(graph, k*dt, "");
 
-		vec3_t goalPos(2.0, 0.0, 0.0);
-		quat_t goalOri = quat_t();
+		vec3_t startPos(0.0, 0.0, 1.0);
+		quat_t startOri = quat_t();
+		vec3_t goalPos (2.0, 0.0, 1.0);
+		quat_t goalOri  = quat_t();
 
 		centroid->waypoints.resize(2);
 		centroid->waypoints[0].k = 0;
-		centroid->waypoints[0].pos_t = vec3_t(0.0, 0.0, 0.0);
-		centroid->waypoints[0].pos_r = quat_t();
+		centroid->waypoints[0].pos_t = startPos;
+		centroid->waypoints[0].pos_r = startOri;
 		centroid->waypoints[0].vel_t = vec3_t(0.0, 0.0, 0.0);
 		centroid->waypoints[0].vel_r = vec3_t(0.0, 0.0, 0.0);
 		centroid->waypoints[0].fix_pos_t = true;
