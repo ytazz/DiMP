@@ -70,20 +70,22 @@ public:
 		//biped->param.swingProfile = DiMP::BipedLIP::SwingProfile::Wedge;
 		//biped->param.swingProfile = DiMP::BipedLIP::SwingProfile::Cycloid;
 		biped->param.swingProfile = DiMP::BipedLIP::SwingProfile::HeelToe;
-		biped->param.copPosMin    = vec2_t(-0.040, -0.025 );
-		biped->param.copPosMax    = vec2_t( 0.110,  0.025 );
+		biped->param.copMin       = vec2_t(-0.040, -0.025 );
+		biped->param.copMax       = vec2_t( 0.110,  0.025 );
+		biped->param.accMin       = vec2_t(-0.25, -1.0 );
+		biped->param.accMax       = vec2_t( 0.25,  1.0 );
+		biped->param.momMin       = vec2_t(-0.0, -0.0 );
+		biped->param.momMax       = vec2_t( 0.0,  0.0 );
 		biped->param.ankleToToe   = 0.100;
 		biped->param.ankleToHeel  = 0.070;
 		biped->param.toeRadius    = 0.100;
 		biped->param.heelRadius   = 0.100;
-		biped->param.accWeight    = 1.0;
-		biped->param.momWeight    = 0.0;
-
+		
 		/*
 		 D -> RL -> L -> LR -> R ... -> RL -> D
 
 		 */
-		const uint nstep = 10;
+		const uint nstep = 14;
 		const uint nphase = 2 * nstep + 3;
 
 		for (uint i = 0; i < nphase; i++)
@@ -103,7 +105,7 @@ public:
 		biped->phase[nphase-1] = DiMP::BipedLIP::Phase::D;
 
 		real_t spacing = 0.23/2;
-		vec2_t goalPos(2.0, 0.0);
+		vec2_t goalPos(3.0, 0.0);
 		real_t goalOri = Rad(0);
 
 		biped->waypoints.resize(2);
@@ -112,7 +114,6 @@ public:
 		biped->waypoints[0].torso_pos_t       = vec2_t(0.0, 0.0);
 		biped->waypoints[0].torso_pos_r       = 0.0;
 		biped->waypoints[0].torso_vel_t       = vec2_t(0.0, 0.0);
-		//biped->waypoints[0].torso_vel_r       = 0.0;
 		biped->waypoints[0].foot_pos_t[0]     = vec2_t(0.0, -spacing);
 		biped->waypoints[0].foot_pos_r[0]     = 0.0;
 		biped->waypoints[0].foot_pos_t[1]     = vec2_t(0.0, spacing);
@@ -121,7 +122,6 @@ public:
 		biped->waypoints[0].fix_torso_pos_t   = true;
 		biped->waypoints[0].fix_torso_pos_r   = true;
 		biped->waypoints[0].fix_torso_vel_t   = true;
-		//biped->waypoints[0].fix_torso_vel_r   = true;
 		biped->waypoints[0].fix_foot_pos_t[0] = true;
 		biped->waypoints[0].fix_foot_pos_r[0] = true;
 		biped->waypoints[0].fix_foot_pos_t[1] = true;
@@ -134,7 +134,6 @@ public:
 		biped->waypoints[1].torso_pos_t       = goalPos;
 		biped->waypoints[1].torso_pos_r       = goalOri;
 		biped->waypoints[1].torso_vel_t       = vec2_t(0.0, 0.0);
-		//biped->waypoints[1].torso_vel_r       = 0.0;
 		biped->waypoints[1].foot_pos_t[0]     = goalPos + mat2_t::Rot(goalOri) * vec2_t(0.0, -spacing);
 		biped->waypoints[1].foot_pos_r[0]     = goalOri;
 		biped->waypoints[1].foot_pos_t[1]     = goalPos + mat2_t::Rot(goalOri) * vec2_t(0.0, spacing);
@@ -143,7 +142,6 @@ public:
 		biped->waypoints[1].fix_torso_pos_t   = true;
 		biped->waypoints[1].fix_torso_pos_r   = true;
 		biped->waypoints[1].fix_torso_vel_t   = true;
-		//biped->waypoints[1].fix_torso_vel_r   = true;
 		biped->waypoints[1].fix_foot_pos_t[0] = true;
 		biped->waypoints[1].fix_foot_pos_r[0] = true;
 		biped->waypoints[1].fix_foot_pos_t[1] = true;
@@ -155,6 +153,10 @@ public:
 		graph->scale.Set(1.0, 1.0, 1.0);
 		graph->Init();
 
+		graph->solver->SetConstraintWeight(ID(DiMP::ConTag::BipedAccRange), 1.0);
+		graph->solver->SetConstraintWeight(ID(DiMP::ConTag::BipedMomRange), 1.0);
+		//graph->solver->Enable(ID(DiMP::ConTag::BipedAccRange), false);
+		
 		graph->solver->SetCorrection(ID(), 0.5);
 		graph->solver->param.numIter[0] = 20;
 		graph->solver->param.cutoffStepSize = 0.1;
@@ -165,18 +167,6 @@ public:
 		//graph->solver->param.methodMajor = Solver::Method::Major::DDP;
 		graph->solver->param.methodMinor = Solver::Method::Minor::Direct;
 		graph->solver->param.verbose = true;
-
-		//graph->solver->Enable(ID(DiMP::ConTag::BipedLipP      ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::BipedLipV      ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::BipedFootRangeT), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::BipedFootRangeR), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::BipedFootMatchT), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::BipedFootMatchR), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::BipedComP      ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::BipedComV      ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::BipedCop       ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::BipedDuration  ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::BipedTime      ), false);
 
 		targetPos = vec3_t(0.0, 0.6, -0.2);
 	}
