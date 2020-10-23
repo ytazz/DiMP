@@ -8,7 +8,6 @@ namespace DiMP {;
 
 	struct BipedLipPosCon;
 	struct BipedLipVelCon;
-	struct BipedLipAccCon;
 	struct BipedLipCopCon;
 	struct BipedLipCmpCon;
 	struct BipedLipMomCon;
@@ -16,8 +15,10 @@ namespace DiMP {;
 	struct BipedComConV;
 	struct BipedFootRangeConT;
 	struct BipedFootRangeConR;
-	struct BipedAccRangeCon;
 	struct BipedCopRangeCon;
+	struct BipedCmpRangeCon;
+	struct BipedAccRangeCon;
+	struct BipedMomRangeCon;
 	struct BipedTimeCon;
 
 	/**
@@ -31,10 +32,7 @@ namespace DiMP {;
 
 		V2Var*		var_com_pos;        ///< position of CoM
 		V2Var*		var_com_vel;        ///< velocity of CoM
-		V2Var*      var_com_acc;        ///< acceleration of CoM
-
-		V2Var*      var_mom;            ///< angular momentum around CoM
-		                                ///< it is actually normalized momentum L/mg
+		V2Var*      var_mom;            ///< angular momentum around CoM; it is actually normalized momentum L/mg
 
 		V2Var*		var_cop_pos;        ///< position of CoP
 		V2Var*      var_cop_vel;        ///< velocity of CoP
@@ -50,7 +48,6 @@ namespace DiMP {;
 
 		BipedLipPosCon*    con_lip_pos;     ///< LIP position constraint
 		BipedLipVelCon*    con_lip_vel;     ///< LIP velocity constraint
-		BipedLipAccCon*    con_lip_acc;     ///< match constraint between com and cop (+ cmp offset)
 		BipedLipCopCon*    con_lip_cop;     ///< LIP cop constraint
 		BipedLipCmpCon*    con_lip_cmp;     ///< LIP cmp constraint
 		BipedLipMomCon*    con_lip_mom;     ///< LIP angular momentum constraint
@@ -62,7 +59,9 @@ namespace DiMP {;
 		BipedFootRangeConR*   con_foot_range_r[2];      ///< range constraint on foot orientation relative to torso, [r|l]
 
 		BipedCopRangeCon*  con_cop_range[2];   ///< range constraint on CoP relative to support foot, [x|y]
+		BipedCmpRangeCon*  con_cmp_range[2];   ///< range constraint on CMP
 		BipedAccRangeCon*  con_acc_range[2];   ///< range constraint on CoM acceleration
+		BipedMomRangeCon*  con_mom_range[2];
 
 		BipedTimeCon*    con_time;			   ///< relates step duration and cumulative time
 		RangeConS*       con_duration_range;   ///< range constraint on step period
@@ -70,8 +69,6 @@ namespace DiMP {;
 		MatchConV2*      con_foot_match_t[2];
 		MatchConS *      con_foot_match_r[2];
 
-		FixConV2*        con_mom_zero;       ///< fix momentum to zero
-		
 	public:
 		virtual void AddVar(Solver* solver);
 		virtual void AddCon(Solver* solver);
@@ -122,18 +119,19 @@ namespace DiMP {;
 			vec2_t  footPosMax[2];
 			real_t  footOriMin[2];
 			real_t  footOriMax[2];
-			vec2_t  comAccMin;                  ///< admissible range of CoM acceleration
-			vec2_t  comAccMax;
-			vec2_t  copPosMin;                  ///< admissible range of CoP relative to foot
-			vec2_t  copPosMax;
+			vec2_t  copMin;                  ///< admissible range of CoP relative to foot
+			vec2_t  copMax;
+			vec2_t  cmpMin;                  ///< admissible range of CoP relative to foot
+			vec2_t  cmpMax;
+			vec2_t  accMin;                  ///< admissible range of CoM acceleration
+			vec2_t  accMax;
+			vec2_t  momMin;                  ///< admissible range of angular momentum
+			vec2_t  momMax;
 			
 			real_t  ankleToToe ;
 			real_t  ankleToHeel;
 			real_t  toeRadius  ;
 			real_t  heelRadius ;
-
-			real_t  accWeight;       ///< weight on com-cop difference. bigger weight means smaller com acceleration
-			real_t  momWeight;       ///< weight on cmp. bigger weight means smaller angular momentum change
 
 			Param();
 		};
@@ -253,14 +251,6 @@ namespace DiMP {;
 		BipedLipVelCon(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale);
 	};
 
-	/// CoM acceleration constraint based on LIP model
-	struct BipedLipAccCon : BipedLipCon {
-		virtual void CalcCoef();
-		virtual void CalcDeviation();
-		
-		BipedLipAccCon(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale);
-	};
-
 	/// CoP constraint based on LIP model
 	struct BipedLipCopCon : BipedLipCon {
 		virtual void CalcCoef();
@@ -337,23 +327,6 @@ namespace DiMP {;
 		BipedFootRangeConR(Solver* solver, string _name, BipedLIPKey* _obj, uint _side, real_t _scale);
 	};
 
-	/// CoM acceleration range constraint
-	struct BipedAccRangeCon : Constraint {
-		BipedLIPKey* obj;
-		vec2_t       dir, dir_abs;
-		vec2_t       a;
-		real_t       thetat;
-		mat2_t       R, dR;
-		real_t       _min, _max;
-		bool         on_lower, on_upper;
-
-		virtual void CalcCoef();
-		virtual void CalcDeviation();
-		virtual void Project(real_t& l, uint k);
-
-		BipedAccRangeCon(Solver* solver, string _name, BipedLIPKey* _obj, vec2_t _dir, real_t _scale);
-	};
-
 	/// CoP range constraint
 	struct BipedCopRangeCon : Constraint {
 		BipedLIPKey* obj;
@@ -370,6 +343,58 @@ namespace DiMP {;
 		virtual void Project(real_t& l, uint k);
 
 		BipedCopRangeCon(Solver* solver, string _name, BipedLIPKey* _obj, uint _side, vec2_t _dir, real_t _scale);
+	};
+
+	/// CMP range constraint
+	struct BipedCmpRangeCon : Constraint {
+		BipedLIPKey* obj;
+		vec2_t       dir, dir_abs;
+		vec2_t       pc;
+		real_t       thetat;
+		mat2_t       R, dR;
+		real_t       _min, _max;
+		bool         on_lower, on_upper;
+
+		virtual void CalcCoef();
+		virtual void CalcDeviation();
+		virtual void Project(real_t& l, uint k);
+
+		BipedCmpRangeCon(Solver* solver, string _name, BipedLIPKey* _obj, vec2_t _dir, real_t _scale);
+	};
+
+	/// CoM acceleration range constraint
+	struct BipedAccRangeCon : Constraint {
+		BipedLIPKey* obj;
+		vec2_t       dir, dir_abs;
+		real_t       T;
+		vec2_t       a;
+		real_t       thetat;
+		mat2_t       R, dR;
+		real_t       _min, _max;
+		bool         on_lower, on_upper;
+
+		virtual void CalcCoef();
+		virtual void CalcDeviation();
+		virtual void Project(real_t& l, uint k);
+
+		BipedAccRangeCon(Solver* solver, string _name, BipedLIPKey* _obj, vec2_t _dir, real_t _scale);
+	};
+
+	/// angular momentum range constraint
+	struct BipedMomRangeCon : Constraint {
+		BipedLIPKey* obj;
+		vec2_t       dir, dir_abs;
+		vec2_t       m;
+		real_t       thetat;
+		mat2_t       R, dR;
+		real_t       _min, _max;
+		bool         on_lower, on_upper;
+
+		virtual void CalcCoef();
+		virtual void CalcDeviation();
+		virtual void Project(real_t& l, uint k);
+
+		BipedMomRangeCon(Solver* solver, string _name, BipedLIPKey* _obj, vec2_t _dir, real_t _scale);
 	};
 
 	/// time constraint
