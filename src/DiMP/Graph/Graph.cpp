@@ -46,8 +46,9 @@ const char* VarNames[] = {
 	"centroid_vel_r"    ,
 	"centroid_end_pos"  ,
 	"centroid_end_vel"  ,
-	"centroid_face_gap" , 
-	"centroid_face_force"
+	"centroid_pos_cmpl" , 
+	"centroid_vel_cmpl" , 
+	"centroid_force"
 };
 
 const char* ConNames[] = {
@@ -100,10 +101,11 @@ const char* ConNames[] = {
 	"centroid_pos_r"      ,
 	"centroid_vel_t"      ,
 	"centroid_vel_r"      ,
-	"centroid_range"      ,
-	"centroid_vel"        ,
-	"centroid_gap"        ,
-	"centroid_fric" 
+	"centroid_end_range"  ,
+	"centroid_end_vel"    ,
+	"centroid_fric"       ,
+	"centroid_pos_cmpl"   ,
+	"centroid_vel_cmpl"
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

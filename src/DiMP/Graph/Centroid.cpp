@@ -11,13 +11,6 @@ const real_t inf = numeric_limits<real_t>::max();
 //-------------------------------------------------------------------------------------------------
 // CentroidKey
 
-vec3_t CentroidKey::Face::f(){
-	return vec3_t(
-		var_force[0]->val,
-		var_force[1]->val,
-		var_force[2]->val);
-}
-
 CentroidKey::CentroidKey() {
 	
 }
@@ -44,23 +37,16 @@ void CentroidKey::AddVar(Solver* solver) {
 	stringstream ss;
 	for(int i = 0; i < nend; i++){
 		ss.str("");
-		ss << name << "_end" << i << "_pos";
-		ends[i].var_pos = new V3Var(solver, ID(VarTag::CentroidEndPos, node, tick, ss.str()), node->graph->scale.pos_t);
-
-		ss.str("");
-		ss << name << "_end" << i << "_vel";
-		ends[i].var_vel = new SVar(solver, ID(VarTag::CentroidEndVel, node, tick, ss.str()), node->graph->scale.vel_t);
+		ss << name << "_end" << i;
+		ends[i].var_pos = new V3Var(solver, ID(VarTag::CentroidEndPos, node, tick, ss.str() + "_pos"), node->graph->scale.pos_t);
+		ends[i].var_vel = new V3Var(solver, ID(VarTag::CentroidEndVel, node, tick, ss.str() + "_vel"), node->graph->scale.vel_t);
 	
 		for(int j = 0; j < nface; j++){
 			ss.str("");
-			ss << name << "_end" << i << "_face" << j << "gap";
-			ends[i].faces[j].var_gap = new SVar(solver, ID(VarTag::CentroidFaceGap, node, tick, ss.str()), node->graph->scale.pos_t);
-
-			for(int k = 0; k < 3; k++){
-				ss.str("");
-				ss << name << "_end" << i << "_face" << j << "_force" << k;
-				ends[i].faces[j].var_force[k] = new SVar(solver, ID(VarTag::CentroidFaceForce, node, tick, ss.str()), node->graph->scale.force_t);
-			}
+			ss << name << "_end" << i << "_face" << j;
+			ends[i].faces[j].var_force    = new V3Var(solver, ID(VarTag::CentroidForce  , node, tick, ss.str() + "_force"  ), node->graph->scale.force_t);
+			ends[i].faces[j].var_pos_cmpl = new SVar (solver, ID(VarTag::CentroidPosCmpl, node, tick, ss.str() + "_poscmpl"), node->graph->scale.pos_t  );
+			ends[i].faces[j].var_vel_cmpl = new SVar (solver, ID(VarTag::CentroidVelCmpl, node, tick, ss.str() + "_velcmpl"), node->graph->scale.vel_t  );
 		}
 	}
 }
@@ -84,22 +70,24 @@ void CentroidKey::AddCon(Solver* solver) {
 		for(int j = 0; j < 3; j++){
 			ss.str("");
 			ss << name << "_end" << i << "_range" << j;
-			ends[i].con_range[j] = new CentroidRangeCon(solver, ConTag::CentroidRange, ss.str(), this, i, j, node->graph->scale.pos_t);
+			ends[i].con_range[j] = new CentroidEndRangeCon(solver, ConTag::CentroidEndRange, ss.str(), this, i, j, node->graph->scale.pos_t);
 		}
 
 		if(next){
 			ss.str("");
 			ss << name << "_end" << i << "_vel";
-			ends[i].con_vel = new CentroidVelCon(solver, ConTag::CentroidVel, ss.str(), this, i, node->graph->scale.vel_t);
+			ends[i].con_vel = new CentroidEndVelCon(solver, ConTag::CentroidEndVel, ss.str(), this, i, node->graph->scale.vel_t);
 
 			for(int j = 0; j < nface; j++){
 				ss.str("");
-				ss << name << "_end" << i << "_face" << j << "_gap";
-				ends[i].faces[j].con_gap = new CentroidGapCon(solver, ConTag::CentroidGap, ss.str(), this, i, j, node->graph->scale.force_t);
-			
-				ss.str("");
-				ss << name << "_end" << i << "_face" << j << "_fric";
-				ends[i].faces[j].con_fric = new CentroidFrictionCon(solver, ConTag::CentroidFriction, ss.str(), this, i, j, node->graph->scale.force_t);
+				ss << name << "_end" << i << "_face" << j;
+				ends[i].faces[j].con_fric = new CentroidFrictionCon(solver, ConTag::CentroidFriction, ss.str() + "_fric", this, i, j, node->graph->scale.force_t);
+
+				ends[i].faces[j].con_pos_cmpl[0] = new CentroidPosCmplCon(solver, ConTag::CentroidPosCmpl, ss.str() + "_poscmpl0", this, i, j, 0, node->graph->scale.force_t);
+				ends[i].faces[j].con_pos_cmpl[1] = new CentroidPosCmplCon(solver, ConTag::CentroidPosCmpl, ss.str() + "_poscmpl1", this, i, j, 1, node->graph->scale.force_t);
+
+				ends[i].faces[j].con_vel_cmpl[0] = new CentroidVelCmplCon(solver, ConTag::CentroidVelCmpl, ss.str() + "_velcmpl0", this, i, j, 0, node->graph->scale.force_t);
+				ends[i].faces[j].con_vel_cmpl[1] = new CentroidVelCmplCon(solver, ConTag::CentroidVelCmpl, ss.str() + "_velcmpl1", this, i, j, 1, node->graph->scale.force_t);
 			}
 		}
 	}
@@ -111,13 +99,14 @@ void CentroidKey::Prepare() {
 	// calculate contact activity
 	for(End& end : ends){
 		for(int i = 0; i < end.faces.size(); i++){
-			ends[i].con_vel->enabled = false;
-
 			obj->param.faces[i].CalcNearest(end.var_pos->val, end.faces[i].pc, end.faces[i].iedge, end.faces[i].ivtx);
 
 			for(Face& face : end.faces){
-				face.con_gap ->enabled = false;
 				face.con_fric->enabled = false;
+				face.con_pos_cmpl[0]->enabled = false;
+				face.con_pos_cmpl[1]->enabled = false;
+				face.con_vel_cmpl[0]->enabled = false;
+				face.con_vel_cmpl[1]->enabled = false;
 			}
 		}
 	}
@@ -518,9 +507,7 @@ CentroidVelConT::CentroidVelConT(Solver* solver, int _tag, string _name, Centroi
 	AddSLink(obj[0]->var_vel_t);
 	for(CentroidKey::End& end : obj[0]->ends){
 		for(CentroidKey::Face& face : end.faces){
-			for(int k = 0; k < 3; k++){
-				AddC3Link(face.var_force[k]);
-			}
+			AddSLink(face.var_force);
 		}
 	}
 }
@@ -534,13 +521,12 @@ CentroidVelConR::CentroidVelConR(Solver* solver, int _tag, string _name, Centroi
 	for(CentroidKey::End& end : obj[0]->ends){
 		AddX3Link(end.var_pos  );
 		for(CentroidKey::Face& face : end.faces){
-			for(int k = 0; k < 3; k++)
-				AddC3Link(face.var_force[k]);
+			AddX3Link(face.var_force);
 		}
 	}
 }
 
-CentroidRangeCon::CentroidRangeCon(Solver* solver, int _tag, string _name, CentroidKey* _obj, int _iend, int _dir, real_t _scale):
+CentroidEndRangeCon::CentroidEndRangeCon(Solver* solver, int _tag, string _name, CentroidKey* _obj, int _iend, int _dir, real_t _scale):
 	Constraint(solver, 1, ID(_tag, _obj->node, _obj->tick, _name), _scale){
 	obj  = _obj;
 	iend = _iend;
@@ -551,25 +537,15 @@ CentroidRangeCon::CentroidRangeCon(Solver* solver, int _tag, string _name, Centr
 	AddR3Link(obj->ends[iend].var_pos);
 }
 
-CentroidVelCon::CentroidVelCon(Solver* solver, int _tag, string _name, CentroidKey* _obj, int _iend, real_t _scale):
+CentroidEndVelCon::CentroidEndVelCon(Solver* solver, int _tag, string _name, CentroidKey* _obj, int _iend, real_t _scale):
 	Constraint(solver, 1, ID(_tag, _obj->node, _obj->tick, _name), _scale){
 	obj[0] = _obj;
 	obj[1] = (CentroidKey*)_obj->next;
 	iend  = _iend ;
 	
-	AddSLink (obj[0]->ends[iend].var_vel);
-	AddR3Link(obj[0]->ends[iend].var_pos);
-	AddR3Link(obj[1]->ends[iend].var_pos);
-}
-
-CentroidGapCon::CentroidGapCon(Solver* solver, int _tag, string _name, CentroidKey* _obj, int _iend, int _iface, real_t _scale):
-	Constraint(solver, 1, ID(_tag, _obj->node, _obj->tick, _name), _scale){
-	obj   = _obj;
-	iend  = _iend ;
-	iface = _iface;
-	
-	AddSLink (obj->ends[iend].faces[iface].var_gap);
-	AddR3Link(obj->ends[iend].var_pos);
+	AddSLink(obj[1]->ends[iend].var_pos);
+	AddSLink(obj[0]->ends[iend].var_pos);
+	AddSLink(obj[0]->ends[iend].var_vel);
 }
 
 CentroidFrictionCon::CentroidFrictionCon(Solver* solver, int _tag, string _name, CentroidKey* _obj, int _iend, int _iface, real_t _scale):
@@ -578,16 +554,35 @@ CentroidFrictionCon::CentroidFrictionCon(Solver* solver, int _tag, string _name,
 	iend  = _iend ;
 	iface = _iface;
 	
-	AddSLink(obj->ends[iend].faces[iface].var_force[0]);
-	AddSLink(obj->ends[iend].faces[iface].var_force[1]);
-	AddSLink(obj->ends[iend].faces[iface].var_force[2]);
+	AddR3Link(obj->ends[iend].faces[iface].var_force);
 }
 
-CmplCon::CmplCon(Solver* solver, ID _id, SVar* _var, SVar* _var_slack, int _side, real_t _scale):
-	Constraint(solver, 1, _id, _scale){
-	var       = _var;
-	var_slack = _var_slack;
-	side      = _side;
+CentroidPosCmplCon::CentroidPosCmplCon(Solver* solver, int _tag, string _name, CentroidKey* _obj, int _iend, int _iface, bool _side, real_t _scale):
+	Constraint(solver, 1, ID(_tag, _obj->node, _obj->tick, _name), _scale){
+	obj   = _obj;
+	iend  = _iend ;
+	iface = _iface;
+	side  = _side;
+	
+	if(side == 0)
+	     AddR3Link(obj->ends[iend].var_pos);
+	else AddR3Link(obj->ends[iend].faces[iface].var_force);
+	
+	AddSLink(obj->ends[iend].faces[iface].var_pos_cmpl);
+}
+
+CentroidVelCmplCon::CentroidVelCmplCon(Solver* solver, int _tag, string _name, CentroidKey* _obj, int _iend, int _iface, bool _side, real_t _scale):
+	Constraint(solver, 1, ID(_tag, _obj->node, _obj->tick, _name), _scale){
+	obj   = _obj;
+	iend  = _iend ;
+	iface = _iface;
+	side  = _side;
+	
+	if(side == 0)
+		 AddR3Link(obj->ends[iend].var_vel);
+	else AddR3Link(obj->ends[iend].faces[iface].var_force);
+	
+	AddSLink(obj->ends[iend].faces[iface].var_vel_cmpl);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -596,7 +591,7 @@ void CentroidCon::Prepare(){
 
 }
 
-void CentroidRangeCon::Prepare(){
+void CentroidEndRangeCon::Prepare(){
 	p      = obj->var_pos_t->val;
 	q      = obj->var_pos_r->val;
 	pend   = obj->ends[iend].var_pos->val;
@@ -605,16 +600,12 @@ void CentroidRangeCon::Prepare(){
 	nabs   = q*n;
 }
 
-void CentroidVelCon::Prepare(){
-	p0 = obj[0]->ends[iend].var_pos->val;
-	p1 = obj[1]->ends[iend].var_pos->val;
-	dp = p1 - p0;
-	
-	real_t n = dp.norm();
-	const real_t eps = 1.0e-10;
-	if(n > eps)
-		 dpn = dp/n;
-	else dpn.clear();
+void CentroidFrictionCon::Prepare(){
+	Centroid* cen = (Centroid*)obj->node;
+
+	mu  = cen->param.faces[iface].mu;
+	f   = obj->ends[iend].faces[iface].f();
+	ftn = vec2_t(f.x, f.y).norm();
 }
 
 void CentroidGapCon::Prepare(){
@@ -646,14 +637,6 @@ void CentroidGapCon::Prepare(){
 	if(face.iedge != -1 && face.ivtx != -1){
 	
 	}
-}
-
-void CentroidFrictionCon::Prepare(){
-	Centroid* cen = (Centroid*)obj->node;
-
-	mu  = cen->param.faces[iface].mu;
-	f   = obj->ends[iend].faces[iface].f();
-	ftn = vec2_t(f.x, f.y).norm();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
