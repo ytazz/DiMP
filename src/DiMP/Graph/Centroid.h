@@ -201,11 +201,13 @@ struct CentroidEndRangeCon : Constraint{
 	quat_t       q;
 	vec3_t       pend;
 	vec3_t       dp;
+	bool	     on_lower, on_upper;
 
 	void Prepare();
 
 	virtual void  CalcCoef();
 	virtual void  CalcDeviation();
+	virtual void  Project(real_t& l, uint k);
 
 	CentroidEndRangeCon(Solver* solver, int _tag, string _name, CentroidKey* _obj, int _iend, int _dir, real_t _scale);
 };
@@ -227,6 +229,7 @@ struct CentroidPosCmplCon : Constraint{
 	bool         side;
 	int          iend;
 	int          iface;
+	real_t       gamma;
 	vec3_t       p;
 	vec3_t       pc;
 	vec3_t       dp;
@@ -245,6 +248,7 @@ struct CentroidVelCmplCon : Constraint{
 	bool         side;
 	int          iend;
 	int          iface;
+	real_t       gamma;
 	vec3_t       p;
 	vec3_t       pc;
 	vec3_t       dp;
@@ -270,6 +274,7 @@ struct CentroidFrictionCon : Constraint{
 
 	virtual void  CalcCoef();
 	virtual void  CalcDeviation();
+	virtual void  Project(real_t& l, uint k);
 
 	CentroidFrictionCon(Solver* solver, int _tag, string _name, CentroidKey* _obj, int _iend, int _nface, real_t _scale);
 };
