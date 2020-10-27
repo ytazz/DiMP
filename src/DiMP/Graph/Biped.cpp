@@ -715,7 +715,7 @@ real_t BipedLIP::TorsoAngAcc(real_t t) {
 	return 0.0;
 }
 
-void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& angvel, vec3_t& acc, vec3_t& angacc) {
+void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& angvel, vec3_t& acc, vec3_t& angacc, int& contact) {
 	BipedLIPKey* keym2 = 0;
 	BipedLIPKey* keym1 = 0;
 	BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;
@@ -737,6 +737,8 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 		angvel.clear();
 		acc   .clear();
 		angacc.clear();
+
+		contact = ContactState::Surface;
 
 		return;
 	}
@@ -765,11 +767,15 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 		// double support
 		if(ph == Phase::LR || ph == Phase::RL || ph == Phase::D){
 			pos2 = p0;
+
+			contact = ContactState::Surface;
 		}
 		// support foot of single support
 		if( (ph == Phase::R && side == 0) ||
 		    (ph == Phase::L && side == 1) ){
 			pos2 = p0;
+			
+			contact = ContactState::Surface;
 		}
 		// swing foot of single support
 		if( (ph == Phase::R && side == 1) ||
@@ -784,17 +790,23 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 			}
 			pos2 = p0 + (p1 - p0)*s;
 			vel2 = (p1 - p0)/tau;
+
+			contact = ContactState::Float;
 		}
 	}
 	if (param.swingProfile == SwingProfile::Cycloid){
 		// double support
 		if(ph == Phase::LR || ph == Phase::RL || ph == Phase::D){
 			pos2 = p0;
+
+			contact = ContactState::Surface;
 		}
 		// support foot of single support
 		if( (ph == Phase::R && side == 0) ||
 		    (ph == Phase::L && side == 1) ){
 			pos2 = p0;
+
+			contact = ContactState::Surface;
 		}
 		// swing foot of single support
 		if( (ph == Phase::R && side == 1) ||
@@ -810,6 +822,8 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 
 			acc2 = ((p1 - p0)/(tau*tau))*_2pi*sin(_2pi*s);
 			az   = (h0/(2.0*tau*tau))*(_2pi*_2pi)*cos(_2pi*s);
+
+			contact = ContactState::Float;
 		}
 	}
 	if(param.swingProfile == SwingProfile::HeelToe){
@@ -836,6 +850,8 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 				vpitch = vc/r1;
 				vel2.x = (r1*(1.0 - cos(pitch)) - l1*sin(pitch))*vpitch;
 				vz     = (r1*sin(pitch) - l1*cos(pitch))*vpitch;
+
+				contact = ContactState::Heel;
 			}
 			// current cop is on toe
 			else if(ct > p0.x + l0){
@@ -846,10 +862,14 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 				vpitch = vc/r0;
 				vel2.x = (r0*(1.0 - cos(pitch)) + l0*sin(pitch))*vpitch;
 				vz     = (r0*sin(pitch) + l0*cos(pitch))*vpitch;
+
+				contact = ContactState::Toe;
 			}
 			// current cop is in the middle
 			else{
 				pos2.x = p0.x;
+
+				contact = ContactState::Surface;
 			}
 		}
 		// swing foot of single support phase
@@ -906,6 +926,8 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 			z  += h0*(1 - cos(_2pi*s))/2.0;
 			vz += (h0/(2.0*tau))*_2pi*sin(_2pi*s);
 			az += (h0/(2.0*tau*tau))*(_2pi*_2pi)*cos(_2pi*s);
+
+			contact = ContactState::Float;
 		
 			//vec2_t r(p11x - p00x, p11z - p00z);
 			//real_t a     = r.norm();
@@ -931,9 +953,14 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 			pos2.x = p0.x + r0*(pitch - sin(pitch)) + l0*(1.0 - cos(pitch));
 			z      =        r0*(1.0   - cos(pitch)) + l0*sin(pitch);
 
-			if( pitch > 0.0 )
-				 vpitch = cv/r0;
-			else vpitch = 0.0;
+			if( pitch > 0.0 ){
+				vpitch = cv/r0;
+				contact = ContactState::Toe;
+			}
+			else{
+				vpitch = 0.0;
+				contact = ContactState::Surface;
+			}
 			
 			vel2.x = (r0*(1.0 - cos(pitch)) + l0*sin(pitch))*vpitch;
 			vz     = (r0*sin(pitch) + l0*cos(pitch))*vpitch;
@@ -951,9 +978,14 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 			pos2.x = p0.x + r1*(pitch - sin(pitch)) - l1*(1.0 - cos(pitch));
 			z      =        r1*(1.0   - cos(pitch)) - l1*sin(pitch);
 
-			if( pitch < 0.0)
-				 vpitch = cv/r1;
-			else vpitch = 0.0;
+			if( pitch < 0.0){
+				vpitch = cv/r1;
+				contact = ContactState::Heel;
+			}
+			else{
+				vpitch = 0.0;
+				contact = ContactState::Surface;
+			}
 			
 			vel2.x = (r1*(1.0 - cos(pitch)) - l1*sin(pitch))*vpitch;
 			vz     = (r1*sin(pitch) - l1*cos(pitch))*vpitch;
@@ -963,6 +995,8 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 			pitch  = 0.0;
 			pos2.x = p0.x;
 			z      = 0.0;
+
+			contact = ContactState::Surface;
 		}
 
 		pos2.y = p0.y + (p1.y - p0.y)*s;
@@ -1163,13 +1197,14 @@ void BipedLIP::Draw(Render::Canvas* canvas, Render::Config* conf) {
 void BipedLIP::CreateSnapshot(real_t t, BipedLIP::Snapshot& s){
 	pose_t pose;
 	vec3_t vel, angvel, acc, angacc;
+	int    contact;
 
 	s.t = t;
 	s.com_pos = ComPos(t);
-	FootPose(t, 0, pose, vel, angvel, acc, angacc);
+	FootPose(t, 0, pose, vel, angvel, acc, angacc, contact);
 	s.foot_pos_t[0] = pose.Pos();
 	s.foot_pos_r[0] = pose.Ori();
-	FootPose(t, 1, pose, vel, angvel, acc, angacc);
+	FootPose(t, 1, pose, vel, angvel, acc, angacc, contact);
 	s.foot_pos_t[1] = pose.Pos();
 	s.foot_pos_r[1] = pose.Ori();
 	s.torso_pos_t = TorsoPos(s.com_pos, s.foot_pos_t[0], s.foot_pos_t[1]);
@@ -1236,13 +1271,15 @@ void BipedLIP::Save(const char* filename) {
 
 	pose_t pose;
 	vec3_t vel, angvel, acc, angacc;
+	int    contact;
+
 	for (real_t t = 0.0; t <= tf; t += dt) {
 		vec3_t com_p   = ComPos(t);
 
-		FootPose(t, 1, pose, vel, angvel, acc, angacc);
+		FootPose(t, 1, pose, vel, angvel, acc, angacc, contact);
 		vec3_t lfoot_p = pose.Pos();
 
-		FootPose(t, 0, pose, vel, angvel, acc, angacc);
+		FootPose(t, 0, pose, vel, angvel, acc, angacc, contact);
 		vec3_t rfoot_p = pose.Pos();
 
 		vec3_t cop_p   = CopPos(t);

@@ -70,7 +70,7 @@ public:
 		//biped->param.swingProfile = DiMP::BipedLIP::SwingProfile::Wedge;
 		//biped->param.swingProfile = DiMP::BipedLIP::SwingProfile::Cycloid;
 		biped->param.swingProfile = DiMP::BipedLIP::SwingProfile::HeelToe;
-		biped->param.copMin       = vec2_t(-0.040, -0.025 );
+		biped->param.copMin       = vec2_t(-0.030, -0.025 );
 		biped->param.copMax       = vec2_t( 0.110,  0.025 );
 		biped->param.accMin       = vec2_t(-0.25, -1.0 );
 		biped->param.accMax       = vec2_t( 0.25,  1.0 );
