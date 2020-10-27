@@ -100,6 +100,15 @@ namespace DiMP {;
 				HeelToe,      ///< heel-to-toe walking
 			};
 		};
+		/// contact state
+		struct ContactState{
+			enum{
+				Float,    //< in floating state
+				Surface,  //< in surface contact
+				Heel,     //< in line contact on heel
+				Toe,      //< in line contact on toe
+			};
+		};
 
 		struct Param {
 			real_t	gravity;				///< gravity (positive)
@@ -194,7 +203,7 @@ namespace DiMP {;
 		real_t TorsoOri   (real_t t);
 		real_t TorsoAngVel(real_t t);
 		real_t TorsoAngAcc(real_t t);
-		void   FootPose   (real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& angvel, vec3_t& acc, vec3_t& angacc);
+		void   FootPose   (real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& angvel, vec3_t& acc, vec3_t& angacc, int& contact);
 		vec3_t CopPos     (real_t t);
 		vec3_t CmpPos     (real_t t);
 		vec3_t Momentum   (real_t t);
