@@ -1098,8 +1098,6 @@ void BipedLIP::Draw(Render::Canvas* canvas, Render::Config* conf) {
 	// com
 	if (conf->Set(canvas, Render::Item::BipedCom, this)) {
 		canvas->BeginLayer("biped_com", true);
-		canvas->SetLineWidth(3.0f);
-		canvas->SetLineColor("black");
 		canvas->BeginPath();
 		canvas->MoveTo(trajectory[0].com_pos);
 		for (uint i = 1; i < trajectory.size(); i++) {
@@ -1112,8 +1110,6 @@ void BipedLIP::Draw(Render::Canvas* canvas, Render::Config* conf) {
 	// cop
 	if (conf->Set(canvas, Render::Item::BipedCop, this)) {
 		canvas->BeginLayer("biped_cop", true);
-		canvas->SetLineWidth(3.0f);
-		canvas->SetLineColor("magenta");
 		canvas->BeginPath();
 		canvas->MoveTo(trajectory[0].cop_pos);
 		for (uint i = 1; i < trajectory.size(); i++) {
@@ -1125,8 +1121,6 @@ void BipedLIP::Draw(Render::Canvas* canvas, Render::Config* conf) {
 	// cmp
 	if (conf->Set(canvas, Render::Item::BipedCmp, this)) {
 		canvas->BeginLayer("biped_cmp", true);
-		canvas->SetLineWidth(1.0f);
-		canvas->SetLineColor("green");
 		canvas->BeginPath();
 		canvas->MoveTo(trajectory[0].cmp_pos);
 		for (uint i = 1; i < trajectory.size(); i++) {
@@ -1139,8 +1133,6 @@ void BipedLIP::Draw(Render::Canvas* canvas, Render::Config* conf) {
 	// torso
 	if (conf->Set(canvas, Render::Item::BipedTorso, this)) {
 		canvas->BeginLayer("biped_torso", true);
-		canvas->SetLineWidth(2.0f);
-		canvas->SetLineColor("blue");
 		canvas->BeginPath();
 		canvas->MoveTo(trajectory[0].torso_pos_t);
 		for (uint i = 1; i < trajectory.size(); i++) {
@@ -1154,7 +1146,6 @@ void BipedLIP::Draw(Render::Canvas* canvas, Render::Config* conf) {
 	// swing foot
 	if (conf->Set(canvas, Render::Item::BipedFoot, this)) {
 		canvas->BeginLayer("biped_foot", true);
-		canvas->SetLineWidth(1.0f);
 		canvas->BeginPath();
 		canvas->MoveTo(trajectory[0].foot_pos_t[0]);
 		for (uint i = 1; i < trajectory.size(); i++) {

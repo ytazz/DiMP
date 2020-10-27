@@ -87,8 +87,11 @@ public:
 			void CalcNearest(const vec3_t& p, vec3_t& pc, int& iedge, int& ivtx);
 		};
 
-		real_t	mass;
-		vec3_t	gravity;
+		real_t	m;  //< mass
+		real_t  I;  //< inertia
+		vec3_t	g;  //< gravity
+		real_t  h;  //< time resolution
+		real_t  l;  //< nominal length
 		
 		vector<End>   ends;
 		vector<Face>  faces;
@@ -115,9 +118,14 @@ public:
 	};
 
 	struct Snapshot{
-		real_t  t;
-		vec3_t  pos;
-		vector<vec3_t>  end_pos;
+		struct End{
+			vec3_t pos;
+			vec3_t force;
+		};
+
+		real_t       t;
+		vec3_t       pos;
+		vector<End>  ends;
 		
 		Snapshot();
 	};
@@ -143,8 +151,9 @@ public:
 	vec3_t ComVel   (real_t t, int type = Interpolate::Quadratic);
 	quat_t ComOri   (real_t t, int type = Interpolate::SlerpDiff);
 	vec3_t ComAngVel(real_t t, int type = Interpolate::Quadratic);
-	vec3_t EndPos   (real_t t, int index, int type = Interpolate::LinearDiff);
-	vec3_t EndVel   (real_t t, int index, int type = Interpolate::LinearDiff);
+	vec3_t EndPos   (real_t t, int index, int type = Interpolate::Quadratic);
+	vec3_t EndVel   (real_t t, int index, int type = Interpolate::Quadratic);
+	vec3_t EndForce (real_t t, int index, int type = Interpolate::LinearDiff);
 
 	void CreateSnapshot(real_t t, Snapshot& s);
 	void CalcTrajectory();
@@ -194,13 +203,13 @@ struct CentroidVelConR : CentroidCon{
 struct CentroidEndRangeCon : Constraint{
 	CentroidKey* obj;
 	int          iend;
-	int          dir;
-	vec3_t       n;
-	vec3_t       nabs;
+	vec3_t       dir;
+	vec3_t       dir_abs;
 	vec3_t       p;
 	quat_t       q;
 	vec3_t       pend;
 	vec3_t       dp;
+	real_t       _min, _max;
 	bool	     on_lower, on_upper;
 
 	void Prepare();
@@ -209,7 +218,7 @@ struct CentroidEndRangeCon : Constraint{
 	virtual void  CalcDeviation();
 	virtual void  Project(real_t& l, uint k);
 
-	CentroidEndRangeCon(Solver* solver, int _tag, string _name, CentroidKey* _obj, int _iend, int _dir, real_t _scale);
+	CentroidEndRangeCon(Solver* solver, int _tag, string _name, CentroidKey* _obj, int _iend, vec3_t _dir, real_t _scale);
 };
 
 struct CentroidEndVelCon : Constraint{

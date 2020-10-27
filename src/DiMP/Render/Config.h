@@ -30,6 +30,7 @@ struct Item{
 		CentroidPos,
 		CentroidEnd,
 		CentroidFace,
+		CentroidForce,
 		Avoid,
 	};
 };

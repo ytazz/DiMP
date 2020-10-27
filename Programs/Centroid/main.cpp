@@ -42,13 +42,16 @@ public:
 	virtual void BuildScene() {
 		centroid = new DiMP::Centroid(graph, "centroid");
 
-		centroid->param.gravity = vec3_t(0.0, 0.0, -9.8);
-		centroid->param.mass    = 1.0;
+		centroid->param.g = vec3_t(0.0, 0.0, -9.8);
+		centroid->param.m = 1.0;
+		centroid->param.I = 1.0;
+		centroid->param.h = 0.1;
+		centroid->param.l = 1.0;
 
 		centroid->param.ends.resize(2);
-		centroid->param.ends[0].rangeMin = vec3_t(-0.5, -0.3, -1.0);
+		centroid->param.ends[0].rangeMin = vec3_t(-0.5, -0.3, -1.1);
 		centroid->param.ends[0].rangeMax = vec3_t( 0.5,  0.0, -0.9);
-		centroid->param.ends[1].rangeMin = vec3_t(-0.5,  0.0, -1.0);
+		centroid->param.ends[1].rangeMin = vec3_t(-0.5,  0.0, -1.1);
 		centroid->param.ends[1].rangeMax = vec3_t( 0.5,  0.3, -0.9);
 
 		centroid->param.faces.resize(1);
@@ -59,6 +62,7 @@ public:
 		f.vertices[1] = vec3_t(-10.0,  10.0, 0.0);
 		f.vertices[2] = vec3_t(-10.0, -10.0, 0.0);
 		f.vertices[3] = vec3_t( 10.0, -10.0, 0.0);
+		f.mu = 1.0;
 		
 		const int N = 10;
 		const real_t dt = 0.1;
@@ -67,7 +71,7 @@ public:
 
 		vec3_t startPos(0.0, 0.0, 1.0);
 		quat_t startOri = quat_t();
-		vec3_t goalPos (2.0, 0.0, 1.0);
+		vec3_t goalPos (0.3, 0.0, 1.0);
 		quat_t goalOri  = quat_t();
 
 		centroid->waypoints.resize(2);
@@ -94,6 +98,16 @@ public:
 		graph->scale.Set(1.0, 1.0, 1.0);
 		graph->Init();
 
+		//graph->solver->Enable(ID(DiMP::ConTag::CentroidPosT    ), false);
+		//graph->solver->Enable(ID(DiMP::ConTag::CentroidPosR    ), false);
+		//graph->solver->Enable(ID(DiMP::ConTag::CentroidVelT    ), false);
+		//graph->solver->Enable(ID(DiMP::ConTag::CentroidVelR    ), false);
+		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndRange), false);
+		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndVel  ), false);
+		//graph->solver->Enable(ID(DiMP::ConTag::CentroidFriction), false);
+		//graph->solver->Enable(ID(DiMP::ConTag::CentroidPosCmpl ), false);
+		graph->solver->Enable(ID(DiMP::ConTag::CentroidVelCmpl ), false);
+		
 		graph->solver->SetCorrection(ID(), 0.5);
 		graph->solver->param.numIter[0] = 20;
 		graph->solver->param.minStepSize = 1.0;
