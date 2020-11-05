@@ -109,6 +109,12 @@ namespace DiMP {;
 				Toe,      //< in line contact on toe
 			};
 		};
+		struct FootCurveType{
+			enum{
+				Arc,
+				Clothoid,
+			};
+		};
 
 		struct Param {
 			real_t	gravity;				///< gravity (positive)
@@ -137,10 +143,13 @@ namespace DiMP {;
 			vec2_t  momMin;                  ///< admissible range of angular momentum
 			vec2_t  momMax;
 			
+			int     footCurveType;
 			real_t  ankleToToe ;
 			real_t  ankleToHeel;
-			real_t  toeRadius  ;
-			real_t  heelRadius ;
+			real_t  toeCurvature ;
+			real_t  heelCurvature;
+			real_t  toeCurvatureRate ;
+			real_t  heelCurvatureRate;
 
 			Param();
 		};
@@ -196,17 +205,20 @@ namespace DiMP {;
 		virtual void        DrawSnapshot  (Render::Canvas* canvas, Render::Config* conf);
 		virtual void        Draw          (Render::Canvas* canvas, Render::Config* conf);
 		
-		int    Phase      (real_t t);
-		vec3_t ComPos     (real_t t);
-		vec3_t ComVel     (real_t t);
-		vec3_t ComAcc     (real_t t);
-		real_t TorsoOri   (real_t t);
-		real_t TorsoAngVel(real_t t);
-		real_t TorsoAngAcc(real_t t);
-		void   FootPose   (real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& angvel, vec3_t& acc, vec3_t& angacc, int& contact);
-		vec3_t CopPos     (real_t t);
-		vec3_t CmpPos     (real_t t);
-		vec3_t Momentum   (real_t t);
+		int    Phase        (real_t t);
+		vec3_t ComPos       (real_t t);
+		vec3_t ComVel       (real_t t);
+		vec3_t ComAcc       (real_t t);
+		real_t TorsoOri     (real_t t);
+		real_t TorsoAngVel  (real_t t);
+		real_t TorsoAngAcc  (real_t t);
+		void   FootRotation (real_t po, real_t cp, real_t cv, vec3_t& pos, vec3_t& angle, vec3_t& vel, vec3_t& angvel, int& contact);
+		void   FootPose     (real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& angvel, vec3_t& acc, vec3_t& angacc, int& contact);
+		real_t TimeToLiftoff(real_t t, int side);
+		real_t TimeToLanding(real_t t, int side);
+		vec3_t CopPos       (real_t t);
+		vec3_t CmpPos       (real_t t);
+		vec3_t Momentum     (real_t t);
 		
 		vec3_t TorsoPos(const vec3_t& pcom, const vec3_t& psup, const vec3_t& pswg);
 		vec3_t TorsoVel(const vec3_t& vcom, const vec3_t& vsup, const vec3_t& vswg);
