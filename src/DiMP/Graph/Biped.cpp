@@ -1060,6 +1060,10 @@ real_t BipedLIP::TimeToLiftoff(real_t t, int side){
 	while(keyNextFloat->next && phase[keyNextFloat->tick->idx] != phase_float)
 		keyNextFloat = (BipedLIPKey*)keyNextFloat->next;
 	
+	// return 1.0 if there is no next float phase in the trajectory
+	if(key == keyNextFloat && phase[key->tick->idx] != phase_float)
+		return 1.0;
+
 	return keyNextFloat->tick->time - t;
 }
 
@@ -1070,6 +1074,10 @@ real_t BipedLIP::TimeToLanding(real_t t, int side){
 	int phase_float = (side == 0 ? Phase::L : Phase::R);
 	while(keyNextContact->next && phase[keyNextContact->tick->idx] == phase_float)
 		keyNextContact = (BipedLIPKey*)keyNextContact->next;
+
+	// return 1.0 if there is no next contact phase in the trajectory
+	if(key == keyNextContact && phase[key->tick->idx] == phase_float)
+		return 1.0;
 
 	return keyNextContact->tick->time - t;
 }
