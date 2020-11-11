@@ -46,9 +46,9 @@ const char* VarNames[] = {
 	"centroid_vel_r"    ,
 	"centroid_end_pos"  ,
 	"centroid_end_vel"  ,
-	"centroid_pos_cmpl" , 
-	"centroid_vel_cmpl" , 
-	"centroid_force"
+	"centroid_contact_pos",
+	"centroid_contact_force",
+	"centroid_contact_cmpl"
 };
 
 const char* ConNames[] = {
@@ -102,11 +102,12 @@ const char* ConNames[] = {
 	"centroid_pos_r"      ,
 	"centroid_vel_t"      ,
 	"centroid_vel_r"      ,
+	"centroid_end_pos"    ,
 	"centroid_end_range"  ,
-	"centroid_end_vel"    ,
-	"centroid_fric"       ,
-	"centroid_pos_cmpl"   ,
-	"centroid_vel_cmpl"
+	"centroid_end_cmpl"   ,
+	"centroid_contact_gap"  ,
+	"centroid_contact_force",
+	"centroid_contact_cmpl" 
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -372,13 +373,12 @@ void Graph::ExtractGeometryPairs(){
 	}
 	int timeInt = timer2.CountUS();
 
-	DSTR << " tsort: "    << timeSort
-		 << " tenum: "    << timeEnum 
-		 << " tint: "     << timeInt
-		 << " queuemax: " << szmax
-		 << " numint: " << numInt[0] << " " << numInt[1] << " " << numInt[2] << " " << numIntAll
-		 << endl;
-
+	//DSTR << " tsort: "    << timeSort
+	//	 << " tenum: "    << timeEnum 
+	//	 << " tint: "     << timeInt
+	//	 << " queuemax: " << szmax
+	//	 << " numint: " << numInt[0] << " " << numInt[1] << " " << numInt[2] << " " << numIntAll
+	//	 << endl;
 }
 
 void Graph::Finish(){
@@ -405,9 +405,9 @@ void Graph::Step(){
 	Finish();
 	uint TFinish = timer.CountUS();
 
-	DSTR << " tpre: " << TPrepare;
-	DSTR << " tstp: " << TStep;
-	DSTR << " tfin: " << TFinish << endl;
+	//DSTR << " tpre: " << TPrepare;
+	//DSTR << " tstp: " << TStep;
+	//DSTR << " tfin: " << TFinish << endl;
 
 }
 

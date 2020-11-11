@@ -42,18 +42,33 @@ public:
 	virtual void BuildScene() {
 		centroid = new DiMP::Centroid(graph, "centroid");
 
-		centroid->param.g = vec3_t(0.0, 0.0, -9.8);
-		centroid->param.m = 1.0;
-		centroid->param.I = 1.0;
-		centroid->param.h = 0.1;
-		centroid->param.l = 1.0;
+		vec3_t startPos(0.0, 0.0, 1.0);
+		quat_t startOri = quat_t();
+		vec3_t goalPos (2.0, 0.0, 1.0);
+		quat_t goalOri  = quat_t();
 
-		centroid->param.ends.resize(2);
-		centroid->param.ends[0].rangeMin = vec3_t(-0.5, -0.3, -1.1);
-		centroid->param.ends[0].rangeMax = vec3_t( 0.5,  0.0, -0.9);
-		centroid->param.ends[1].rangeMin = vec3_t(-0.5,  0.0, -1.1);
-		centroid->param.ends[1].rangeMax = vec3_t( 0.5,  0.3, -0.9);
+		centroid->param.g    = 9.8;
+		centroid->param.m    = 1.0;
+		centroid->param.I    = 1.0;
+		centroid->param.h    = 0.1;
+		centroid->param.mu   = 0.5;
+		centroid->param.dmax = 1.0;
+		centroid->param.fmax = 1.0;
 
+		//centroid->param.l = 1.0;
+
+		centroid->param.ends.resize(1);
+		centroid->param.ends[0].rangeMin = vec3_t(-0.25, -0.1, -1.1);
+		centroid->param.ends[0].rangeMax = vec3_t( 0.25,  0.1, -0.9);
+		//centroid->param.ends[1].rangeMin = vec3_t(-0.25,  0.0, -1.1);
+		//centroid->param.ends[1].rangeMax = vec3_t( 0.25,  0.3, -0.9);
+		centroid->param.contacts.resize(2);
+		centroid->param.contacts[0].iend = 0;
+		centroid->param.contacts[0].pos  = vec3_t(startPos.x, startPos.y, 0.0);
+		centroid->param.contacts[1].iend = 0;
+		centroid->param.contacts[1].pos  = vec3_t(goalPos.x, goalPos.y, 0.0);
+
+		/*
 		centroid->param.faces.resize(1);
 		DiMP::Centroid::Param::Face& f = centroid->param.faces[0];
 		const real_t d = 3.0;
@@ -62,38 +77,20 @@ public:
 		f.vertices[1] = vec3_t(-10.0,  10.0, 0.0);
 		f.vertices[2] = vec3_t(-10.0, -10.0, 0.0);
 		f.vertices[3] = vec3_t( 10.0, -10.0, 0.0);
-		f.mu = 1.0;
-		
-		const int N = 10;
+		f.mu  = 1.0;
+		f.eta = 1.0;
+		*/
+		const int N = 30;
 		const real_t dt = 0.1;
 		for(int k = 0; k <= N; k++)
 			new DiMP::Tick(graph, k*dt, "");
 
-		vec3_t startPos(0.0, 0.0, 1.0);
-		quat_t startOri = quat_t();
-		vec3_t goalPos (0.3, 0.0, 1.0);
-		quat_t goalOri  = quat_t();
-
-		centroid->waypoints.resize(2);
-		centroid->waypoints[0].k = 0;
-		centroid->waypoints[0].pos_t = startPos;
-		centroid->waypoints[0].pos_r = startOri;
-		centroid->waypoints[0].vel_t = vec3_t(0.0, 0.0, 0.0);
-		centroid->waypoints[0].vel_r = vec3_t(0.0, 0.0, 0.0);
-		centroid->waypoints[0].fix_pos_t = true;
-		centroid->waypoints[0].fix_pos_r = true;
-		centroid->waypoints[0].fix_vel_t = true;
-		centroid->waypoints[0].fix_vel_r = true;
-
-		centroid->waypoints[1].k = N;
-		centroid->waypoints[1].pos_t = goalPos;
-		centroid->waypoints[1].pos_r = goalOri;
-		centroid->waypoints[1].vel_t = vec3_t(0.0, 0.0, 0.0);
-		centroid->waypoints[1].vel_r = vec3_t(0.0, 0.0, 0.0);
-		centroid->waypoints[1].fix_pos_t = true;
-		centroid->waypoints[1].fix_pos_r = true;
-		centroid->waypoints[1].fix_vel_t = true;
-		centroid->waypoints[1].fix_vel_r = true;
+		centroid->waypoints.push_back(DiMP::Centroid::Waypoint(0, 0.0, startPos, startOri, vec3_t(), vec3_t(), true, true, true, true));
+		centroid->waypoints.back().ends.push_back(DiMP::Centroid::Waypoint::End(vec3_t(startPos.x, startPos.y, 0.0), vec3_t(), true, false));
+		//centroid->waypoints.back().ends.push_back(DiMP::Centroid::Waypoint::End(vec3_t(startPos.x, startPos.y + 0.10, 0.0), vec3_t(), true, false));
+		centroid->waypoints.push_back(DiMP::Centroid::Waypoint(N, centroid->param.h*N, goalPos, goalOri, vec3_t(), vec3_t(), true, true, true, true));
+		centroid->waypoints.back().ends.push_back(DiMP::Centroid::Waypoint::End(vec3_t(goalPos.x, goalPos.y, 0.0), vec3_t(), true, false));
+		//centroid->waypoints.back().ends.push_back(DiMP::Centroid::Waypoint::End(vec3_t(goalPos.x, goalPos.y + 0.10, 0.0), vec3_t(), true, false));
 
 		graph->scale.Set(1.0, 1.0, 1.0);
 		graph->Init();
@@ -101,18 +98,21 @@ public:
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidPosT    ), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidPosR    ), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidVelT    ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::CentroidVelR    ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndRange), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndVel  ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::CentroidFriction), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::CentroidPosCmpl ), false);
-		graph->solver->Enable(ID(DiMP::ConTag::CentroidVelCmpl ), false);
+		graph->solver->Enable(ID(DiMP::ConTag::CentroidVelR        ), false);
+		graph->solver->Enable(ID(DiMP::ConTag::CentroidEndRange    ), false);
+		graph->solver->Enable(ID(DiMP::ConTag::CentroidEndPos      ), false);
+		graph->solver->Enable(ID(DiMP::ConTag::CentroidEndCmpl     ), false);
+		graph->solver->Enable(ID(DiMP::ConTag::CentroidContactGap  ), false);
+		graph->solver->Enable(ID(DiMP::ConTag::CentroidContactForce), false);
+		graph->solver->Enable(ID(DiMP::ConTag::CentroidContactCmpl ), false);
 		
 		graph->solver->SetCorrection(ID(), 0.5);
 		graph->solver->param.numIter[0] = 20;
-		graph->solver->param.minStepSize = 1.0;
+		graph->solver->param.cutoffStepSize = 0.0001;
+		graph->solver->param.minStepSize = 0.0001;
 		graph->solver->param.maxStepSize = 1.0;
-		graph->solver->param.methodMajor = Solver::Method::Major::Prioritized;
+		graph->solver->param.methodMajor = Solver::Method::Major::GaussNewton;
+		graph->solver->param.methodMinor = Solver::Method::Minor::Direct;
 		graph->solver->param.verbose = true;
 
 		targetPos = vec3_t(0.0, 0.6, -0.2);
