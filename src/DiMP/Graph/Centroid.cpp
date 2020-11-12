@@ -108,6 +108,8 @@ void CentroidKey::Prepare() {
 				con.var_force[1]->val,
 				con.var_force[2]->val);
 		}
+
+		DSTR << tick->idx << " " << con.f << " " << con.var_active[0]->val << " " << con.var_active[1]->val << endl;
 	}
 }
 
@@ -330,13 +332,8 @@ void Centroid::Init() {
 
 		key->var_pos_t->val = curve_t.CalcPos(t)/L;
 		key->var_pos_r->val = curve_r.CalcPos(t);
-
-		if(key->next){
-			// set normalized velocity
-			real_t dt = graph->ticks[k+1]->time - t;
-			key->var_vel_t->val = curve_t.CalcVel(t)*(T/L);
-			key->var_vel_r->val = curve_r.CalcVel(t)*(T);
-		}
+		key->var_vel_t->val = curve_t.CalcVel(t)*(T/L);
+		key->var_vel_r->val = curve_r.CalcVel(t)*(T);
 
 		for(int i = 0; i < key->ends.size(); i++){
 			key->ends[i].var_pos->val = curve_end[i].CalcPos(t)/L;
@@ -362,7 +359,7 @@ void Centroid::Init() {
 
 	// set initial position to contact points
 	for(int i = 0; i < contacts.size(); i++){
-		contacts[i].var_pos->val = param.contacts[i].pos;
+		contacts[i].var_pos->val = param.contacts[i].pos/L;
 	}
 	
 	// set initial values of cmpl variables
@@ -465,8 +462,8 @@ vec3_t Centroid::EndPos(real_t t, int index, int type) {
 
 	return InterpolatePos(
 		t,
-		k0->tick->time, k0->ends[index].var_pos->val/L, k0->ends[index].var_vel->val*(L/T),
-		k1->tick->time, k1->ends[index].var_pos->val/L, k1->ends[index].var_vel->val*(L/T),
+		k0->tick->time, k0->ends[index].var_pos->val*L, k0->ends[index].var_vel->val*(L/T),
+		k1->tick->time, k1->ends[index].var_pos->val*L, k1->ends[index].var_vel->val*(L/T),
 		type);
 }
 
@@ -480,8 +477,8 @@ vec3_t Centroid::EndVel(real_t t, int index, int type) {
 
 	return InterpolateVel(
 		t,
-		k0->tick->time, k0->ends[index].var_pos->val/L, k0->ends[index].var_vel->val*(L/T),
-		k1->tick->time, k1->ends[index].var_pos->val/L, k1->ends[index].var_vel->val*(L/T),
+		k0->tick->time, k0->ends[index].var_pos->val*L, k0->ends[index].var_vel->val*(L/T),
+		k1->tick->time, k1->ends[index].var_pos->val*L, k1->ends[index].var_vel->val*(L/T),
 		type);
 }
 
@@ -501,7 +498,7 @@ vec3_t Centroid::ContactForce(real_t t, int index, int type) {
 }
 
 vec3_t Centroid::ContactPos(int index){
-	return contacts[index].var_pos->val;
+	return contacts[index].var_pos->val*L;
 }
 
 void Centroid::CalcTrajectory() {
@@ -691,8 +688,8 @@ CentroidContactGapCon::CentroidContactGapCon(Solver* solver, int _tag, string _n
 	Centroid* cen = (Centroid*)_obj->node;
 	iend = cen->param.contacts[icon].iend;
 	
-	AddR3Link(cen->contacts[icon].var_pos);
 	AddR3Link(obj->ends    [iend].var_pos);
+	AddR3Link(cen->contacts[icon].var_pos);
 	AddSLink (obj->contacts[icon].var_active[1]);
 }
 
@@ -746,11 +743,15 @@ void CentroidEndRangeCon::Prepare(){
 void CentroidContactGapCon::Prepare(){
 	Centroid* cen = (Centroid*)obj->node;
 	
-	dmax = cen->param.dmax;
-	pe   = obj->ends[iend].var_pos->val;
-	pc   = cen->contacts[icon].var_pos->val;
-	dp   = pe - pc;
-	ac   = obj->contacts[icon].var_active[1]->val;
+	dmax   = cen->param.dmax;
+	pe     = obj->ends[iend].var_pos->val;
+	pc     = cen->contacts[icon].var_pos->val;
+	ac     = obj->contacts[icon].var_active[1]->val;
+	dp     = pe - pc;
+	dpnorm = dp.norm();
+	if(dpnorm > eps)
+		 dpn = dp/dpnorm;
+	else dpn = vec3_t(1.0, 0.0, 0.0);
 
 	/*
 	//dpnorm = dp.norm();
@@ -864,8 +865,9 @@ void CentroidVelConR::CalcCoef(){
 
 	for(int j = 0; j < obj[0]->contacts.size(); j++){
 		((X3Link*)links[i++])->SetCoef(hnorm*obj[0]->contacts[j].f);
-
-		vec3_t r = cen->contacts[i].var_pos->val - obj[0]->var_pos_t->val;
+	}
+	for(int j = 0; j < obj[0]->contacts.size(); j++){
+		vec3_t r = cen->contacts[j].var_pos->val - obj[0]->var_pos_t->val;
 
 		((C3Link*)links[i++])->SetCoef(-hnorm*(r % vec3_t(1.0, 0.0, 0.0)));
 		((C3Link*)links[i++])->SetCoef(-hnorm*(r % vec3_t(0.0, 1.0, 0.0)));
@@ -903,8 +905,9 @@ void CentroidEndCmplCon::CalcCoef(){
 void CentroidContactGapCon::CalcCoef(){
 	Prepare();
 
-	((R3Link*)links[0])->SetCoef(-dpn );
-	((SLink* )links[1])->SetCoef( dmax);
+	((R3Link*)links[0])->SetCoef( dpn );
+	((R3Link*)links[1])->SetCoef(-dpn );
+	((SLink* )links[2])->SetCoef(-dmax);
 }
 
 void CentroidContactForceCon::CalcCoef(){
@@ -1012,13 +1015,12 @@ void CentroidEndCmplCon::CalcDeviation(){
 }
 
 void CentroidContactGapCon::CalcDeviation(){
-	y[0] = dmax*ac - dpnorm;
-	if(y[0] < 0.0){
+	y[0] = 0.0;
+	active = false;
+
+	if(dpnorm > dmax*ac){
+		y[0]   = dpnorm - dmax*ac;
 		active = true;
-	}
-	else{
-		y[0] = 0.0;
-		active = false;
 	}
 }
 
