@@ -262,16 +262,14 @@ void BipedLIPKey::Draw(Render::Canvas* canvas, Render::Config* conf) {
 // BipedLIP
 
 BipedLIP::Param::Param() {
-	gravity        = 9.8;
-	heightCoM      = 0.496;
-	heightlow      = 0.45;
-	heighthigh     = 0.51;
-	heightmiddle   = (heightlow + heighthigh)/2;
-	torsoMass      = 4.432*0.8;
-	footMass       = (4.432 - torsoMass) / 2;
-	swingProfile   = SwingProfile::Cycloid;
-	swingHeight[0] = 0.1; //0: maximum swing foot height
-	swingHeight[1] = 0.1; //1: swing foot height before landing (Wedge only)
+	gravity          = 9.8;
+	heightCoM        = 0.496;
+	torsoMass        = 4.432*0.8;
+	footMass         = (4.432 - torsoMass) / 2;
+	swingProfile     = SwingProfile::Cycloid;
+	swingHeight[0]   = 0.1; //0: maximum swing foot height
+	swingHeight[1]   = 0.1; //1: swing foot height before landing (Wedge only)
+	comHeightProfile = ComHeightProfile::Constant;
 	durationMin[Phase::R ] = 0.1; // duration minimum at single support
 	durationMax[Phase::R ] = 0.8; // duration maximum at single support
 	durationMin[Phase::L ] = 0.1;
@@ -340,6 +338,8 @@ BipedLIP::Waypoint::Waypoint() {
 	fix_foot_pos_r[0] = false;
 	fix_foot_pos_t[1] = false;
 	fix_foot_pos_r[1] = false;
+	fix_com_pos       = false;
+	fix_com_vel       = false;
 	fix_cop_pos       = false;
 	fix_cmp_pos       = false;
 	fix_mom           = false;
@@ -535,6 +535,8 @@ void BipedLIP::Init() {
 		key->var_torso_pos_t->locked = wp.fix_torso_pos_t;
 		key->var_torso_pos_r->locked = wp.fix_torso_pos_r;
 		key->var_torso_vel_t->locked = wp.fix_torso_vel_t;
+		key->var_com_pos    ->locked = wp.fix_com_pos;
+		key->var_com_vel    ->locked = wp.fix_com_vel;
 		key->var_cop_pos    ->locked = wp.fix_cop_pos;
 		key->var_cmp_pos    ->locked = wp.fix_cmp_pos;
 		key->var_mom        ->locked = wp.fix_mom;
@@ -567,11 +569,12 @@ vec3_t BipedLIP::ComPos(real_t t) {
 	BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;
 	BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;
 
-	vec2_t pt;
+	real_t dt = t - key0->var_time->val;
 
+	vec2_t pt;
+	
 	if(key1 == key0->next){
 		real_t T    = param.T;
-		real_t dt   = t - key0->var_time->val;
 		vec2_t p0   = key0->var_com_pos->val;
 		vec2_t v0   = key0->var_com_vel->val;
 		vec2_t c0   = key0->var_cop_pos->val;
@@ -637,6 +640,88 @@ vec3_t BipedLIP::ComAcc(real_t t) {
 	}
 	
 	return vec3_t(at.x, at.y, 0.0);
+}
+
+void BipedLIP::ComState(real_t t, vec3_t& pos, vec3_t& vel, vec3_t& acc){
+	BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;
+	BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;
+
+	real_t dt = t - key0->var_time->val;
+
+	// x and y
+	vec2_t pt;
+	vec2_t vt;
+	vec2_t at;
+
+	if(key1 == key0->next){
+		real_t T    = param.T;
+		real_t T2   = T * T;
+		vec2_t p0   = key0->var_com_pos->val;
+		vec2_t v0   = key0->var_com_vel->val;
+		vec2_t c0   = key0->var_cop_pos->val;
+		vec2_t cm0  = key0->var_cmp_pos->val;
+		vec2_t cv0  = key0->var_cop_vel->val;
+		vec2_t cmv0 = key0->var_cmp_vel->val;
+	
+		pt = (c0+cm0) + (cv0+cmv0)*dt + cosh(dt/T)*(p0 - (c0+cm0)) + T*sinh(dt/T)*(v0 - (cv0+cmv0));
+		vt = (cv0+cmv0) + (1/T)*sinh(dt/T)*(p0 - (c0+cm0)) + cosh(dt/T)*(v0 - (cv0+cmv0));
+		at = (1/T2)*cosh(dt/T)*(p0 - (c0+cm0)) + (1/T)*sinh(dt/T)*(v0 - (cv0+cmv0));
+	}
+	else{
+		pt = key0->var_com_pos->val;
+		vt = key0->var_com_vel->val;
+		at = vec2_t();
+	}
+	
+	// z
+	real_t r   = param.heightCoM;
+	real_t ptz = param.heightCoM;
+	real_t vtz = 0.0;
+	real_t atz = 0.0;
+
+	if(param.comHeightProfile == ComHeightProfile::Compass){
+		// artificially add vertical com motion...
+		int ph = phase[key0->tick->idx];
+		if(ph == Phase::L || ph == Phase::R){
+			int sup = (ph == Phase::R ? 0 : 1);
+			int swg = (ph == Phase::R ? 1 : 0);
+
+			vec2_t psup = key0->var_foot_pos_t[sup]->val;
+		
+			ptz = sqrt(r*r - (pt - psup).square());
+			vtz = -(1.0/ptz)*((pt - psup)*vt);
+		}
+		if(ph == Phase::LR || ph == Phase::RL){
+			real_t t0 = key0->var_time->val;
+			real_t t1 = key1->var_time->val;
+			real_t pz0, pz1;
+			real_t vz0, vz1;
+			int    sup0 = (ph == Phase::RL ? 0 : 1);
+			int    sup1 = (ph == Phase::RL ? 1 : 0);
+			vec2_t psup0 = key0->var_foot_pos_t[sup0]->val;
+			vec2_t psup1 = key1->var_foot_pos_t[sup1]->val;
+			vec2_t p0    = key0->var_com_pos->val;
+			vec2_t p1    = key1->var_com_pos->val;
+			vec2_t v0    = key0->var_com_vel->val;
+			vec2_t v1    = key1->var_com_vel->val;
+
+			pz0 = sqrt(r*r - (p0 - psup0).square());
+			pz1 = sqrt(r*r - (p1 - psup1).square());
+			vz0 = -(1.0/pz0)*((p0 - psup0)*v0);
+			vz1 = -(1.0/pz1)*((p1 - psup1)*v1);
+
+			ptz = InterpolatePos(t, 
+				t0, pz0, vz0,
+				t1, pz1, vz1, Interpolate::Cubic);
+			vtz = InterpolateVel(t, 
+				t0, pz0, vz0,
+				t1, pz1, vz1, Interpolate::Cubic);
+		}
+	}
+
+	pos = vec3_t(pt.x, pt.y, ptz);
+	vel = vec3_t(vt.x, vt.y, vtz);
+	acc = vec3_t(at.x, at.y, atz);
 }
 
 vec3_t BipedLIP::Momentum(real_t t){
@@ -1264,7 +1349,8 @@ void BipedLIP::CreateSnapshot(real_t t, BipedLIP::Snapshot& s){
 	int    contact;
 
 	s.t = t;
-	s.com_pos = ComPos(t);
+	//s.com_pos = ComPos(t);
+	ComState(t, s.com_pos, s.com_vel, s.com_acc);
 	FootPose(t, 0, pose, vel, angvel, acc, angacc, contact);
 	s.foot_pos_t[0] = pose.Pos();
 	s.foot_pos_r[0] = pose.Ori();

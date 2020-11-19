@@ -44,7 +44,7 @@ public:
 
 		vec3_t startPos(0.0, 0.0, 1.0);
 		quat_t startOri = quat_t();
-		vec3_t goalPos (0.5, 0.0, 1.0);
+		vec3_t goalPos (1.0, 0.0, 1.0);
 		quat_t goalOri  = quat_t();
 
 		centroid->param.g    = 9.8;
@@ -54,6 +54,7 @@ public:
 		centroid->param.mu   = 0.5;
 		centroid->param.dmax = 1.0;
 		centroid->param.fmax = 2.0;
+		centroid->param.p    = 0.5;
 
 		//centroid->param.l = 1.0;
 
@@ -108,8 +109,8 @@ public:
 		
 		graph->solver->SetCorrection(ID(), 0.5);
 		graph->solver->param.numIter[0] = 20;
-		graph->solver->param.cutoffStepSize = 1.0;
-		graph->solver->param.minStepSize = 1.0;
+		graph->solver->param.cutoffStepSize = 0.0001;
+		graph->solver->param.minStepSize = 0.0001;
 		graph->solver->param.maxStepSize = 1.0;
 		graph->solver->param.methodMajor = Solver::Method::Major::GaussNewton;
 		graph->solver->param.methodMinor = Solver::Method::Minor::Direct;

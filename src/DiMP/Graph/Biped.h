@@ -115,19 +115,23 @@ namespace DiMP {;
 				Clothoid,
 			};
 		};
+		struct ComHeightProfile{
+			enum{
+				Constant,
+				Compass,
+			};
+		};
 
 		struct Param {
 			real_t	gravity;				///< gravity (positive)
 			real_t  T;                      ///< time constant of LIP
 			real_t  heightCoM;
-			real_t  heightlow;
-			real_t  heighthigh;
-			real_t  heightmiddle;
 			real_t  torsoMass;
 			real_t  footMass;
 			int     swingProfile;
 			real_t  swingHeight[2];             ///< 0: maximum swing height
 												///< 1: lowest height before touch down. for wedge only
+			int     comHeightProfile;
 			real_t	durationMin[Phase::Num];	///< minimum duration of each phase
 			real_t	durationMax[Phase::Num];	///< maximum duration of each phase
 			vec2_t	footPosMin[2];              ///< admissible range of foot relative to torso
@@ -162,6 +166,8 @@ namespace DiMP {;
 			real_t  torso_pos_r;
 			vec2_t  foot_pos_t[2];
 			real_t  foot_pos_r[2];
+			//vec2_t  com_pos;
+			//vec2_t  com_vel;
 			vec2_t  cop_pos;
 
 			bool    fix_time;
@@ -170,6 +176,8 @@ namespace DiMP {;
 			bool    fix_torso_vel_t;
 			bool    fix_foot_pos_t[2];
 			bool    fix_foot_pos_r[2];
+			bool    fix_com_pos;
+			bool    fix_com_vel;
 			bool    fix_cop_pos;
 			bool    fix_cmp_pos;
 			bool    fix_mom;
@@ -180,6 +188,8 @@ namespace DiMP {;
 		struct Snapshot{
 			real_t  t;
 			vec3_t  com_pos;
+			vec3_t  com_vel;
+			vec3_t  com_acc;
 			vec3_t  torso_pos_t;
 			real_t  torso_pos_r;
 			vec3_t  foot_pos_t[2];
@@ -209,6 +219,7 @@ namespace DiMP {;
 		vec3_t ComPos       (real_t t);
 		vec3_t ComVel       (real_t t);
 		vec3_t ComAcc       (real_t t);
+		void   ComState     (real_t t, vec3_t& pos, vec3_t& vel, vec3_t& acc);
 		real_t TorsoOri     (real_t t);
 		real_t TorsoAngVel  (real_t t);
 		real_t TorsoAngAcc  (real_t t);

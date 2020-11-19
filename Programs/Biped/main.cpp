@@ -39,15 +39,17 @@ public:
 	virtual ~MyApp() {}
 
 	virtual void BuildScene() {
+		const real_t mt = 3.578+28.054+2.0*14.023+13.877;
+		const real_t mf = 13.877/2;
 		const real_t Ts = 0.5;
 		const real_t Td = 0.2;
 		const int    nstep_idle   = 2;  //< number of steps to step in place
-		const int    nstep_acc    = 4;  //< number of steps to accelerate
-		const int    nstep_cruise = 2;  //< number of steps to walk in constant speed
+		const int    nstep_acc    = 6;  //< number of steps to accelerate
+		const int    nstep_cruise = 0;  //< number of steps to walk in constant speed
 		const int    nstep_dec    = 1;  //< number of steps to decelerate
 		const int    nstep        = nstep_idle + nstep_acc + nstep_cruise + nstep_dec;
 		const int    nphase       = 2 * nstep + 3;  //< 2 phases per step + (one D at the beginning) + (two D at the end)
-		const real_t vmax         = 0.55;    //< walking distance
+		const real_t vmax         = 0.83*(1.0 + (2.0*mf)/mt);    //< walking distance
 		const real_t Tacc         = nstep_acc   *(Ts + Td);
 		const real_t Tcruise      = nstep_cruise*(Ts + Td);
 		const real_t Tdec         = nstep_dec   *(Ts + Td);
@@ -58,13 +60,10 @@ public:
 		const real_t dist_dec     = vmax*Tdec - 0.5*dec*Tdec*Tdec;
 
 		biped = new DiMP::BipedLIP(graph, "biped");
-		biped->param.gravity = 9.8;
-		biped->param.heightCoM = 1.05;
-		biped->param.heightlow = 0.52;
-		biped->param.heighthigh = 0.54;
-		biped->param.heightmiddle = (biped->param.heightlow + biped->param.heighthigh)/2;
-		biped->param.torsoMass = 3.578+28.054+2.0*14.023+13.877;
-		biped->param.footMass = 13.877/2;
+		biped->param.gravity      = 9.8;
+		biped->param.heightCoM    = 1.05;
+		biped->param.torsoMass    = mt;
+		biped->param.footMass     = mf;
 		biped->param.durationMin[DiMP::BipedLIP::Phase::R ] = 0.50;
 		biped->param.durationMax[DiMP::BipedLIP::Phase::R ] = 0.50;
 		biped->param.durationMin[DiMP::BipedLIP::Phase::L ] = 0.50;
@@ -87,7 +86,9 @@ public:
 		biped->param.swingHeight[1] = 0.050;
 		//biped->param.swingProfile = DiMP::BipedLIP::SwingProfile::Wedge;
 		//biped->param.swingProfile = DiMP::BipedLIP::SwingProfile::Cycloid;
-		biped->param.swingProfile  = DiMP::BipedLIP::SwingProfile::HeelToe;
+		biped->param.swingProfile     = DiMP::BipedLIP::SwingProfile::HeelToe;
+		//biped->param.comHeightProfile = DiMP::BipedLIP::ComHeightProfile::Constant;
+		biped->param.comHeightProfile = DiMP::BipedLIP::ComHeightProfile::Compass;
 		biped->param.copMin        = vec2_t(-0.030, -0.025 );
 		biped->param.copMax        = vec2_t( 0.110,  0.025 );
 		biped->param.accMin        = vec2_t(-0.50, -1.0 );
@@ -163,16 +164,6 @@ public:
 		biped->waypoints[1].foot_pos_t[1]     = vec2_t(0.0,  spacing);
 		biped->waypoints[1].foot_pos_r[1]     = 0.0;
 		biped->waypoints[1].cop_pos           = vec2_t(0.0,  0.0);
-		biped->waypoints[1].fix_torso_pos_t   = false;
-		biped->waypoints[1].fix_torso_pos_r   = false;
-		biped->waypoints[1].fix_torso_vel_t   = false;
-		biped->waypoints[1].fix_foot_pos_t[0] = false;
-		biped->waypoints[1].fix_foot_pos_r[0] = false;
-		biped->waypoints[1].fix_foot_pos_t[1] = false;
-		biped->waypoints[1].fix_foot_pos_r[1] = false;
-		biped->waypoints[1].fix_cop_pos       = false;
-		biped->waypoints[1].fix_cmp_pos       = false;
-		biped->waypoints[1].fix_mom           = false;
 
 		biped->waypoints[2].k                 = 1 + 2*(nstep_idle + nstep_acc);
 		biped->waypoints[2].torso_pos_t       = vec2_t(dist_acc, 0.0);
@@ -183,17 +174,7 @@ public:
 		biped->waypoints[2].foot_pos_t[1]     = vec2_t(dist_acc,  spacing);
 		biped->waypoints[2].foot_pos_r[1]     = 0.0;
 		biped->waypoints[2].cop_pos           = vec2_t(dist_acc,  0.0);
-		biped->waypoints[2].fix_torso_pos_t   = false;
-		biped->waypoints[2].fix_torso_pos_r   = false;
-		biped->waypoints[2].fix_torso_vel_t   = false;
-		biped->waypoints[2].fix_foot_pos_t[0] = false;
-		biped->waypoints[2].fix_foot_pos_r[0] = false;
-		biped->waypoints[2].fix_foot_pos_t[1] = false;
-		biped->waypoints[2].fix_foot_pos_r[1] = false;
-		biped->waypoints[2].fix_cop_pos       = false;
-		biped->waypoints[2].fix_cmp_pos       = false;
-		biped->waypoints[2].fix_mom           = false;
-
+		
 		biped->waypoints[3].k                 = 1 + 2*(nstep_idle + nstep_acc + nstep_cruise);
 		biped->waypoints[3].torso_pos_t       = vec2_t(dist_acc + dist_cruise, 0.0);
 		biped->waypoints[3].torso_pos_r       = 0.0;
@@ -203,17 +184,7 @@ public:
 		biped->waypoints[3].foot_pos_t[1]     = vec2_t(dist_acc + dist_cruise,  spacing);
 		biped->waypoints[3].foot_pos_r[1]     = 0.0;
 		biped->waypoints[3].cop_pos           = vec2_t(dist_acc + dist_cruise,  0.0);
-		biped->waypoints[3].fix_torso_pos_t   = false;
-		biped->waypoints[3].fix_torso_pos_r   = false;
-		biped->waypoints[3].fix_torso_vel_t   = false;
-		biped->waypoints[3].fix_foot_pos_t[0] = false;
-		biped->waypoints[3].fix_foot_pos_r[0] = false;
-		biped->waypoints[3].fix_foot_pos_t[1] = false;
-		biped->waypoints[3].fix_foot_pos_r[1] = false;
-		biped->waypoints[3].fix_cop_pos       = false;
-		biped->waypoints[3].fix_cmp_pos       = false;
-		biped->waypoints[3].fix_mom           = false;
-
+		
 		biped->waypoints[4].k                 = nphase - 1;
 		biped->waypoints[4].torso_pos_t       = vec2_t(dist_acc + dist_cruise + dist_dec, 0.0);
 		biped->waypoints[4].torso_pos_r       = 0.0;

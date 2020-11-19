@@ -82,6 +82,7 @@ public:
 		real_t  mu;
 		real_t  fmax;
 		real_t  dmax;
+		real_t  p;
 		
 		vector<End>       ends;
 		vector<Contact>   contacts;
@@ -249,8 +250,10 @@ struct CentroidEndRangeCon : Constraint{
 };
 
 struct CentroidEndCmplCon : Constraint{
-	CentroidKey* obj;
-	int          iend;
+	CentroidKey*    obj;
+	int             iend;
+	vector<real_t>  a;
+	real_t          p;
 	
 	void Prepare();
 
@@ -306,6 +309,7 @@ struct CentroidContactCmplCon : Constraint{
 	int           icon;
 	real_t        a;
 	real_t        ac;
+	real_t        p;
 	
 	void Prepare();
 

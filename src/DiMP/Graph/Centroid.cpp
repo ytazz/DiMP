@@ -740,6 +740,19 @@ void CentroidEndRangeCon::Prepare(){
 	dir_abs = q*dir;
 }
 
+void CentroidEndCmplCon::Prepare(){
+	Centroid* cen = (Centroid*)obj->node;
+
+	a.clear();
+	for(int j = 0; j < obj->contacts.size(); j++){
+		if(cen->param.contacts[j].iend == iend){
+			a.push_back( obj->contacts[j].var_active[0]->val );
+		}
+	}
+
+	p = cen->param.p;
+}
+
 void CentroidContactGapCon::Prepare(){
 	Centroid* cen = (Centroid*)obj->node;
 	
@@ -797,8 +810,11 @@ void CentroidContactForceCon::Prepare(){
 }
 
 void CentroidContactCmplCon::Prepare(){
+	Centroid* cen = (Centroid*)obj->node;
+
 	a  = obj->contacts[icon].var_active[0]->val;
 	ac = obj->contacts[icon].var_active[1]->val;
+	p  = cen->param.p;
 }
 /*
 void CentroidEndVelCon::Prepare(){
@@ -892,13 +908,12 @@ void CentroidEndRangeCon::CalcCoef(){
 }
 
 void CentroidEndCmplCon::CalcCoef(){
+	Prepare();
 	Centroid* cen = (Centroid*)obj->node;
 	
 	int i = 0;
-	for(int j = 0; j < obj->contacts.size(); j++){
-		if(cen->param.contacts[j].iend == iend){
-			((SLink*)links[i++])->SetCoef(1.0);
-		}
+	for(int j = 0; j < a.size(); j++){
+		((SLink*)links[i++])->SetCoef( p*pow( std::max(a[j], 0.0), p-1.0) );
 	}
 }
 
@@ -926,8 +941,8 @@ void CentroidContactForceCon::CalcCoef(){
 void CentroidContactCmplCon::CalcCoef(){
 	Prepare();
 
-	((SLink*)links[0])->SetCoef(1.0);
-	((SLink*)links[1])->SetCoef(1.0);
+	((SLink*)links[0])->SetCoef( p*pow( std::max(a , 0.0), p-1.0) );
+	((SLink*)links[1])->SetCoef( p*pow( std::max(ac, 0.0), p-1.0) );
 }
 
 /*
@@ -1003,12 +1018,8 @@ void CentroidEndRangeCon::CalcDeviation(){
 void CentroidEndCmplCon::CalcDeviation(){
 	y[0] = 0.0;
 
-	Centroid* cen = (Centroid*)obj->node;
-	
-	for(int j = 0; j < obj->contacts.size(); j++){
-		if(cen->param.contacts[j].iend == iend){
-			y[0] += obj->contacts[j].var_active[0]->val;
-		}
+	for(int j = 0; j < a.size(); j++){
+		y[0] += pow( std::max(a[j], 0.0), p);
 	}
 
 	y[0] -= 1.0;
@@ -1055,7 +1066,7 @@ void CentroidContactForceCon::CalcDeviation(){
 }
 
 void CentroidContactCmplCon::CalcDeviation(){
-	y[0] = a + ac - 1.0;
+	y[0] = pow( std::max(a, 0.0), p) + pow( std::max(ac, 0.0), p) - 1.0;
 }
 
 /*
