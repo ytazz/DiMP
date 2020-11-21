@@ -44,12 +44,12 @@ public:
 		const real_t Ts = 0.5;
 		const real_t Td = 0.2;
 		const int    nstep_idle   = 2;  //< number of steps to step in place
-		const int    nstep_acc    = 6;  //< number of steps to accelerate
-		const int    nstep_cruise = 0;  //< number of steps to walk in constant speed
+		const int    nstep_acc    = 2;  //< number of steps to accelerate
+		const int    nstep_cruise = 3;  //< number of steps to walk in constant speed
 		const int    nstep_dec    = 1;  //< number of steps to decelerate
 		const int    nstep        = nstep_idle + nstep_acc + nstep_cruise + nstep_dec;
 		const int    nphase       = 2 * nstep + 3;  //< 2 phases per step + (one D at the beginning) + (two D at the end)
-		const real_t vmax         = 0.83*(1.0 + (2.0*mf)/mt);    //< walking distance
+		const real_t vmax         = 0.55*(1.0 + (2.0*mf)/mt);    //< walking distance
 		const real_t Tacc         = nstep_acc   *(Ts + Td);
 		const real_t Tcruise      = nstep_cruise*(Ts + Td);
 		const real_t Tdec         = nstep_dec   *(Ts + Td);
@@ -64,14 +64,14 @@ public:
 		biped->param.heightCoM    = 1.05;
 		biped->param.torsoMass    = mt;
 		biped->param.footMass     = mf;
-		biped->param.durationMin[DiMP::BipedLIP::Phase::R ] = 0.50;
-		biped->param.durationMax[DiMP::BipedLIP::Phase::R ] = 0.50;
-		biped->param.durationMin[DiMP::BipedLIP::Phase::L ] = 0.50;
-		biped->param.durationMax[DiMP::BipedLIP::Phase::L ] = 0.50;
-		biped->param.durationMin[DiMP::BipedLIP::Phase::RL] = 0.20;
-		biped->param.durationMax[DiMP::BipedLIP::Phase::RL] = 0.20;
-		biped->param.durationMin[DiMP::BipedLIP::Phase::LR] = 0.20;
-		biped->param.durationMax[DiMP::BipedLIP::Phase::LR] = 0.20;
+		biped->param.durationMin[DiMP::BipedLIP::Phase::R ] = 0.55;
+		biped->param.durationMax[DiMP::BipedLIP::Phase::R ] = 0.55;
+		biped->param.durationMin[DiMP::BipedLIP::Phase::L ] = 0.55;
+		biped->param.durationMax[DiMP::BipedLIP::Phase::L ] = 0.55;
+		biped->param.durationMin[DiMP::BipedLIP::Phase::RL] = 0.25;
+		biped->param.durationMax[DiMP::BipedLIP::Phase::RL] = 0.25;
+		biped->param.durationMin[DiMP::BipedLIP::Phase::LR] = 0.25;
+		biped->param.durationMax[DiMP::BipedLIP::Phase::LR] = 0.25;
 		biped->param.durationMin[DiMP::BipedLIP::Phase::D ] = 0.30;
 		biped->param.durationMax[DiMP::BipedLIP::Phase::D ] = 0.30;
 		biped->param.footPosMin[0] = vec2_t(-0.45, -0.20);
@@ -125,7 +125,7 @@ public:
 		biped->phase[nphase-2] = DiMP::BipedLIP::Phase::D;
 		biped->phase[nphase-1] = DiMP::BipedLIP::Phase::D;
 
-		real_t spacing = 0.23/2;
+		real_t spacing = 0.18/2;
 		//vec2_t goalPos(3.0, 0.0);
 		//real_t goalOri  = Rad(0.0);
 

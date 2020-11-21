@@ -680,42 +680,44 @@ void BipedLIP::ComState(real_t t, vec3_t& pos, vec3_t& vel, vec3_t& acc){
 	real_t atz = 0.0;
 
 	if(param.comHeightProfile == ComHeightProfile::Compass){
-		// artificially add vertical com motion...
-		int ph = phase[key0->tick->idx];
-		if(ph == Phase::L || ph == Phase::R){
-			int sup = (ph == Phase::R ? 0 : 1);
-			int swg = (ph == Phase::R ? 1 : 0);
+		if(key1 == key0->next){
+			// artificially add vertical com motion...
+			int ph = phase[key0->tick->idx];
+			if(ph == Phase::L || ph == Phase::R){
+				int sup = (ph == Phase::R ? 0 : 1);
+				int swg = (ph == Phase::R ? 1 : 0);
 
-			vec2_t psup = key0->var_foot_pos_t[sup]->val;
+				vec2_t psup = key0->var_foot_pos_t[sup]->val;
 		
-			ptz = sqrt(r*r - (pt - psup).square());
-			vtz = -(1.0/ptz)*((pt - psup)*vt);
-		}
-		if(ph == Phase::LR || ph == Phase::RL){
-			real_t t0 = key0->var_time->val;
-			real_t t1 = key1->var_time->val;
-			real_t pz0, pz1;
-			real_t vz0, vz1;
-			int    sup0 = (ph == Phase::RL ? 0 : 1);
-			int    sup1 = (ph == Phase::RL ? 1 : 0);
-			vec2_t psup0 = key0->var_foot_pos_t[sup0]->val;
-			vec2_t psup1 = key1->var_foot_pos_t[sup1]->val;
-			vec2_t p0    = key0->var_com_pos->val;
-			vec2_t p1    = key1->var_com_pos->val;
-			vec2_t v0    = key0->var_com_vel->val;
-			vec2_t v1    = key1->var_com_vel->val;
+				ptz = sqrt(r*r - (pt - psup).square());
+				vtz = -(1.0/ptz)*((pt - psup)*vt);
+			}
+			if(ph == Phase::LR || ph == Phase::RL || ph == Phase::D){
+				real_t t0 = key0->var_time->val;
+				real_t t1 = key1->var_time->val;
+				real_t pz0, pz1;
+				real_t vz0, vz1;
+				int    sup0 = (ph == Phase::RL ? 0 : 1);
+				int    sup1 = (ph == Phase::RL ? 1 : 0);
+				vec2_t psup0 = key0->var_foot_pos_t[sup0]->val;
+				vec2_t psup1 = key1->var_foot_pos_t[sup1]->val;
+				vec2_t p0    = key0->var_com_pos->val;
+				vec2_t p1    = key1->var_com_pos->val;
+				vec2_t v0    = key0->var_com_vel->val;
+				vec2_t v1    = key1->var_com_vel->val;
 
-			pz0 = sqrt(r*r - (p0 - psup0).square());
-			pz1 = sqrt(r*r - (p1 - psup1).square());
-			vz0 = -(1.0/pz0)*((p0 - psup0)*v0);
-			vz1 = -(1.0/pz1)*((p1 - psup1)*v1);
+				pz0 = sqrt(r*r - (p0 - psup0).square());
+				pz1 = sqrt(r*r - (p1 - psup1).square());
+				vz0 = -(1.0/pz0)*((p0 - psup0)*v0);
+				vz1 = -(1.0/pz1)*((p1 - psup1)*v1);
 
-			ptz = InterpolatePos(t, 
-				t0, pz0, vz0,
-				t1, pz1, vz1, Interpolate::Cubic);
-			vtz = InterpolateVel(t, 
-				t0, pz0, vz0,
-				t1, pz1, vz1, Interpolate::Cubic);
+				ptz = InterpolatePos(t, 
+					t0, pz0, vz0,
+					t1, pz1, vz1, Interpolate::Cubic);
+				vtz = InterpolateVel(t, 
+					t0, pz0, vz0,
+					t1, pz1, vz1, Interpolate::Cubic);
+			}
 		}
 	}
 
