@@ -90,6 +90,7 @@ const char* ConNames[] = {
 	"biped_foot_range_r"  ,
 	"biped_foot_match_t"  ,
 	"biped_foot_match_r"  ,
+	"biped_foot_height"   ,
 	"biped_com_p"         ,
 	"biped_com_v"         ,
 	"biped_cop_range"     ,

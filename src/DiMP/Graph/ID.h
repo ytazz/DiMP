@@ -92,6 +92,7 @@ struct ConTag{
 		BipedFootRangeR,
 		BipedFootMatchT,
 		BipedFootMatchR,
+		BipedFootHeight,
 		BipedComPos,
 		BipedComVel,
 		BipedCopRange,
