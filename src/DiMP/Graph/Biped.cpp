@@ -25,6 +25,8 @@ BipedLIPKey::BipedLIPKey() {
 void BipedLIPKey::AddVar(Solver* solver) {
 	BipedLIP* obj = (BipedLIP*)node;
 
+	vec3_t one(1.0, 1.0, 1.0);
+
 	// torso position and velocity
 	var_torso_pos_t = new V3Var(solver, ID(VarTag::BipedTorsoTP, node, tick, name + "_torso_tp"), node->graph->scale.pos_t);
 	var_torso_pos_r = new SVar (solver, ID(VarTag::BipedTorsoRP, node, tick, name + "_torso_rp"), node->graph->scale.pos_r);
@@ -32,9 +34,9 @@ void BipedLIPKey::AddVar(Solver* solver) {
 	solver->AddInputVar(var_torso_pos_t, tick->idx);
 	solver->AddInputVar(var_torso_pos_r, tick->idx);
 	solver->AddInputVar(var_torso_vel_t, tick->idx);
-	var_torso_pos_t->weight = eps;
-	var_torso_pos_r->weight = eps;
-	var_torso_vel_t->weight = eps;
+	var_torso_pos_t->weight    = eps*one;
+	var_torso_pos_r->weight[0] = eps;
+	var_torso_vel_t->weight    = eps*one;
 	
 	// foot position
 	var_foot_pos_t[0] = new V3Var(solver, ID(VarTag::BipedFootT, node, tick, name + "_foot_r_t"), node->graph->scale.pos_t);
@@ -45,32 +47,32 @@ void BipedLIPKey::AddVar(Solver* solver) {
 	solver->AddInputVar(var_foot_pos_r[0], tick->idx);
 	solver->AddInputVar(var_foot_pos_t[1], tick->idx);
 	solver->AddInputVar(var_foot_pos_r[1], tick->idx);
-	var_foot_pos_t[0]->weight = eps;
-	var_foot_pos_r[0]->weight = eps;
-	var_foot_pos_t[1]->weight = eps;
-	var_foot_pos_r[1]->weight = eps;
+	var_foot_pos_t[0]->weight    = eps*one;
+	var_foot_pos_r[0]->weight[0] = eps;
+	var_foot_pos_t[1]->weight    = eps*one;
+	var_foot_pos_r[1]->weight[0] = eps;
 
 	// CoM position and velocity
 	var_com_pos = new V3Var(solver, ID(VarTag::BipedComP, node, tick, name + "_com_p"), node->graph->scale.pos_t);
 	var_com_vel = new V3Var(solver, ID(VarTag::BipedComV, node, tick, name + "_com_v"), node->graph->scale.vel_t);
-	var_com_pos->weight = eps;
-	var_com_vel->weight = eps;
+	var_com_pos->weight = eps*one;
+	var_com_vel->weight = eps*one;
 	
 	// angular momentum
 	var_mom     = new V3Var(solver, ID(VarTag::BipedMom, node, tick, name + "_mom"), node->graph->scale.vel_r);  //< no proper matching scale for angular momentum...
-	var_mom->weight = eps;
+	var_mom->weight = eps*one;
 
 	// CoP position
 	var_cop_pos = new V3Var(solver, ID(VarTag::BipedCopP, node, tick, name + "_cop_p"), node->graph->scale.pos_t);
-	var_cop_pos->weight = eps;
+	var_cop_pos->weight = eps*one;
 
 	// CMP offset
 	var_cmp_pos = new V3Var(solver, ID(VarTag::BipedCmpP, node, tick, name + "_cmp_p"), node->graph->scale.pos_t);
-	var_cmp_pos->weight = eps;
+	var_cmp_pos->weight = eps*one;
 
 	// absolute time
 	var_time = new SVar(solver, ID(VarTag::BipedTime, node, tick, name + "_time"), node->graph->scale.time);
-	var_time->weight = eps;
+	var_time->weight[0] = eps;
 
 	// register state variables of ddp
 	solver->AddStateVar(var_com_pos, tick->idx);
@@ -83,15 +85,15 @@ void BipedLIPKey::AddVar(Solver* solver) {
 	if(next){
 		// CoP velocity
 		var_cop_vel  = new V3Var(solver, ID(VarTag::BipedCopV, node, tick, name + "_cop_v"), node->graph->scale.vel_t);
-		var_cop_vel->weight = eps;
+		var_cop_vel->weight = eps*one;
 
 		// CMP velocity
 		var_cmp_vel  = new V3Var(solver, ID(VarTag::BipedCmpV, node, tick, name + "_cmp_v"), node->graph->scale.vel_t);
-		var_cmp_vel->weight = eps;
+		var_cmp_vel->weight = eps*one;
 
 		// step duration
 		var_duration = new SVar(solver, ID(VarTag::BipedDuration, node, tick, name + "_duration"), node->graph->scale.time);
-		var_duration->weight = eps;
+		var_duration->weight[0] = eps;
 
 		// register input variables of ddp
 		solver->AddInputVar(var_cop_vel , tick->idx);
