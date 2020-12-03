@@ -90,8 +90,8 @@ public:
 		biped->param.swingProfile     = DiMP::BipedLIP::SwingProfile::Cycloid;
 		biped->param.comHeightProfile = DiMP::BipedLIP::ComHeightProfile::Constant;
 		//biped->param.comHeightProfile = DiMP::BipedLIP::ComHeightProfile::Compass;
-		biped->param.copMin        = vec3_t(-0.030, -0.025, -1.0);
-		biped->param.copMax        = vec3_t( 0.110,  0.025,  1.0);
+		biped->param.copMin        = vec3_t(-0.030,  0.00, -1.0);
+		biped->param.copMax        = vec3_t( 0.110,  0.01,  1.0);
 		biped->param.accMin        = vec3_t(-10.0, -1.0, -1.0);
 		biped->param.accMax        = vec3_t( 10.0,  1.0,  1.0);
 		biped->param.momMin        = vec3_t(-0.0, -0.0, -1.0);

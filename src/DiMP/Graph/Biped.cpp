@@ -438,8 +438,14 @@ void BipedLIP::Init() {
 
 		for(int j = 0; j < 3; j++){
 			// cop range
-			key->con_cop_range[j]->_min = param.copMin[j];
-			key->con_cop_range[j]->_max = param.copMax[j];
+			if(j == 1){
+				key->con_cop_range[j]->_min = (ph == BipedLIP::Phase::L || ph == BipedLIP::Phase::LR ? param.copMin[j] : -param.copMax[j]);
+				key->con_cop_range[j]->_max = (ph == BipedLIP::Phase::L || ph == BipedLIP::Phase::LR ? param.copMax[j] : -param.copMin[j]);
+			}
+			else{
+				key->con_cop_range[j]->_min = param.copMin[j];
+				key->con_cop_range[j]->_max = param.copMax[j];
+			}
 		
 			// cmp range
 			key->con_cmp_range[j]->_min = param.cmpMin[j];
@@ -842,7 +848,7 @@ real_t clothoid_y(real_t d, real_t kappa){
 	return (1.0/tmp)*fresnelS(tmp*d);
 }
 
-void BipedLIP::FootRotation(real_t po, real_t cp, real_t cv, vec3_t& pos, vec3_t& angle, vec3_t& vel, vec3_t& angvel, int& contact){
+void BipedLIP::FootRotation(real_t px0, real_t pz0, real_t cp, real_t cv, vec3_t& pos, vec3_t& angle, vec3_t& vel, vec3_t& angvel, int& contact){
 	// po : position of foot origin
 	// cp : position of contact point
 	// cv : velocity of contact point
@@ -863,8 +869,8 @@ void BipedLIP::FootRotation(real_t po, real_t cp, real_t cv, vec3_t& pos, vec3_t
 	real_t vphi;
 
 	// current cop is on heel
-	if(cp < po - l1){
-		d = cp - (po - l1);
+	if(cp < px0 - l1){
+		d = cp - (px0 - l1);
 		if(param.footCurveType == FootCurveType::Arc){
 			phi = d/r1;
 			u   = vec2_t(-l1 + d, 0.0);
@@ -887,8 +893,8 @@ void BipedLIP::FootRotation(real_t po, real_t cp, real_t cv, vec3_t& pos, vec3_t
 		contact = ContactState::Heel;
 	}
 	// current cop is on toe
-	else if(cp > po + l0){
-		d = cp - (po + l0);
+	else if(cp > px0 + l0){
+		d = cp - (px0 + l0);
 		if(param.footCurveType == FootCurveType::Arc){
 			phi = d/r0;
 			u   = vec2_t(l0 + d, 0.0);
@@ -926,8 +932,8 @@ void BipedLIP::FootRotation(real_t po, real_t cp, real_t cv, vec3_t& pos, vec3_t
 	vec2_t pos2 = u - mat2_t::Rot(-phi)*v;
 	vec2_t vel2 = (ud - mat2_t::Rot(-phi)*vd)*cv + mat2_t::Rot(-phi+ (pi/2.0))*v*vphi;
 
-	pos.x     = pos2[0] + po;
-	pos.z     = pos2[1];
+	pos.x     = pos2[0] + px0;
+	pos.z     = pos2[1] + pz0;
 	vel.x     = vel2[0];
 	vel.z     = vel2[1];
 	angle [1] = phi;
@@ -1064,7 +1070,7 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 		if( (ph == Phase::R && side == 0) ||
 			(ph == Phase::L && side == 1) ){
 
-			FootRotation(p0.x, ct, vc, pos, angle, vel, angvel, contact);
+			FootRotation(p0.x, p0.z, ct, vc, pos, angle, vel, angvel, contact);
 
 		}
 		// swing foot of single support phase
@@ -1092,8 +1098,8 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 			if(keym1) c0 = std::max(p0.x, (keym1->var_cop_pos->val.x + cvm2*keym1->var_duration->val));
 			if(key2 ) c1 = std::min(p1.x, (key2 ->var_cop_pos->val.x - cv2 *key1 ->var_duration->val));
 
-			FootRotation(p0.x, c0, cvm2, p00, theta0, v00, omega0, con0);
-			FootRotation(p1.x, c1, cv2 , p11, theta1, v11, omega1, con1);
+			FootRotation(p0.x, p0.z, c0, cvm2, p00, theta0, v00, omega0, con0);
+			FootRotation(p1.x, p1.z, c1, cv2 , p11, theta1, v11, omega1, con1);
 			
 			// interpolate between endpoints with cubic polynomial
 			pos.x    = InterpolatePos(t, t0, p00.x   , v00.x   , t1, p11.x   , v11.x   , Spr::Interpolate::Cubic);
@@ -1125,7 +1131,7 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 
 			real_t ct = c0.x + cv*dt;
 
-			FootRotation(p0.x, ct, cv, pos, angle, vel, angvel, contact);
+			FootRotation(p0.x, p0.z, ct, cv, pos, angle, vel, angvel, contact);
 		}
 		// landed foot of double support phase
 		if( (ph == Phase::LR && side == 0)||
@@ -1137,11 +1143,11 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 
 			real_t ct = c1.x - cv*(tau - dt);
 
-			FootRotation(p0.x, ct, cv, pos, angle, vel, angvel, contact);
+			FootRotation(p0.x, p0.z, ct, cv, pos, angle, vel, angvel, contact);
 		}
 		// double support
 		if(ph == Phase::D){
-			pos = vec3_t(p0.x, p0.y, 0.0);
+			pos = vec3_t(p0.x, p0.y, p0.z);
 			contact = ContactState::Surface;
 		}
 
