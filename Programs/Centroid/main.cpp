@@ -52,22 +52,13 @@ public:
 		centroid->param.I    = 1.0;
 		centroid->param.h    = 0.1;
 		centroid->param.mu   = 0.5;
-		centroid->param.dmax = 1.0;
-		centroid->param.fmax = 2.0;
-		centroid->param.p    = 0.5;
-
-		//centroid->param.l = 1.0;
+		centroid->param.eta  = 0.5;
 
 		centroid->param.ends.resize(1);
 		centroid->param.ends[0].rangeMin = vec3_t(-0.25, -0.1, -1.1);
 		centroid->param.ends[0].rangeMax = vec3_t( 0.25,  0.1, -0.9);
 		//centroid->param.ends[1].rangeMin = vec3_t(-0.25,  0.0, -1.1);
 		//centroid->param.ends[1].rangeMax = vec3_t( 0.25,  0.3, -0.9);
-		centroid->param.contacts.resize(2);
-		centroid->param.contacts[0].iend = 0;
-		centroid->param.contacts[0].pos  = vec3_t(startPos.x, startPos.y, 0.0);
-		centroid->param.contacts[1].iend = 0;
-		centroid->param.contacts[1].pos  = vec3_t(goalPos.x, goalPos.y, 0.0);
 
 		/*
 		centroid->param.faces.resize(1);

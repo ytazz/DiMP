@@ -44,9 +44,7 @@ struct VarTag{
 		CentroidRV,
 		CentroidEndPos,
 		CentroidEndVel,
-		CentroidContactPos,
-		CentroidContactForce,
-		CentroidContactCmpl,
+		CentroidEndForce,
 		NumTypes,
 	};
 };
@@ -107,10 +105,8 @@ struct ConTag{
 		CentroidVelR,
 		CentroidEndPos,
 		CentroidEndRange,
-		CentroidEndCmpl,
-		CentroidContactGap,
-		CentroidContactForce,
-		CentroidContactCmpl,
+		CentroidEndVel,
+		CentroidEndForce,
 		NumTypes,
 	};
 };
