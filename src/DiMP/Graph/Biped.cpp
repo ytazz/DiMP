@@ -1103,21 +1103,15 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 			
 			// interpolate between endpoints with cubic polynomial
 			pos.x    = InterpolatePos(t, t0, p00.x   , v00.x   , t1, p11.x   , v11.x   , Spr::Interpolate::Cubic);
-			//pos.y    = InterpolatePos(t, t0, p00.y   , v00.y   , t1, p11.y   , v11.y   , Spr::Interpolate::Cubic);
 			pos.z    = InterpolatePos(t, t0, p00.z   , v00.z   , t1, p11.z   , v11.z   , Spr::Interpolate::Cubic);
-			//angle.x  = InterpolatePos(t, t0, theta0.x, omega0.x, t1, theta1.x, omega1.x, Spr::Interpolate::Cubic);
 			angle.y  = InterpolatePos(t, t0, theta0.y, omega0.y, t1, theta1.y, omega1.y, Spr::Interpolate::Cubic);
 
 			vel.x    = InterpolateVel(t, t0, p00.x   , v00.x   , t1, p11.x   , v11.x   , Spr::Interpolate::Cubic);
-			//vel.y    = InterpolateVel(t, t0, p00.y   , v00.y   , t1, p11.y   , v11.y   , Spr::Interpolate::Cubic);
 			vel.z    = InterpolateVel(t, t0, p00.z   , v00.z   , t1, p11.z   , v11.z   , Spr::Interpolate::Cubic);
-			//angvel.x = InterpolateVel(t, t0, theta0.x, omega0.x, t1, theta1.x, omega1.x, Spr::Interpolate::Cubic);
 			angvel.y = InterpolateVel(t, t0, theta0.y, omega0.y, t1, theta1.y, omega1.y, Spr::Interpolate::Cubic);
 
 			acc.x    = InterpolateAcc(t, t0, p00.x   , v00.x   , t1, p11.x   , v11.x   , Spr::Interpolate::Cubic);
-			//acc.y    = InterpolateAcc(t, t0, p00.y   , v00.y   , t1, p11.y   , v11.y   , Spr::Interpolate::Cubic);
 			acc.z    = InterpolateAcc(t, t0, p00.z   , v00.z   , t1, p11.z   , v11.z   , Spr::Interpolate::Cubic);
-			//angacc.x = InterpolateAcc(t, t0, theta0.x, omega0.x, t1, theta1.x, omega1.x, Spr::Interpolate::Cubic);
 			angacc.y = InterpolateAcc(t, t0, theta0.y, omega0.y, t1, theta1.y, omega1.y, Spr::Interpolate::Cubic);
 
 			// add cycloid movement to z to avoid scuffing the ground
@@ -1126,7 +1120,7 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 			acc.z += (h0/(2.0*tau*tau))*(_2pi*_2pi)*cos(_2pi*s);
 
 			// define cycloid movement in y to avoid scuffing support leg
-			/*if (ph == Phase::L) {
+			if (ph == Phase::L) {
 				pos.y = p0.y - h0 * (1 - cos(_2pi * s)) / 3.0 + (p1.y - p0.y) * s;
 				vel.y = - (h0 / (3.0 * tau)) * _2pi * sin(_2pi * s) + (p1.y - p0.y) / tau;
 				acc.y = - (h0 / (3.0 * tau * tau)) * (_2pi * _2pi) * cos(_2pi * s);
@@ -1135,19 +1129,8 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 				pos.y = p0.y + h0 * (1 - cos(_2pi * s)) / 3.0 + (p1.y - p0.y)* s;
 				vel.y = (h0 / (3.0 * tau)) * _2pi * sin(_2pi * s) + (p1.y - p0.y) / tau;
 				acc.y = (h0 / (3.0 * tau * tau)) * (_2pi * _2pi) * cos(_2pi * s);
-			}*/
+			}
 
-			// define sin curve movement in y to avoid scuffing support leg
-			if (ph == Phase::L) {
-				pos.y = p0.y + (p1.y - p0.y) * s - (h0 - h0 * cos(_2pi * s)) / 3;
-				vel.y = (p1.y - p0.y) / tau - h0 * _2pi * sin(_2pi * s) / (3 * tau);
-				acc.y = - h0 * ((_2pi * _2pi) / (3 * tau * tau)) * cos(_2pi * s);
-			}
-			else {
-				pos.y = p0.y + (p1.y - p0.y) * s + (h0 - h0 * cos(_2pi * s)) / 3;
-				vel.y = (p1.y - p0.y) / tau + h0 * _2pi * sin(_2pi * s) / (3 * tau);
-				acc.y = h0 * ((_2pi * _2pi) / (3 * tau * tau)) * cos(_2pi * s);
-			}
 			contact = ContactState::Float;
 		}
 		// lifting-off foot of double support phase
