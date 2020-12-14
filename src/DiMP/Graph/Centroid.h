@@ -36,12 +36,14 @@ public:
 
 		SVar*                  var_pos  [3];    //< end effector position
 		SVar*                  var_vel  [3];    //< end effector velocity
-		SVar*                  var_force[2];    //< contact force
+		SVar*                  var_force[3];    //< contact force
 		
 		CentroidEndRangeCon*   con_range[3];
 		CentroidEndPosCon*     con_pos  [3];  //< position update constraint
 		CentroidEndVelCon*     con_vel;       //< conic velocity constraint
 		CentroidEndForceCon*   con_force;     //< coniv force constraint (friction)
+		RangeConS*             con_pos_z;
+		RangeConS*             con_force_z;
 		//CentroidEndCmplCon*    con_cmpl;
 
 		vec3_t GetPos  ();
@@ -112,7 +114,7 @@ public:
 			real_t _time, vec3_t _pos_t, quat_t _pos_r, vec3_t _vel_t, vec3_t _vel_r, 
 			bool _fix_pos_t, bool _fix_pos_r, bool _fix_vel_t, bool _fix_vel_r);
 	};
-
+	
 	struct Snapshot{
 		struct End{
 			vec3_t  pos;
