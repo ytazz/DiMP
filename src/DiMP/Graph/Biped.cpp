@@ -1081,6 +1081,7 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 			real_t cv2    = 0.0;  //< cop velocity of next single support phase
 			real_t c0     = 0.0;  //< cop position at lift-off
 			real_t c1     = 0.0;  //< cop position at landing
+			real_t lambda = 0.0;  //< offset of foot position in y axis
 			vec3_t theta0;        //< foot angle at lift-off
 			vec3_t theta1;        //< foot angle at landing
 			vec3_t omega0;        //< foot rotation speed at lift-off
@@ -1097,6 +1098,7 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 						
 			if(keym1) c0 = std::max(p0.x, (keym1->var_cop_pos->val.x + cvm2*keym1->var_duration->val));
 			if(key2 ) c1 = std::min(p1.x, (key2 ->var_cop_pos->val.x - cv2 *key1 ->var_duration->val));
+			if(key0 ) lambda = std::min(std::abs(key0->var_foot_pos_t[std::abs(side - 1)]->val.y - p0.y), std::abs(key0->var_foot_pos_t[std::abs(side - 1)]->val.y - p1.y));
 
 			FootRotation(p0.x, p0.z, c0, cvm2, p00, theta0, v00, omega0, con0);
 			FootRotation(p1.x, p1.z, c1, cv2 , p11, theta1, v11, omega1, con1);
@@ -1119,16 +1121,32 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 			vel.z += (h0/(2.0*tau))*_2pi*sin(_2pi*s);
 			acc.z += (h0/(2.0*tau*tau))*(_2pi*_2pi)*cos(_2pi*s);
 
-			// define cycloid movement in y to avoid scuffing support leg
+			// define movement in y to avoid scuffing support leg
 			if (ph == Phase::L) {
-				pos.y = p0.y - h0 * (1 - cos(_2pi * s)) / 3.0 + (p1.y - p0.y) * s;
-				vel.y = - (h0 / (3.0 * tau)) * _2pi * sin(_2pi * s) + (p1.y - p0.y) / tau;
-				acc.y = - (h0 / (3.0 * tau * tau)) * (_2pi * _2pi) * cos(_2pi * s);
+				if (lambda < 0.195) {
+					pos.y = p0.y - 0.035 * (0.195 - lambda) * (1 - cos(_2pi * s)) / (2.0 * 0.04) + (p1.y - p0.y) * s;
+					vel.y = -(0.035 * (0.195 - lambda) / (2.0 * 0.04 * tau)) * _2pi * sin(_2pi * s) + (p1.y - p0.y) / tau;
+					acc.y = -(0.035 * (0.195 - lambda) / (2.0 * 0.04 * tau * tau)) * (_2pi * _2pi) * cos(_2pi * s);
+				}
+				else {
+					pos.y = p0.y + (p1.y - p0.y) * s;
+					vel.y = (p1.y - p0.y) / tau;
+					acc.y = 0.0;
+				}
+				
 			}
 			else {
-				pos.y = p0.y + h0 * (1 - cos(_2pi * s)) / 3.0 + (p1.y - p0.y)* s;
-				vel.y = (h0 / (3.0 * tau)) * _2pi * sin(_2pi * s) + (p1.y - p0.y) / tau;
-				acc.y = (h0 / (3.0 * tau * tau)) * (_2pi * _2pi) * cos(_2pi * s);
+				if (lambda < 0.195) {
+					pos.y = p0.y + 0.035 * (0.195 - lambda) * (1 - cos(_2pi * s)) / (2.0 * 0.04) + (p1.y - p0.y) * s;
+					vel.y = (0.035 * (0.195 - lambda) / (2.0 * 0.04 * tau)) * _2pi * sin(_2pi * s) + (p1.y - p0.y) / tau;
+					acc.y = (0.035 * (0.195 - lambda) / (2.0 * 0.04 * tau * tau)) * (_2pi * _2pi) * cos(_2pi * s);
+				}
+				else {
+					pos.y = p0.y + (p1.y - p0.y) * s;
+					vel.y = (p1.y - p0.y) / tau;
+					acc.y = 0.0;
+				}
+				
 			}
 
 			contact = ContactState::Float;
