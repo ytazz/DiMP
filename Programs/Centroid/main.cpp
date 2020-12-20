@@ -20,9 +20,6 @@ public:
 
 	DiMP::Centroid*	centroid;
 
-	vec3_t  targetPos;
-	uint    curIdx;
-
 public:
 	MyApp() {
 		appName = "Centroid";
@@ -34,8 +31,6 @@ public:
 		AddAction(MENU_MAIN, ID_INC, "incrase")->AddHotKey('n');
 		AddAction(MENU_MAIN, ID_DEC, "decrease")->AddHotKey('m');
 		AddAction(MENU_MAIN, ID_SAVE, "save")->AddHotKey('s');
-
-		curIdx = 0;
 	}
 	virtual ~MyApp() {}
 
@@ -79,24 +74,21 @@ public:
 
 		centroid->waypoints.push_back(DiMP::Centroid::Waypoint(0, 0.0, startPos, startOri, vec3_t(), vec3_t(), true, true, true, true));
 		centroid->waypoints.back().ends.push_back(DiMP::Centroid::Waypoint::End(vec3_t(startPos.x, startPos.y, 0.0), vec3_t(), false, false));
-		//centroid->waypoints.back().ends.push_back(DiMP::Centroid::Waypoint::End(vec3_t(startPos.x, startPos.y + 0.10, 0.0), vec3_t(), true, false));
+		
 		centroid->waypoints.push_back(DiMP::Centroid::Waypoint(N, centroid->param.h*N, goalPos, goalOri, vec3_t(), vec3_t(), true, true, true, true));
 		centroid->waypoints.back().ends.push_back(DiMP::Centroid::Waypoint::End(vec3_t(goalPos.x, goalPos.y, 0.0), vec3_t(), false, false));
-		//centroid->waypoints.back().ends.push_back(DiMP::Centroid::Waypoint::End(vec3_t(goalPos.x, goalPos.y + 0.10, 0.0), vec3_t(), true, false));
-
+		
 		graph->scale.Set(1.0, 1.0, 1.0);
 		graph->Init();
 
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidPosT    ), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidPosR    ), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidVelT    ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::CentroidVelR        ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndRange    ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndPos      ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndCmpl     ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::CentroidContactGap  ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::CentroidContactForce), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::CentroidContactCmpl ), false);
+		//graph->solver->Enable(ID(DiMP::ConTag::CentroidVelR    ), false);
+		graph->solver->Enable(ID(DiMP::ConTag::CentroidEndRange), false);
+		graph->solver->Enable(ID(DiMP::ConTag::CentroidEndPos  ), false);
+		graph->solver->Enable(ID(DiMP::ConTag::CentroidEndVel  ), false);
+		graph->solver->Enable(ID(DiMP::ConTag::CentroidEndForce), false);
 		
 		graph->solver->SetCorrection(ID(), 0.5);
 		graph->solver->param.numIter[0] = 20;
@@ -106,27 +98,10 @@ public:
 		graph->solver->param.methodMajor = Solver::Method::Major::GaussNewton;
 		graph->solver->param.methodMinor = Solver::Method::Minor::Direct;
 		graph->solver->param.verbose = true;
-
-		targetPos = vec3_t(0.0, 0.6, -0.2);
 	}
 
 	virtual void OnAction(int menu, int id) {
 		if (menu == MENU_MAIN) {
-			if (id == ID_X) {
-				curIdx = 0;
-			}
-			if (id == ID_Y) {
-				curIdx = 1;
-			}
-			if (id == ID_Z) {
-				curIdx = 2;
-			}
-			if (id == ID_INC) {
-			}
-			if (id == ID_DEC) {
-			}
-			if (id == ID_SAVE) {
-			}
 		}
 		App::OnAction(menu, id);
 	}
