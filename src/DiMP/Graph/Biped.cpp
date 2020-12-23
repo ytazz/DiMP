@@ -1077,15 +1077,17 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 		if( (ph == Phase::L && side == 0) ||
 			(ph == Phase::R && side == 1) ){
 
-			real_t cvm2   = 0.0;  //< cop velocity of previous single support phase
-			real_t cv2    = 0.0;  //< cop velocity of next single support phase
-			real_t c0     = 0.0;  //< cop position at lift-off
-			real_t c1     = 0.0;  //< cop position at landing
-			real_t lambda = 0.0;  //< offset of foot position in y axis
-			vec3_t theta0;        //< foot angle at lift-off
-			vec3_t theta1;        //< foot angle at landing
-			vec3_t omega0;        //< foot rotation speed at lift-off
-			vec3_t omega1;        //< foot rotation speed at landing
+			real_t cvm2   = 0.0;               //< cop velocity of previous single support phase
+			real_t cv2    = 0.0;               //< cop velocity of next single support phase
+			real_t c0     = 0.0;               //< cop position at lift-off
+			real_t c1     = 0.0;               //< cop position at landing
+			real_t lambda = 0.0;               //< offset of foot position in y axis
+			real_t lambda_s = 0.195;           //< standard of lambda
+			real_t avoidance = 0.035 / 0.04;   //< avoidance ratio on lambda
+			vec3_t theta0;                     //< foot angle at lift-off
+			vec3_t theta1;                     //< foot angle at landing
+			vec3_t omega0;                     //< foot rotation speed at lift-off
+			vec3_t omega1;                     //< foot rotation speed at landing
 			vec3_t p00;
 			vec3_t v00;
 			vec3_t p11;
@@ -1122,31 +1124,18 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 			acc.z += (h0/(2.0*tau*tau))*(_2pi*_2pi)*cos(_2pi*s);
 
 			// define movement in y to avoid scuffing support leg
-			if (ph == Phase::L) {
-				if (lambda < 0.195) {
-					pos.y = p0.y - 0.035 * (0.195 - lambda) * (1 - cos(_2pi * s)) / (2.0 * 0.04) + (p1.y - p0.y) * s;
-					vel.y = -(0.035 * (0.195 - lambda) / (2.0 * 0.04 * tau)) * _2pi * sin(_2pi * s) + (p1.y - p0.y) / tau;
-					acc.y = -(0.035 * (0.195 - lambda) / (2.0 * 0.04 * tau * tau)) * (_2pi * _2pi) * cos(_2pi * s);
-				}
-				else {
-					pos.y = p0.y + (p1.y - p0.y) * s;
-					vel.y = (p1.y - p0.y) / tau;
-					acc.y = 0.0;
-				}
-				
+			real_t avoid_y = (lambda < lambda_s) ? avoidance * (lambda_s - lambda) : 0;
+
+			if (ph == Phase::L) { 
+				pos.y = p0.y + (p1.y - p0.y) * s - avoid_y * (1 - cos(_2pi * s)) / 2.0;
+				vel.y = (p1.y - p0.y) / tau - (avoid_y / (2.0 * tau)) * _2pi * sin(_2pi * s);
+				acc.y = - (avoid_y / (2.0 * tau * tau)) * (_2pi*_2pi) * cos(_2pi * s);
 			}
-			else {
-				if (lambda < 0.195) {
-					pos.y = p0.y + 0.035 * (0.195 - lambda) * (1 - cos(_2pi * s)) / (2.0 * 0.04) + (p1.y - p0.y) * s;
-					vel.y = (0.035 * (0.195 - lambda) / (2.0 * 0.04 * tau)) * _2pi * sin(_2pi * s) + (p1.y - p0.y) / tau;
-					acc.y = (0.035 * (0.195 - lambda) / (2.0 * 0.04 * tau * tau)) * (_2pi * _2pi) * cos(_2pi * s);
-				}
-				else {
-					pos.y = p0.y + (p1.y - p0.y) * s;
-					vel.y = (p1.y - p0.y) / tau;
-					acc.y = 0.0;
-				}
-				
+			
+			if (ph == Phase::R) {
+				pos.y = p0.y + (p1.y - p0.y) * s + avoid_y * (1 - cos(_2pi * s)) / 2.0;
+				vel.y = (p1.y - p0.y) / tau + (avoid_y / (2.0 * tau)) * _2pi * sin(_2pi * s);
+				acc.y = (avoid_y / (2.0 * tau * tau)) * (_2pi * _2pi) * cos(_2pi * s);
 			}
 
 			contact = ContactState::Float;
@@ -1181,11 +1170,11 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 			contact = ContactState::Surface;
 		}
 
-		if ((ph != Phase::L || side != 0) &&
-			(ph != Phase::R || side != 1)) {
+		if ((ph != Phase::L || side == 1) &&
+			(ph != Phase::R || side == 0)) {
 			pos.y = p0.y + (p1.y - p0.y) * s;
 			vel.y = (p1.y - p0.y) / tau;
-			acc.y = 0.0;
+			acc.y = 0;
 		}
 	}
 
