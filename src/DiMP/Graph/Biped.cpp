@@ -328,6 +328,9 @@ BipedLIP::Param::Param() {
 	heelCurvature     = 10.0;
 	toeCurvatureRate  = 0.0;
 	heelCurvatureRate = 0.0;
+
+	minSpacing  = 0.0;
+	swingMargin = 1.0;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -1082,8 +1085,6 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 			real_t c0     = 0.0;               //< cop position at lift-off
 			real_t c1     = 0.0;               //< cop position at landing
 			real_t lambda = 0.0;               //< offset of foot position in y axis
-			real_t lambda_s = 0.195;           //< standard of lambda
-			real_t avoidance = 0.035 / 0.04;   //< avoidance ratio on lambda
 			vec3_t theta0;                     //< foot angle at lift-off
 			vec3_t theta1;                     //< foot angle at landing
 			vec3_t omega0;                     //< foot rotation speed at lift-off
@@ -1100,7 +1101,7 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 						
 			if(keym1) c0 = std::max(p0.x, (keym1->var_cop_pos->val.x + cvm2*keym1->var_duration->val));
 			if(key2 ) c1 = std::min(p1.x, (key2 ->var_cop_pos->val.x - cv2 *key1 ->var_duration->val));
-			if(key0 ) lambda = std::min(std::abs(key0->var_foot_pos_t[std::abs(side - 1)]->val.y - p0.y), std::abs(key0->var_foot_pos_t[std::abs(side - 1)]->val.y - p1.y));
+			if(key0 ) lambda = std::min(std::abs(key0->var_foot_pos_t[!side]->val.y - p0.y), std::abs(key0->var_foot_pos_t[!side]->val.y - p1.y));
 
 			FootRotation(p0.x, p0.z, c0, cvm2, p00, theta0, v00, omega0, con0);
 			FootRotation(p1.x, p1.z, c1, cv2 , p11, theta1, v11, omega1, con1);
@@ -1124,9 +1125,7 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 			acc.z += (h0/(2.0*tau*tau))*(_2pi*_2pi)*cos(_2pi*s);
 
 			// define movement in y to avoid scuffing support leg
-			real_t avoid_y = (lambda < lambda_s) ? avoidance * (lambda_s - lambda) : 0;
-			//real_t avoid_y = 0.0;
-
+			real_t avoid_y = (lambda < param.minSpacing) ? param.swingMargin * (param.minSpacing - lambda) : 0;
 			real_t sign = (ph == Phase::R ? 1.0 : -1.0);
 			pos.y = p0.y + (p1.y - p0.y) * s + sign * avoid_y * (1 - cos(_2pi * s)) / 2.0;
 			vel.y = (p1.y - p0.y) / tau + (sign * avoid_y / (2.0 * tau)) * _2pi * sin(_2pi * s);
