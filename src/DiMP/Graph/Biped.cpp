@@ -1125,19 +1125,13 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 
 			// define movement in y to avoid scuffing support leg
 			real_t avoid_y = (lambda < lambda_s) ? avoidance * (lambda_s - lambda) : 0;
+			//real_t avoid_y = 0.0;
 
-			if (ph == Phase::L) { 
-				pos.y = p0.y + (p1.y - p0.y) * s - avoid_y * (1 - cos(_2pi * s)) / 2.0;
-				vel.y = (p1.y - p0.y) / tau - (avoid_y / (2.0 * tau)) * _2pi * sin(_2pi * s);
-				acc.y = - (avoid_y / (2.0 * tau * tau)) * (_2pi*_2pi) * cos(_2pi * s);
-			}
+			real_t sign = (ph == Phase::R ? 1.0 : -1.0);
+			pos.y = p0.y + (p1.y - p0.y) * s + sign * avoid_y * (1 - cos(_2pi * s)) / 2.0;
+			vel.y = (p1.y - p0.y) / tau + (sign * avoid_y / (2.0 * tau)) * _2pi * sin(_2pi * s);
+			acc.y = (sign * avoid_y / (2.0 * tau * tau)) * (_2pi * _2pi) * cos(_2pi * s);
 			
-			if (ph == Phase::R) {
-				pos.y = p0.y + (p1.y - p0.y) * s + avoid_y * (1 - cos(_2pi * s)) / 2.0;
-				vel.y = (p1.y - p0.y) / tau + (avoid_y / (2.0 * tau)) * _2pi * sin(_2pi * s);
-				acc.y = (avoid_y / (2.0 * tau * tau)) * (_2pi * _2pi) * cos(_2pi * s);
-			}
-
 			contact = ContactState::Float;
 		}
 		// lifting-off foot of double support phase
