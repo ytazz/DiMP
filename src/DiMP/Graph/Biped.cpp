@@ -278,9 +278,9 @@ void BipedLIPKey::Draw(Render::Canvas* canvas, Render::Config* conf) {
 
 BipedLIP::Param::Param() {
 	gravity          = 9.8;
-	comHeight        = 0.496;
-	torsoMass        = 4.432*0.8;
-	footMass         = (4.432 - torsoMass) / 2;
+	comHeight        = 1.0;
+	torsoMass        = 10.0;
+	footMass         = 5.0;
 	swingProfile     = SwingProfile::Cycloid;
 	swingHeight[0]   = 0.1; //0: maximum swing foot height
 	swingHeight[1]   = 0.1; //1: swing foot height before landing (Wedge only)
@@ -297,10 +297,10 @@ BipedLIP::Param::Param() {
 	durationMax[Phase::D ] = 0.2;
 
 	// range of foot position relative to com
-	footPosMin[0] = vec3_t(-0.2, -0.14, 0.0);
-	footPosMax[0] = vec3_t( 0.2, -0.07, 0.0);
-	footPosMin[1] = vec3_t(-0.2,  0.07, 0.0);
-	footPosMax[1] = vec3_t( 0.2,  0.14, 0.0);
+	footPosMin[0] = vec3_t(-0.5, -0.20, 0.0);
+	footPosMax[0] = vec3_t( 0.5, -0.00, 0.0);
+	footPosMin[1] = vec3_t(-0.5,  0.00, 0.0);
+	footPosMax[1] = vec3_t( 0.5,  0.20, 0.0);
 	footOriMin[0] = Rad(-15.0);
 	footOriMax[0] = Rad( 15.0);
 	footOriMin[1] = Rad(-15.0);
@@ -591,96 +591,11 @@ int BipedLIP::Phase(real_t t) {
 	return phase[key->tick->idx];
 }
 
-/*
-vec3_t BipedLIP::ComPos(real_t t) {
-	BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;
-	BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;
-
-	real_t dt = t - key0->var_time->val;
-
-	vec3_t pt;
-	
-	if(key1 == key0->next){
-		real_t T    = param.T;
-		vec2_t p0   = key0->var_com_pos->val;
-		vec2_t v0   = key0->var_com_vel->val;
-		vec2_t c0   = key0->var_cop_pos->val;
-		vec2_t cm0  = key0->var_cmp_pos->val;
-		vec2_t cv0  = key0->var_cop_vel->val;
-		vec2_t cmv0 = key0->var_cmp_vel->val;
-
-		pt = (c0+cm0) + (cv0+cmv0)*dt + cosh(dt/T)*(p0 - (c0+cm0)) + T*sinh(dt/T)*(v0 - (cv0+cmv0));
-	}
-	else{
-		pt = key0->var_com_pos->val;
-	}
-	
-	return pt;
-	//return vec3_t(pt.x, pt.y, param.comHeight);
-}
-
-vec3_t BipedLIP::ComVel(real_t t) {
-	BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;
-	BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;
-
-	vec2_t vt;
-
-	if(key1 == key0->next){
-		real_t T    = param.T;
-		real_t dt   = t - key0->var_time->val;
-		vec2_t p0   = key0->var_com_pos->val;
-		vec2_t v0   = key0->var_com_vel->val;
-		vec2_t c0   = key0->var_cop_pos->val;
-		vec2_t cm0  = key0->var_cmp_pos->val;
-		vec2_t cv0  = key0->var_cop_vel->val;
-		vec2_t cmv0 = key0->var_cmp_vel->val;
-		
-		vt = (cv0+cmv0) + (1/T)*sinh(dt/T)*(p0 - (c0+cm0)) + cosh(dt/T)*(v0 - (cv0+cmv0));
-	}
-	else{
-		vt = key0->var_com_vel->val;
-	}
-	
-	return vec3_t(vt.x, vt.y, 0.0);
-}
-
-vec3_t BipedLIP::ComAcc(real_t t) {
-	BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;
-	BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;
-
-	vec2_t at;
-
-	if(key1 == key0->next){
-		real_t T    = param.T;
-		real_t T2   = T * T;
-		real_t dt   = t - key0->var_time->val;
-		vec2_t p0   = key0->var_com_pos->val;
-		vec2_t v0   = key0->var_com_vel->val;
-		vec2_t c0   = key0->var_cop_pos->val;
-		vec2_t cm0  = key0->var_cmp_pos->val;
-		vec2_t cv0  = key0->var_cop_vel->val;
-		vec2_t cmv0 = key0->var_cmp_vel->val;
-	
-		at = (1/T2)*cosh(dt/T)*(p0 - (c0+cm0)) + (1/T)*sinh(dt/T)*(v0 - (cv0+cmv0));
-	}
-	else{
-		at = vec2_t();
-	}
-	
-	return vec3_t(at.x, at.y, 0.0);
-}
-*/
-
 void BipedLIP::ComState(real_t t, vec3_t& pos, vec3_t& vel, vec3_t& acc){
 	BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;
 	BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;
 
 	real_t dt = t - key0->var_time->val;
-
-	// x and y
-	//vec3_t pt;
-	//vec3_t vt;
-	//vec3_t at;
 
 	if(key1 == key0->next){
 		real_t T    = param.T;
@@ -701,59 +616,6 @@ void BipedLIP::ComState(real_t t, vec3_t& pos, vec3_t& vel, vec3_t& acc){
 		vel = key0->var_com_vel->val;
 		acc = vec3_t();
 	}
-	/*
-	// z
-	real_t r   = param.comHeight;
-	real_t ptz = param.comHeight;
-	real_t vtz = 0.0;
-	real_t atz = 0.0;
-
-	if(param.comHeightProfile == ComHeightProfile::Compass){
-		if(key1 == key0->next){
-			// artificially add vertical com motion...
-			int ph = phase[key0->tick->idx];
-			if(ph == Phase::L || ph == Phase::R){
-				int sup = (ph == Phase::R ? 0 : 1);
-				int swg = (ph == Phase::R ? 1 : 0);
-
-				vec2_t psup = key0->var_foot_pos_t[sup]->val;
-		
-				ptz = sqrt(r*r - (pt - psup).square());
-				vtz = -(1.0/ptz)*((pt - psup)*vt);
-			}
-			if(ph == Phase::LR || ph == Phase::RL || ph == Phase::D){
-				real_t t0 = key0->var_time->val;
-				real_t t1 = key1->var_time->val;
-				real_t pz0, pz1;
-				real_t vz0, vz1;
-				int    sup0 = (ph == Phase::RL ? 0 : 1);
-				int    sup1 = (ph == Phase::RL ? 1 : 0);
-				vec2_t psup0 = key0->var_foot_pos_t[sup0]->val;
-				vec2_t psup1 = key1->var_foot_pos_t[sup1]->val;
-				vec2_t p0    = key0->var_com_pos->val;
-				vec2_t p1    = key1->var_com_pos->val;
-				vec2_t v0    = key0->var_com_vel->val;
-				vec2_t v1    = key1->var_com_vel->val;
-
-				pz0 = sqrt(r*r - (p0 - psup0).square());
-				pz1 = sqrt(r*r - (p1 - psup1).square());
-				vz0 = -(1.0/pz0)*((p0 - psup0)*v0);
-				vz1 = -(1.0/pz1)*((p1 - psup1)*v1);
-
-				ptz = InterpolatePos(t, 
-					t0, pz0, vz0,
-					t1, pz1, vz1, Interpolate::Cubic);
-				vtz = InterpolateVel(t, 
-					t0, pz0, vz0,
-					t1, pz1, vz1, Interpolate::Cubic);
-			}
-		}
-	}
-
-	pos = vec3_t(pt.x, pt.y, ptz);
-	vel = vec3_t(vt.x, vt.y, vtz);
-	acc = vec3_t(at.x, at.y, atz);
-	*/
 }
 
 vec3_t BipedLIP::Momentum(real_t t){
@@ -1210,41 +1072,6 @@ real_t BipedLIP::TimeToLanding(real_t t, int side){
 	return keyNextContact->tick->time - t;
 }
 		
-/*
-void BipedLIP::FootVel(real_t t, int side, vec3_t& vel, vec3_t& angvel){
-	// calculate velocity by forward difference
-	const real_t dt = 0.001;
-	const real_t dtinv = 1.0/dt;
-
-	pose_t P0 = FootPose(t     , side);
-	pose_t P1 = FootPose(t + dt, side);
-
-	vel = (P1.Pos() - P0.Pos())*dtinv;
-	
-	quat_t dp = P0.Ori().Conjugated() * P1.Ori();
-	vec3_t axis   = dp.Axis ();
-	real_t theta  = dp.Theta();
-	if(theta > pi)
-		theta -= 2*pi;
-	angvel = (P0.Ori() * (theta * axis))*dtinv;
-}
-*/
-/*
-void BipedLIP::FootAcc(real_t t, int side, vec3_t& acc, vec3_t& angacc){
-	// calculate velocity by forward difference
-	const real_t dt = 0.001;
-	const real_t dtinv = 1.0/dt;
-
-	vec3_t v0, w0;
-	vec3_t v1, w1;
-	FootVel(t     , side, v0, w0);
-	FootVel(t + dt, side, v1, w1);
-
-	acc    = (v1 - v0)*dtinv;
-	angacc = (w1 - w0)*dtinv;
-}
-*/
-
 vec3_t BipedLIP::CopPos(real_t t) {
 	BipedLIPKey* key0 = (BipedLIPKey*)traj.GetSegment(t).first;
 	BipedLIPKey* key1 = (BipedLIPKey*)traj.GetSegment(t).second;
@@ -1264,7 +1091,6 @@ vec3_t BipedLIP::CopPos(real_t t) {
 	}
 
 	return ct;
-	//return vec3_t(ct.x, ct.y, 0.0);
 }
 
 vec3_t BipedLIP::CmpPos(real_t t) {
@@ -1457,44 +1283,7 @@ void BipedLIP::DrawSnapshot(Render::Canvas* canvas, Render::Config* conf) {
 		canvas->EndPath();
 	}
 }
-/*
-void BipedLIP::Save(const char* filename) {
-	FILE* file = fopen(filename, "w");
 
-	real_t dt = 0.0001;
-	real_t tf = traj.back()->tick->time;
-
-	pose_t pose;
-	vec3_t vel, angvel, acc, angacc;
-	int    contact;
-
-	for (real_t t = 0.0; t <= tf; t += dt) {
-		vec3_t com_p   = ComPos(t);
-
-		FootPose(t, 1, pose, vel, angvel, acc, angacc, contact);
-		vec3_t lfoot_p = pose.Pos();
-
-		FootPose(t, 0, pose, vel, angvel, acc, angacc, contact);
-		vec3_t rfoot_p = pose.Pos();
-
-		vec3_t cop_p   = CopPos(t);
-
-		fprintf(file, "%3.4lf,", t);
-		fprintf(file, "%3.4lf, %3.4lf, %3.4lf,", com_p.x, com_p.y, com_p.z);
-		fprintf(file, "%3.4lf, %3.4lf, %3.4lf, %3.4lf, %3.4lf, %3.4lf,", lfoot_p.x, lfoot_p.y, lfoot_p.z, rfoot_p.x, rfoot_p.y, rfoot_p.z);
-		fprintf(file, "%3.4lf, %3.4lf\n", cop_p.x, cop_p.y);
-	}
-	fclose(file);
-}
-
-void BipedLIP::Print(){
-	real_t dt = 0.0001;
-	real_t tf = traj.back()->tick->time;
-	for (real_t t = 0.0; t <= tf; t += dt) {
-		printf("%3.4lf,\n", t);
-	}
-}
-*/
 //-------------------------------------------------------------------------------------------------
 
 // Constructors

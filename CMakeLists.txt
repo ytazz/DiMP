@@ -34,7 +34,7 @@ find_package(SDL2_ttf REQUIRED COMPONENTS SDL2_ttf::SDL2_ttf)
 
 set(Boost_USE_STATIC_LIBS        ON)
 set(Boost_USE_MULTITHREADED      ON)
-find_package(Boost REQUIRED COMPONENTS regex thread chrono)
+find_package(Boost REQUIRED COMPONENTS regex thread chrono serialization)
 
 find_package(PNG)
 
