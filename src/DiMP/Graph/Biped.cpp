@@ -987,7 +987,7 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 			acc.z += (h0/(2.0*tau*tau))*(_2pi*_2pi)*cos(_2pi*s);
 
 			// define movement in y to avoid scuffing support leg
-			real_t avoid_y = (lambda < param.minSpacing) ? param.swingMargin * (param.minSpacing - lambda) : 0;
+			real_t avoid_y = (lambda < param.minSpacing) ? param.swingMargin + (param.minSpacing - lambda) : param.swingMargin;
 			real_t sign = (ph == Phase::R ? 1.0 : -1.0);
 			pos.y = p0.y + (p1.y - p0.y) * s + sign * avoid_y * (1 - cos(_2pi * s)) / 2.0;
 			vel.y = (p1.y - p0.y) / tau + (sign * avoid_y / (2.0 * tau)) * _2pi * sin(_2pi * s);
