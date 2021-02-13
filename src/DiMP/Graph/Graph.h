@@ -6,6 +6,7 @@
 #include <DiMP/Graph/Geometry.h>
 #include <DiMP/Graph/Connector.h>
 #include <DiMP/Graph/Octtree.h>
+#include <DiMP/Graph/Solver.h>
 #include <DiMP/Render/Canvas.h>
 #include <DiMP/Render/Config.h>
 
@@ -87,7 +88,7 @@ public:
 	Tasks			tasks;			///< tasks
 	Avoids          avoids;         ///< avoid tasks
 
-	UTRef<Solver>	       solver;	///< internal solver
+	UTRef<CustomSolver>	   solver;	///< internal solver
 	UTRef<Render::Config>  conf;	///< default draw configuration
 
 	Param		 param;

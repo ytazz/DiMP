@@ -44,9 +44,12 @@ const char* VarNames[] = {
 	"centroid_pos_r"    ,
 	"centroid_vel_t"    ,
 	"centroid_vel_r"    ,
+	"centroid_time"     ,
+	"centroid_duration" ,
 	"centroid_end_pos"  ,
 	"centroid_end_vel"  ,
-	"centroid_end_force"
+	"centroid_end_stiff",
+	"centroid_end_moment"
 };
 
 const char* ConNames[] = {
@@ -101,10 +104,12 @@ const char* ConNames[] = {
 	"centroid_pos_r"      ,
 	"centroid_vel_t"      ,
 	"centroid_vel_r"      ,
+	"centroid_time"       ,
 	"centroid_end_pos"    ,
+	"centroid_end_stiff"  ,
+	"centroid_end_moment" ,
 	"centroid_end_range"  ,
-	"centroid_end_vel"    ,
-	"centroid_end_force"
+	"centroid_end_contact"
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -144,7 +149,7 @@ Graph::Param::Param(){
 //////////////////////////////////////////////////////////////////////////////////////
 
 Graph::Graph(){
-	solver = new Solver();
+	solver = new CustomSolver();
 	//solver->graph = this;
 
 	conf = new Render::Config();
