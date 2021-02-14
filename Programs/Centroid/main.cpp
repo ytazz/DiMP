@@ -67,6 +67,7 @@ public:
 		}
 
 		centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(1.0, -1.0), vec2_t(1.5, 1.0), 0.3));
+		centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(1.25, -1.0), vec2_t(1.75, 1.0), 0.4));
 		//centroid->param.ends[1].rangeMin = vec3_t(-0.25,  0.0, -1.1);
 		//centroid->param.ends[1].rangeMax = vec3_t( 0.25,  0.3, -0.9);
 
