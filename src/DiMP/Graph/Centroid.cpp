@@ -221,20 +221,21 @@ void CentroidKey::Prepare() {
 		}
 
 		con_vel_match->weight = 0.1 * one;
+    }
 	
-		// set stiffness and moment variables
-		for(int i = 0; i < ends.size(); i++){
-			End& end = ends[i];
+    // set stiffness and moment variables
+	for(int i = 0; i < ends.size(); i++){
+		End& end = ends[i];
 
-			if(end.contact){
-				end.con_contact->_min = 0.0;
-				end.con_contact->_max = 0.0;
-			}
-			else{
-				end.con_contact->_min = 0.0;
-				end.con_contact->_max = inf;
-			}
-
+		if(end.contact){
+			end.con_contact->_min = 0.0;
+			end.con_contact->_max = 0.0;
+		}
+		else{
+			end.con_contact->_min = 0.0;
+			end.con_contact->_max = inf;
+		}
+    }
 			//end.con_pos->enabled = end.contact;
 
 			/*if(!end.contact){
@@ -262,8 +263,6 @@ void CentroidKey::Prepare() {
 			//end.con_force_range[2]->weight[0] = 0.001;
 			//end.con_stiff_zero->desired   = 0.0;
 			//end.con_stiff_zero->weight[0] = 0.0;
-		}
-	}
 }
 
 void CentroidKey::Swap(CentroidKey* key){
@@ -286,11 +285,81 @@ void CentroidKey::Draw(Render::Canvas* canvas, Render::Config* conf) {
 
 //-------------------------------------------------------------------------------------------------
 // Centroid
+bool Centroid::Vertex::IsOutside(const vec3_t& _p){
+    return ( edge[0]->t)*(_p - p) > 0.0 &&
+           (-edge[1]->t)*(_p - p) > 0.0;
+}
+
+bool Centroid::Edge::IsOutside(const vec3_t& _p){
+    return n*(_p - vtx[0]->p) > 0.0;
+}
 
 Centroid::Face::Face(const vec2_t _rmin, const vec2_t _rmax, real_t _h){
 	rangeMin = _rmin;
 	rangeMax = _rmax;
 	height   = _h;
+}
+
+void Centroid::Face::CalcNearest(const vec3_t& p, vec3_t& pf, vec3_t& nf){
+    for(Vertex& v : vtx){
+        if( v.IsOutside(p) ){
+            pf = v.p;
+            nf = p - pf;
+            nf.unitize();
+            return;
+        }
+    }
+    for(Edge& e : edge){
+        if( e.IsOutside(p) ){
+            pf = p - (e.n*(p - e.vtx[0]->p))*e.n;
+            nf = e.n;
+            return;
+        }
+    }
+    pf = p - (n*(p - c))*n;
+    nf = n;
+}
+
+void Centroid::Face::Init(){
+    vec3_t _p[4];
+    vec3_t _n[4];
+    vec3_t _t[4];
+    // vertices
+    _p[0] = vec3_t(rangeMin.x, rangeMin.y, height);
+    _p[1] = vec3_t(rangeMax.x, rangeMin.y, height);
+    _p[2] = vec3_t(rangeMax.x, rangeMax.y, height);
+    _p[3] = vec3_t(rangeMin.x, rangeMax.y, height);
+
+    // center
+    c = vec3_t();
+    for(int i = 0; i < 4; i++){
+        c += _p[i];
+    }
+    c *= (1.0/4.0);
+    
+    // face normal
+    n = (_p[0] - c)%(_p[1] - c);
+    n.unitize();
+
+    // edge tangents and normals
+    for(int i = 0; i < 4; i++){
+        _t[i] = (_p[(i+1)%4] - _p[i]);
+        _t[i].unitize();
+
+        _n[i] = _t[i]%n;
+        _n[i].unitize();
+    }
+
+    for(int i = 0; i < 4; i++){
+        vtx[i].p       = _p[i];
+        vtx[i].edge[0] = &edge[(i-1+4)%4];
+        vtx[i].edge[1] = &edge[i];
+    
+        edge[i].vtx[0] = &vtx[i];
+        edge[i].vtx[1] = &vtx[(i+1)%4];
+        edge[i].t      = _t[i];
+        edge[i].n      = _n[i];
+    }
 }
 
 Centroid::Param::Param() {
@@ -349,6 +418,10 @@ Centroid::~Centroid() {
 
 void Centroid::Init() {
 	TrajectoryNode::Init();
+
+    // init faces
+    for(Face& f : faces)
+        f.Init();
 
 	// calc normalized params
 	L = sqrt(param.I/param.m);
@@ -531,7 +604,7 @@ void Centroid::Prepare() {
 			key->var_duration->val = ((CentroidKey*)key->next)->var_time->val - key->var_time->val;
 		}
 
-		DSTR << k << " " << key->var_time->val << " " << key->var_duration->val << endl;
+		//DSTR << k << " " << key->var_time->val << " " << key->var_duration->val << endl;
 	}
 
 	// update contact state
@@ -562,13 +635,20 @@ void Centroid::Finish(){
 	TrajectoryNode::Finish();
 }
 
-Centroid::Face* Centroid::FindFace(const vec3_t& p){
-	Face* fnear = 0;
+Centroid::Face* Centroid::FindFace(const vec3_t& p, vec3_t& pf, vec3_t& nf){
+	Face*  fnear = 0;
+    real_t dmin;
+	vec3_t _pf;
+	vec3_t _nf;
 	for(Face& f : faces){
-		if( (f.rangeMin.x <= p.x && p.x <= f.rangeMax.x) &&
-			(f.rangeMin.y <= p.y && p.y <= f.rangeMax.y) ){
-			if(!fnear || fnear->height < f.height)
-				fnear = &f;
+		f.CalcNearest(p, _pf, _nf);
+        real_t d = (p - _pf).norm();
+
+		if(!fnear || d < dmin){
+			fnear = &f;
+            dmin  = d;
+            pf    = _pf;
+            nf    = _nf;
 		}
 	}
 
@@ -754,6 +834,7 @@ void Centroid::Draw(Render::Canvas* canvas, Render::Config* conf) {
 void Centroid::CreateSnapshot(real_t t, Centroid::Snapshot& s){
 	s.t = t;
 	s.pos = ComPos(t);
+	s.ori = ComOri(t);
 	s.vel = ComVel(t);
 
 	s.ends.resize(param.ends.size());
@@ -773,6 +854,7 @@ void Centroid::DrawSnapshot(Render::Canvas* canvas, Render::Config* conf) {
 		for(int i = 0; i < param.ends.size(); i++){
 			canvas->BeginPath();
 			canvas->MoveTo(snapshot.pos);
+			canvas->LineTo(snapshot.pos + snapshot.ori*param.ends[i].basePos);
 			canvas->LineTo(snapshot.ends[i].pos);
 			canvas->EndPath();
 		}
@@ -926,8 +1008,8 @@ CentroidEndForceRangeCon::CentroidEndForceRangeCon(Solver* solver, int _tag, str
 void CentroidEndPosRangeCon::Prepare(){
 	p       = obj->var_pos_t->val;
 	q       = obj->var_pos_r->val;
+	pbase   = obj->cen->param.ends[iend].basePos;
 	pend    = obj->ends[iend].var_pos->val;
-	dp      = pend - p;
 	dir_abs = q*dir;
 }
 
@@ -938,7 +1020,8 @@ void CentroidEndVelRangeCon::Prepare(){
 }
 
 void CentroidEndContactCon::Prepare(){
-	face = obj->cen->FindFace(obj->ends[iend].var_pos->val);
+	face = obj->cen->FindFace(obj->ends[iend].var_pos->val, pf, nf);
+    DSTR << obj->ends[iend].var_pos->val << " " << pf << " " << nf << endl;
 }
 /*
 void CentroidEndForceRangeCon::Prepare(){
@@ -1029,9 +1112,9 @@ void CentroidEndMomentCon::CalcCoef(){
 void CentroidEndPosRangeCon::CalcCoef(){
 	Prepare();
 
-	((R3Link*)links[0])->SetCoef(-dir_abs     );
-	((R3Link*)links[1])->SetCoef( dir_abs % dp);
-	((R3Link*)links[2])->SetCoef( dir_abs     );
+	((R3Link*)links[0])->SetCoef(-dir_abs);
+	((R3Link*)links[1])->SetCoef( dir_abs%(pend - p));
+	((R3Link*)links[2])->SetCoef( dir_abs);
 }
 
 void CentroidEndVelRangeCon::CalcCoef(){
@@ -1044,7 +1127,7 @@ void CentroidEndVelRangeCon::CalcCoef(){
 void CentroidEndContactCon::CalcCoef(){
 	Prepare();
 
-	((R3Link*)links[0])->SetCoef(vec3_t(0.0, 0.0, 1.0));
+	((R3Link*)links[0])->SetCoef(nf);
 }
 /*
 void CentroidEndForceRangeCon::CalcCoef(){
@@ -1103,7 +1186,7 @@ void CentroidEndPosRangeCon::CalcDeviation(){
 	y[0]   = 0.0;
 	on_lower = on_upper = active = false;
 
-	real_t r = dir_abs*dp;
+	real_t r = dir_abs*(pend - (p + q*pbase));
 	if(r < _min){
 		y[0]     = r - _min;
 		on_lower = true;
@@ -1137,8 +1220,7 @@ void CentroidEndContactCon::CalcDeviation(){
 	y[0]   = 0.0;
 	on_lower = on_upper = active = false;
 
-	real_t h = (face ? face->height : 0.0);
-	real_t r = obj->ends[iend].var_pos->val.z - h;
+	real_t r = nf*(obj->ends[iend].var_pos->val - pf);
 	if(r < _min){
 		y[0]     = r - _min;
 		on_lower = true;

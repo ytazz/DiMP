@@ -44,20 +44,22 @@ public:
 		real_t goalTime = 5.0;
 		real_t spacing  = 0.2;
 
-		centroid->param.g          = 9.8;
-		centroid->param.m          = 1.0;
-		centroid->param.I          = 1.0;
+		centroid->param.g = 9.8;
+		centroid->param.m = 1.0;
+		centroid->param.I = 1.0;
 		
 		const int nend = 2;
 		centroid->param.ends.resize(nend);
 		for(int i = 0; i < nend; i++){
 			if(i == 0){
-				centroid->param.ends[i].posRangeMin    = vec3_t(-1.5, -spacing/2.0, -1.5);
-				centroid->param.ends[i].posRangeMax    = vec3_t( 1.5, -spacing/2.0, -0.5);
+				centroid->param.ends[i].basePos     = vec3_t( 0.0, -spacing/2.0,  0.0);
+				centroid->param.ends[i].posRangeMin = vec3_t(-0.5,  0.0        , -1.2);
+				centroid->param.ends[i].posRangeMax = vec3_t( 0.5,  0.0        , -0.8);
 			}
 			else{
-				centroid->param.ends[i].posRangeMin    = vec3_t(-1.5,  spacing/2.0, -1.5);
-				centroid->param.ends[i].posRangeMax    = vec3_t( 1.5,  spacing/2.0, -0.5);
+				centroid->param.ends[i].basePos     = vec3_t( 0.0,  spacing/2.0,  0.0);
+				centroid->param.ends[i].posRangeMin = vec3_t(-0.5,  0.0        , -1.2);
+				centroid->param.ends[i].posRangeMax = vec3_t( 0.5,  0.0        , -0.8);
 			}
 			centroid->param.ends[i].velRangeMin    = vec3_t(-1.5, -100.0, -100.0);
 			centroid->param.ends[i].velRangeMax    = vec3_t( 1.5,  100.0,  100.0);
@@ -66,8 +68,10 @@ public:
 			centroid->param.ends[i].momentRangeMax = vec3_t( 0.0,  0.0,  1.0);
 		}
 
-		centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(1.0, -1.0), vec2_t(1.5, 1.0), 0.3));
-		centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(1.25, -1.0), vec2_t(1.75, 1.0), 0.4));
+        centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(-10.0, -10.0), vec2_t( 1.0, 10.0), 0.0));
+		//centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(  1.0, -10.0), vec2_t( 1.5, 10.0), 0.3));
+        centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(  2.5, -10.0), vec2_t(10.0, 10.0), 0.0));
+		//centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(1.25, -1.0), vec2_t(1.75, 1.0), 0.4));
 		//centroid->param.ends[1].rangeMin = vec3_t(-0.25,  0.0, -1.1);
 		//centroid->param.ends[1].rangeMax = vec3_t( 0.25,  0.3, -0.9);
 
