@@ -227,13 +227,19 @@ void CentroidKey::Prepare() {
 	for(int i = 0; i < ends.size(); i++){
 		End& end = ends[i];
 
-		if(end.contact){
+        //for(int j = 0; j < 3; j++){
+        //    end.con_pos_range[j]->enabled = (i == iend);
+        //}
+
+		if(iend == i && end.contact){
+            end.con_contact->enabled = true;
 			end.con_contact->_min = 0.0;
 			end.con_contact->_max = 0.0;
 		}
 		else{
-			end.con_contact->_min = 0.0;
-			end.con_contact->_max = inf;
+			end.con_contact->enabled = false;
+			//end.con_contact->_min = 0.0;
+			//end.con_contact->_max = inf;
 		}
     }
 			//end.con_pos->enabled = end.contact;
