@@ -103,6 +103,13 @@ namespace DiMP {;
 				HeelToe,      ///< heel-to-toe walking
 			};
 		};
+        /// swing foot interpolation
+        struct SwingInterpolation{
+            enum{
+                Cubic   = 3,
+                Quintic = 5,
+            };
+        };
 		/// contact state
 		struct ContactState{
 			enum{
@@ -132,6 +139,7 @@ namespace DiMP {;
 			real_t  torsoMass;
 			real_t  footMass;
 			int     swingProfile;
+            int     swingInterpolation;
 			real_t  swingHeight[2];             ///< 0: maximum swing height
 												///< 1: lowest height before touch down. for wedge only
 			int     comHeightProfile;
@@ -230,7 +238,7 @@ namespace DiMP {;
 		real_t TorsoOri     (real_t t);
 		real_t TorsoAngVel  (real_t t);
 		real_t TorsoAngAcc  (real_t t);
-		void   FootRotation (real_t px0, real_t pz0, real_t cp, real_t cv, vec3_t& pos, vec3_t& angle, vec3_t& vel, vec3_t& angvel, int& contact);
+		void   FootRotation (real_t px0, real_t pz0, real_t cp, real_t cv, real_t ca, vec3_t& pos, vec3_t& angle, vec3_t& vel, vec3_t& angvel, vec3_t& acc, vec3_t& angacc, int& contact);
 		void   FootPose     (real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& angvel, vec3_t& acc, vec3_t& angacc, int& contact);
 		real_t TimeToLiftoff(real_t t, int side);
 		real_t TimeToLanding(real_t t, int side);

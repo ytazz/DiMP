@@ -282,6 +282,7 @@ BipedLIP::Param::Param() {
 	torsoMass        = 10.0;
 	footMass         = 5.0;
 	swingProfile     = SwingProfile::Cycloid;
+	swingProfile     = SwingInterpolation::Cubic;
 	swingHeight[0]   = 0.1; //0: maximum swing foot height
 	swingHeight[1]   = 0.1; //1: swing foot height before landing (Wedge only)
 	comHeightProfile = ComHeightProfile::Constant;
@@ -330,7 +331,7 @@ BipedLIP::Param::Param() {
 	heelCurvatureRate = 0.0;
 
 	minSpacing  = 0.0;
-	swingMargin = 1.0;
+	swingMargin = 0.0;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -713,7 +714,12 @@ real_t clothoid_y(real_t d, real_t kappa){
 	return (1.0/tmp)*fresnelS(tmp*d);
 }
 
-void BipedLIP::FootRotation(real_t px0, real_t pz0, real_t cp, real_t cv, vec3_t& pos, vec3_t& angle, vec3_t& vel, vec3_t& angvel, int& contact){
+void BipedLIP::FootRotation(
+    real_t px0, real_t pz0,
+    real_t cp, real_t cv, real_t ca,
+    vec3_t& pos, vec3_t& angle, vec3_t& vel, vec3_t& angvel, vec3_t& acc, vec3_t& angacc,
+    int& contact)
+{
 	// po : position of foot origin
 	// cp : position of contact point
 	// cv : velocity of contact point
@@ -727,12 +733,11 @@ void BipedLIP::FootRotation(real_t px0, real_t pz0, real_t cp, real_t cv, vec3_t
 	real_t kappa0 = param.toeCurvatureRate ;
 	real_t kappa1 = param.heelCurvatureRate;
 
-	real_t d;          //< rolling distance
-	vec2_t u, ud;      //< foot center to contact point on the ground, and its derivative
-	vec2_t v, vd;      //< foot center to contact point on the foot, and its derivative
-	real_t phi;
-	real_t vphi;
-
+	real_t d;                 //< rolling distance
+	vec2_t u, ud, udd;        //< foot center to contact point on the ground, and its derivative w.r.t. d
+	vec2_t v, vd, vdd;        //< foot center to contact point on the foot, and its derivative w.r.t. d
+	real_t phi, phid, phidd;  //< foot rotation and its derivative w.r.t. d
+	
 	// current cop is on heel
 	if(cp < px0 - l1){
 		d = cp - (px0 - l1);
@@ -741,18 +746,26 @@ void BipedLIP::FootRotation(real_t px0, real_t pz0, real_t cp, real_t cv, vec3_t
 			u   = vec2_t(-l1 + d, 0.0);
 			v   = vec2_t(-l1 + r1*sin(phi), r1*(1.0 - cos(phi)));
 
-			vphi = cv/r1;
+			phid = 1.0/r1;
 			ud   = vec2_t(1.0, 0.0);
 			vd   = vec2_t(cos(phi), sin(phi));
+
+            phidd = 0.0;
+            udd   = vec2_t(0.0, 0.0);
+            vdd   = vec2_t(-sin(phi), cos(phi))*phid;
 		}
 		if(param.footCurveType == FootCurveType::Clothoid){
 			phi = -0.5*kappa1*d*d;
 			u   = vec2_t(-l1 + d, 0.0);
 			v   = vec2_t(-l1 - clothoid_x(-d, kappa1), clothoid_y(-d, kappa1));
 
-			vphi = -kappa1*d*cv;
+			phid = -kappa1*d;
 			ud   = vec2_t(1.0, 0.0);
-			vd   = vec2_t(cos(0.5*kappa1*d*d), -sin(0.5*kappa1*d*d));
+			vd   = vec2_t(cos(phi), sin(phi));
+
+            phidd = -kappa1;
+            udd   = vec2_t(0.0, 0.0);
+            vdd   = vec2_t(-sin(phi), cos(phi))*phid;
 		}
 
 		contact = ContactState::Heel;
@@ -765,45 +778,128 @@ void BipedLIP::FootRotation(real_t px0, real_t pz0, real_t cp, real_t cv, vec3_t
 			u   = vec2_t(l0 + d, 0.0);
 			v   = vec2_t(l0 + r0*sin(phi), r0*(1.0 - cos(phi)));
 
-			vphi = cv/r0;
+			phid = 1.0/r0;
 			ud   = vec2_t(1.0, 0.0);
 			vd   = vec2_t(cos(phi), sin(phi));
+
+            phidd = 0.0;
+            udd   = vec2_t(0.0, 0.0);
+            vdd   = vec2_t(-sin(phi), cos(phi))*phid;
 		}
 		if(param.footCurveType == FootCurveType::Clothoid){
 			phi = 0.5*kappa0*d*d;
 			u   = vec2_t(l0 + d, 0.0);
 			v   = vec2_t(l0 + clothoid_x(d, kappa0), clothoid_y(d, kappa0));
 
-			vphi = kappa0*d*cv;
+			phid = kappa0*d;
 			ud   = vec2_t(1.0, 0.0);
-			vd   = vec2_t(cos(0.5*kappa0*d*d), sin(0.5*kappa0*d*d));
+			vd   = vec2_t(cos(phi), sin(phi));
+
+            phidd = kappa0;
+            udd  = vec2_t(0.0, 0.0);
+            vdd  = vec2_t(-sin(phi), cos(phi))*phid;
 		}
 
 		contact = ContactState::Toe;
 	}
 	// current cop is in the middle
 	else{
-		phi = 0.0;
-		u   = vec2_t();
-		v   = vec2_t();
-
-		vphi = 0.0;
-		ud   = vec2_t();
-		vd   = vec2_t();
+		phi = phid = phidd = 0.0;
+		u   = ud   = udd   = vec2_t();
+		v   = vd   = vdd   = vec2_t();
 
 		contact = ContactState::Surface;
 	}
 
 	vec2_t pos2 = u - mat2_t::Rot(-phi)*v;
-	vec2_t vel2 = (ud - mat2_t::Rot(-phi)*vd)*cv + mat2_t::Rot(-phi+ (pi/2.0))*v*vphi;
+	vec2_t vel2 = (ud  - mat2_t::Rot(-phi)* vd                 + mat2_t::Rot(-phi + (pi/2.0))*v*phid)*cv;
+    vec2_t acc2 = (ud  - mat2_t::Rot(-phi)* vd                 + mat2_t::Rot(-phi + (pi/2.0))*v*phid)*ca
+                + (udd - mat2_t::Rot(-phi)*(vdd - v*phid*phid) + mat2_t::Rot(-phi + (pi/2.0))*(2.0*vd*phid + v*phidd))*(cv*cv);
 
 	pos.x     = pos2[0] + px0;
 	pos.z     = pos2[1] + pz0;
 	vel.x     = vel2[0];
 	vel.z     = vel2[1];
-	angle [1] = phi;
-	angvel[1] = vphi;
+    acc.x     = acc2[0];
+    acc.z     = acc2[1];
+	angle .y  = phi;
+	angvel.y  = phid*cv;
+    angacc.y  = phidd*cv*cv + phid*ca;
+}
 
+// cubic or quintic interpolation
+void Interpolate(
+    real_t t , real_t& p , real_t& v , real_t& a,
+    real_t t0, real_t  p0, real_t  v0, real_t  a0,
+    real_t t1, real_t  p1, real_t  v1, real_t  a1,
+    int type)
+{
+    real_t Kcubic[6][6] = {
+        { 1.0,  0.0, -3.0,  2.0,  0.0,  0.0},
+        { 0.0,  0.0,  3.0, -2.0,  0.0,  0.0},
+        { 0.0,  1.0, -2.0,  1.0,  0.0,  0.0},
+        { 0.0,  0.0, -1.0,  1.0,  0.0,  0.0},
+        { 0.0,  0.0,  0.0,  0.0,  0.0,  0.0},
+        { 0.0,  0.0,  0.0,  0.0,  0.0,  0.0}
+    };
+    real_t Kquintic[6][6] = {
+        { 1.0,  0.0,  0.0, -10.0,  15.0, -6.0},
+        { 0.0,  0.0,  0.0,  10.0, -15.0,  6.0},
+        { 0.0,  1.0,  0.0, - 6.0,   8.0, -3.0},
+        { 0.0,  0.0,  0.0, - 4.0,   7.0, -3.0},
+        { 0.0,  0.0,  0.5, - 1.5,   1.5, -0.5},
+        { 0.0,  0.0,  0.0,   0.5, - 1.0,  0.5}
+    };
+
+    real_t h  = t1 - t0;
+    real_t h2 = h*h;
+    real_t s  = (t - t0)/h;
+    real_t s2 = s*s;
+    real_t s3 = s*s2;
+    real_t s4 = s*s3;
+    real_t s5 = s*s4;
+
+    real_t (*K)[6] = (type == BipedLIP::SwingInterpolation::Cubic ? Kcubic : Kquintic);
+
+    vec6_t kp, kv, ka;
+    for(int i = 0; i < 6; i++){
+        kp[i] =     K[i][0] +     K[i][1]*s +      K[i][2]*s2 +      K[i][3]*s3 +     K[i][4]*s4 + K[i][5]*s5;
+        kv[i] =     K[i][1] + 2.0*K[i][2]*s +  3.0*K[i][3]*s2 +  4.0*K[i][4]*s3 + 5.0*K[i][5]*s4;
+        ka[i] = 2.0*K[i][2] + 6.0*K[i][3]*s + 12.0*K[i][4]*s2 + 20.0*K[i][5]*s3;
+    }
+
+    p = kp[0]   *p0 + kp[1]   *p1 + kp[2]*h*v0 + kp[3]*h*v1 + kp[4]*h2*a0 + kp[5]*h2*a1;
+    v = kv[0]/h *p0 + kv[1]/h *p1 + kv[2]  *v0 + kv[3]  *v1 + kv[4]*h *a0 + kv[5]*h *a1;
+    a = ka[0]/h2*p0 + ka[1]/h2*p1 + ka[2]/h*v0 + ka[3]/h*v1 + ka[4]   *a0 + ka[5]   *a1;
+
+}
+
+// 4-th order or 6-th order spline
+// both ends are zero (up to 1st or 2nd derivative) and take pmid at midpoint
+void Interpolate2(real_t t, real_t& p, real_t& v, real_t& a, real_t t0, real_t t1, real_t pmid, int type){
+    real_t K6[7] = {0.0, 0.0, 0.0,  1.0, -3.0, 3.0, -1.0};
+    real_t K4[7] = {0.0, 0.0, 1.0, -2.0,  1.0, 0.0,  0.0};
+
+    real_t h  = t1 - t0;
+    real_t h2 = h*h;
+    real_t s  = (t - t0)/h;
+    real_t s2 = s*s;
+    real_t s3 = s*s2;
+    real_t s4 = s*s3;
+    real_t s5 = s*s4;
+    real_t s6 = s*s5;
+
+    real_t* K = (type == BipedLIP::SwingInterpolation::Cubic ? K4 : K6);
+
+    real_t kp, kv, ka;
+    kp =     K[0] +     K[1]*s +      K[2]*s2 +      K[3]*s3 +      K[4]*s4 +     K[5]*s5 + K[6]*s6;
+    kv =     K[1] + 2.0*K[2]*s +  3.0*K[3]*s2 +  4.0*K[4]*s3 +  5.0*K[5]*s4 + 6.0*K[6]*s5;
+    ka = 2.0*K[2] + 6.0*K[3]*s + 12.0*K[4]*s2 + 20.0*K[5]*s3 + 30.0*K[6]*s4;
+
+    real_t C = (type == BipedLIP::SwingInterpolation::Cubic ? 16.0 : 64.0) * pmid;
+    p = kp*C;
+    v = kv*C/h;
+    a = ka*C/h2;
 }
 
 void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& angvel, vec3_t& acc, vec3_t& angacc, int& contact) {
@@ -929,13 +1025,13 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 		vec3_t c0 = key0->var_cop_pos->val;
 		vec3_t c1 = key1->var_cop_pos->val;
 		real_t ct = c0.x + (c1.x - c0.x)*s;
-		real_t vc = (c1.x - c0.x)/tau;
-		
+		real_t cv = (c1.x - c0.x)/tau;
+        
 		// support foot of single support phase
 		if( (ph == Phase::R && side == 0) ||
 			(ph == Phase::L && side == 1) ){
 
-			FootRotation(p0.x, p0.z, ct, vc, pos, angle, vel, angvel, contact);
+			FootRotation(p0.x, p0.z, ct, cv, 0.0, pos, angle, vel, angvel, acc, angacc, contact);
 
 		}
 		// swing foot of single support phase
@@ -947,17 +1043,14 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 			real_t c0     = 0.0;               //< cop position at lift-off
 			real_t c1     = 0.0;               //< cop position at landing
 			real_t lambda = 0.0;               //< offset of foot position in y axis
-			vec3_t theta0;                     //< foot angle at lift-off
-			vec3_t theta1;                     //< foot angle at landing
-			vec3_t omega0;                     //< foot rotation speed at lift-off
-			vec3_t omega1;                     //< foot rotation speed at landing
-			vec3_t p00;
-			vec3_t v00;
-			vec3_t p11;
-			vec3_t v11;
-			int    con0;
-			int    con1;
-
+			vec3_t theta0, theta1;             //< foot angle at lift-off and landing
+			vec3_t omega0, omega1;             //< foot angular velocity at lift-off and landing
+            vec3_t alpha0, alpha1;             //< foot angular acceleration at lift-off and landing
+            vec3_t p00, p11;                   //< foot position at lift-off and landing
+			vec3_t v00, v11;                   //< foot velocity at lift-off and landing
+            vec3_t a00, a11;                   //< foot acceleration at lift-off and landing
+			int    con0, con1;
+			
 			if(keym2 && keym1) cvm2 = std::max(0.0, keym1->var_cop_pos->val.x - keym2->var_cop_pos->val.x) / (keym2->var_duration->val);
 			if(key2  && key3 ) cv2  = std::max(0.0, key3 ->var_cop_pos->val.x - key2 ->var_cop_pos->val.x) / (key2 ->var_duration->val);
 						
@@ -965,26 +1058,30 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 			if(key2 ) c1 = std::min(p1.x, (key2 ->var_cop_pos->val.x - cv2 *key1 ->var_duration->val));
 			if(key0 ) lambda = std::min(std::abs(key0->var_foot_pos_t[!side]->val.y - p0.y), std::abs(key0->var_foot_pos_t[!side]->val.y - p1.y));
 
-			FootRotation(p0.x, p0.z, c0, cvm2, p00, theta0, v00, omega0, con0);
-			FootRotation(p1.x, p1.z, c1, cv2 , p11, theta1, v11, omega1, con1);
+			FootRotation(p0.x, p0.z, c0, cvm2, 0.0, p00, theta0, v00, omega0, a00, alpha0, con0);
+			FootRotation(p1.x, p1.z, c1, cv2 , 0.0, p11, theta1, v11, omega1, a11, alpha1, con1);
 			
 			// interpolate between endpoints with cubic polynomial
-			pos.x    = InterpolatePos(t, t0, p00.x   , v00.x   , t1, p11.x   , v11.x   , Spr::Interpolate::Cubic);
-			pos.z    = InterpolatePos(t, t0, p00.z   , v00.z   , t1, p11.z   , v11.z   , Spr::Interpolate::Cubic);
-			angle.y  = InterpolatePos(t, t0, theta0.y, omega0.y, t1, theta1.y, omega1.y, Spr::Interpolate::Cubic);
-
-			vel.x    = InterpolateVel(t, t0, p00.x   , v00.x   , t1, p11.x   , v11.x   , Spr::Interpolate::Cubic);
-			vel.z    = InterpolateVel(t, t0, p00.z   , v00.z   , t1, p11.z   , v11.z   , Spr::Interpolate::Cubic);
-			angvel.y = InterpolateVel(t, t0, theta0.y, omega0.y, t1, theta1.y, omega1.y, Spr::Interpolate::Cubic);
-
-			acc.x    = InterpolateAcc(t, t0, p00.x   , v00.x   , t1, p11.x   , v11.x   , Spr::Interpolate::Cubic);
-			acc.z    = InterpolateAcc(t, t0, p00.z   , v00.z   , t1, p11.z   , v11.z   , Spr::Interpolate::Cubic);
-			angacc.y = InterpolateAcc(t, t0, theta0.y, omega0.y, t1, theta1.y, omega1.y, Spr::Interpolate::Cubic);
-
+			Interpolate(t, pos  .x, vel   .x, acc   .x, t0, p00   .x, v00   .x, a00   .x, t1, p11   .x, v11   .x, a11   .x, param.swingInterpolation);
+			Interpolate(t, pos  .z, vel   .z, acc   .z, t0, p00   .z, v00   .z, a00   .z, t1, p11   .z, v11   .z, a11   .z, param.swingInterpolation);
+			Interpolate(t, angle.y, angvel.y, angacc.y, t0, theta0.y, omega0.y, alpha0.y, t1, theta1.y, omega1.y, alpha1.y, param.swingInterpolation);
+            
 			// add cycloid movement to z to avoid scuffing the ground
-			pos.z += h0*(1 - cos(_2pi*s))/2.0;
-			vel.z += (h0/(2.0*tau))*_2pi*sin(_2pi*s);
-			acc.z += (h0/(2.0*tau*tau))*(_2pi*_2pi)*cos(_2pi*s);
+            real_t dpos_z, dvel_z, dacc_z;
+            Interpolate2(t, dpos_z, dvel_z, dacc_z, t0, t1, h0, param.swingInterpolation);
+            //real_t tmid = (t0 + t1)/2.0;
+            //if(t < tmid){
+            //    Interpolate(t, dpos_z, dvel_z, dacc_z, t0, 0.0, 0.0, 0.0, tmid, h0, 0.0, 0.0, param.swingInterpolation);
+            //}
+            //else{
+            //    Interpolate(t, dpos_z, dvel_z, dacc_z, tmid, h0, 0.0, 0.0, t1, 0.0, 0.0, 0.0, param.swingInterpolation);
+            //}
+            pos.z += dpos_z;
+            vel.z += dvel_z;
+            acc.z += dacc_z;
+			//pos.z += h0*(1 - cos(_2pi*s))/2.0;
+			//vel.z += (h0/(2.0*tau))*_2pi*sin(_2pi*s);
+			//acc.z += (h0/(2.0*tau*tau))*(_2pi*_2pi)*cos(_2pi*s);
 
 			// define movement in y to avoid scuffing support leg
 			real_t avoid_y = (lambda < param.minSpacing) ? param.swingMargin + (param.minSpacing - lambda) : param.swingMargin;
@@ -1000,24 +1097,24 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 			 (ph == Phase::LR && side == 1) ){
 
 			// cop velocity of previous single support phase
-			real_t cv = 0.0;
-			if(keym1) cv = std::max(0.0, key0->var_cop_pos->val.x - keym1->var_cop_pos->val.x) / (keym1->var_duration->val);
+			real_t cvm1 = 0.0;
+			if(keym1) cvm1 = std::max(0.0, key0->var_cop_pos->val.x - keym1->var_cop_pos->val.x) / (keym1->var_duration->val);
 
-			real_t ct = c0.x + cv*dt;
+			real_t ct = c0.x + cvm1*dt;
 
-			FootRotation(p0.x, p0.z, ct, cv, pos, angle, vel, angvel, contact);
+			FootRotation(p0.x, p0.z, ct, cvm1, 0.0, pos, angle, vel, angvel, acc, angacc, contact);
 		}
 		// landed foot of double support phase
 		if( (ph == Phase::LR && side == 0)||
 			(ph == Phase::RL && side == 1) ){
 
 			// cop velocity of next single support phase
-			real_t cv = 0.0;
-			if(key2) cv = std::max(0.0, key2->var_cop_pos->val.x - key1->var_cop_pos->val.x) / (key1->var_duration->val);
+			real_t cv1 = 0.0;
+			if(key2) cv1 = std::max(0.0, key2->var_cop_pos->val.x - key1->var_cop_pos->val.x) / (key1->var_duration->val);
 
-			real_t ct = c1.x - cv*(tau - dt);
+			real_t ct = c1.x - cv1*(tau - dt);
 
-			FootRotation(p0.x, p0.z, ct, cv, pos, angle, vel, angvel, contact);
+			FootRotation(p0.x, p0.z, ct, cv1, 0.0, pos, angle, vel, angvel, acc, angacc, contact);
 		}
 		// double support
 		if(ph == Phase::D){

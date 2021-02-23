@@ -87,8 +87,10 @@ public:
 		biped->param.swingHeight[1] = 0.050;
 		//biped->param.swingProfile = DiMP::BipedLIP::SwingProfile::Wedge;
 		//biped->param.swingProfile = DiMP::BipedLIP::SwingProfile::Cycloid;
-		biped->param.swingProfile     = DiMP::BipedLIP::SwingProfile::Cycloid;
-		biped->param.comHeightProfile = DiMP::BipedLIP::ComHeightProfile::Constant;
+		biped->param.swingProfile       = DiMP::BipedLIP::SwingProfile::HeelToe;
+		//biped->param.swingInterpolation = DiMP::BipedLIP::SwingInterpolation::Cubic;
+		biped->param.swingInterpolation = DiMP::BipedLIP::SwingInterpolation::Quintic;
+		biped->param.comHeightProfile   = DiMP::BipedLIP::ComHeightProfile::Constant;
 		//biped->param.comHeightProfile = DiMP::BipedLIP::ComHeightProfile::Compass;
 		biped->param.copMin        = vec3_t(-0.030,  0.00, -1.0);
 		biped->param.copMax        = vec3_t( 0.110,  0.01,  1.0);
