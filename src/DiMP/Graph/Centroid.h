@@ -109,6 +109,7 @@ class Centroid : public TrajectoryNode {
 public:
 	struct Param {
 		struct End{
+			vec3_t  basePos;
 			vec3_t  posRangeMin;
 			vec3_t  posRangeMax;
 			vec3_t  velRangeMin;
@@ -126,10 +127,32 @@ public:
 		Param();
 	};
 	
+    struct Edge;
+    struct Vertex{
+        vec3_t  p;
+        Edge*   edge[2];
+
+        bool IsOutside(const vec3_t& _p);
+    };
+    struct Edge{
+        vec3_t  t;
+        vec3_t  n;
+        Vertex* vtx[2];
+
+        bool IsOutside(const vec3_t& _p);
+    };
 	struct Face{
 		vec2_t  rangeMin;
 		vec2_t  rangeMax;
 		real_t  height;
+
+        Vertex  vtx [4];
+        Edge    edge[4];
+        vec3_t  c;
+        vec3_t  n;
+
+        void Init();
+        void CalcNearest(const vec3_t& p, vec3_t& pf, vec3_t& nf);
 
 		Face(const vec2_t _rmin, const vec2_t _rmax, real_t _h);
 	};
@@ -172,6 +195,7 @@ public:
 	
 		real_t       t;
 		vec3_t       pos;
+		quat_t       ori;
 		vec3_t       vel;
 		vector<End>  ends;
 		
@@ -200,7 +224,7 @@ public:
 	virtual void        DrawSnapshot  (Render::Canvas* canvas, Render::Config* conf);
 	virtual void        Draw          (Render::Canvas* canvas, Render::Config* conf);
 
-	Face*  FindFace (const vec3_t& p);
+	Face*  FindFace (const vec3_t& p, vec3_t& pf, vec3_t& nf);
 	vec3_t ComPos   (real_t t, int type = Interpolate::Cubic);
 	vec3_t ComVel   (real_t t, int type = Interpolate::Cubic);
 	quat_t ComOri   (real_t t, int type = Interpolate::SlerpDiff);
@@ -279,8 +303,8 @@ struct CentroidEndPosRangeCon : Constraint{
 	vec3_t       dir_abs;
 	vec3_t       p;
 	quat_t       q;
+	vec3_t       pbase;
 	vec3_t       pend;
-	vec3_t       dp;
 	real_t       _min, _max;
 	bool	     on_lower, on_upper;
 
@@ -316,6 +340,8 @@ struct CentroidEndContactCon : Constraint{
 	CentroidKey*     obj;
 	int              iend;
 	Centroid::Face*  face;
+    vec3_t           pf;
+    vec3_t           nf;
 	real_t           _min, _max;
 	bool	         on_lower, on_upper;
 
