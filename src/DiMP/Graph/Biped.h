@@ -159,13 +159,15 @@ namespace DiMP {;
 			vec3_t  momMax;
 			
 			int     footCurveType;
-			real_t  ankleToToe ;
+			real_t  ankleToToe ;             ///< offset from foot center to the begining of toe|heel
 			real_t  ankleToHeel;
-			real_t  toeCurvature ;
+			real_t  toeCurvature ;           ///< toe|heel curvature (for arc)
 			real_t  heelCurvature;
-			real_t  toeCurvatureRate ;
+			real_t  toeCurvatureRate ;       ///< toe|heel curvature rate (for clothoid)
 			real_t  heelCurvatureRate;
-
+            real_t  toeRotationMax;          ///< upper limit of toe|heel rotation angle
+            real_t  heelRotationMax;         
+            
 			real_t  minSpacing;   ///< minimum lateral spacing of feet with which swing foot does not collide with support foot
 			real_t  swingMargin;  ///< 
 
@@ -183,6 +185,8 @@ namespace DiMP {;
 			vec3_t  foot_pos_t[2];
 			real_t  foot_pos_r[2];
 			vec3_t  cop_pos;
+            vec3_t  cop_min;
+            vec3_t  cop_max;
 
 			bool    fix_time;
 			//bool    fix_torso_pos_t;
@@ -195,6 +199,7 @@ namespace DiMP {;
 			bool    fix_cop_pos;
 			bool    fix_cmp_pos;
 			bool    fix_mom;
+            bool    set_cop_range;
 
 			Waypoint();
 		};

@@ -329,6 +329,8 @@ BipedLIP::Param::Param() {
 	heelCurvature     = 10.0;
 	toeCurvatureRate  = 0.0;
 	heelCurvatureRate = 0.0;
+    toeRotationMax    = 1.0;
+    heelRotationMax   = 1.0;
 
 	minSpacing  = 0.0;
 	swingMargin = 0.0;
@@ -348,6 +350,8 @@ BipedLIP::Waypoint::Waypoint() {
 	foot_pos_t[1] = vec3_t();
 	foot_pos_r[1] = 0.0;
 	cop_pos       = vec3_t();
+    cop_min       = vec3_t();
+    cop_max       = vec3_t();
 
 	fix_com_pos       = false;
 	fix_com_vel       = false;
@@ -362,6 +366,7 @@ BipedLIP::Waypoint::Waypoint() {
 	fix_cop_pos       = false;
 	fix_cmp_pos       = false;
 	fix_mom           = false;
+    set_cop_range     = false;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -441,7 +446,7 @@ void BipedLIP::Init() {
 		}
 
 		for(int j = 0; j < 3; j++){
-			// cop range
+			// cop range: the sign of y range is flipped for left support
 			if(j == 1){
 				key->con_cop_range[j]->_min = (ph == BipedLIP::Phase::L || ph == BipedLIP::Phase::LR ? param.copMin[j] : -param.copMax[j]);
 				key->con_cop_range[j]->_max = (ph == BipedLIP::Phase::L || ph == BipedLIP::Phase::LR ? param.copMax[j] : -param.copMin[j]);
@@ -568,8 +573,17 @@ void BipedLIP::Init() {
 		key->var_cmp_pos    ->locked = wp.fix_cmp_pos;
 		key->var_mom        ->locked = wp.fix_mom;
 
-		if(wp.fix_cop_pos)
+		if(wp.fix_cop_pos){
 			key->var_cop_pos->val = wp.cop_pos;
+        }
+
+        // set cop range if specified (param setting is overridden)
+        if(wp.set_cop_range){
+            for(int j = 0; j < 3; j++){
+			    key->con_cop_range[j]->_min = wp.cop_min[j];
+			    key->con_cop_range[j]->_max = wp.cop_max[j];
+            }
+        }
 
 		for (uint j = 0; j < 2; j++) {
 			key->var_foot_pos_t[j]->locked = wp.fix_foot_pos_t[j];
@@ -734,38 +748,49 @@ void BipedLIP::FootRotation(
 	real_t kappa1 = param.heelCurvatureRate;
 
 	real_t d;                 //< rolling distance
+    real_t phi_max;           //< upper limit of rotation angle
 	vec2_t u, ud, udd;        //< foot center to contact point on the ground, and its derivative w.r.t. d
 	vec2_t v, vd, vdd;        //< foot center to contact point on the foot, and its derivative w.r.t. d
 	real_t phi, phid, phidd;  //< foot rotation and its derivative w.r.t. d
+
+    phi = phid = phidd = 0.0;
 	
 	// current cop is on heel
 	if(cp < px0 - l1){
 		d = cp - (px0 - l1);
+        phi_max = param.heelRotationMax;
+
 		if(param.footCurveType == FootCurveType::Arc){
-			phi = d/r1;
-			u   = vec2_t(-l1 + d, 0.0);
+			phi = std::max(-phi_max, d/r1);
+            d   = r1*phi;
+            u   = vec2_t(-l1 + d, 0.0);
 			v   = vec2_t(-l1 + r1*sin(phi), r1*(1.0 - cos(phi)));
 
-			phid = 1.0/r1;
-			ud   = vec2_t(1.0, 0.0);
-			vd   = vec2_t(cos(phi), sin(phi));
+            if(phi != -phi_max){
+			    phid = 1.0/r1;
+			    ud   = vec2_t(1.0, 0.0);
+			    vd   = vec2_t(cos(phi), sin(phi));
 
-            phidd = 0.0;
-            udd   = vec2_t(0.0, 0.0);
-            vdd   = vec2_t(-sin(phi), cos(phi))*phid;
+                phidd = 0.0;
+                udd   = vec2_t(0.0, 0.0);
+                vdd   = vec2_t(-sin(phi), cos(phi))*phid;
+            }
 		}
 		if(param.footCurveType == FootCurveType::Clothoid){
-			phi = -0.5*kappa1*d*d;
+			phi = std::max(-phi_max, -0.5*kappa1*d*d);
+            d   = -sqrt(-2.0*phi/kappa1);
 			u   = vec2_t(-l1 + d, 0.0);
 			v   = vec2_t(-l1 - clothoid_x(-d, kappa1), clothoid_y(-d, kappa1));
 
-			phid = -kappa1*d;
-			ud   = vec2_t(1.0, 0.0);
-			vd   = vec2_t(cos(phi), sin(phi));
+            if(phi != -phi_max){
+			    phid = -kappa1*d;
+			    ud   = vec2_t(1.0, 0.0);
+			    vd   = vec2_t(cos(phi), sin(phi));
 
-            phidd = -kappa1;
-            udd   = vec2_t(0.0, 0.0);
-            vdd   = vec2_t(-sin(phi), cos(phi))*phid;
+                phidd = -kappa1;
+                udd   = vec2_t(0.0, 0.0);
+                vdd   = vec2_t(-sin(phi), cos(phi))*phid;
+            }
 		}
 
 		contact = ContactState::Heel;
@@ -773,31 +798,39 @@ void BipedLIP::FootRotation(
 	// current cop is on toe
 	else if(cp > px0 + l0){
 		d = cp - (px0 + l0);
-		if(param.footCurveType == FootCurveType::Arc){
-			phi = d/r0;
+		phi_max = param.toeRotationMax;
+
+        if(param.footCurveType == FootCurveType::Arc){
+			phi = std::min(phi_max, d/r0);
+            d   = r0*phi;
 			u   = vec2_t(l0 + d, 0.0);
 			v   = vec2_t(l0 + r0*sin(phi), r0*(1.0 - cos(phi)));
 
-			phid = 1.0/r0;
-			ud   = vec2_t(1.0, 0.0);
-			vd   = vec2_t(cos(phi), sin(phi));
+            if(phi != phi_max){
+			    phid = 1.0/r0;
+			    ud   = vec2_t(1.0, 0.0);
+			    vd   = vec2_t(cos(phi), sin(phi));
 
-            phidd = 0.0;
-            udd   = vec2_t(0.0, 0.0);
-            vdd   = vec2_t(-sin(phi), cos(phi))*phid;
+                phidd = 0.0;
+                udd   = vec2_t(0.0, 0.0);
+                vdd   = vec2_t(-sin(phi), cos(phi))*phid;
+            }
 		}
 		if(param.footCurveType == FootCurveType::Clothoid){
-			phi = 0.5*kappa0*d*d;
+			phi = std::min(phi_max, 0.5*kappa0*d*d);
+            d   = sqrt(2.0*phi/kappa0);
 			u   = vec2_t(l0 + d, 0.0);
 			v   = vec2_t(l0 + clothoid_x(d, kappa0), clothoid_y(d, kappa0));
 
-			phid = kappa0*d;
-			ud   = vec2_t(1.0, 0.0);
-			vd   = vec2_t(cos(phi), sin(phi));
+            if(phi != phi_max){
+			    phid = kappa0*d;
+			    ud   = vec2_t(1.0, 0.0);
+			    vd   = vec2_t(cos(phi), sin(phi));
 
-            phidd = kappa0;
-            udd  = vec2_t(0.0, 0.0);
-            vdd  = vec2_t(-sin(phi), cos(phi))*phid;
+                phidd = kappa0;
+                udd  = vec2_t(0.0, 0.0);
+                vdd  = vec2_t(-sin(phi), cos(phi))*phid;
+            }
 		}
 
 		contact = ContactState::Toe;

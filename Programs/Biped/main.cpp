@@ -73,8 +73,8 @@ public:
 		biped->param.durationMax[DiMP::BipedLIP::Phase::RL] = 0.05;
 		biped->param.durationMin[DiMP::BipedLIP::Phase::LR] = 0.05;
 		biped->param.durationMax[DiMP::BipedLIP::Phase::LR] = 0.05;
-		biped->param.durationMin[DiMP::BipedLIP::Phase::D ] = 0.30;
-		biped->param.durationMax[DiMP::BipedLIP::Phase::D ] = 0.30;
+		biped->param.durationMin[DiMP::BipedLIP::Phase::D ] = 1.0;
+		biped->param.durationMax[DiMP::BipedLIP::Phase::D ] = 1.0;
 		biped->param.footPosMin[0] = vec3_t(-0.45, -0.20, -1.5);
 		biped->param.footPosMax[0] = vec3_t( 0.45, -0.09, -0.5);
 		biped->param.footPosMin[1] = vec3_t(-0.45,  0.09, -1.5);
@@ -92,8 +92,8 @@ public:
 		biped->param.swingInterpolation = DiMP::BipedLIP::SwingInterpolation::Quintic;
 		biped->param.comHeightProfile   = DiMP::BipedLIP::ComHeightProfile::Constant;
 		//biped->param.comHeightProfile = DiMP::BipedLIP::ComHeightProfile::Compass;
-		biped->param.copMin        = vec3_t(-0.030,  0.00, -1.0);
-		biped->param.copMax        = vec3_t( 0.110,  0.01,  1.0);
+		biped->param.copMin        = vec3_t(-0.100,  0.00, -1.0);
+		biped->param.copMax        = vec3_t( 0.150,  0.01,  1.0);
 		biped->param.accMin        = vec3_t(-10.0, -1.0, -1.0);
 		biped->param.accMax        = vec3_t( 10.0,  1.0,  1.0);
 		biped->param.momMin        = vec3_t(-0.0, -0.0, -1.0);
@@ -108,6 +108,8 @@ public:
 		biped->param.ankleToHeel       = 0.040;
 		biped->param.toeCurvatureRate  = 156.0;
 		biped->param.heelCurvatureRate = 156.0;
+        biped->param.toeRotationMax    = Rad(45.0);
+        biped->param.heelRotationMax   = Rad(45.0);
 		
 		/*
 		 D -> RL -> L -> LR -> R ... -> RL -> D
