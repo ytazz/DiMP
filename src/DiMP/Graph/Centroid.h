@@ -144,7 +144,8 @@ public:
 	struct Face{
 		vec2_t  rangeMin;
 		vec2_t  rangeMax;
-		real_t  height;
+		vec3_t  pos;
+        quat_t  ori;
 
         Vertex  vtx [4];
         Edge    edge[4];
@@ -154,7 +155,7 @@ public:
         void Init();
         void CalcNearest(const vec3_t& p, vec3_t& pf, vec3_t& nf);
 
-		Face(const vec2_t _rmin, const vec2_t _rmax, real_t _h);
+		Face(const vec2_t _rmin, const vec2_t _rmax, const vec3_t& _pos, const quat_t& _ori);
 	};
 
 	struct Waypoint {

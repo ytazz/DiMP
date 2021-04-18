@@ -37,6 +37,14 @@ void CentroidKey::AddVar(Solver* solver) {
 	var_vel_r   ->weight    = damping*one;
 	var_time    ->weight[0] = damping;
 	var_duration->weight[0] = damping;
+
+    solver->AddStateVar(var_pos_t, tick->idx);
+	solver->AddStateVar(var_pos_r, tick->idx);
+	solver->AddStateVar(var_vel_t, tick->idx);
+	solver->AddStateVar(var_vel_r, tick->idx);
+	solver->AddStateVar(var_time , tick->idx);
+
+    solver->AddInputVar(var_duration, tick->idx);
 	
 	ends.resize(cen->param.ends.size());
 	stringstream ss;
@@ -53,6 +61,12 @@ void CentroidKey::AddVar(Solver* solver) {
 		ends[i].var_vel   ->weight    = damping*one;
 		ends[i].var_stiff ->weight[0] = damping;
 		ends[i].var_moment->weight    = damping*one;
+
+        solver->AddStateVar(ends[i].var_pos, tick->idx);
+
+        solver->AddInputVar(ends[i].var_vel   , tick->idx);
+        solver->AddInputVar(ends[i].var_stiff , tick->idx);
+        solver->AddInputVar(ends[i].var_moment, tick->idx);
 	}
 }
 
@@ -69,6 +83,15 @@ void CentroidKey::AddCon(Solver* solver) {
 		con_duration_range = new RangeConS(solver, ID(ConTag::CentroidTime, node, tick, name + "_duration"), var_duration, 1.0);
 
 		con_vel_match = new MatchConV3(solver, ID(ConTag::CentroidVelT, node, tick, name + "_vel_match"), var_vel_t, ((CentroidKey*)next)->var_vel_t, 1.0);
+
+        solver->AddTransitionCon(con_pos_t, tick->idx);
+        solver->AddTransitionCon(con_pos_r, tick->idx);
+        solver->AddTransitionCon(con_vel_t, tick->idx);
+        solver->AddTransitionCon(con_vel_r, tick->idx);
+        solver->AddTransitionCon(con_time , tick->idx);
+
+        solver->AddCostCon(con_duration_range, tick->idx);
+        //solver->AddCostCon(con_vel_match     , tick->idx);
 	}
 
 	stringstream ss;
@@ -107,6 +130,18 @@ void CentroidKey::AddCon(Solver* solver) {
 		ends[i].con_moment_range[2] = new RangeConV3(solver, ID(ConTag::CentroidEndMoment, node, tick, name + "_mom_range2"), ends[i].var_moment, vec3_t(0.0, 0.0, 1.0), 1.0);
 
 		ends[i].con_contact = new CentroidEndContactCon(solver, name + "_contact", this, i, 1.0);
+
+        solver->AddCostCon(ends[i].con_pos_range[0]   , tick->idx);
+        solver->AddCostCon(ends[i].con_pos_range[1]   , tick->idx);
+        solver->AddCostCon(ends[i].con_pos_range[2]   , tick->idx);
+        solver->AddCostCon(ends[i].con_vel_range[0]   , tick->idx);
+        solver->AddCostCon(ends[i].con_vel_range[1]   , tick->idx);
+        solver->AddCostCon(ends[i].con_vel_range[2]   , tick->idx);
+        solver->AddCostCon(ends[i].con_stiff_range    , tick->idx);
+        solver->AddCostCon(ends[i].con_moment_range[0], tick->idx);
+        solver->AddCostCon(ends[i].con_moment_range[1], tick->idx);
+        solver->AddCostCon(ends[i].con_moment_range[2], tick->idx);
+        solver->AddCostCon(ends[i].con_contact        , tick->idx);
 		
 		//ends[i].con_stiff_zero = new FixConS(solver, ID(ConTag::CentroidEndStiff, node,tick, name + "_stiff_zero"), ends[i].var_stiff, 1.0);
 	}
@@ -300,10 +335,11 @@ bool Centroid::Edge::IsOutside(const vec3_t& _p){
     return n*(_p - vtx[0]->p) > 0.0;
 }
 
-Centroid::Face::Face(const vec2_t _rmin, const vec2_t _rmax, real_t _h){
+Centroid::Face::Face(const vec2_t _rmin, const vec2_t _rmax, const vec3_t& _pos, const quat_t& _ori){
 	rangeMin = _rmin;
 	rangeMax = _rmax;
-	height   = _h;
+	pos      = _pos;
+    ori      = _ori;
 }
 
 void Centroid::Face::CalcNearest(const vec3_t& p, vec3_t& pf, vec3_t& nf){
@@ -331,10 +367,10 @@ void Centroid::Face::Init(){
     vec3_t _n[4];
     vec3_t _t[4];
     // vertices
-    _p[0] = vec3_t(rangeMin.x, rangeMin.y, height);
-    _p[1] = vec3_t(rangeMax.x, rangeMin.y, height);
-    _p[2] = vec3_t(rangeMax.x, rangeMax.y, height);
-    _p[3] = vec3_t(rangeMin.x, rangeMax.y, height);
+    _p[0] = pos + ori*vec3_t(rangeMin.x, rangeMin.y, 0.0);
+    _p[1] = pos + ori*vec3_t(rangeMax.x, rangeMin.y, 0.0);
+    _p[2] = pos + ori*vec3_t(rangeMax.x, rangeMax.y, 0.0);
+    _p[3] = pos + ori*vec3_t(rangeMin.x, rangeMax.y, 0.0);
 
     // center
     c = vec3_t();
@@ -827,11 +863,11 @@ void Centroid::Draw(Render::Canvas* canvas, Render::Config* conf) {
 	for(Face& f : faces){
 		canvas->BeginLayer("centroid_face", true);
 		canvas->BeginPath();
-		canvas->MoveTo(vec3_t(f.rangeMin.x, f.rangeMin.y, f.height));
-		canvas->LineTo(vec3_t(f.rangeMax.x, f.rangeMin.y, f.height));
-		canvas->LineTo(vec3_t(f.rangeMax.x, f.rangeMax.y, f.height));
-		canvas->LineTo(vec3_t(f.rangeMin.x, f.rangeMax.y, f.height));
-		canvas->LineTo(vec3_t(f.rangeMin.x, f.rangeMin.y, f.height));
+		canvas->MoveTo(f.pos + f.ori*vec3_t(f.rangeMin.x, f.rangeMin.y, 0.0));
+		canvas->LineTo(f.pos + f.ori*vec3_t(f.rangeMax.x, f.rangeMin.y, 0.0));
+		canvas->LineTo(f.pos + f.ori*vec3_t(f.rangeMax.x, f.rangeMax.y, 0.0));
+		canvas->LineTo(f.pos + f.ori*vec3_t(f.rangeMin.x, f.rangeMax.y, 0.0));
+		canvas->LineTo(f.pos + f.ori*vec3_t(f.rangeMin.x, f.rangeMin.y, 0.0));
 		canvas->EndPath();
 		canvas->EndLayer();
 	}

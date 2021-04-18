@@ -19,6 +19,7 @@ public:
 	};
 
 	DiMP::Centroid*	centroid;
+    FILE*  fileDuration;
 
 public:
 	MyApp() {
@@ -39,7 +40,7 @@ public:
 
 		vec3_t startPos(0.0, 0.0, 1.0);
 		quat_t startOri = quat_t();
-		vec3_t goalPos (3.0, 0.0, 1.0);
+		vec3_t goalPos (6, 0.0, 1.0);
 		quat_t goalOri  = quat_t::Rot(Rad(30.0), 'z');
 		real_t goalTime = 5.0;
 		real_t spacing  = 0.2;
@@ -53,13 +54,13 @@ public:
 		for(int i = 0; i < nend; i++){
 			if(i == 0){
 				centroid->param.ends[i].basePos     = vec3_t( 0.0, -spacing/2.0,  0.0);
-				centroid->param.ends[i].posRangeMin = vec3_t(-0.5,  0.0        , -1.2);
-				centroid->param.ends[i].posRangeMax = vec3_t( 0.5,  0.0        , -0.8);
+				centroid->param.ends[i].posRangeMin = vec3_t(-0.5,  0.0        , -1.1);
+				centroid->param.ends[i].posRangeMax = vec3_t( 0.5,  0.0        , -0.9);
 			}
 			else{
 				centroid->param.ends[i].basePos     = vec3_t( 0.0,  spacing/2.0,  0.0);
-				centroid->param.ends[i].posRangeMin = vec3_t(-0.5,  0.0        , -1.2);
-				centroid->param.ends[i].posRangeMax = vec3_t( 0.5,  0.0        , -0.8);
+				centroid->param.ends[i].posRangeMin = vec3_t(-0.5,  0.0        , -1.1);
+				centroid->param.ends[i].posRangeMax = vec3_t( 0.5,  0.0        , -0.9);
 			}
 			centroid->param.ends[i].velRangeMin    = vec3_t(-1.5, -100.0, -100.0);
 			centroid->param.ends[i].velRangeMax    = vec3_t( 1.5,  100.0,  100.0);
@@ -68,10 +69,11 @@ public:
 			centroid->param.ends[i].momentRangeMax = vec3_t( 0.0,  0.0,  1.0);
 		}
 
-        centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(-10.0, -10.0), vec2_t( 1.0, 10.0), 0.0));
+        centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(-10.0, -10.0), vec2_t( 1.0, 10.0), vec3_t(0.0, 0.0, 0.0), quat_t::Rot(Rad( 10.0), 'x')));
+		centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(  2.5, -10.0), vec2_t( 3.0, 10.0), vec3_t(0.0, 0.0, 0.3), quat_t::Rot(Rad(-10.0), 'x')));
+		centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(  4.5, -10.0), vec2_t(10.0, 10.0), vec3_t(0.0, 0.0, 0.3), quat_t::Rot(Rad(-10.0), 'x')));
 		//centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(  1.0, -10.0), vec2_t( 1.5, 10.0), 0.3));
-        centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(  2.5, -10.0), vec2_t(10.0, 10.0), 0.0));
-		//centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(1.25, -1.0), vec2_t(1.75, 1.0), 0.4));
+        //centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(1.25, -1.0), vec2_t(1.75, 1.0), 0.4));
 		//centroid->param.ends[1].rangeMin = vec3_t(-0.25,  0.0, -1.1);
 		//centroid->param.ends[1].rangeMax = vec3_t( 0.25,  0.3, -0.9);
 
@@ -122,10 +124,27 @@ public:
 		graph->solver->param.cutoffStepSize = 0.5;
 		graph->solver->param.minStepSize    = 0.5;
 		graph->solver->param.maxStepSize    = 1.0;
-		graph->solver->param.methodMajor    = Solver::Method::Major::GaussNewton;
+		//graph->solver->param.methodMajor    = Solver::Method::Major::GaussNewton;
+        graph->solver->param.methodMajor    = Solver::Method::Major::DDP;
 		graph->solver->param.methodMinor    = Solver::Method::Minor::Direct;
 		graph->solver->param.verbose        = true;
+
+        fileDuration = fopen("duration.csv", "w");
 	}
+
+    virtual void OnStep(){
+        App::OnStep();
+
+        real_t t = 0.0;
+        for (uint k = 0; k < graph->ticks.size(); k++) {
+			DiMP::CentroidKey* key = (DiMP::CentroidKey*)centroid->traj.GetKeypoint(graph->ticks[k]);
+            fprintf(fileDuration, "%f, ", t);
+            if(key->next){
+                t += key->var_duration->val;
+			}
+        }
+        fprintf(fileDuration, "\n");
+    }
 
 	virtual void OnAction(int menu, int id) {
 		if (menu == MENU_MAIN) {
