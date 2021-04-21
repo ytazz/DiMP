@@ -131,6 +131,10 @@ void CentroidKey::AddCon(Solver* solver) {
 
 		ends[i].con_contact = new CentroidEndContactCon(solver, name + "_contact", this, i, 1.0);
 
+        if(next){
+            solver->AddTransitionCon(ends[i].con_pos, tick->idx);
+        }
+
         solver->AddCostCon(ends[i].con_pos_range[0]   , tick->idx);
         solver->AddCostCon(ends[i].con_pos_range[1]   , tick->idx);
         solver->AddCostCon(ends[i].con_pos_range[2]   , tick->idx);
@@ -1063,7 +1067,7 @@ void CentroidEndVelRangeCon::Prepare(){
 
 void CentroidEndContactCon::Prepare(){
 	face = obj->cen->FindFace(obj->ends[iend].var_pos->val, pf, nf);
-    DSTR << obj->ends[iend].var_pos->val << " " << pf << " " << nf << endl;
+    //DSTR << obj->ends[iend].var_pos->val << " " << pf << " " << nf << endl;
 }
 /*
 void CentroidEndForceRangeCon::Prepare(){
@@ -1206,6 +1210,7 @@ void CentroidVelConR::CalcDeviation(){
 void CentroidTimeCon::CalcDeviation(){
 	y[0] = obj[1]->var_time->val - (obj[0]->var_time->val + obj[0]->var_duration->val);
 }
+
 void CentroidEndPosCon::CalcDeviation(){
 	if(obj[0]->ends[iend].contact){
 		y = obj[1]->ends[iend].var_pos->val - (obj[0]->ends[iend].var_pos->val);
@@ -1300,8 +1305,14 @@ void CentroidVelConR::CalcLhs(){
 void CentroidTimeCon::CalcLhs(){
 	obj[1]->var_time->val = obj[0]->var_time->val + obj[0]->var_duration->val;
 }
+
 void CentroidEndPosCon::CalcLhs(){
-	obj[1]->ends[iend].var_pos->val = obj[0]->ends[iend].var_pos->val + obj[0]->ends[iend].var_vel->val*obj[0]->var_duration->val;
+	if(obj[0]->ends[iend].contact){
+		obj[1]->ends[iend].var_pos->val = obj[0]->ends[iend].var_pos->val;
+	}
+	else{
+    	obj[1]->ends[iend].var_pos->val = obj[0]->ends[iend].var_pos->val + obj[0]->ends[iend].var_vel->val*obj[0]->var_duration->val;
+	}
 }
 /*
 void CentroidEndStiffCon::CalcLhs(){

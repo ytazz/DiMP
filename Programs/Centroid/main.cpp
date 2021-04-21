@@ -110,11 +110,11 @@ public:
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidVelT     ), false);
 		graph->solver->Enable(ID(DiMP::ConTag::CentroidVelR     ), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidTime     ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndRange ), false);
+		graph->solver->Enable(ID(DiMP::ConTag::CentroidEndRange ), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndPos   ), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndStiff ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndMoment), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndContact), false);
+		graph->solver->Enable(ID(DiMP::ConTag::CentroidEndMoment), false);
+		graph->solver->Enable(ID(DiMP::ConTag::CentroidEndContact), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndVel  ), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndForce), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndCmpl), false);
