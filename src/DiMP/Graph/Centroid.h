@@ -116,11 +116,16 @@ public:
 			vec3_t  velRangeMax;
 			vec3_t  momentRangeMin;
 			vec3_t  momentRangeMax;
+            vec2_t  copRangeMin;
+            vec2_t  copRangeMax;
 		};
 
 		real_t	m;  //< mass
 		real_t  I;  //< inertia
 		real_t	g;  //< gravity
+
+        vec3_t  bodyRangeMin;
+        vec3_t  bodyRangeMax;
 		
 		vector<End>   ends;
 		

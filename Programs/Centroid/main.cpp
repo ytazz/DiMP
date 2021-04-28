@@ -48,6 +48,9 @@ public:
 		centroid->param.g = 9.8;
 		centroid->param.m = 1.0;
 		centroid->param.I = 1.0;
+
+        centroid->param.bodyRangeMin = vec3_t(-0.1, -0.1, -0.25);
+        centroid->param.bodyRangeMax = vec3_t( 0.1,  0.1,  0.25);
 		
 		const int nend = 2;
 		centroid->param.ends.resize(nend);
@@ -67,6 +70,9 @@ public:
 
 			centroid->param.ends[i].momentRangeMin = vec3_t(-0.0, -0.0, -1.0);
 			centroid->param.ends[i].momentRangeMax = vec3_t( 0.0,  0.0,  1.0);
+
+            centroid->param.ends[i].copRangeMin = vec2_t(-0.1, -0.05);
+			centroid->param.ends[i].copRangeMax = vec2_t( 0.1,  0.05);
 		}
 
         centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(-10.0, -10.0), vec2_t( 1.0, 10.0), vec3_t(0.0, 0.0, 0.0), quat_t::Rot(Rad( 10.0), 'x')));
@@ -110,11 +116,11 @@ public:
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidVelT     ), false);
 		graph->solver->Enable(ID(DiMP::ConTag::CentroidVelR     ), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidTime     ), false);
-		graph->solver->Enable(ID(DiMP::ConTag::CentroidEndRange ), false);
+		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndRange ), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndPos   ), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndStiff ), false);
-		graph->solver->Enable(ID(DiMP::ConTag::CentroidEndMoment), false);
-		graph->solver->Enable(ID(DiMP::ConTag::CentroidEndContact), false);
+		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndMoment), false);
+		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndContact), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndVel  ), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndForce), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndCmpl), false);
@@ -124,7 +130,7 @@ public:
 		graph->solver->param.cutoffStepSize = 0.5;
 		graph->solver->param.minStepSize    = 0.5;
 		graph->solver->param.maxStepSize    = 1.0;
-		//graph->solver->param.methodMajor    = Solver::Method::Major::GaussNewton;
+        //graph->solver->param.methodMajor    = Solver::Method::Major::GaussNewton;
         graph->solver->param.methodMajor    = Solver::Method::Major::DDP;
 		graph->solver->param.methodMinor    = Solver::Method::Minor::Direct;
 		graph->solver->param.verbose        = true;

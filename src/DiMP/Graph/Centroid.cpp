@@ -412,6 +412,9 @@ Centroid::Param::Param() {
 	g  = 9.8;
 	m  = 1.0;
 	I  = 1.0;
+
+    bodyRangeMin = vec3_t(-0.1, -0.1, -0.1);
+    bodyRangeMax = vec3_t( 0.1,  0.1,  0.1);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -721,11 +724,6 @@ vec3_t Centroid::ComPos(real_t t, int type) {
 	}
 
 	return L*pt;
-	//return InterpolatePos(
-	//	t,
-	//	k0->var_time->val*T, k0->var_pos_t->val*L, k0->var_vel_t->val*V,
-	//	k1->var_time->val*T, k1->var_pos_t->val*L, k1->var_vel_t->val*V,
-	//	type);
 }
 
 vec3_t Centroid::ComVel(real_t t, int type) {
@@ -748,11 +746,6 @@ vec3_t Centroid::ComVel(real_t t, int type) {
 	}
 
 	return V*vt;
-	//return InterpolateVel(
-	//	t,
-	//	k0->var_time->val*T, k0->var_pos_t->val*L, k0->var_vel_t->val*V,
-	//	k1->var_time->val*T, k1->var_pos_t->val*L, k1->var_vel_t->val*V,
-	//	type);
 }
 
 quat_t Centroid::ComOri(real_t t, int type) {
@@ -895,13 +888,57 @@ void Centroid::CreateSnapshot(real_t t){
 }
 
 void Centroid::DrawSnapshot(Render::Canvas* canvas, Render::Config* conf) {
-	if (conf->Set(canvas, Render::Item::CentroidEnd, this)) {
-		// lines connecting com and feet
+    // body box
+    if(conf->Set(canvas, Render::Item::CentroidPos, this)){
+        vec3_t vtx[8];
+        vtx[0] = vec3_t(param.bodyRangeMin.x, param.bodyRangeMin.y, param.bodyRangeMin.z);
+        vtx[1] = vec3_t(param.bodyRangeMin.x, param.bodyRangeMax.y, param.bodyRangeMin.z);
+        vtx[2] = vec3_t(param.bodyRangeMax.x, param.bodyRangeMax.y, param.bodyRangeMin.z);
+        vtx[3] = vec3_t(param.bodyRangeMax.x, param.bodyRangeMin.y, param.bodyRangeMin.z);
+        vtx[4] = vec3_t(param.bodyRangeMin.x, param.bodyRangeMin.y, param.bodyRangeMax.z);
+        vtx[5] = vec3_t(param.bodyRangeMin.x, param.bodyRangeMax.y, param.bodyRangeMax.z);
+        vtx[6] = vec3_t(param.bodyRangeMax.x, param.bodyRangeMax.y, param.bodyRangeMax.z);
+        vtx[7] = vec3_t(param.bodyRangeMax.x, param.bodyRangeMin.y, param.bodyRangeMax.z);
+        for(int j = 0; j < 2; j++){
+		    canvas->BeginPath();
+		    canvas->MoveTo(snapshot.pos + snapshot.ori*vtx[4*j+0]);
+		    canvas->LineTo(snapshot.pos + snapshot.ori*vtx[4*j+1]);
+		    canvas->LineTo(snapshot.pos + snapshot.ori*vtx[4*j+2]);
+		    canvas->LineTo(snapshot.pos + snapshot.ori*vtx[4*j+3]);
+		    canvas->LineTo(snapshot.pos + snapshot.ori*vtx[4*j+0]);
+		    canvas->EndPath();
+        }
+		for(int j = 0; j < 4; j++){
+		    canvas->BeginPath();
+		    canvas->MoveTo(snapshot.pos + snapshot.ori*vtx[0+j]);
+		    canvas->LineTo(snapshot.pos + snapshot.ori*vtx[4+j]);
+		    canvas->EndPath();
+        }
+    }
+
+    if (conf->Set(canvas, Render::Item::CentroidEnd, this)) {
+		// lines connecting com and end
 		for(int i = 0; i < param.ends.size(); i++){
 			canvas->BeginPath();
 			canvas->MoveTo(snapshot.pos);
 			canvas->LineTo(snapshot.pos + snapshot.ori*param.ends[i].basePos);
 			canvas->LineTo(snapshot.ends[i].pos);
+			canvas->EndPath();
+		}
+
+        // end rectangle
+        for(int i = 0; i < param.ends.size(); i++){
+            vec3_t vtx[4];
+            vtx[0] = vec3_t(param.ends[i].copRangeMin.x, param.ends[i].copRangeMin.y, 0.0);
+            vtx[1] = vec3_t(param.ends[i].copRangeMin.x, param.ends[i].copRangeMax.y, 0.0);
+            vtx[2] = vec3_t(param.ends[i].copRangeMax.x, param.ends[i].copRangeMax.y, 0.0);
+            vtx[3] = vec3_t(param.ends[i].copRangeMax.x, param.ends[i].copRangeMin.y, 0.0);
+			canvas->BeginPath();
+			canvas->MoveTo(snapshot.ends[i].pos + vtx[0]);
+			canvas->LineTo(snapshot.ends[i].pos + vtx[1]);
+			canvas->LineTo(snapshot.ends[i].pos + vtx[2]);
+			canvas->LineTo(snapshot.ends[i].pos + vtx[3]);
+			canvas->LineTo(snapshot.ends[i].pos + vtx[0]);
 			canvas->EndPath();
 		}
 	}
