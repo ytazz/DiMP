@@ -857,17 +857,19 @@ void Centroid::Draw(Render::Canvas* canvas, Render::Config* conf) {
 		}
 	}
 
-	for(Face& f : faces){
-		canvas->BeginLayer("centroid_face", true);
-		canvas->BeginPath();
-		canvas->MoveTo(f.pos + f.ori*vec3_t(f.rangeMin.x, f.rangeMin.y, 0.0));
-		canvas->LineTo(f.pos + f.ori*vec3_t(f.rangeMax.x, f.rangeMin.y, 0.0));
-		canvas->LineTo(f.pos + f.ori*vec3_t(f.rangeMax.x, f.rangeMax.y, 0.0));
-		canvas->LineTo(f.pos + f.ori*vec3_t(f.rangeMin.x, f.rangeMax.y, 0.0));
-		canvas->LineTo(f.pos + f.ori*vec3_t(f.rangeMin.x, f.rangeMin.y, 0.0));
-		canvas->EndPath();
-		canvas->EndLayer();
-	}
+    if(conf->Set(canvas, Render::Item::CentroidFace, this)){
+	    for(Face& f : faces){
+		    canvas->BeginLayer("centroid_face", true);
+		    canvas->BeginPath();
+		    canvas->MoveTo(f.pos + f.ori*vec3_t(f.rangeMin.x, f.rangeMin.y, 0.0));
+		    canvas->LineTo(f.pos + f.ori*vec3_t(f.rangeMax.x, f.rangeMin.y, 0.0));
+		    canvas->LineTo(f.pos + f.ori*vec3_t(f.rangeMax.x, f.rangeMax.y, 0.0));
+		    canvas->LineTo(f.pos + f.ori*vec3_t(f.rangeMin.x, f.rangeMax.y, 0.0));
+		    canvas->LineTo(f.pos + f.ori*vec3_t(f.rangeMin.x, f.rangeMin.y, 0.0));
+		    canvas->EndPath();
+		    canvas->EndLayer();
+	    }
+    }
 }
 
 void Centroid::CreateSnapshot(real_t t, Centroid::Snapshot& s){
@@ -889,7 +891,7 @@ void Centroid::CreateSnapshot(real_t t){
 
 void Centroid::DrawSnapshot(Render::Canvas* canvas, Render::Config* conf) {
     // body box
-    if(conf->Set(canvas, Render::Item::CentroidPos, this)){
+    if(conf->Set(canvas, Render::Item::CentroidTorso, this)){
         vec3_t vtx[8];
         vtx[0] = vec3_t(param.bodyRangeMin.x, param.bodyRangeMin.y, param.bodyRangeMin.z);
         vtx[1] = vec3_t(param.bodyRangeMin.x, param.bodyRangeMax.y, param.bodyRangeMin.z);

@@ -31,6 +31,7 @@ bool Config::Set(Canvas* canvas, int attr, Node* node){
 	else if(attr == Item::CentroidEnd     ){ c = "black"  ; lw = 1.0f; }
 	else if(attr == Item::CentroidFace    ){ c = "green"  ; lw = 1.0f; }
 	else if(attr == Item::CentroidForce   ){ c = "magenta"; lw = 1.0f; }
+    else if(attr == Item::CentroidTorso   ){ c = "black"  ; lw = 1.0f; }
 
 	canvas->SetLineColor(c, 0);
 	canvas->SetLineColor(c, 1);
