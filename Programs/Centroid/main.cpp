@@ -112,9 +112,9 @@ public:
 		graph->Init();
 
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidPosT    ), false);
-		graph->solver->Enable(ID(DiMP::ConTag::CentroidPosR     ), false);
+		//graph->solver->Enable(ID(DiMP::ConTag::CentroidPosR     ), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidVelT     ), false);
-		graph->solver->Enable(ID(DiMP::ConTag::CentroidVelR     ), false);
+		//graph->solver->Enable(ID(DiMP::ConTag::CentroidVelR     ), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidTime     ), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndRange ), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndPos   ), false);
@@ -130,8 +130,8 @@ public:
 		graph->solver->param.cutoffStepSize = 0.5;
 		graph->solver->param.minStepSize    = 0.5;
 		graph->solver->param.maxStepSize    = 1.0;
-        //graph->solver->param.methodMajor    = Solver::Method::Major::GaussNewton;
-        graph->solver->param.methodMajor    = Solver::Method::Major::DDP;
+        graph->solver->param.methodMajor    = Solver::Method::Major::GaussNewton;
+        //graph->solver->param.methodMajor    = Solver::Method::Major::DDP;
 		graph->solver->param.methodMinor    = Solver::Method::Minor::Direct;
 		graph->solver->param.verbose        = true;
 
