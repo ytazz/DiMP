@@ -40,7 +40,7 @@ public:
 
 		vec3_t startPos(0.0, 0.0, 1.0);
 		quat_t startOri = quat_t();
-		vec3_t goalPos (6, 0.0, 1.0);
+		vec3_t goalPos (3.0, 0.0, 1.0);
 		quat_t goalOri  = quat_t::Rot(Rad(30.0), 'z');
 		real_t goalTime = 5.0;
 		real_t spacing  = 0.2;
@@ -75,26 +75,16 @@ public:
 			centroid->param.ends[i].copRangeMax = vec2_t( 0.1,  0.05);
 		}
 
+        // flat ground
+        centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(-10.0, -10.0), vec2_t( 10.0, 10.0), vec3_t(0.0, 0.0, 0.0), quat_t()));
+		
+        /* 
+        // uneven terrain
         centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(-10.0, -10.0), vec2_t( 1.0, 10.0), vec3_t(0.0, 0.0, 0.0), quat_t::Rot(Rad( 10.0), 'x')));
 		centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(  2.5, -10.0), vec2_t( 3.0, 10.0), vec3_t(0.0, 0.0, 0.3), quat_t::Rot(Rad(-10.0), 'x')));
 		centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(  4.5, -10.0), vec2_t(10.0, 10.0), vec3_t(0.0, 0.0, 0.3), quat_t::Rot(Rad(-10.0), 'x')));
-		//centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(  1.0, -10.0), vec2_t( 1.5, 10.0), 0.3));
-        //centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(1.25, -1.0), vec2_t(1.75, 1.0), 0.4));
-		//centroid->param.ends[1].rangeMin = vec3_t(-0.25,  0.0, -1.1);
-		//centroid->param.ends[1].rangeMax = vec3_t( 0.25,  0.3, -0.9);
+        */
 
-		/*
-		centroid->param.faces.resize(1);
-		DiMP::Centroid::Param::Face& f = centroid->param.faces[0];
-		const real_t d = 3.0;
-		f.vertices.resize(4);
-		f.vertices[0] = vec3_t( 10.0,  10.0, 0.0);
-		f.vertices[1] = vec3_t(-10.0,  10.0, 0.0);
-		f.vertices[2] = vec3_t(-10.0, -10.0, 0.0);
-		f.vertices[3] = vec3_t( 10.0, -10.0, 0.0);
-		f.mu  = 1.0;
-		f.eta = 1.0;
-		*/
 		const int N = 25;
 		const real_t dt = goalTime/((real_t)N);
 		for(int k = 0; k <= N; k++)
@@ -103,10 +93,14 @@ public:
 		centroid->waypoints.push_back(DiMP::Centroid::Waypoint(0, 0.0, startPos, startOri, vec3_t(), vec3_t(), true, true, true, true));
 		centroid->waypoints.back().ends.push_back(DiMP::Centroid::Waypoint::End(vec3_t(startPos.x, startPos.y - spacing/2.0, 0.0), vec3_t(), true, true));
 		centroid->waypoints.back().ends.push_back(DiMP::Centroid::Waypoint::End(vec3_t(startPos.x, startPos.y + spacing/2.0, 0.0), vec3_t(), true, true));
-		
-		centroid->waypoints.push_back(DiMP::Centroid::Waypoint(N, dt*N, goalPos, goalOri, vec3_t(), vec3_t(), true, true, true, true));
-		centroid->waypoints.back().ends.push_back(DiMP::Centroid::Waypoint::End(vec3_t(goalPos.x, goalPos.y - spacing/2.0, 0.0), vec3_t(), true, true));
-		centroid->waypoints.back().ends.push_back(DiMP::Centroid::Waypoint::End(vec3_t(goalPos.x, goalPos.y + spacing/2.0, 0.0), vec3_t(), true, true));
+
+        //centroid->waypoints.push_back(DiMP::Centroid::Waypoint(0, 0.0, startPos, startOri, vec3_t(), vec3_t(), true, true, true, true));
+		//centroid->waypoints.back().ends.push_back(DiMP::Centroid::Waypoint::End(vec3_t(startPos.x, startPos.y - spacing/2.0, 0.0), vec3_t(), true, true));
+		//centroid->waypoints.back().ends.push_back(DiMP::Centroid::Waypoint::End(vec3_t(startPos.x, startPos.y + spacing/2.0, 0.0), vec3_t(), true, true));
+
+		centroid->waypoints.push_back(DiMP::Centroid::Waypoint(N, dt*N, goalPos, goalOri, vec3_t(), vec3_t(), false, false, false, false));
+		centroid->waypoints.back().ends.push_back(DiMP::Centroid::Waypoint::End(vec3_t(goalPos.x, goalPos.y - spacing/2.0, 0.0), vec3_t(), false, false));
+		centroid->waypoints.back().ends.push_back(DiMP::Centroid::Waypoint::End(vec3_t(goalPos.x, goalPos.y + spacing/2.0, 0.0), vec3_t(), false, false));
 		
 		graph->scale.Set(1.0, 1.0, 1.0);
 		graph->Init();
@@ -130,8 +124,8 @@ public:
 		graph->solver->param.cutoffStepSize = 0.5;
 		graph->solver->param.minStepSize    = 0.5;
 		graph->solver->param.maxStepSize    = 1.0;
-        graph->solver->param.methodMajor    = Solver::Method::Major::GaussNewton;
-        //graph->solver->param.methodMajor    = Solver::Method::Major::DDP;
+        //graph->solver->param.methodMajor    = Solver::Method::Major::GaussNewton;
+        graph->solver->param.methodMajor    = Solver::Method::Major::DDP;
 		graph->solver->param.methodMinor    = Solver::Method::Minor::Direct;
 		graph->solver->param.verbose        = true;
 

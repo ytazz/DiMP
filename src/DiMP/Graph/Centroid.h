@@ -10,6 +10,7 @@ struct CentroidPosConR;
 struct CentroidVelConT;
 struct CentroidVelConR;
 struct CentroidTimeCon;
+struct CentroidEffortCon;
 struct CentroidEndPosCon;
 struct CentroidEndPosRangeCon;
 struct CentroidEndVelRangeCon;
@@ -33,13 +34,14 @@ public:
 	SVar*   var_time;
 	SVar*   var_duration;  //< duration of this contact phase
 	
-	CentroidPosConT*  con_pos_t;
-	CentroidPosConR*  con_pos_r;
-	CentroidVelConT*  con_vel_t;
-	CentroidVelConR*  con_vel_r;
-	CentroidTimeCon*  con_time;
-	RangeConS*        con_duration_range;
-	MatchConV3*       con_vel_match;
+	CentroidPosConT*    con_pos_t;
+	CentroidPosConR*    con_pos_r;
+	CentroidVelConT*    con_vel_t;
+	CentroidVelConR*    con_vel_r;
+	CentroidTimeCon*    con_time;
+	RangeConS*          con_duration_range;
+    CentroidEffortCon*  con_effort;
+	//MatchConV3*       con_vel_match;
 
 	int  iend;   //< end-effector index
 
@@ -290,6 +292,13 @@ struct CentroidTimeCon : CentroidCon{
 	virtual void  CalcLhs();
 		
 	CentroidTimeCon(Solver* solver, string _name, CentroidKey* _obj, real_t _scale);
+};
+
+struct CentroidEffortCon : CentroidCon{
+	virtual void  CalcCoef();
+	virtual void  CalcDeviation();
+		
+	CentroidEffortCon(Solver* solver, string _name, CentroidKey* _obj, real_t _scale);
 };
 
 struct CentroidEndPosCon : CentroidCon{
