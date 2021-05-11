@@ -41,6 +41,8 @@ public:
 	CentroidTimeCon*    con_time;
 	RangeConS*          con_duration_range;
     CentroidEffortCon*  con_effort;
+    FixConV3*           con_des_pos_t;
+    FixConQ*            con_des_pos_r;
 	//MatchConV3*       con_vel_match;
 
 	int  iend;   //< end-effector index
