@@ -10,7 +10,7 @@ struct CentroidPosConR;
 struct CentroidVelConT;
 struct CentroidVelConR;
 struct CentroidTimeCon;
-struct CentroidEffortCon;
+struct CentroidEndEffortCon;
 struct CentroidEndPosCon;
 struct CentroidEndPosRangeCon;
 struct CentroidEndVelRangeCon;
@@ -40,10 +40,10 @@ public:
 	CentroidVelConR*    con_vel_r;
 	CentroidTimeCon*    con_time;
 	RangeConS*          con_duration_range;
-    CentroidEffortCon*  con_effort;
     FixConV3*           con_des_pos_t;
     FixConQ*            con_des_pos_r;
-	//MatchConV3*       con_vel_match;
+	//MatchConV3*         con_vel_match;
+    FixConV3*           con_vel_zero;
 
 	int  iend;   //< end-effector index
 
@@ -86,6 +86,7 @@ public:
 		RangeConS*                con_stiff_range;
 		RangeConV3*               con_moment_range[3];
 		CentroidEndContactCon*    con_contact;
+        CentroidEndEffortCon*     con_effort;
 
 		real_t k_pbar_pe;
 		vec3_t k_pbar_le;
@@ -296,13 +297,6 @@ struct CentroidTimeCon : CentroidCon{
 	CentroidTimeCon(Solver* solver, string _name, CentroidKey* _obj, real_t _scale);
 };
 
-struct CentroidEffortCon : CentroidCon{
-	virtual void  CalcCoef();
-	virtual void  CalcDeviation();
-		
-	CentroidEffortCon(Solver* solver, string _name, CentroidKey* _obj, real_t _scale);
-};
-
 struct CentroidEndPosCon : CentroidCon{
 	int iend;
 
@@ -372,21 +366,17 @@ struct CentroidEndContactCon : Constraint{
 
 };
 
-/*
-struct CentroidEndForceRangeCon : Constraint{
-	CentroidKey* obj;
-	int          iend;
-	vec3_t       dir;
-	real_t       le;
-	vec3_t       p;
-	vec3_t       pe;
-	
-	void Prepare();
+struct CentroidEndEffortCon : Constraint{
+	CentroidKey*     obj;
+	int              iend;
+    real_t           le, le2;
 
-	virtual void  CalcCoef();
+    void Prepare();
+
+    virtual void  CalcCoef();
 	virtual void  CalcDeviation();
-	
-	CentroidEndForceRangeCon(Solver* solver, int _tag, string _name, CentroidKey* _obj, int _iend, vec3_t _dir, real_t _scale);
+		
+	CentroidEndEffortCon(Solver* solver, string _name, CentroidKey* _obj, int _iend, real_t _scale);
 };
-*/
+
 }
