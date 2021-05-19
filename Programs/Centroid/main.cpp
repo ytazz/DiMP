@@ -40,7 +40,7 @@ public:
 
 		vec3_t startPos(0.0, 0.0, 1.0);
 		quat_t startOri = quat_t();
-		vec3_t goalPos (8.0, 0.0, 1.0);
+		vec3_t goalPos (10.0, 0.0, 1.0);
 		quat_t goalOri  = quat_t::Rot(Rad(0.0), 'z');
 		real_t goalTime = 5.0;
 		real_t spacing  = 0.2;
@@ -78,13 +78,11 @@ public:
         // flat ground
         centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(-10.0, -10.0), vec2_t( 10.0, 10.0), vec3_t(0.0, 0.0, 0.0), quat_t()));
 		
-        /* 
         // uneven terrain
-        centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(-10.0, -10.0), vec2_t( 1.0, 10.0), vec3_t(0.0, 0.0, 0.0), quat_t::Rot(Rad( 10.0), 'x')));
-		centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(  2.5, -10.0), vec2_t( 3.0, 10.0), vec3_t(0.0, 0.0, 0.3), quat_t::Rot(Rad(-10.0), 'x')));
-		centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(  4.5, -10.0), vec2_t(10.0, 10.0), vec3_t(0.0, 0.0, 0.3), quat_t::Rot(Rad(-10.0), 'x')));
-        */
-
+        //centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(-10.0, -10.0), vec2_t( 1.0, 10.0), vec3_t(0.0, 0.0, 0.0), quat_t::Rot(Rad( 10.0), 'x')));
+		//centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(  2.5, -10.0), vec2_t( 3.0, 10.0), vec3_t(0.0, 0.0, 0.3), quat_t::Rot(Rad(-10.0), 'x')));
+		//centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(  4.5, -10.0), vec2_t(10.0, 10.0), vec3_t(0.0, 0.0, 0.3), quat_t::Rot(Rad(-10.0), 'x')));
+        
 		const int N = 25;
 		const real_t dt = goalTime/((real_t)N);
 		for(int k = 0; k <= N; k++)
@@ -121,8 +119,8 @@ public:
 
 		graph->solver->SetCorrection(ID(), 0.5);
 		graph->solver->param.numIter[0]     = 20;
-		graph->solver->param.cutoffStepSize = 0.5;
-		graph->solver->param.minStepSize    = 0.5;
+		graph->solver->param.cutoffStepSize = 0.1;
+		graph->solver->param.minStepSize    = 1.0;
 		graph->solver->param.maxStepSize    = 1.0;
         //graph->solver->param.methodMajor    = Solver::Method::Major::GaussNewton;
         graph->solver->param.methodMajor    = Solver::Method::Major::DDP;
@@ -157,9 +155,9 @@ public:
 					//fprintf(file, "%f, %f, %f, ", key->var_pos_t->val.x, key->var_pos_t->val.y, key->var_pos_t->val.z);
 					//fprintf(file, "%f, %f, %f, ", key->var_vel_t->val.x, key->var_vel_t->val.y, key->var_vel_t->val.z);
 					
-					for(int i = 0; i < key->ends.size(); i++){
-						fprintf(file, "%d, ", key->ends[i].contact);
-					}
+					//for(int i = 0; i < key->ends.size(); i++){
+					//	fprintf(file, "%d, ", key->ends[i].contact);
+					//}
 					//for(int i = 0; i < key->ends.size(); i++){
 					//	fprintf(file, "%f, ", key->ends[i].con_effort->y.norm());
 					//}

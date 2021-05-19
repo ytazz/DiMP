@@ -10,11 +10,12 @@ struct CentroidPosConR;
 struct CentroidVelConT;
 struct CentroidVelConR;
 struct CentroidTimeCon;
-struct CentroidEndEffortCon;
+//struct CentroidEndEffortCon;
 struct CentroidEndPosCon;
 struct CentroidEndPosRangeCon;
 struct CentroidEndVelRangeCon;
 struct CentroidEndContactCon;
+//struct CentroidEndCmplCon;
 //struct CentroidEndStiffCon;
 //struct CentroidEndMomentCon;
 //struct CentroidEndForceRangeCon;
@@ -86,7 +87,8 @@ public:
 		RangeConS*                con_stiff_range;
 		RangeConV3*               con_moment_range[3];
 		CentroidEndContactCon*    con_contact;
-        CentroidEndEffortCon*     con_effort;
+        //CentroidEndEffortCon*     con_effort;
+        //CentroidEndCmplCon*       con_cmpl;
 
 		real_t k_pbar_pe;
 		vec3_t k_pbar_le;
@@ -363,20 +365,34 @@ struct CentroidEndContactCon : Constraint{
 	virtual void  Project(real_t& l, uint k);
 
 	CentroidEndContactCon(Solver* solver, string _name, CentroidKey* _obj, int _iend, real_t _scale);
-
 };
 
-struct CentroidEndEffortCon : Constraint{
-	CentroidKey*     obj;
-	int              iend;
-    real_t           le, le2;
+//struct CentroidEndCmplCon : Constraint{
+//	CentroidKey*     obj;
+//	int              iend;
+//    real_t           le;
+//    vec3_t           ve, ven;
+//	real_t           ve_norm;
+//
+//	void Prepare();
+//
+//	virtual void  CalcCoef();
+//	virtual void  CalcDeviation();
+//	
+//	CentroidEndCmplCon(Solver* solver, string _name, CentroidKey* _obj, int _iend, real_t _scale);
+//};
 
-    void Prepare();
-
-    virtual void  CalcCoef();
-	virtual void  CalcDeviation();
-		
-	CentroidEndEffortCon(Solver* solver, string _name, CentroidKey* _obj, int _iend, real_t _scale);
-};
+//struct CentroidEndEffortCon : Constraint{
+//	CentroidKey*     obj;
+//	int              iend;
+//    real_t           le, le2;
+//
+//    void Prepare();
+//
+//    virtual void  CalcCoef();
+//	virtual void  CalcDeviation();
+//		
+//	CentroidEndEffortCon(Solver* solver, string _name, CentroidKey* _obj, int _iend, real_t _scale);
+//};
 
 }
