@@ -314,10 +314,10 @@ void CentroidKey::Draw(Render::Canvas* canvas, Render::Config* conf) {
 	p = var_pos_t->val*cen->L;
 	canvas->Point(p);
 
-    //if(ncon > 0){
-	p = pbar*cen->L;
-	canvas->Point(p);
-    //}
+    if(ncon > 0){
+	    p = pbar*cen->L;
+	    canvas->Point(p);
+    }
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -471,13 +471,17 @@ void Centroid::Init() {
 	F = param.m*param.g;
 	M = F*L;
 
-	// end effector range
+    // end effector range
+	vector<bool> contact(param.ends.size(), false);
 	for (int k = 0; k < graph->ticks.size(); k++) {
 		CentroidKey* key = (CentroidKey*)traj.GetKeypoint(graph->ticks[k]);
 
 		key->iend = (k % key->ends.size());
-
+        contact[key->iend] = !contact[key->iend];
+		
 		for(int i = 0; i < key->ends.size(); i++){
+            key->ends[i].contact = contact[i];
+
 			for(int j = 0; j < 3; j++){
 				key->ends[i].con_pos_range[j]->_min = param.ends[i].posRangeMin[j]/L;
 				key->ends[i].con_pos_range[j]->_max = param.ends[i].posRangeMax[j]/L;

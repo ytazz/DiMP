@@ -40,7 +40,7 @@ public:
 
 		vec3_t startPos(0.0, 0.0, 1.0);
 		quat_t startOri = quat_t();
-		vec3_t goalPos (10.0, 0.0, 1.0);
+		vec3_t goalPos (8.0, 0.0, 1.0);
 		quat_t goalOri  = quat_t::Rot(Rad(0.0), 'z');
 		real_t goalTime = 5.0;
 		real_t spacing  = 0.2;
@@ -57,13 +57,13 @@ public:
 		for(int i = 0; i < nend; i++){
 			if(i == 0){
 				centroid->param.ends[i].basePos     = vec3_t( 0.0, -spacing/2.0,  0.0);
-				centroid->param.ends[i].posRangeMin = vec3_t(-0.5, -0.0        , -1.1);
-				centroid->param.ends[i].posRangeMax = vec3_t( 0.5,  0.0        , -0.9);
+				centroid->param.ends[i].posRangeMin = vec3_t(-0.3, -0.0        , -1.1);
+				centroid->param.ends[i].posRangeMax = vec3_t( 0.3,  0.0        , -0.9);
 			}
 			else{
 				centroid->param.ends[i].basePos     = vec3_t( 0.0,  spacing/2.0,  0.0);
-				centroid->param.ends[i].posRangeMin = vec3_t(-0.5, -0.0        , -1.1);
-				centroid->param.ends[i].posRangeMax = vec3_t( 0.5,  0.0        , -0.9);
+				centroid->param.ends[i].posRangeMin = vec3_t(-0.3, -0.0        , -1.1);
+				centroid->param.ends[i].posRangeMax = vec3_t( 0.3,  0.0        , -0.9);
 			}
 			centroid->param.ends[i].velRangeMin    = vec3_t(-1.5, -100.0, -100.0);
 			centroid->param.ends[i].velRangeMax    = vec3_t( 1.5,  100.0,  100.0);
@@ -147,11 +147,15 @@ public:
 	virtual void OnAction(int menu, int id) {
 		if (menu == MENU_MAIN) {
 			if(id == ID_SAVE){
-				const char* filename = "log.csv";
+				const char* filename = "schedule.csv";
 				FILE* file = fopen(filename, "w");
 				for (uint k = 0; k < graph->ticks.size(); k++) {
 					DiMP::CentroidKey* key = (DiMP::CentroidKey*)centroid->traj.GetKeypoint(graph->ticks[k]);
-					fprintf(file, "%f, %f, ", key->var_duration->val, key->var_time->val);
+                    for(int i = 0; i < key->ends.size(); i++){
+                        if(key->ends[i].contact){
+                            fprintf(file, "%d, %f, %f\n", i, key->var_time->val, key->var_duration->val);
+                        }
+                    }
 					//fprintf(file, "%f, %f, %f, ", key->var_pos_t->val.x, key->var_pos_t->val.y, key->var_pos_t->val.z);
 					//fprintf(file, "%f, %f, %f, ", key->var_vel_t->val.x, key->var_vel_t->val.y, key->var_vel_t->val.z);
 					
@@ -161,7 +165,7 @@ public:
 					//for(int i = 0; i < key->ends.size(); i++){
 					//	fprintf(file, "%f, ", key->ends[i].con_effort->y.norm());
 					//}
-					fprintf(file, "\n");
+					//fprintf(file, "\n");
 				}
 				fclose(file);
 			}
