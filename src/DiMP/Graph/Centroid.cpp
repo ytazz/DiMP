@@ -136,7 +136,11 @@ void CentroidKey::AddCon(Solver* solver) {
 		ends[i].con_vel_range[1] = new CentroidEndVelRangeCon(solver, ss.str() + "_vel_range1", this, i, vec3_t(0.0, 1.0, 0.0), node->graph->scale.pos_t);
 		ends[i].con_vel_range[2] = new CentroidEndVelRangeCon(solver, ss.str() + "_vel_range2", this, i, vec3_t(0.0, 0.0, 1.0), node->graph->scale.pos_t);
 
-		ends[i].con_contact = new CentroidEndContactCon(solver, name + "_contact", this, i, 1.0);
+        int nface = cen->faces.size();
+        ends[i].con_contact.resize(nface);
+        for(int j = 0; j < nface; j++){
+		    ends[i].con_contact[j] = new CentroidEndContactCon(solver, name + "_contact", this, i, j, 1.0);
+        }
 
         //ends[i].con_effort  = new CentroidEndEffortCon(solver, name + "_effort", this, i, 1.0);
 
@@ -146,7 +150,9 @@ void CentroidKey::AddCon(Solver* solver) {
         solver->AddCostCon(ends[i].con_vel_range[0]   , tick->idx);
         solver->AddCostCon(ends[i].con_vel_range[1]   , tick->idx);
         solver->AddCostCon(ends[i].con_vel_range[2]   , tick->idx);
-        solver->AddCostCon(ends[i].con_contact        , tick->idx);
+        
+        for(int j = 0; j < nface; j++)
+            solver->AddCostCon(ends[i].con_contact[j], tick->idx);
         
         //solver->AddCostCon(ends[i].con_effort         , tick->idx);
 	}
@@ -278,18 +284,21 @@ void CentroidKey::Prepare() {
 	for(int i = 0; i < ends.size(); i++){
 		End& end = ends[i];
 
-		if(/*iend == i && */end.contact){
-            end.con_contact->enabled = true;
-		    end.con_contact->_min = 0.0;
-		    end.con_contact->_max = 0.0;
+        for(int j = 0; j < end.con_contact.size(); j++){
+		    end.con_contact[j]->_min = 0.0;
+		    end.con_contact[j]->_max = (end.contact ? 0.0 : inf);
+        }
 
-            //end.con_cmpl->weight = 1.0*one;
-		}
-		else{
-			end.con_contact->enabled = true;
-		    end.con_contact->_min = 0.0;
-		    end.con_contact->_max = inf;
-		}
+		//if(/*iend == i && */end.contact){
+        //    //end.con_contact->enabled = true;
+        //
+        //    //end.con_cmpl->weight = 1.0*one;
+		//}
+		//else{
+		//	//end.con_contact->enabled = true;
+		//    end.con_contact->_min = 0.0;
+		//    end.con_contact->_max = inf;
+		//}
 
         //if(end.contact){
         //    end.con_effort->enabled = true;
@@ -340,6 +349,15 @@ Centroid::Face::Face(const vec2_t _rmin, const vec2_t _rmax, const vec3_t& _pos,
     ori      = _ori;
 }
 
+bool Centroid::Face::IsInside(const vec3_t& p){
+    bool inside = true;
+    for(Edge& e : edge){
+        inside &= !e.IsOutside(p);
+    }
+    return inside;
+}
+
+/*
 void Centroid::Face::CalcNearest(const vec3_t& p, vec3_t& pf, vec3_t& nf){
     for(Vertex& v : vtx){
         if( v.IsOutside(p) ){
@@ -359,7 +377,7 @@ void Centroid::Face::CalcNearest(const vec3_t& p, vec3_t& pf, vec3_t& nf){
     pf = p - (n*(p - c))*n;
     nf = n;
 }
-
+*/
 void Centroid::Face::Init(){
     vec3_t _p[4];
     vec3_t _n[4];
@@ -649,7 +667,7 @@ void Centroid::Finish(){
             for(CentroidKey::End& end : key->ends){
                  //DSTR << " v: " << end.var_vel->val << " l: " << end.var_stiff->val;
                 //DSTR << " cmpl: " << end.con_cmpl->y;
-                DSTR << " " << end.con_contact->enabled << " " << end.con_contact->y;
+                //DSTR << " " << end.con_contact->enabled << " " << end.con_contact->y;
             }
         }
         DSTR << endl;
@@ -658,6 +676,7 @@ void Centroid::Finish(){
 	TrajectoryNode::Finish();
 }
 
+/*
 Centroid::Face* Centroid::FindFace(const vec3_t& p, vec3_t& pf, vec3_t& nf){
 	Face*  fnear = 0;
     real_t dmin;
@@ -677,6 +696,7 @@ Centroid::Face* Centroid::FindFace(const vec3_t& p, vec3_t& pf, vec3_t& nf){
 
 	return fnear;
 }	
+*/
 
 vec3_t Centroid::ComPos(real_t t, int type) {
 	if(traj.empty())
@@ -905,7 +925,7 @@ void Centroid::DrawSnapshot(Render::Canvas* canvas, Render::Config* conf) {
             vtx[1] = vec3_t(param.ends[i].copRangeMin.x, param.ends[i].copRangeMax.y, 0.0);
             vtx[2] = vec3_t(param.ends[i].copRangeMax.x, param.ends[i].copRangeMax.y, 0.0);
             vtx[3] = vec3_t(param.ends[i].copRangeMax.x, param.ends[i].copRangeMin.y, 0.0);
-            //canvas->SetLineWidth(snapshot.ends[i].contact ? 2.0f : 1.0f);
+            canvas->SetLineWidth(snapshot.ends[i].contact ? 2.0f : 1.0f);
 			canvas->BeginPath();
 			canvas->MoveTo(snapshot.ends[i].pos + vtx[0]);
 			canvas->LineTo(snapshot.ends[i].pos + vtx[1]);
@@ -1012,10 +1032,12 @@ CentroidEndVelRangeCon::CentroidEndVelRangeCon(Solver* solver, string _name, Cen
 	AddR3Link(obj->ends[iend].var_vel);
 }
 
-CentroidEndContactCon::CentroidEndContactCon(Solver* solver, string _name, CentroidKey* _obj, int _iend, real_t _scale):
+CentroidEndContactCon::CentroidEndContactCon(Solver* solver, string _name, CentroidKey* _obj, int _iend, int _iface, real_t _scale):
 	Constraint(solver, 1, ID(ConTag::CentroidEndContact, _obj->node, _obj->tick, _name), _scale){
-	obj  = _obj;
-	iend = _iend;
+	obj   = _obj;
+	iend  = _iend;
+    iface = _iface;
+    //face  = &obj->cen->faces[iface];
 
 	AddR3Link(obj->ends[iend].var_pos);
 }
@@ -1056,7 +1078,7 @@ void CentroidEndVelRangeCon::Prepare(){
 }
 
 void CentroidEndContactCon::Prepare(){
-	face = obj->cen->FindFace(obj->ends[iend].var_pos->val, pf, nf);
+	//face = obj->cen->FindFace(obj->ends[iend].var_pos->val, pf, nf);
     //DSTR << obj->tick->idx << " " << pf << " " << nf << endl;
 }
 
@@ -1159,9 +1181,9 @@ void CentroidEndVelRangeCon::CalcCoef(){
 }
 
 void CentroidEndContactCon::CalcCoef(){
-	Prepare();
+	//Prepare();
 
-	((R3Link*)links[0])->SetCoef(nf);
+	((R3Link*)links[0])->SetCoef(obj->cen->faces[iface].n);
 }
 
 //void CentroidEndCmplCon::CalcCoef(){
@@ -1253,7 +1275,17 @@ void CentroidEndContactCon::CalcDeviation(){
 	y[0]   = 0.0;
 	on_lower = on_upper = active = false;
 
-	real_t r = nf*(obj->ends[iend].var_pos->val - pf);
+    Centroid::Face& face = obj->cen->faces[iface];
+
+    vec3_t pe = obj->ends[iend].var_pos->val;
+
+    if(!face.IsInside(pe)){
+        active = false;
+        return;
+    }
+
+	real_t r = face.n*(pe - face.c);
+
 	if(r < _min){
 		y[0]     = r - _min;
 		on_lower = true;

@@ -79,8 +79,8 @@ public:
         //centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(-1.0, -5.0), vec2_t( 10.0, 5.0), vec3_t(0.0, 0.0, 0.0), quat_t::Rot(Rad(0.0), 'y')));
 		
         // step
-        centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(-1.0, -5.0), vec2_t( 3.6, 5.0), vec3_t(0.0, 0.0, 0.0), quat_t()));
-		centroid->faces.push_back(DiMP::Centroid::Face(vec2_t( 3.5, -5.0), vec2_t( 8.0, 5.0), vec3_t(0.0, 0.0, 0.5), quat_t()));
+        centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(-1.0, -5.0), vec2_t( 3.5, 5.0), vec3_t(0.0, 0.0, 0.0), quat_t()));
+		centroid->faces.push_back(DiMP::Centroid::Face(vec2_t( 3.6, -5.0), vec2_t( 8.0, 5.0), vec3_t(0.0, 0.0, 0.5), quat_t()));
 
         // uneven terrain
         //centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(-10.0, -10.0), vec2_t( 1.0, 10.0), vec3_t(0.0, 0.0, 0.0), quat_t::Rot(Rad( 10.0), 'x')));
@@ -117,18 +117,15 @@ public:
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndStiff ), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndMoment), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndContact), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndVel  ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndForce), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndCmpl), false);
 
 		graph->solver->SetCorrection(ID(), 0.5);
 		graph->solver->param.numIter[0]     = 20;
 		graph->solver->param.cutoffStepSize = 0.1;
 		graph->solver->param.minStepSize    = 1.0;
 		graph->solver->param.maxStepSize    = 1.0;
-        graph->solver->param.methodMajor    = Solver::Method::Major::GaussNewton;
+        //graph->solver->param.methodMajor    = Solver::Method::Major::GaussNewton;
         graph->solver->param.methodMajor    = Solver::Method::Major::DDP;
-		//graph->solver->param.methodMinor    = Solver::Method::Minor::Direct;
+		graph->solver->param.methodMinor    = Solver::Method::Minor::Direct;
 		graph->solver->param.verbose        = true;
 
         fileDuration = fopen("duration.csv", "w");

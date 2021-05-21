@@ -81,12 +81,12 @@ public:
 		//MatchConV3*               con_pos_match;
 		//MatchConS*                con_stiff_match;
 		//MatchConV3*               con_moment_match;
-		CentroidEndPosCon*        con_pos;
-		CentroidEndPosRangeCon*   con_pos_range[3];
-		CentroidEndVelRangeCon*   con_vel_range[3];
-		RangeConS*                con_stiff_range;
-		RangeConV3*               con_moment_range[3];
-		CentroidEndContactCon*    con_contact;
+		CentroidEndPosCon*              con_pos;
+		CentroidEndPosRangeCon*         con_pos_range[3];
+		CentroidEndVelRangeCon*         con_vel_range[3];
+		RangeConS*                      con_stiff_range;
+		RangeConV3*                     con_moment_range[3];
+		vector<CentroidEndContactCon*>  con_contact;
         //CentroidEndEffortCon*     con_effort;
         //CentroidEndCmplCon*       con_cmpl;
 
@@ -165,7 +165,8 @@ public:
         vec3_t  n;
 
         void Init();
-        void CalcNearest(const vec3_t& p, vec3_t& pf, vec3_t& nf);
+        bool IsInside   (const vec3_t& p);
+        //void CalcNearest(const vec3_t& p, vec3_t& pf, vec3_t& nf);
 
 		Face(const vec2_t _rmin, const vec2_t _rmax, const vec3_t& _pos, const quat_t& _ori);
 	};
@@ -238,7 +239,7 @@ public:
 	virtual void        DrawSnapshot  (Render::Canvas* canvas, Render::Config* conf);
 	virtual void        Draw          (Render::Canvas* canvas, Render::Config* conf);
 
-	Face*  FindFace  (const vec3_t& p, vec3_t& pf, vec3_t& nf);
+	//Face*  FindFace  (const vec3_t& p, vec3_t& pf, vec3_t& nf);
 	vec3_t ComPos    (real_t t, int type = Interpolate::Cubic);
 	vec3_t ComVel    (real_t t, int type = Interpolate::Cubic);
 	quat_t ComOri    (real_t t, int type = Interpolate::SlerpDiff);
@@ -354,9 +355,12 @@ struct CentroidEndVelRangeCon : Constraint{
 struct CentroidEndContactCon : Constraint{
 	CentroidKey*     obj;
 	int              iend;
-	Centroid::Face*  face;
+    int              iface;
+	//Centroid::Face*  face;
+    vec3_t           pe;
     vec3_t           pf;
     vec3_t           nf;
+    bool             inside;
 	real_t           _min, _max;
 	bool	         on_lower, on_upper;
 
@@ -366,7 +370,7 @@ struct CentroidEndContactCon : Constraint{
 	virtual void  CalcDeviation();
 	virtual void  Project(real_t& l, uint k);
 
-	CentroidEndContactCon(Solver* solver, string _name, CentroidKey* _obj, int _iend, real_t _scale);
+	CentroidEndContactCon(Solver* solver, string _name, CentroidKey* _obj, int _iend, int _iface, real_t _scale);
 };
 
 //struct CentroidEndCmplCon : Constraint{
