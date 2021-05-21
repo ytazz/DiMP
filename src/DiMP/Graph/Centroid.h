@@ -204,6 +204,7 @@ public:
 		struct End{
 			vec3_t  pos;
 			vec3_t  force;
+            bool    contact;
 		};
 	
 		real_t       t;
@@ -237,12 +238,13 @@ public:
 	virtual void        DrawSnapshot  (Render::Canvas* canvas, Render::Config* conf);
 	virtual void        Draw          (Render::Canvas* canvas, Render::Config* conf);
 
-	Face*  FindFace (const vec3_t& p, vec3_t& pf, vec3_t& nf);
-	vec3_t ComPos   (real_t t, int type = Interpolate::Cubic);
-	vec3_t ComVel   (real_t t, int type = Interpolate::Cubic);
-	quat_t ComOri   (real_t t, int type = Interpolate::SlerpDiff);
-	vec3_t ComAngVel(real_t t, int type = Interpolate::Cubic);
-	vec3_t EndPos   (real_t t, int index, int type = Interpolate::LinearDiff);
+	Face*  FindFace  (const vec3_t& p, vec3_t& pf, vec3_t& nf);
+	vec3_t ComPos    (real_t t, int type = Interpolate::Cubic);
+	vec3_t ComVel    (real_t t, int type = Interpolate::Cubic);
+	quat_t ComOri    (real_t t, int type = Interpolate::SlerpDiff);
+	vec3_t ComAngVel (real_t t, int type = Interpolate::Cubic);
+	vec3_t EndPos    (real_t t, int index, int type = Interpolate::LinearDiff);
+	bool   EndContact(real_t t, int index);
 	//vec3_t EndForce (real_t t, int index, int type = Interpolate::LinearDiff);
 	
 	void CreateSnapshot(real_t t, Snapshot& s);

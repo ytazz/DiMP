@@ -278,7 +278,7 @@ void CentroidKey::Prepare() {
 	for(int i = 0; i < ends.size(); i++){
 		End& end = ends[i];
 
-		if(iend == i && end.contact){
+		if(/*iend == i && */end.contact){
             end.con_contact->enabled = true;
 		    end.con_contact->_min = 0.0;
 		    end.con_contact->_max = 0.0;
@@ -286,7 +286,9 @@ void CentroidKey::Prepare() {
             //end.con_cmpl->weight = 1.0*one;
 		}
 		else{
-			end.con_contact->enabled = false;
+			end.con_contact->enabled = true;
+		    end.con_contact->_min = 0.0;
+		    end.con_contact->_max = inf;
 		}
 
         //if(end.contact){
@@ -583,6 +585,11 @@ void Centroid::Init() {
 			key->ends[j].var_pos->locked = wp.ends[j].fix_pos;
 		}
 	}
+
+    // call prepare here so that initial trajectory is visualized properly
+    Prepare();
+
+    trajReady = false;
 }
 
 void Centroid::Prepare() {
@@ -642,6 +649,7 @@ void Centroid::Finish(){
             for(CentroidKey::End& end : key->ends){
                  //DSTR << " v: " << end.var_vel->val << " l: " << end.var_stiff->val;
                 //DSTR << " cmpl: " << end.con_cmpl->y;
+                DSTR << " " << end.con_contact->enabled << " " << end.con_contact->y;
             }
         }
         DSTR << endl;
@@ -759,6 +767,17 @@ vec3_t Centroid::EndPos(real_t t, int index, int type) {
 		type);
 }
 
+bool Centroid::EndContact(real_t t, int index) {
+	if(traj.empty())
+		return vec3_t();
+
+	KeyPair      kp = traj.GetSegment(t);
+	CentroidKey* k0 = (CentroidKey*)kp.first;
+	CentroidKey* k1 = (CentroidKey*)kp.second;
+
+    return k0->ends[index].contact;
+}
+
 void Centroid::CalcTrajectory() {
 	real_t tf = traj.back()->tick->time;
 	real_t dt = 0.01;
@@ -831,7 +850,8 @@ void Centroid::CreateSnapshot(real_t t, Centroid::Snapshot& s){
 
 	s.ends.resize(param.ends.size());
 	for(int i = 0; i < param.ends.size(); i++){
-		s.ends[i].pos   = EndPos  (t, i);
+		s.ends[i].pos     = EndPos    (t, i);
+        s.ends[i].contact = EndContact(t, i);
 	}
 }
 
@@ -885,6 +905,7 @@ void Centroid::DrawSnapshot(Render::Canvas* canvas, Render::Config* conf) {
             vtx[1] = vec3_t(param.ends[i].copRangeMin.x, param.ends[i].copRangeMax.y, 0.0);
             vtx[2] = vec3_t(param.ends[i].copRangeMax.x, param.ends[i].copRangeMax.y, 0.0);
             vtx[3] = vec3_t(param.ends[i].copRangeMax.x, param.ends[i].copRangeMin.y, 0.0);
+            //canvas->SetLineWidth(snapshot.ends[i].contact ? 2.0f : 1.0f);
 			canvas->BeginPath();
 			canvas->MoveTo(snapshot.ends[i].pos + vtx[0]);
 			canvas->LineTo(snapshot.ends[i].pos + vtx[1]);
@@ -1036,6 +1057,7 @@ void CentroidEndVelRangeCon::Prepare(){
 
 void CentroidEndContactCon::Prepare(){
 	face = obj->cen->FindFace(obj->ends[iend].var_pos->val, pf, nf);
+    //DSTR << obj->tick->idx << " " << pf << " " << nf << endl;
 }
 
 //void CentroidEndCmplCon::Prepare(){

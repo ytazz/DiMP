@@ -40,7 +40,7 @@ public:
 
 		vec3_t startPos(0.0, 0.0, 1.0);
 		quat_t startOri = quat_t();
-		vec3_t goalPos (8.0, 0.0, 1.0);
+		vec3_t goalPos (8.0, 0.0, 1.5);
 		quat_t goalOri  = quat_t::Rot(Rad(0.0), 'z');
 		real_t goalTime = 5.0;
 		real_t spacing  = 0.2;
@@ -76,8 +76,12 @@ public:
 		}
 
         // flat ground
-        centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(-10.0, -10.0), vec2_t( 10.0, 10.0), vec3_t(0.0, 0.0, 0.0), quat_t()));
+        //centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(-1.0, -5.0), vec2_t( 10.0, 5.0), vec3_t(0.0, 0.0, 0.0), quat_t::Rot(Rad(0.0), 'y')));
 		
+        // step
+        centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(-1.0, -5.0), vec2_t( 3.6, 5.0), vec3_t(0.0, 0.0, 0.0), quat_t()));
+		centroid->faces.push_back(DiMP::Centroid::Face(vec2_t( 3.5, -5.0), vec2_t( 8.0, 5.0), vec3_t(0.0, 0.0, 0.5), quat_t()));
+
         // uneven terrain
         //centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(-10.0, -10.0), vec2_t( 1.0, 10.0), vec3_t(0.0, 0.0, 0.0), quat_t::Rot(Rad( 10.0), 'x')));
 		//centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(  2.5, -10.0), vec2_t( 3.0, 10.0), vec3_t(0.0, 0.0, 0.3), quat_t::Rot(Rad(-10.0), 'x')));
@@ -122,9 +126,9 @@ public:
 		graph->solver->param.cutoffStepSize = 0.1;
 		graph->solver->param.minStepSize    = 1.0;
 		graph->solver->param.maxStepSize    = 1.0;
-        //graph->solver->param.methodMajor    = Solver::Method::Major::GaussNewton;
+        graph->solver->param.methodMajor    = Solver::Method::Major::GaussNewton;
         graph->solver->param.methodMajor    = Solver::Method::Major::DDP;
-		graph->solver->param.methodMinor    = Solver::Method::Minor::Direct;
+		//graph->solver->param.methodMinor    = Solver::Method::Minor::Direct;
 		graph->solver->param.verbose        = true;
 
         fileDuration = fopen("duration.csv", "w");
