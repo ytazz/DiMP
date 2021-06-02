@@ -87,6 +87,7 @@ public:
 		RangeConS*                      con_stiff_range;
 		RangeConV3*                     con_moment_range[3];
 		vector<CentroidEndContactCon*>  con_contact;
+        FixConS*                        con_stiff_zero;
         //CentroidEndEffortCon*     con_effort;
         //CentroidEndCmplCon*       con_cmpl;
 

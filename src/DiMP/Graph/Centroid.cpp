@@ -115,6 +115,7 @@ void CentroidKey::AddCon(Solver* solver) {
 		    ends[i].con_moment_range[1] = new RangeConV3(solver, ID(ConTag::CentroidEndMoment, node, tick, name + "_mom_range1"), ends[i].var_moment, vec3_t(0.0, 1.0, 0.0), 1.0);
 		    ends[i].con_moment_range[2] = new RangeConV3(solver, ID(ConTag::CentroidEndMoment, node, tick, name + "_mom_range2"), ends[i].var_moment, vec3_t(0.0, 0.0, 1.0), 1.0);
 
+            ends[i].con_stiff_zero = new FixConS(solver, ID(ConTag::CentroidEndStiff, node, tick, name + "_stiff_zero"), ends[i].var_stiff, 1.0);
             //ends[i].con_cmpl = new CentroidEndCmplCon(solver, name + "_cmpl", this, i, 1.0);
 
             solver->AddTransitionCon(ends[i].con_pos, tick->idx);
@@ -287,6 +288,11 @@ void CentroidKey::Prepare() {
         for(int j = 0; j < end.con_contact.size(); j++){
 		    end.con_contact[j]->_min = 0.0;
 		    end.con_contact[j]->_max = (end.contact ? 0.0 : inf);
+        }
+
+        if(next){
+            end.con_stiff_zero->desired   = 0.0;
+            end.con_stiff_zero->weight[0] = 0.1;
         }
 
 		//if(/*iend == i && */end.contact){
