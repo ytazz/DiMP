@@ -7,6 +7,7 @@ global nu
 global N
 global tau
 global lambda
+global g
 
 % num of ends
 nend = 2;
@@ -25,6 +26,9 @@ tau = 0.3;
 
 % stiffness
 lambda = 1.0;
+
+% gravity
+g = [0;0;1];
 
 % initial state
 % px py pz vx vy vz p1x p1y p2x p2y
@@ -59,13 +63,14 @@ X = zeros(nneighbor*nx, N);
 % minimum cost
 J = zeros(nneighbor, 1);
 
-while
+while 1
 	% generate neighboring mode sequences
 	Iset = repmat(I, nneighbor, 1);
 	ofst = nend;
 	for iend = 1:nend
 		for k = 2:N
-			Iset(ofst + iend, k) = !Iset(ofst + iend, k);
+            % logical not
+			Iset(ofst + iend, k) = ~Iset(ofst + iend, k);
 			ofst = ofst + nend;
 		end
 	end
@@ -75,7 +80,8 @@ while
 		% calc optimal control
 		iu = (i-1)*nu;
 		ix = (i-1)*nx;
-		[J(i), U(iu+1:iu*nu,:), X(ix+1:ix+nx,:)] = optimal(x0, Iset((i-1)*nend+1:i*nend,:));
+        
+        [J(i), U(iu+1:iu*nu,:), X(ix+1:ix+nx,:)] = optimal(x0, Iset((i-1)*nend+1:i*nend,:));
 		
 	end
 	

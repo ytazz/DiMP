@@ -20,7 +20,7 @@ function [A, B, a] = calc_matrices(I)
 		A(4:6, 4:6) = eye(3);
 		a(4:6)      = -g*tau;
 		
-		for iend : 1:nend
+		for iend = 1:nend
 			ix = 6+2*(iend-1);
 			iu = 2*(iend-1);
 			A(ix+1:ix+2, ix+1:ix+2) = eye(2);
@@ -34,7 +34,7 @@ function [A, B, a] = calc_matrices(I)
 		
 		A(1:3, 1:3) = eye(3)*C;
 		A(1:3, 4:6) = eye(3)*(S/lbar);
-		for iend : 1:nend
+		for iend = 1:nend
 			ix = 6+2*(iend-1);
 			A(1:3, ix+1:ix+2) = [eye(2); zeros(1,2)]*((1-C)/nc);
 		end
@@ -42,13 +42,13 @@ function [A, B, a] = calc_matrices(I)
 		
 		A(4:6, 1:3) = eye(3)*(S*lbar);
 		A(4:6, 4:6) = eye(3)*C;
-		for iend : 1:nend
+		for iend = 1:nend
 			ix = 6+2*(iend-1);
 			A(1:3, ix+1:ix+2) = [eye(2); zeros(1,2)]*((-lbar*S)/nc);
 		end
 		a(1:3) = ((-lbar*S)/(nc*lambda^2))*g;
 
-		for iend : 1:nend
+		for iend = 1:nend
 			ix = 6+2*(iend-1);
 			iu = 2*(iend-1);
 			A(ix+1:ix+2, ix+1:ix+2) = eye(2);

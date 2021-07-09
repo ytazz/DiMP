@@ -13,9 +13,13 @@ function [J, dx, du] = optimal(dx0, I)
 	Lxx = zeros(N-1, nx, nx);
 	Luu = zeros(N-1, nu, nu);
 	Lux = zeros(N-1, nu, nx);
-	
+    
 	for k = 1:N-1
-		[fx(k), fu(k), f0(k)] = calc_matrices(I(k));
+		[A, B, a] = calc_matrices(I(:,k));
+        fx(k,:,:) = A;
+        fu(k,:,:) = B;
+        f0(k,:,:) = a;
+        %size(fx(k,:,:))
 	end
 	for k = 1:N
 		[Lu(k), Lx(k), Lxx(k), Luu(k), Lux(k)] = calc_cost(k);
