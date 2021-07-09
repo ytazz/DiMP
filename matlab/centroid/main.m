@@ -53,6 +53,9 @@ Iset = zeros(nneighbor*nend, N);
 % optimal control input sequence
 U = zeros(nneighbor*nu, N-1);
 
+% optimal state sequence
+X = zeros(nneighbor*nx, N);
+
 % minimum cost
 J = zeros(nneighbor, 1);
 
@@ -70,7 +73,9 @@ while
 	% for each mode sequence
 	for i = 1:nneighbor
 		% calc optimal control
-		[J(i), U((i-1)*nu+1:i*nu,:)] = optimal(x0, Iset((i-1)*nend+1:i*nend,:));
+		iu = (i-1)*nu;
+		ix = (i-1)*nx;
+		[J(i), U(iu+1:iu*nu,:), X(ix+1:ix+nx,:)] = optimal(x0, Iset((i-1)*nend+1:i*nend,:));
 		
 	end
 	
