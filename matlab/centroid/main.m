@@ -8,6 +8,9 @@ global N
 global tau
 global lambda
 global g
+global wend
+global wvel
+global wgoal
 
 % num of ends
 nend = 2;
@@ -29,6 +32,11 @@ lambda = 1.0;
 
 % gravity
 g = [0;0;1];
+
+% cost weights
+wend  = 1.0;
+wvel  = 1.0;
+wgoal = 10.0;
 
 % initial state
 % px py pz vx vy vz p1x p1y p2x p2y

@@ -22,7 +22,7 @@ function [J, dx, du] = optimal(dx0, I)
         %size(fx(k,:,:))
 	end
 	for k = 1:N
-		[Lu(k), Lx(k), Lxx(k), Luu(k), Lux(k)] = calc_cost(k);
+		[L(k), Lx(k), Lu(k), Lxx(k), Luu(k), Lux(k)] = calc_cost(k);
 	end
 	
 	V(N)   = L(N);
