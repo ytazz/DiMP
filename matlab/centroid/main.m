@@ -10,7 +10,8 @@ global lambda
 global g
 global wend
 global wvel
-global wgoal
+global wdes
+global pgoal
 
 % num of ends
 nend = 2;
@@ -34,9 +35,14 @@ lambda = 1.0;
 g = [0;0;1];
 
 % cost weights
-wend  = 1.0;
-wvel  = 1.0;
-wgoal = 10.0;
+wend = 1.0;
+wvel = 1.0;
+wdes = 10.0;
+
+% goal position
+pgoal = [1;
+         0;
+         1];
 
 % initial state
 % px py pz vx vy vz p1x p1y p2x p2y
@@ -60,39 +66,41 @@ I    = repmat(I0, 1, N);
 
 % set of neighboring mode sequences
 nneighbor = nend*(N-1)+1;
-Iset = zeros(nneighbor*nend, N);
+Iset = cell(nneighbor, 1);
 
 % optimal control input sequence
-U = zeros(nneighbor*nu, N-1);
+U = cell(nneighbor, 1);
 
 % optimal state sequence
-X = zeros(nneighbor*nx, N);
+X = cell(nneighbor, 1);
 
 % minimum cost
-J = zeros(nneighbor, 1);
+J = cell(nneighbor, 1);
 
 while 1
 	% generate neighboring mode sequences
-	Iset = repmat(I, nneighbor, 1);
-	ofst = nend;
+    for i = 1:nneighbor
+        Iset{i} = I;
+    end
+    
+	i = 1;
 	for iend = 1:nend
 		for k = 2:N
             % logical not
-			Iset(ofst + iend, k) = ~Iset(ofst + iend, k);
-			ofst = ofst + nend;
+			Iset{i}(iend, k) = ~Iset{i}(iend, k);
+			i = i+1;
 		end
 	end
 	
 	% for each mode sequence
 	for i = 1:nneighbor
 		% calc optimal control
-		iu = (i-1)*nu;
-		ix = (i-1)*nx;
-        
-        [J(i), U(iu+1:iu*nu,:), X(ix+1:ix+nx,:)] = optimal(x0, Iset((i-1)*nend+1:i*nend,:));
+		[J{i}, U{i}, X{i}] = optimal(x0, Iset{i});
 		
-	end
+    end
 	
+    'hoge'
+    
 	% update best mode sequence
 	
 	% break if mode sequence has not changed (local optimality reached)

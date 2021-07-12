@@ -1,4 +1,4 @@
-function [L, Lx, Lu, Lxx, Luu, Lux] = calc_cost(k)
+function [L, Lx, Lxx, Lu, Luu, Lux] = calc_cost(k)
 	global nend
 	global nx
 	global nu
@@ -6,7 +6,7 @@ function [L, Lx, Lu, Lxx, Luu, Lux] = calc_cost(k)
 	global pgoal
 	global wend
 	global wvel
-	global wgoal
+	global wdes
 	
 	L   = 0;
 	Lx  = zeros(nx, 1);
