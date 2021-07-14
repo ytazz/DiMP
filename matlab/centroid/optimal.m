@@ -86,12 +86,13 @@ function [J, dx, du] = optimal(dx0, I)
 	    V  {k} = Q  {k} - (1.0/2.0)*(Qu{k}'*Quuinv_Qu{k});
 	    Vx {k} = Qx {k} - Qux{k}'*Quuinv_Qu{k};
 	    Vxx{k} = Qxx{k} - Qux{k}'*Quuinv{k}*Qux{k};
-	end
+    end
 	
+    dx{1} = dx0;
 	for k = 1:N-1
 	    du{k}   = -Quuinv{k}*(Qu{k} + Qux{k}*dx{k});
 		dx{k+1} = fx{k}*dx{k} + fu{k}*du{k} + f0{k};
 	end
 	
-	J = V{1};
+	J = V{1} + Vx{1}'*dx0 + (1.0/2.0)*(dx0'*Vxx{1}*dx0);
 end

@@ -23,24 +23,24 @@ nx = 3+3+2*nend;
 nu = 2*nend;
 
 % num of steps
-N = 10;
+N = 20;
 
 % duration
 tau = 0.3;
 
 % stiffness
-lambda = 1.0;
+lambda = 0.5;
 
 % gravity
 g = [0;0;1];
 
 % cost weights
-wend = 1.0;
-wvel = 1.0;
-wdes = 10.0;
+wend = 0.0001;
+wvel = 0.0001;
+wdes = 1.0;
 
 % goal position
-pgoal = [1;
+pgoal = [2;
          0;
          1];
 
@@ -78,12 +78,14 @@ X = cell(nneighbor, 1);
 J = cell(nneighbor, 1);
 
 while 1
+    I
+    
 	% generate neighboring mode sequences
     for i = 1:nneighbor
         Iset{i} = I;
     end
     
-	i = 1;
+	i = 2;
 	for iend = 1:nend
 		for k = 2:N
             % logical not
@@ -93,17 +95,30 @@ while 1
 	end
 	
 	% for each mode sequence
+    imin = -1;
+    Jmin = inf;
 	for i = 1:nneighbor
 		% calc optimal control
-		[J{i}, U{i}, X{i}] = optimal(x0, Iset{i});
-		
+		[J{i}, X{i}, U{i}] = optimal(x0, Iset{i});
+        if J{i} < Jmin
+            Jmin = J{i};
+            imin = i;
+        end
     end
-	
-    'hoge'
     
-	% update best mode sequence
+    J{imin}
+    X{imin}
+    U{imin}
 	
 	% break if mode sequence has not changed (local optimality reached)
+    if imin == 1
+        break;
+    end
+    
+  	% update best mode sequence
+    I = Iset{imin};
 
 end
 
+I
+'hoge'
