@@ -27,26 +27,24 @@ function [A, B, a] = calc_matrices(I)
 			B(ix+1:ix+2, iu+1:iu+2) = eye(2)*tau;
 		end		
 	else
-		lbar = sqrt(nc)*lambda;
-		
-		C = cosh(lbar*tau);
-		S = sinh(lbar*tau);
+		C = cosh(lambda*tau);
+		S = sinh(lambda*tau);
 		
 		A(1:3, 1:3) = eye(3)*C;
-		A(1:3, 4:6) = eye(3)*(S/lbar);
+		A(1:3, 4:6) = eye(3)*(S/lambda);
 		for iend = 1:nend
 			ix = 6+2*(iend-1);
 			A(1:3, ix+1:ix+2) = [eye(2); zeros(1,2)]*((1-C)/nc);
 		end
-		a(1:3) = ((1-C)/(nc*lambda^2))*g;
+		a(1:3) = ((1-C)/(lambda^2))*g;
 		
-		A(4:6, 1:3) = eye(3)*(S*lbar);
+		A(4:6, 1:3) = eye(3)*(lambda*S);
 		A(4:6, 4:6) = eye(3)*C;
 		for iend = 1:nend
 			ix = 6+2*(iend-1);
-			A(1:3, ix+1:ix+2) = [eye(2); zeros(1,2)]*((-lbar*S)/nc);
+			A(1:3, ix+1:ix+2) = [eye(2); zeros(1,2)]*((-lambda*S)/nc);
 		end
-		a(1:3) = ((-lbar*S)/(nc*lambda^2))*g;
+		a(1:3) = ((-S)/(lambda))*g;
 
 		for iend = 1:nend
 			ix = 6+2*(iend-1);
