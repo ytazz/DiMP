@@ -79,6 +79,7 @@ add_library(dimp
 
 target_link_libraries(dimp Springhead::Springhead)
 target_link_libraries(dimp Scenebuilder)
+target_link_libraries(dimp OpenGL::GL)
 
 install(TARGETS dimp
   EXPORT   dimpExport

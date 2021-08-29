@@ -66,7 +66,7 @@ void AvoidKey::Prepare(){
 			geoPairs);
 		int timeExtract = ptimer.CountUS();
 		*/
-		DSTR << "geo0: " << obj0->geoInfos.size() << " geo1: " << obj1->geoInfos.size() << " geo pair: " << geoPairs.size() << endl;
+		//DSTR << "geo0: " << obj0->geoInfos.size() << " geo1: " << obj1->geoInfos.size() << " geo pair: " << geoPairs.size() << endl;
 
 		timer.CountUS();
 		for(int gp_idx = 0; gp_idx < geoPairs.size(); gp_idx++){
@@ -138,7 +138,7 @@ void AvoidKey::Prepare(){
 		}
 
 		
-		DSTR << "bsphere: " << nsphere << " bbox: " << nbox << " gjk: " << ngjk << " active: " << nactive << endl;
+		//DSTR << "bsphere: " << nsphere << " bbox: " << nbox << " gjk: " << ngjk << " active: " << nactive << endl;
 		if(gpmax){
 			DSTR << " dist: " << gpmax->dist << " normal: " << gpmax->normal << endl;
 		}

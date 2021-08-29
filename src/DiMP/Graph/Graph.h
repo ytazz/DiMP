@@ -119,7 +119,7 @@ public:
 		}
 
 		T& operator()(int r, int c){
-			return at(ncol*r + c);
+			return vector<T>::at(ncol*r + c);
 		}
 	};
 
