@@ -131,6 +131,30 @@ public:
         fileDuration = fopen("duration.csv", "w");
 	}
 
+    void PrintSchedule(const char* filename){
+       	FILE* file = fopen(filename, "w");
+		for (uint k = 0; k < graph->ticks.size(); k++) {
+			DiMP::CentroidKey* key = (DiMP::CentroidKey*)centroid->traj.GetKeypoint(graph->ticks[k]);
+            for(int i = 0; i < key->ends.size(); i++){
+                if(key->ends[i].contact){
+                    fprintf(file, "%d, %f, %f\n", i, key->var_time->val, key->var_duration->val);
+                }
+            }
+			//fprintf(file, "%f, %f, %f, ", key->var_pos_t->val.x, key->var_pos_t->val.y, key->var_pos_t->val.z);
+			//fprintf(file, "%f, %f, %f, ", key->var_vel_t->val.x, key->var_vel_t->val.y, key->var_vel_t->val.z);
+					
+			//for(int i = 0; i < key->ends.size(); i++){
+			//	fprintf(file, "%d, ", key->ends[i].contact);
+			//}
+			//for(int i = 0; i < key->ends.size(); i++){
+			//	fprintf(file, "%f, ", key->ends[i].con_effort->y.norm());
+			//}
+			//fprintf(file, "\n");
+		}
+		fclose(file);
+	
+    }
+
     virtual void OnStep(){
         App::OnStep();
 
@@ -143,32 +167,19 @@ public:
 			}
         }
         fprintf(fileDuration, "\n");
+
+        static int cnt = 0;
+        stringstream ss;
+        ss << "centroid_log/schedule" << cnt << ".csv";
+        PrintSchedule(ss.str().c_str());
+        cnt++;
+
     }
 
 	virtual void OnAction(int menu, int id) {
 		if (menu == MENU_MAIN) {
 			if(id == ID_SAVE){
-				const char* filename = "schedule.csv";
-				FILE* file = fopen(filename, "w");
-				for (uint k = 0; k < graph->ticks.size(); k++) {
-					DiMP::CentroidKey* key = (DiMP::CentroidKey*)centroid->traj.GetKeypoint(graph->ticks[k]);
-                    for(int i = 0; i < key->ends.size(); i++){
-                        if(key->ends[i].contact){
-                            fprintf(file, "%d, %f, %f\n", i, key->var_time->val, key->var_duration->val);
-                        }
-                    }
-					//fprintf(file, "%f, %f, %f, ", key->var_pos_t->val.x, key->var_pos_t->val.y, key->var_pos_t->val.z);
-					//fprintf(file, "%f, %f, %f, ", key->var_vel_t->val.x, key->var_vel_t->val.y, key->var_vel_t->val.z);
-					
-					//for(int i = 0; i < key->ends.size(); i++){
-					//	fprintf(file, "%d, ", key->ends[i].contact);
-					//}
-					//for(int i = 0; i < key->ends.size(); i++){
-					//	fprintf(file, "%f, ", key->ends[i].con_effort->y.norm());
-					//}
-					//fprintf(file, "\n");
-				}
-				fclose(file);
+                PrintSchedule("schedule.csv");
 			}
 		}
 		App::OnAction(menu, id);

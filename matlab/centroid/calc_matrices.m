@@ -13,15 +13,13 @@ function [A, B, a] = calc_matrices(I)
 	nc = sum(I);
 	
 	if nc == 0
-		A(1:3, 1:3) =  eye(3);
-		A(1:3, 4:6) =  eye(3)*tau;
-		a(1:3)      = -0.5*g*tau^2;
+		A(1:2, 1:2) =  eye(2);
+		A(1:2, 3:4) =  eye(2)*tau;
 
-		A(4:6, 4:6) = eye(3);
-		a(4:6)      = -g*tau;
+		A(3:4, 3:4) = eye(2);
 		
 		for iend = 1:nend
-			ix = 6+2*(iend-1);
+			ix = 4+2*(iend-1);
 			iu = 2*(iend-1);
 			A(ix+1:ix+2, ix+1:ix+2) = eye(2);
 			B(ix+1:ix+2, iu+1:iu+2) = eye(2)*tau;
@@ -30,24 +28,22 @@ function [A, B, a] = calc_matrices(I)
 		C = cosh(lambda*tau);
 		S = sinh(lambda*tau);
 		
-		A(1:3, 1:3) = eye(3)*C;
-		A(1:3, 4:6) = eye(3)*(S/lambda);
+		A(1:2, 1:2) = eye(2)*C;
+		A(1:2, 3:4) = eye(2)*(S/lambda);
 		for iend = 1:nend
-			ix = 6+2*(iend-1);
-			A(1:3, ix+1:ix+2) = [eye(2); zeros(1,2)]*((1-C)/nc);
+			ix = 4+2*(iend-1);
+			A(1:2, ix+1:ix+2) = eye(2)*((1-C)/nc);
 		end
-		a(1:3) = ((1-C)/(lambda^2))*g;
 		
-		A(4:6, 1:3) = eye(3)*(lambda*S);
-		A(4:6, 4:6) = eye(3)*C;
+		A(3:4, 1:2) = eye(2)*(lambda*S);
+		A(3:4, 3:4) = eye(2)*C;
 		for iend = 1:nend
-			ix = 6+2*(iend-1);
-			A(1:3, ix+1:ix+2) = [eye(2); zeros(1,2)]*((-lambda*S)/nc);
+			ix = 4+2*(iend-1);
+			A(1:2, ix+1:ix+2) = eye(2)*((-lambda*S)/nc);
 		end
-		a(1:3) = ((-S)/(lambda))*g;
-
+		
 		for iend = 1:nend
-			ix = 6+2*(iend-1);
+			ix = 4+2*(iend-1);
 			iu = 2*(iend-1);
 			A(ix+1:ix+2, ix+1:ix+2) = eye(2);
 			B(ix+1:ix+2, iu+1:iu+2) = eye(2)*((1 - I(iend))*tau);
