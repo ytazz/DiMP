@@ -77,6 +77,7 @@ add_library(dimp
 	${DIMP_HEADERS_RENDER}
 	)
 
+target_link_libraries(dimp ${Boost_LIBRARIES})
 target_link_libraries(dimp Springhead::Springhead)
 target_link_libraries(dimp Scenebuilder)
 target_link_libraries(dimp OpenGL::GL)
