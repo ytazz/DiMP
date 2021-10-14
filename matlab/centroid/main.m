@@ -12,43 +12,43 @@ global wend
 global wvel
 global wdes
 global pgoal
+global fx
+global fu
+global f0
 
 % num of ends
 nend = 2;
 
 % state dimension
-nx = 3+3+2*nend;
+nx = 2+2+2*nend;
 
 % input dimension
 nu = 2*nend;
 
 % num of steps
-N = 20;
+N = 30;
 
 % duration
-tau = 0.3;
+tau = 0.2;
 
 % stiffness
-lambda = 0.5;
+lambda = 1.0;
 
 % gravity
-g = [0;0;1];
+%g = [0;0;1];
 
 % cost weights
-wend = 0.0001;
-wvel = 0.0001;
-wdes = 1.0;
+wend = 1.0;
+wvel = 1.0;
+wdes = 10.0;
 
 % goal position
 pgoal = [2;
-         0;
-         1];
+         0];
 
 % initial state
 % px py pz vx vy vz p1x p1y p2x p2y
 x0 = [0.0
-      0.0
-      1.0
       0.0
       0.0
       0.0
@@ -107,10 +107,8 @@ while 1
     end
     
     J{imin}
-    X{imin}
-    U{imin}
-	
-	% break if mode sequence has not changed (local optimality reached)
+
+    % break if mode sequence has not changed (local optimality reached)
     if imin == 1
         break;
     end
@@ -120,5 +118,13 @@ while 1
 
 end
 
-I
-'hoge'
+[J{1}, X{1}, U{1}] = optimal(x0, I);
+xtraj = zeros(nx, N);
+utraj = zeros(nu, N-1);
+for k = 1:N
+    xtraj(:,k) = X{1}{k};
+end
+for k = 1:N-1
+    utraj(:,k) = U{1}{k};
+end
+

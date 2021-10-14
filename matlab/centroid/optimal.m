@@ -2,6 +2,9 @@ function [J, dx, du] = optimal(dx0, I)
 	global nx
 	global nu
 	global N
+    global fx
+    global fu
+    global f0
 
 	dx  = cell(N  , 1);
 	du  = cell(N-1, 1);
@@ -53,8 +56,18 @@ function [J, dx, du] = optimal(dx0, I)
         end
     end
     
-	for k = 1:N-1
-		[fx{k}, fu{k}, f0{k}] = calc_matrices(I(:,k));
+    includes_flight = 0;
+    for k = 1:N-1
+        if I(:,k) == [0;0]
+            includes_flight = 1;
+            break;
+        end
+        [fx{k}, fu{k}, f0{k}] = calc_matrices(I(:,k));
+    end
+    
+    if includes_flight == 1
+        J = inf;
+        return;
     end
     
     for k = 1:N
@@ -63,9 +76,9 @@ function [J, dx, du] = optimal(dx0, I)
         else
             [L{k}, Lx{k}, Lxx{k}] = calc_cost(k);
         end
-	end
-	
-	V  {N} = L  {N};
+    end
+    
+    V  {N} = L  {N};
 	Vx {N} = Lx {N};
 	Vxx{N} = Lxx{N};
     
@@ -80,19 +93,22 @@ function [J, dx, du] = optimal(dx0, I)
 		Quu{k} = Quu{k} + eps*eye(nu);
     	
         Quuinv{k} = Quu{k}^-1;
+        
+        % force symmetry
+        Quuinv{k} = (1.0/2.0)*(Quuinv{k} + Quuinv{k}');
 
 	    Quuinv_Qu{k} = Quuinv{k}*Qu{k};
 
 	    V  {k} = Q  {k} - (1.0/2.0)*(Qu{k}'*Quuinv_Qu{k});
 	    Vx {k} = Qx {k} - Qux{k}'*Quuinv_Qu{k};
 	    Vxx{k} = Qxx{k} - Qux{k}'*Quuinv{k}*Qux{k};
-    end
+            end
 	
     dx{1} = dx0;
 	for k = 1:N-1
 	    du{k}   = -Quuinv{k}*(Qu{k} + Qux{k}*dx{k});
 		dx{k+1} = fx{k}*dx{k} + fu{k}*du{k} + f0{k};
-	end
-	
-	J = V{1} + Vx{1}'*dx0 + (1.0/2.0)*(dx0'*Vxx{1}*dx0);
+    end
+
+    J = V{1} + Vx{1}'*dx0 + (1.0/2.0)*(dx0'*Vxx{1}*dx0);
 end
