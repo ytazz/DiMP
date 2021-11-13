@@ -8,7 +8,7 @@ namespace DiMP {;
 const real_t pi      = M_PI;
 const real_t inf     = numeric_limits<real_t>::max();
 const real_t eps     = 1.0e-10;
-const real_t damping = 0.5;
+const real_t damping = 1.0;
 const vec3_t one(1.0, 1.0, 1.0);
 
 //-------------------------------------------------------------------------------------------------
@@ -73,7 +73,13 @@ void CentroidKey::AddVar(Solver* solver) {
 void CentroidKey::AddCon(Solver* solver) {
 	CentroidKey* nextObj = (CentroidKey*)next;
 
-	if(next){
+    subcost_u.clear();
+    subcost_x.clear();
+
+    int nend  = cen->ends .size();
+    int nface = cen->faces.size();
+
+    if(next){
 		con_pos_t = new CentroidPosConT(solver, name + "_pos_t", this, node->graph->scale.pos_t);
 		con_pos_r = new CentroidPosConR(solver, name + "_pos_r", this, node->graph->scale.pos_r);
 		con_vel_t = new CentroidVelConT(solver, name + "_vel_t", this, node->graph->scale.vel_t);
@@ -88,68 +94,79 @@ void CentroidKey::AddCon(Solver* solver) {
         solver->AddTransitionCon(con_vel_r, tick->idx);
         solver->AddTransitionCon(con_time , tick->idx);
 
-        solver->AddCostCon(con_duration_range, tick->idx);
+        subcost_u.push_back(solver->AddCostCon(con_duration_range, tick->idx));
     }
 
-    con_vel_zero = new FixConV3 (solver, ID(ConTag::CentroidVelT, node, tick, name + "_vel_zero"), var_vel_t, 1.0);
-    solver->AddCostCon(con_vel_zero, tick->idx);
-
+    con_vel_zero  = new FixConV3(solver, ID(ConTag::CentroidVelT, node, tick, name + "_vel_zero" ), var_vel_t, 1.0);
     con_des_pos_t = new FixConV3(solver, ID(ConTag::CentroidPosT, node, tick, name + "_des_pos_t"), var_pos_t, 1.0);
     con_des_pos_r = new FixConQ (solver, ID(ConTag::CentroidPosR, node, tick, name + "_des_pos_r"), var_pos_r, 1.0);
-    solver->AddCostCon(con_des_pos_t, tick->idx);
-    solver->AddCostCon(con_des_pos_r, tick->idx);
+
+    subcost_x.push_back(solver->AddCostCon(con_vel_zero , tick->idx));
+    subcost_x.push_back(solver->AddCostCon(con_des_pos_t, tick->idx));
+    subcost_x.push_back(solver->AddCostCon(con_des_pos_r, tick->idx));
 
 	stringstream ss;
-	for(int i = 0; i < ends.size(); i++){
+	for(int i = 0; i < nend; i++){
 		ss.str("");
 		ss << name << "_end" << i;
 
+        ends[i].subcost_c   .clear();
+        ends[i].subcost_nc  .clear();
+        ends[i].subcost_face.resize(nface);
+
+        /// non-complementary constraints
 		if(next){
 			ends[i].con_pos    = new CentroidEndPosCon(solver, ss.str() + "_pos", this, i, 1.0);
+            solver->AddTransitionCon(ends[i].con_pos, tick->idx);
 
-            ends[i].con_stiff_range     = new RangeConS (solver, ID(ConTag::CentroidEndStiff , node, tick, name + "_stiff_range" ), ends[i].var_stiff, 1.0);
-		
+            ends[i].con_stiff_range     = new RangeConS (solver, ID(ConTag::CentroidEndStiff , node, tick, name + "_stiff_range" ), ends[i].var_stiff, 1.0);		
 		    ends[i].con_moment_range[0] = new RangeConV3(solver, ID(ConTag::CentroidEndMoment, node, tick, name + "_mom_range0"), ends[i].var_moment, vec3_t(1.0, 0.0, 0.0), 1.0);
 		    ends[i].con_moment_range[1] = new RangeConV3(solver, ID(ConTag::CentroidEndMoment, node, tick, name + "_mom_range1"), ends[i].var_moment, vec3_t(0.0, 1.0, 0.0), 1.0);
 		    ends[i].con_moment_range[2] = new RangeConV3(solver, ID(ConTag::CentroidEndMoment, node, tick, name + "_mom_range2"), ends[i].var_moment, vec3_t(0.0, 0.0, 1.0), 1.0);
 
-            ends[i].con_stiff_zero = new FixConS (solver, ID(ConTag::CentroidEndStiff, node, tick, name + "_stiff_zero"), ends[i].var_stiff, 1.0);
+            ends[i].con_vel_range[0] = new CentroidEndVelRangeCon(solver, ss.str() + "_vel_range0", this, i, vec3_t(1.0, 0.0, 0.0), node->graph->scale.pos_t);
+		    ends[i].con_vel_range[1] = new CentroidEndVelRangeCon(solver, ss.str() + "_vel_range1", this, i, vec3_t(0.0, 1.0, 0.0), node->graph->scale.pos_t);
+		    ends[i].con_vel_range[2] = new CentroidEndVelRangeCon(solver, ss.str() + "_vel_range2", this, i, vec3_t(0.0, 0.0, 1.0), node->graph->scale.pos_t);
 
-            solver->AddTransitionCon(ends[i].con_pos, tick->idx);
-            
-            solver->AddCostCon(ends[i].con_stiff_range    , tick->idx);
-            solver->AddCostCon(ends[i].con_moment_range[0], tick->idx);
-            solver->AddCostCon(ends[i].con_moment_range[1], tick->idx);
-            solver->AddCostCon(ends[i].con_moment_range[2], tick->idx);
+            subcost_u.push_back(solver->AddCostCon(ends[i].con_stiff_range    , tick->idx));
+            subcost_u.push_back(solver->AddCostCon(ends[i].con_moment_range[0], tick->idx));
+            subcost_u.push_back(solver->AddCostCon(ends[i].con_moment_range[1], tick->idx));
+            subcost_u.push_back(solver->AddCostCon(ends[i].con_moment_range[2], tick->idx));
+
+            subcost_u.push_back(solver->AddCostCon(ends[i].con_vel_range[0], tick->idx));
+            subcost_u.push_back(solver->AddCostCon(ends[i].con_vel_range[1], tick->idx));
+            subcost_u.push_back(solver->AddCostCon(ends[i].con_vel_range[2], tick->idx));
         }
 	
         ends[i].con_pos_range[0] = new CentroidEndPosRangeCon(solver, ss.str() + "_pos_range0", this, i, vec3_t(1.0, 0.0, 0.0), node->graph->scale.pos_t);
 		ends[i].con_pos_range[1] = new CentroidEndPosRangeCon(solver, ss.str() + "_pos_range1", this, i, vec3_t(0.0, 1.0, 0.0), node->graph->scale.pos_t);
 		ends[i].con_pos_range[2] = new CentroidEndPosRangeCon(solver, ss.str() + "_pos_range2", this, i, vec3_t(0.0, 0.0, 1.0), node->graph->scale.pos_t);
+        
+        subcost_x.push_back(solver->AddCostCon(ends[i].con_pos_range[0], tick->idx));
+        subcost_x.push_back(solver->AddCostCon(ends[i].con_pos_range[1], tick->idx));
+        subcost_x.push_back(solver->AddCostCon(ends[i].con_pos_range[2], tick->idx));
 
-		ends[i].con_vel_range[0] = new CentroidEndVelRangeCon(solver, ss.str() + "_vel_range0", this, i, vec3_t(1.0, 0.0, 0.0), node->graph->scale.pos_t);
-		ends[i].con_vel_range[1] = new CentroidEndVelRangeCon(solver, ss.str() + "_vel_range1", this, i, vec3_t(0.0, 1.0, 0.0), node->graph->scale.pos_t);
-		ends[i].con_vel_range[2] = new CentroidEndVelRangeCon(solver, ss.str() + "_vel_range2", this, i, vec3_t(0.0, 0.0, 1.0), node->graph->scale.pos_t);
+        ends[i].con_des_pos = new FixConV3(solver, ID(ConTag::CentroidEndPos, node, tick, name + "_des_pos"), ends[i].var_pos, 1.0);
 
-        ends[i].con_vel_zero[0] = new CentroidEndVelZeroCon(solver, ss.str() + "_vel_zero0", this, i, vec3_t(1.0, 0.0, 0.0), node->graph->scale.pos_t);
-		ends[i].con_vel_zero[1] = new CentroidEndVelZeroCon(solver, ss.str() + "_vel_zero1", this, i, vec3_t(0.0, 1.0, 0.0), node->graph->scale.pos_t);
-		ends[i].con_vel_zero[2] = new CentroidEndVelZeroCon(solver, ss.str() + "_vel_zero2", this, i, vec3_t(0.0, 0.0, 1.0), node->graph->scale.pos_t);
+        subcost_x.push_back(solver->AddCostCon(ends[i].con_des_pos, tick->idx));
 
-        int nface = cen->faces.size();
+        /// complimentary constraints
+        if(next){
+            ends[i].con_vel_zero    = new FixConV3(solver, ID(ConTag::CentroidEndVel   , node, tick, name + "_vel_zero"   ), ends[i].var_vel   , 1.0);
+            ends[i].con_stiff_zero  = new FixConS (solver, ID(ConTag::CentroidEndStiff , node, tick, name + "_stiff_zero" ), ends[i].var_stiff , 1.0);
+            ends[i].con_moment_zero = new FixConV3(solver, ID(ConTag::CentroidEndMoment, node, tick, name + "_moment_zero"), ends[i].var_moment, 1.0);
+
+            ends[i].subcost_c .push_back(solver->AddCostCon(ends[i].con_vel_zero   , tick->idx));
+            ends[i].subcost_nc.push_back(solver->AddCostCon(ends[i].con_stiff_zero , tick->idx));
+            ends[i].subcost_nc.push_back(solver->AddCostCon(ends[i].con_moment_zero, tick->idx));
+        }
+        
         ends[i].con_contact.resize(nface);
         for(int j = 0; j < nface; j++){
 		    ends[i].con_contact[j] = new CentroidEndContactCon(solver, name + "_contact", this, i, j, 1.0);
+            
+            ends[i].subcost_face[j] = solver->AddCostCon(ends[i].con_contact[j], tick->idx);
         }
-
-        solver->AddCostCon(ends[i].con_pos_range[0]   , tick->idx);
-        solver->AddCostCon(ends[i].con_pos_range[1]   , tick->idx);
-        solver->AddCostCon(ends[i].con_pos_range[2]   , tick->idx);
-        solver->AddCostCon(ends[i].con_vel_range[0]   , tick->idx);
-        solver->AddCostCon(ends[i].con_vel_range[1]   , tick->idx);
-        solver->AddCostCon(ends[i].con_vel_range[2]   , tick->idx);
-        
-        for(int j = 0; j < nface; j++)
-            solver->AddCostCon(ends[i].con_contact[j], tick->idx);
         
 	}
 }		
@@ -164,9 +181,9 @@ void CentroidKey::Prepare() {
 	vec3_t msum;
 
 	for(End& end : ends){
-		real_t le  = (end.iface != -1 ? end.var_stiff ->val : 0.0);
-        vec3_t me  = (end.iface != -1 ? end.var_moment->val : vec3_t());
-		vec3_t pe  = end.var_pos->val;
+		real_t le  = end.var_stiff ->val;
+        vec3_t me  = end.var_moment->val;
+		vec3_t pe  = end.var_pos   ->val;
 
 		real_t le2 = le*le;
 
@@ -201,7 +218,7 @@ void CentroidKey::Prepare() {
 	k_v_lbar =  (lbar*tau*C + S)*(p - pbar) + tau*S*v;
 
 	for(End& end : ends){
-		real_t le  = (end.iface != -1 ? end.var_stiff->val : 0.0);
+		real_t le  = end.var_stiff->val;
 		real_t le2 = le*le;
 		vec3_t pe  = end.var_pos->val;
 
@@ -215,44 +232,6 @@ void CentroidKey::Prepare() {
 
 	q_rhs = q*quat_t::Rot(q.Conjugated()*(w*tau));
 	w_rhs = w + msum*tau;
-	
-	var_pos_r->locked = true;
-	var_vel_r->locked = true;
-
-	// set range constraint of duration
-	if(next){
-        var_duration->locked = true;
-
-        con_duration_range->enabled = false;
-		//con_duration_range->_min =  0.0;
-		//con_duration_range->_max =  inf;
-		
-        con_vel_zero->desired = vec3_t();
-        con_vel_zero->weight  = (next ? 0.1 : 1.0)*one;
-    }
-
-    con_des_pos_t->weight = (next ? 0.01 : 1.0)*one;
-    con_des_pos_r->weight = (next ? 0.01 : 1.0)*one;
-	
-    for(int i = 0; i < ends.size(); i++){
-		End& end = ends[i];
-
-        for(int j = 0; j < end.con_contact.size(); j++){
-		    end.con_contact[j]->enabled = (end.iface == j);
-        }
-
-        if(next){
-            end.con_stiff_range->_min = 0.0;
-            end.con_stiff_range->_max = cen->ends[i].stiffnessMax;
-
-            end.con_stiff_zero->desired   = 0.0;
-            end.con_stiff_zero->weight[0] = 0.5;
-
-            end.con_vel_zero[0]->weight[0] = 0.5;
-            end.con_vel_zero[1]->weight[0] = 0.5;
-            end.con_vel_zero[2]->weight[0] = 0.5;
-        }
-    }
 }
 
 void CentroidKey::Draw(Render::Canvas* canvas, Render::Config* conf) {
@@ -264,7 +243,7 @@ void CentroidKey::Draw(Render::Canvas* canvas, Render::Config* conf) {
 	p = var_pos_t->val*cen->L;
 	canvas->Point(p);
 }
-
+/*
 void CentroidKey::CopyVariables(CentroidKey* src){
     var_pos_t   ->val = src->var_pos_t   ->val;
 	var_pos_r   ->val = src->var_pos_r   ->val;
@@ -280,7 +259,7 @@ void CentroidKey::CopyVariables(CentroidKey* src){
 		ends[i].var_moment->val = src->ends[i].var_moment->val;
     }
 }
-
+*/
 //-------------------------------------------------------------------------------------------------
 // Centroid
 
@@ -343,12 +322,12 @@ CentroidDDPNode::CentroidDDPNode(){
 }
 
 CentroidDDPNode::~CentroidDDPNode(){
-
+    int hoge = 0;
 }
 
 //-------------------------------------------------------------------------------------------------
 
-    Centroid::Centroid(Graph* g, string n) :TrajectoryNode(g, n) {
+Centroid::Centroid(Graph* g, string n) :TrajectoryNode(g, n) {
 	type = Type::Object;
 	graph->centroids.Add(this);
 }
@@ -376,12 +355,12 @@ void Centroid::Init() {
 				key->ends[i].con_pos_range[j]->_min = ends[i].posRangeMin[j]/L;
 				key->ends[i].con_pos_range[j]->_max = ends[i].posRangeMax[j]/L;
 
-				key->ends[i].con_vel_range[j]->_min = ends[i].velRangeMin[j]/V;
-				key->ends[i].con_vel_range[j]->_max = ends[i].velRangeMax[j]/V;
-
                 if(key->next){
 				    key->ends[i].con_moment_range[j]->_min = ends[i].momentRangeMin[j]/M;
 				    key->ends[i].con_moment_range[j]->_max = ends[i].momentRangeMax[j]/M;
+				    
+                    key->ends[i].con_vel_range[j]->_min = ends[i].velRangeMin[j]/V;
+				    key->ends[i].con_vel_range[j]->_max = ends[i].velRangeMax[j]/V;
                 }
 			}
 		}
@@ -433,13 +412,28 @@ void Centroid::Init() {
 		key->var_vel_t->val = curve_t.CalcVel(t)/V;
 		key->var_vel_r->val = curve_r.CalcVel(t)/V;
 
+        // rotation is fixed at the moment
+        key->var_pos_r->locked = true;
+	    key->var_vel_r->locked = true;
+
         key->con_des_pos_t->desired = curve_t.CalcPos(t)/L;
         key->con_des_pos_r->desired = curve_r.CalcPos(t)/L;
+        key->con_vel_zero ->desired = vec3_t();
+        key->con_des_pos_t->weight = (key->next ? 1.0 : 10.0)*one;
+        key->con_des_pos_r->weight = (key->next ? 1.0 : 10.0)*one;
+        key->con_vel_zero ->weight = (key->next ? 1.0 : 10.0)*one;
 
 		key->var_time->val = t/T;
 		if(key->next){
 			key->var_duration->val = (key->next->tick->time - t)/T;
-		}
+
+            // duration is fixed
+            key->var_duration->locked = true;
+
+            key->con_duration_range->enabled = false;
+		    //con_duration_range->_min =  0.0;
+		    //con_duration_range->_max =  inf;
+        }
 
         vec3_t psum;
         real_t l2sum = 0.0;
@@ -447,53 +441,45 @@ void Centroid::Init() {
 			key->ends[i].var_pos  ->val = curve_end[i].CalcPos(t)/L;
 			key->ends[i].var_vel  ->val = curve_end[i].CalcVel(t)/V;
 			key->ends[i].var_stiff->val = 1.0/(key->var_pos_t->val.z - key->ends[i].var_pos->val.z);
-
 			key->ends[i].var_moment->val.clear();
 
-            vec3_t pe  = key->ends[i].var_pos  ->val;
-            real_t le  = key->ends[i].var_stiff->val;
-            real_t le2 = le*le;
-            psum  += le2*pe;
-            l2sum += le2;
-		}
+            key->ends[i].con_des_pos->desired = curve_end[i].CalcPos(t)/L;
+            key->ends[i].con_des_pos->weight  = (key->next ? 1.0 : 10.0)*one;
 
-        // initial guess of lbar and pave is needed for scheduling
-        key->lbar = sqrt(l2sum);
-        key->pave = psum/l2sum;
+            if(key->next){
+                key->ends[i].con_stiff_range->_min = 0.0;
+                key->ends[i].con_stiff_range->_max = ends[i].stiffnessMax;
 
-		// fix initial state
-		if(k == 0){
-			key->var_pos_t->locked = true;
-			key->var_pos_r->locked = true;
-			key->var_vel_t->locked = true;
-			key->var_vel_r->locked = true;
-			key->var_time ->locked = true;
-		}
-	}
+                key->ends[i].con_vel_zero   ->desired   = vec3_t();
+                key->ends[i].con_stiff_zero ->desired   = 0.0;
+                key->ends[i].con_moment_zero->desired   = vec3_t();
 
-	// fix variables on waypoints
-	for (uint i = 0; i < waypoints.size(); i++) {
-		Waypoint& wp = waypoints[i];
-		CentroidKey* key = (CentroidKey*)traj.GetKeypoint(graph->ticks[wp.k]);
+                // initial weight is zero
+                key->ends[i].con_vel_zero   ->weight    = param.complWeightMin*one;
+                key->ends[i].con_stiff_zero ->weight[0] = param.complWeightMin;
+                key->ends[i].con_moment_zero->weight    = param.complWeightMin*one;
+            }
 
-		key->var_pos_t->locked = wp.fix_pos_t;
-		key->var_pos_r->locked = wp.fix_pos_r;
-		key->var_vel_t->locked = wp.fix_vel_t;
-		key->var_vel_r->locked = wp.fix_vel_r;
-
-		for(int j = 0; j < key->ends.size(); j++){
-			key->ends[j].var_pos->locked = wp.ends[j].fix_pos;
+            for(int j = 0; j < faces.size(); j++){
+		        key->ends[i].con_contact[j]->weight[0] = param.complWeightMin;
+            }
 		}
 	}
 
     // call prepare here so that initial trajectory is visualized properly
     Prepare();
 
+    complWeight = param.complWeightMin;
+
     trajReady = false;
 }
 
 void Centroid::Prepare() {
 	TrajectoryNode::Prepare();
+
+    complWeight *= param.complWeightRate;
+    complWeight = std::min(complWeight, param.complWeightMax);
+
 	trajReady = false;
 }
 
@@ -585,6 +571,7 @@ vec3_t Centroid::EndPos(real_t t, int index, int type) {
 		type);
 }
 
+/*
 bool Centroid::EndContact(real_t t, int index) {
 	if(traj.empty())
 		return vec3_t();
@@ -595,6 +582,7 @@ bool Centroid::EndContact(real_t t, int index) {
 
     return k0->ends[index].iface != -1;
 }
+*/
 
 void Centroid::CalcTrajectory() {
 	real_t tf = traj.back()->tick->time;
@@ -670,7 +658,7 @@ void Centroid::CreateSnapshot(real_t t, Centroid::Snapshot& s){
 	s.ends.resize(ends.size());
 	for(int i = 0; i < ends.size(); i++){
 		s.ends[i].pos     = EndPos    (t, i);
-        s.ends[i].contact = EndContact(t, i);
+        //s.ends[i].contact = EndContact(t, i);
 	}
 }
 
@@ -724,7 +712,7 @@ void Centroid::DrawSnapshot(Render::Canvas* canvas, Render::Config* conf) {
             vtx[1] = vec3_t(ends[i].copRangeMin.x, ends[i].copRangeMax.y, 0.0);
             vtx[2] = vec3_t(ends[i].copRangeMax.x, ends[i].copRangeMax.y, 0.0);
             vtx[3] = vec3_t(ends[i].copRangeMax.x, ends[i].copRangeMin.y, 0.0);
-            canvas->SetLineWidth(snapshot.ends[i].contact ? 2.0f : 1.0f);
+            canvas->SetLineWidth(/*snapshot.ends[i].contact ? 2.0f : */1.0f);
 			canvas->BeginPath();
 			canvas->MoveTo(snapshot.ends[i].pos + vtx[0]);
 			canvas->LineTo(snapshot.ends[i].pos + vtx[1]);
@@ -736,30 +724,209 @@ void Centroid::DrawSnapshot(Render::Canvas* canvas, Render::Config* conf) {
 	}	
 }
 
-void Centroid::CopyVariables(Centroid* src){
-    for (uint k = 0; k < graph->ticks.size(); k++) {
-		CentroidKey* key     = (CentroidKey*)     traj.GetKeypoint(     graph->ticks[k]);
-        CentroidKey* key_src = (CentroidKey*)src->traj.GetKeypoint(src->graph->ticks[k]);
-
-        key->CopyVariables(key_src);
-    }
-}
-
 int Centroid::NumBranches(CustomSolver::DDPNode* node){
-    return ends.size();
+    int nend  = ends .size();
+    int nface = faces.size();
+
+    int n = 1;
+    for(int i = 0; i < nend; i++){
+        if(((CentroidDDPNode*)node)->contact[i] == -1)
+             n += nface;
+        else n++;
+    }
+    return n;
 }
 
-CustomSolver::DDPNode* Centroid::CreateNode(CustomSolver::DDPNode* parent, int idx){
+CustomSolver::DDPNode* Centroid::CreateNode(CustomSolver::DDPNode* _parent, CustomSolver* _solver, int idx, int nx, int nu){
     CentroidDDPNode* n  = new CentroidDDPNode();
-    CentroidDDPNode* np = (CentroidDDPNode*)parent;
+    CentroidDDPNode* np = (CentroidDDPNode*)_parent;
     n->parent  = np;
-    n->k       = np->k + 1;
-    n->contact = np->contact;
-    n->contact[idx] = !n->contact[idx];
+    n->solver  = _solver;
 
+    int nend  = ends .size();
+    int nface = faces.size();
 
+    if(np){
+        n->k       = np->k + 1;
+        n->contact = np->contact;
+    }
+    else{
+        n->contact.resize(nend);
+        fill(n->contact.begin(), n->contact.end(), 0);
+        n->k = 0;
+    }
+
+    if(idx == 0){
+        // nochange
+    }
+    else{
+        idx--;
+
+        for(int i = 0; i < nend; i++){
+            if(n->contact[i] == -1){
+                if(idx < nface){
+                     n->contact[i] = idx;
+                     break;
+                }
+                else idx -= nface;
+            }
+            else{
+                if(idx == 0){
+                     n->contact[i] = -1;
+                     break;
+                }
+                else idx--;
+            }
+        }
+    }
+
+    n->Resize(nx, nu);
+
+    n->L = 0.0;
+    n->Lx .clear();
+    n->Lu .clear();
+    n->Lxx.clear();
+    n->Luu.clear();
+    n->Lux.clear();
+    
+    CentroidKey* key = (CentroidKey*)traj.GetKeypoint(graph->ticks[n->k]);
+
+    // weights on variables
+    for(Solver::SubState* subst : _solver->state[n->k]->substate){
+        n->Lxx += subst->Lxx;
+    }
+    if(n->k < _solver->N){
+        for(Solver::SubInput* subin : _solver->input[n->k]->subinput){
+            n->Luu += subin->Luu;
+        }
+    }
+
+    for(Solver::SubCost* subcost : key->subcost_x){
+        if(subcost->con->enabled && subcost->con->active){
+            n->L   += subcost->L;
+            n->Lx  += subcost->Lx;
+            n->Lxx += subcost->Lxx;
+        }
+    }
+    for(Solver::SubCost* subcost : key->subcost_u){
+        if(subcost->con->enabled && subcost->con->active){
+            n->L   += subcost->L;
+            n->Lu  += subcost->Lu;
+            n->Luu += subcost->Luu;
+        }
+    }
+
+    // parent contact state is used for weight calculation
+    for(int i = 0; i < nend; i++){
+        real_t w_c   = (n->contact[i] == -1 ? 1.0 : complWeight/param.complWeightMin);
+        real_t w_nc  = (n->contact[i] == -1 ? complWeight/param.complWeightMin : 1.0);
+        real_t w_c2  = w_c*w_c;
+        real_t w_nc2 = w_nc*w_nc;
+
+        for(Solver::SubCost* subcost : key->ends[i].subcost_c){
+            n->L   += w_c2 * subcost->L;
+            n->Lu  += w_c2 * subcost->Lu;
+            n->Luu += w_c2 * subcost->Luu;
+        }
+        for(Solver::SubCost* subcost : key->ends[i].subcost_nc){
+            n->L   += w_nc2 * subcost->L;
+            n->Lu  += w_nc2 * subcost->Lu;
+            n->Luu += w_nc2 * subcost->Luu;
+        }
+
+        for(int j = 0; j < nface; j++){
+            n->L   += w_c2 * key->ends[i].subcost_face[j]->L;
+            n->Lx  += w_c2 * key->ends[i].subcost_face[j]->Lx;
+            n->Lxx += w_c2 * key->ends[i].subcost_face[j]->Lxx;
+        }
+    }
 
     return n;
+}
+
+void Centroid::FinishNode(CustomSolver::DDPNode* _node){
+    CentroidDDPNode* n = (CentroidDDPNode*)_node;
+
+    DSTR << "contact: ";
+    for(int i = 0; i < n->contact.size(); i++){
+        DSTR << n->contact[i] << " ";
+    }
+    DSTR << endl;
+
+    /*
+    int nend  = ends .size();
+    int nface = faces.size();
+
+    if(n->k > 0){
+        CentroidKey* key = (CentroidKey*)traj.GetKeypoint(graph->ticks[n->k - 1]);
+
+        for(int i = 0; i < nend; i++){
+            real_t w_c  = param.complWeightDecay * (n->contact[i] == -1 ? 1.0 : param.complWeightRate);
+            real_t w_nc = param.complWeightDecay * (n->contact[i] == -1 ? param.complWeightRate : 1.0);
+
+            for(Solver::SubCost* subcost : key->ends[i].subcost_c){
+                for(int j = 0; j < subcost->con->nelem; j++){
+                    subcost->con->weight[j] *= w_c;
+                    subcost->con->weight[j] = std::min(subcost->con->weight[j], param.complWeightMax);
+                    DSTR << subcost->con->weight[j] << endl;
+                }
+            }
+            for(Solver::SubCost* subcost : key->ends[i].subcost_nc){
+                for(int j = 0; j < subcost->con->nelem; j++){
+                    subcost->con->weight[j] *= w_nc;
+                    subcost->con->weight[j] = std::min(subcost->con->weight[j], param.complWeightMax);
+                    DSTR << subcost->con->weight[j] << endl;
+                }
+            }
+
+            for(int j = 0; j < nface; j++){
+                key->ends[i].subcost_face[j]->con->weight *= w_c;
+            }
+        }
+    }
+    */
+}
+
+real_t Centroid::CalcNodeCost(CustomSolver::DDPNode* _node){
+    CentroidDDPNode* n = (CentroidDDPNode*)_node;
+    int nend  = ends .size();
+    int nface = faces.size();
+
+    real_t obj = 0.0;
+
+    CentroidKey* key = (CentroidKey*)traj.GetKeypoint(graph->ticks[n->k]);
+
+    for(Solver::SubCost* subcost : key->subcost_x){
+        if(subcost->con->enabled && subcost->con->active){
+            obj += subcost->con->y.square();
+        }
+    }
+    for(Solver::SubCost* subcost : key->subcost_u){
+        if(subcost->con->enabled && subcost->con->active){
+            obj += subcost->con->y.square();
+        }
+    }
+
+    // parent contact state is used for weight calculation
+    for(int i = 0; i < nend; i++){
+        real_t w_c   = (n->contact[i] == -1 ? 1.0 : complWeight/param.complWeightMin);
+        real_t w_nc  = (n->contact[i] == -1 ? complWeight/param.complWeightMin : 1.0);
+        real_t w_c2  = w_c*w_c;
+        real_t w_nc2 = w_nc*w_nc;
+
+        for(Solver::SubCost* subcost : key->ends[i].subcost_c){
+            obj += w_c2 * subcost->con->y.square();
+        }
+        for(Solver::SubCost* subcost : key->ends[i].subcost_nc){
+            obj += w_nc2 * subcost->con->y.square();
+        }
+
+        for(int j = 0; j < nface; j++){
+            obj += w_c2 * key->ends[i].subcost_face[j]->con->y.square();
+        }
+    }
+
+    return 0.5*obj;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -857,7 +1024,7 @@ CentroidEndVelRangeCon::CentroidEndVelRangeCon(Solver* solver, string _name, Cen
     AddR3Link(obj->var_vel_t);
 	AddR3Link(obj->ends[iend].var_vel);
 }
-
+/*
 CentroidEndVelZeroCon::CentroidEndVelZeroCon(Solver* solver, string _name, CentroidKey* _obj, int _iend, vec3_t _dir, real_t _scale):
 	Constraint(solver, 1, ID(ConTag::CentroidEndRange, _obj->node, _obj->tick, _name), _scale){
 	obj  = _obj;
@@ -868,7 +1035,7 @@ CentroidEndVelZeroCon::CentroidEndVelZeroCon(Solver* solver, string _name, Centr
 	AddR3Link(obj->var_vel_t);
 	AddR3Link(obj->ends[iend].var_vel);
 }
-
+*/
 CentroidEndContactCon::CentroidEndContactCon(Solver* solver, string _name, CentroidKey* _obj, int _iend, int _iface, real_t _scale):
 	Constraint(solver, 1, ID(ConTag::CentroidEndContact, _obj->node, _obj->tick, _name), _scale){
 	obj   = _obj;
@@ -897,14 +1064,14 @@ void CentroidEndVelRangeCon::Prepare(){
 	vend    = obj->ends[iend].var_vel->val;
 	dir_abs = q*dir;
 }
-
+/*
 void CentroidEndVelZeroCon::Prepare(){
 	q       = obj->var_pos_r->val;
     v       = obj->var_vel_t->val;
 	vend    = obj->ends[iend].var_vel->val;
 	dir_abs = q*dir;
 }
-
+*/
 void CentroidEndContactCon::Prepare(){
     pe = obj->ends[iend].var_pos->val;
     point->position = pe;
@@ -970,18 +1137,18 @@ void CentroidTimeCon::CalcCoef(){
 }
 
 void CentroidEndPosCon::CalcCoef(){
-	if(obj[0]->ends[iend].iface != -1){
-		((SLink *)links[0])->SetCoef( 1.0);
-		((SLink *)links[1])->SetCoef(-1.0);
-		((SLink *)links[2])->SetCoef( 0.0);
-		((C3Link*)links[3])->SetCoef( vec3_t());
-	}
-	else{
-	    ((SLink *)links[0])->SetCoef( 1.0);
-	    ((SLink *)links[1])->SetCoef(-1.0);
-	    ((SLink *)links[2])->SetCoef(-obj[0]->tau);
-	    ((C3Link*)links[3])->SetCoef(-obj[0]->ends[iend].var_vel->val);
-	}
+	//if(obj[0]->ends[iend].iface != -1){
+	//	((SLink *)links[0])->SetCoef( 1.0);
+	//	((SLink *)links[1])->SetCoef(-1.0);
+	//	((SLink *)links[2])->SetCoef( 0.0);
+	//	((C3Link*)links[3])->SetCoef( vec3_t());
+	//}
+	//else{
+	((SLink *)links[0])->SetCoef( 1.0);
+	((SLink *)links[1])->SetCoef(-1.0);
+	((SLink *)links[2])->SetCoef(-obj[0]->tau);
+	((C3Link*)links[3])->SetCoef(-obj[0]->ends[iend].var_vel->val);
+	//}
 }
 
 void CentroidEndPosRangeCon::CalcCoef(){
@@ -999,7 +1166,7 @@ void CentroidEndVelRangeCon::CalcCoef(){
 	((R3Link*)links[1])->SetCoef(-dir_abs );
 	((R3Link*)links[2])->SetCoef( dir_abs );
 }
-
+/*
 void CentroidEndVelZeroCon::CalcCoef(){
 	Prepare();
 
@@ -1007,7 +1174,7 @@ void CentroidEndVelZeroCon::CalcCoef(){
 	((R3Link*)links[1])->SetCoef(-dir_abs );
 	((R3Link*)links[2])->SetCoef( dir_abs );
 }
-
+*/
 void CentroidEndContactCon::CalcCoef(){
 	Prepare();
 
@@ -1042,12 +1209,12 @@ void CentroidTimeCon::CalcDeviation(){
 }
 
 void CentroidEndPosCon::CalcDeviation(){
-	if(obj[0]->ends[iend].iface != -1){
-		y = obj[1]->ends[iend].var_pos->val - (obj[0]->ends[iend].var_pos->val);
-	}
-	else{
-	    y = obj[1]->ends[iend].var_pos->val - (obj[0]->ends[iend].var_pos->val + obj[0]->ends[iend].var_vel->val*obj[0]->var_duration->val);
-	}
+	//if(obj[0]->ends[iend].iface != -1){
+	//	y = obj[1]->ends[iend].var_pos->val - (obj[0]->ends[iend].var_pos->val);
+	//}
+	//else{
+	y = obj[1]->ends[iend].var_pos->val - (obj[0]->ends[iend].var_pos->val + obj[0]->ends[iend].var_vel->val*obj[0]->var_duration->val);
+	//}
 }
 
 void CentroidEndPosRangeCon::CalcDeviation(){
@@ -1083,11 +1250,11 @@ void CentroidEndVelRangeCon::CalcDeviation(){
 		active   = true;
 	}
 }
-
+/*
 void CentroidEndVelZeroCon::CalcDeviation(){
 	y[0] = dir_abs*(vend - v);
 }
-
+*/
 void CentroidEndContactCon::CalcDeviation(){
 	y[0] = nf*(pe - pf);
 }
@@ -1115,12 +1282,12 @@ void CentroidTimeCon::CalcLhs(){
 }
 
 void CentroidEndPosCon::CalcLhs(){
-	if(obj[0]->ends[iend].iface != -1){
-		obj[1]->ends[iend].var_pos->val = obj[0]->ends[iend].var_pos->val;
-	}
-	else{
-        obj[1]->ends[iend].var_pos->val = obj[0]->ends[iend].var_pos->val + obj[0]->ends[iend].var_vel->val*obj[0]->var_duration->val;
-	}
+	//if(obj[0]->ends[iend].iface != -1){
+	//	obj[1]->ends[iend].var_pos->val = obj[0]->ends[iend].var_pos->val;
+	//}
+	//else{
+    obj[1]->ends[iend].var_pos->val = obj[0]->ends[iend].var_pos->val + obj[0]->ends[iend].var_vel->val*obj[0]->var_duration->val;
+	//}
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
