@@ -8,6 +8,12 @@ add_library(console
 	module/rendering.cpp
 	module/request.cpp
 	module/simulation.cpp
+    base/typedefs.h
+    module/manager.h
+    module/module.h
+    module/rendering.h
+    module/request.h
+    module/simulation.h
 )
 target_link_libraries(console glwin)
 target_link_libraries(console Scenebuilder)
