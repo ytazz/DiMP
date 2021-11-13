@@ -15,7 +15,7 @@ struct CentroidTimeCon;
 struct CentroidEndPosCon;
 struct CentroidEndPosRangeCon;
 struct CentroidEndVelRangeCon;
-struct CentroidEndVelZeroCon;
+//struct CentroidEndVelZeroCon;
 struct CentroidEndContactCon;
 
 /**
@@ -42,6 +42,8 @@ public:
     FixConV3*           con_des_pos_t;
     FixConQ*            con_des_pos_r;
     FixConV3*           con_vel_zero;
+    vector<Solver::SubCost*>  subcost_u;
+    vector<Solver::SubCost*>  subcost_x;
 
 	real_t C;
 	real_t S;
@@ -67,23 +69,27 @@ public:
 	struct End{
 		CentroidKey*  key;
 		
-		int    iface;         //< true if this end effector is in contact
+		//int    iface;       //< true if this end effector is in contact
 		V3Var* var_pos;       //< end effector position
 		V3Var* var_vel;
 		SVar*  var_stiff;     //< contact stiffness
 		V3Var* var_moment;
-        SVar*  var_weight;    //< complementarity weight
 
 		CentroidEndPosCon*              con_pos;
 		CentroidEndPosRangeCon*         con_pos_range[3];
 		CentroidEndVelRangeCon*         con_vel_range[3];
-        CentroidEndVelZeroCon*          con_vel_zero [3];
 		RangeConS*                      con_stiff_range;
 		RangeConV3*                     con_moment_range[3];
-		vector<CentroidEndContactCon*>  con_contact;
         FixConS*                        con_stiff_zero;
-        RangeConS*                      con_weight_range;
-        
+        FixConV3*                       con_moment_zero;
+		FixConV3*                       con_des_pos;
+		FixConV3*                       con_vel_zero;
+        vector<CentroidEndContactCon*>  con_contact;
+
+        vector<Solver::SubCost*>  subcost_c;     ///< costs active when in contact
+        vector<Solver::SubCost*>  subcost_nc;    ///< costs active when not in contact
+        vector<Solver::SubCost*>  subcost_face;  ///< cost active when in contact with each face
+
 		real_t k_pbar_pe;
 		vec3_t k_pbar_le;
 		real_t k_lbar_le;
@@ -96,9 +102,7 @@ public:
 	vector<End>  ends;
 	
 public:
-    void  CopyVariables(CentroidKey* src);
-
-	virtual void AddVar(Solver* solver);
+    virtual void AddVar(Solver* solver);
 	virtual void AddCon(Solver* solver);
 	virtual void Prepare();
 	virtual void Draw(Render::Canvas* canvas, Render::Config* conf);
@@ -106,8 +110,12 @@ public:
 	CentroidKey();
 };
 
-struct CentroidDDPNode : public CustomSolver::DDPNode{
-    vector<bool>  contact;
+class CentroidDDPNode : public CustomSolver::DDPNode{
+public:
+    vector<int>  contact;
+
+public:
+    //virtual void Update();
 
              CentroidDDPNode();
     virtual ~CentroidDDPNode();
@@ -122,8 +130,11 @@ public:
 
         vec3_t  bodyRangeMin;
         vec3_t  bodyRangeMax;
-		
-		//vector<End>   ends;
+
+        real_t  complWeightMin;
+        real_t  complWeightMax;
+        real_t  complWeightRate;
+        //real_t  complWeightDecay;
 		
 		Param();
 	};
@@ -179,7 +190,7 @@ public:
 		struct End{
 			vec3_t  pos;
 			vec3_t  force;
-            bool    contact;
+            //bool    contact;
 		};
 	
 		real_t       t;
@@ -198,7 +209,6 @@ public:
 
     Param	            param;
     vector<End>         ends;
-	//vector<Face>        faces;
     vector<Face>        faces;
 	vector<Waypoint>    waypoints;
 	
@@ -214,6 +224,8 @@ public:
 
     Point*              point;  //< geometries used for internal computation
     Hull*               hull;
+
+    real_t              complWeight;
 	
 	virtual Keypoint*	CreateKeypoint() { return new CentroidKey(); }
 	virtual void		Init   ();
@@ -224,8 +236,10 @@ public:
 	virtual void        Draw          (Render::Canvas* canvas, Render::Config* conf);
 
     // DDPCallback
-    virtual int                     NumBranches(CustomSolver::DDPNode* parent);
-    virtual CustomSolver::DDPNode*  CreateNode (CustomSolver::DDPNode* parent, int idx);
+    virtual int                     NumBranches (CustomSolver::DDPNode* _parent);
+    virtual CustomSolver::DDPNode*  CreateNode  (CustomSolver::DDPNode* _parent, CustomSolver* _solver, int idx, int nx, int nu);
+    virtual void                    FinishNode  (CustomSolver::DDPNode* _node);
+    virtual real_t                  CalcNodeCost(CustomSolver::DDPNode* _node);
 
     //Face*  FindFace  (const vec3_t& p, vec3_t& pf, vec3_t& nf);
 	vec3_t ComPos    (real_t t, int type = Interpolate::Cubic);
@@ -233,10 +247,10 @@ public:
 	quat_t ComOri    (real_t t, int type = Interpolate::SlerpDiff);
 	vec3_t ComAngVel (real_t t, int type = Interpolate::Cubic);
 	vec3_t EndPos    (real_t t, int index, int type = Interpolate::LinearDiff);
-	bool   EndContact(real_t t, int index);
+	//bool   EndContact(real_t t, int index);
 	//vec3_t EndForce (real_t t, int index, int type = Interpolate::LinearDiff);
 
-    void  CopyVariables(Centroid* src);
+    //void  CopyVariables(Centroid* src);
 	
 	void CreateSnapshot(real_t t, Snapshot& s);
 	void CalcTrajectory();
@@ -342,7 +356,7 @@ struct CentroidEndVelRangeCon : Constraint{
 
 	CentroidEndVelRangeCon(Solver* solver, string _name, CentroidKey* _obj, int _iend, vec3_t _dir, real_t _scale);
 };
-
+/*
 struct CentroidEndVelZeroCon : Constraint{
 	CentroidKey* obj;
 	int          iend;
@@ -359,7 +373,7 @@ struct CentroidEndVelZeroCon : Constraint{
 	
 	CentroidEndVelZeroCon(Solver* solver, string _name, CentroidKey* _obj, int _iend, vec3_t _dir, real_t _scale);
 };
-
+*/
 struct CentroidEndContactCon : Constraint{
 	CentroidKey*     obj;
 	int              iend;

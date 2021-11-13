@@ -109,6 +109,7 @@ struct ConTag{
 		CentroidTime,
         CentroidEffort,
 		CentroidEndPos,
+		CentroidEndVel,
 		CentroidEndStiff,
 		CentroidEndMoment,
 		CentroidEndRange,

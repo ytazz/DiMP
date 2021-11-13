@@ -107,6 +107,7 @@ const char* ConNames[] = {
 	"centroid_time"       ,
 	"centroid_effort"     ,
 	"centroid_end_pos"    ,
+	"centroid_end_vel"    ,
 	"centroid_end_stiff"  ,
 	"centroid_end_moment" ,
 	"centroid_end_range"  ,
