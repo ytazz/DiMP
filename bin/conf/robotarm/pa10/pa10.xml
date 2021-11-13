@@ -25,44 +25,44 @@
   <sphere name="sphere_link6" radius="0.1" visual="true" collision="true"/>
     
   <body name="body_link0" dynamical="false">
-    <connector name="mesh"                rot="-90deg@x"/>
-    <connector name="sock" trn="0 0.19 0" rot=" 90deg@x"/>
+    <connector name="mesh"                rot="  0deg@x"/>
+    <connector name="sock" trn="0 0 0.19" rot="180deg@x"/>
   </body>
   <body name="body_link1">
-    <connector name="mesh1"                       rot="-90deg@x"/>
-    <connector name="mesh2" trn=" 0.085 0.07   0" rot=" 90deg@y"/>
-    <connector name="mesh3" trn="-0.085 0.07   0" rot="-90deg@y"/>
-    <connector name="plug"  trn=" 0     0.0    0" rot=" 90deg@x"/>
-    <connector name="sock"  trn=" 0     0.1135 0" rot=" 90deg@y"/>
+    <connector name="mesh1"                       rot="  0deg@x"/>
+    <connector name="mesh2" trn=" 0.085 0 0.07  " rot=" 90deg@z*90deg@x"/>
+    <connector name="mesh3" trn="-0.085 0 0.07  " rot="-90deg@z*90deg@x"/>
+    <connector name="plug"  trn=" 0     0 0.0   " rot="180deg@x"/>
+    <connector name="sock"  trn=" 0     0 0.1135" rot=" 90deg@y"/>
   </body>
   <body name="body_link2">
-    <connector name="mesh1" trn="-0.08 0 0"     rot="90deg@y"/>
-    <connector name="mesh2" trn=" 0    0.07  0"              />
-    <connector name="plug"  trn=" 0    0.0   0" rot="90deg@y"/>
-    <connector name="sock"  trn=" 0    0.315 0" rot="90deg@x"/>
+    <connector name="mesh1" trn="-0.08 0 0    " rot=" 90deg@z*90deg@x"/>
+    <connector name="mesh2" trn=" 0    0 0.07 " rot="  0deg@z*90deg@x"/>
+    <connector name="plug"  trn=" 0    0 0.0  " rot=" 90deg@y"/>
+    <connector name="sock"  trn=" 0    0 0.315" rot="180deg@x"/>
   </body>
   <body name="body_link3">
-    <connector name="mesh1" trn="-0.061 0     0" rot=" 90deg@y"/>
-    <connector name="mesh2" trn=" 0.066 0.06  0" rot=" 90deg@y"/>
-    <connector name="mesh3" trn="-0.066 0.06  0" rot="-90deg@y"/>
-    <connector name="plug"  trn=" 0     0     0" rot=" 90deg@x"/>
-    <connector name="sock"  trn=" 0     0.135 0" rot=" 90deg@y"/>
+    <connector name="mesh1" trn="-0.061 0 0    " rot=" 90deg@z*90deg@x"/>
+    <connector name="mesh2" trn=" 0.066 0 0.06 " rot=" 90deg@z*90deg@x"/>
+    <connector name="mesh3" trn="-0.066 0 0.06 " rot="-90deg@z*90deg@x"/>
+    <connector name="plug"  trn=" 0     0 0    " rot="180deg@x"/>
+    <connector name="sock"  trn=" 0     0 0.135" rot=" 90deg@y"/>
   </body>
   <body name="body_link4">
-    <connector name="mesh1" trn="-0.061 0     0" rot="90deg@y"/>
-    <connector name="mesh2" trn=" 0     0.055 0"              />
-    <connector name="plug"  trn=" 0     0     0" rot="90deg@y"/>
-    <connector name="sock"  trn=" 0     0.235 0" rot="90deg@x"/>
+    <connector name="mesh1" trn="-0.061 0 0    " rot=" 90deg@z*90deg@x"/>
+    <connector name="mesh2" trn=" 0     0 0.055" rot="  0deg@z*90deg@x"/>
+    <connector name="plug"  trn=" 0     0 0    " rot=" 90deg@y"/>
+    <connector name="sock"  trn=" 0     0 0.235" rot="180deg@x"/>
   </body>
   <body name="body_link5">
-    <connector name="mesh1" trn=" 0     0.04  0" rot=" 90deg@y"/>
-    <connector name="mesh2" trn=" 0.056 0.04  0" rot=" 90deg@y"/>
-    <connector name="mesh3" trn="-0.056 0.04  0" rot="-90deg@y"/>
-    <connector name="plug"  trn=" 0     0     0" rot=" 90deg@x"/>
-    <connector name="sock"  trn=" 0     0.194 0" rot=" 90deg@y"/>
+    <connector name="mesh1" trn=" 0     0 0.04 " rot=" 90deg@z*90deg@x"/>
+    <connector name="mesh2" trn=" 0.056 0 0.04 " rot=" 90deg@z*90deg@x"/>
+    <connector name="mesh3" trn="-0.056 0 0.04 " rot="-90deg@z*90deg@x"/>
+    <connector name="plug"  trn=" 0     0 0    " rot="180deg@x"/>
+    <connector name="sock"  trn=" 0     0 0.194" rot=" 90deg@y"/>
   </body>
   <body name="body_link6">
-    <connector name="mesh"             rot="90deg@y"/>
+    <connector name="mesh"             rot="90deg@z*90deg@x"/>
     <connector name="plug" trn="0 0 0" rot="90deg@y"/>
   </body>
 
