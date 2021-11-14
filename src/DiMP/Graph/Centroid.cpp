@@ -428,11 +428,11 @@ void Centroid::Init() {
 			key->var_duration->val = (key->next->tick->time - t)/T;
 
             // duration is fixed
-            key->var_duration->locked = true;
+            //key->var_duration->locked = true;
 
-            key->con_duration_range->enabled = false;
-		    //con_duration_range->_min =  0.0;
-		    //con_duration_range->_max =  inf;
+            //key->con_duration_range->enabled = false;
+		    key->con_duration_range->_min =  0.0;
+		    key->con_duration_range->_max =  inf;
         }
 
         vec3_t psum;
@@ -724,13 +724,18 @@ void Centroid::DrawSnapshot(Render::Canvas* canvas, Render::Config* conf) {
 	}	
 }
 
-int Centroid::NumBranches(CustomSolver::DDPNode* node){
+int Centroid::NumBranches(CustomSolver::DDPNode* _node){
     int nend  = ends .size();
     int nface = faces.size();
 
-    int n = 1;
+    CentroidDDPNode* node = (CentroidDDPNode*)_node;
+
+    int n = 0;
     for(int i = 0; i < nend; i++){
-        if(((CentroidDDPNode*)node)->contact[i] == -1)
+        if(node->count[i] == ends[i].numSwitchMax)
+            continue;
+
+        if(node->contact[i] == -1)
              n += nface;
         else n++;
     }
@@ -746,38 +751,46 @@ CustomSolver::DDPNode* Centroid::CreateNode(CustomSolver::DDPNode* _parent, Cust
     int nend  = ends .size();
     int nface = faces.size();
 
-    if(np){
-        n->k       = np->k + 1;
-        n->contact = np->contact;
-    }
-    else{
+    if(!np){
         n->contact.resize(nend);
+        n->count  .resize(nend);
         fill(n->contact.begin(), n->contact.end(), 0);
+        fill(n->count  .begin(), n->count  .end(), 0);
         n->k = 0;
     }
-
-    if(idx == 0){
-        // nochange
-    }
     else{
-        idx--;
+        n->k       = np->k + 1;
+        n->contact = np->contact;
+        n->count   = np->count;
+
+        //if(idx == 0){
+        //    // nochange
+        //}
+        //else{
+        //    idx--;
 
         for(int i = 0; i < nend; i++){
+            if(n->count[i] == ends[i].numSwitchMax)
+                continue;
+
             if(n->contact[i] == -1){
                 if(idx < nface){
-                     n->contact[i] = idx;
-                     break;
+                    n->contact[i] = idx;
+                    n->count[i]++;
+                    break;
                 }
                 else idx -= nface;
             }
             else{
                 if(idx == 0){
-                     n->contact[i] = -1;
-                     break;
+                    n->contact[i] = -1;
+                    n->count[i]++;
+                    break;
                 }
                 else idx--;
             }
         }
+        //}
     }
 
     n->Resize(nx, nu);

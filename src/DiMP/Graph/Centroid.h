@@ -112,11 +112,11 @@ public:
 
 class CentroidDDPNode : public CustomSolver::DDPNode{
 public:
-    vector<int>  contact;
+    vector<int>  contact;  //< for each iend, -1: not in contact, otherwise index of face in contact with
+    vector<int>  count;    //< for each iend, number of contact switches so far
 
 public:
-    //virtual void Update();
-
+    
              CentroidDDPNode();
     virtual ~CentroidDDPNode();
 };
@@ -150,6 +150,7 @@ public:
         vec2_t  copRangeMin;
         vec2_t  copRangeMax;
         real_t  stiffnessMax;
+        int     numSwitchMax;
 
         Point*  point;
 

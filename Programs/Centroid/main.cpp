@@ -42,12 +42,12 @@ public:
 
 		vec3_t startPos(0.0, 0.0, 1.0);
 		quat_t startOri = quat_t();
-		vec3_t goalPos (3.0, 0.0, 1.0);
+		vec3_t goalPos (8.0, 0.0, 1.0);
 		quat_t goalOri  = quat_t::Rot(Rad(0.0), 'z');
         real_t duration = 0.3;
 		real_t spacing  = 0.2;
         int nend = 2;
-        int N    = 10;
+        int N    = 14;
         real_t goalTime = duration * N;
 		
         centroid = new DiMP::Centroid(graph, "centroid");
@@ -74,16 +74,16 @@ public:
 			
             if(iend == 0){
 				centroid->ends[iend].basePos     = vec3_t( 0.0, -spacing/2.0,  0.0);
-				centroid->ends[iend].posRangeMin = vec3_t(-10.0, -0.0        , -1.1);
-				centroid->ends[iend].posRangeMax = vec3_t( 10.0,  0.0        , -0.9);
+				centroid->ends[iend].posRangeMin = vec3_t(-0.5, -0.0        , -1.1);
+				centroid->ends[iend].posRangeMax = vec3_t( 0.5,  0.0        , -0.9);
 			}
 			else{
 				centroid->ends[iend].basePos     = vec3_t( 0.0,  spacing/2.0,  0.0);
-				centroid->ends[iend].posRangeMin = vec3_t(-10.0, -0.0        , -1.1);
-				centroid->ends[iend].posRangeMax = vec3_t( 10.0,  0.0        , -0.9);
+				centroid->ends[iend].posRangeMin = vec3_t(-0.5, -0.0        , -1.1);
+				centroid->ends[iend].posRangeMax = vec3_t( 0.5,  0.0        , -0.9);
 			}
-			centroid->ends[iend].velRangeMin    = vec3_t(-10.0, -100.0, -100.0);
-			centroid->ends[iend].velRangeMax    = vec3_t( 10.0,  100.0,  100.0);
+			centroid->ends[iend].velRangeMin    = vec3_t(-1.5, -100.0, -100.0);
+			centroid->ends[iend].velRangeMax    = vec3_t( 1.5,  100.0,  100.0);
 
 			centroid->ends[iend].momentRangeMin = vec3_t(-0.0, -0.0, -1.0);
 			centroid->ends[iend].momentRangeMax = vec3_t( 0.0,  0.0,  1.0);
@@ -92,6 +92,8 @@ public:
 			centroid->ends[iend].copRangeMax = vec2_t( 0.1,  0.05);
 
             centroid->ends[iend].stiffnessMax = 1.0;
+
+            centroid->ends[iend].numSwitchMax = N/2;
 		}
 
         // flat ground
