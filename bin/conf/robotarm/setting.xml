@@ -1,8 +1,36 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 
 <!--
-<setting scene="reaching2d" />
-<setting scene="welding" />
+<scene
+  name = "reaching2d"
+  conf_filename = ""
+  >
+  <workspace name = "conf/robotarm/scene_reaching2d.xml"/>
+</scene>
 -->
-<setting scene="reaching3d" />
 
+<scene
+  name = "reaching3d"
+  conf_filename = ""
+  >
+  <workspace filename = "conf/robotarm/scene_reaching3d.xml"/>
+</scene>
+
+<!--
+<scene
+  name = "welding"
+  conf_filename = "conf/robotarm/welding.xml"
+  >
+  <workspace filename = "conf/robotarm/scene_welding.xml"/>
+</scene>
+-->
+
+<!--
+<scene
+	name          = "reaching_twostage"
+	conf_filename = ""
+	>
+	<workspace filename = "conf/robotarm/scene_reaching3d.xml"/>
+	<workspace filename = "conf/robotarm/scene_reaching3d_local.xml" />
+</scene>
+-->

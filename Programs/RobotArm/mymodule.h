@@ -2,20 +2,17 @@
 
 #include <module/module.h>
 
-#include <sbbuilder.h>
-#include <sbscenelocal.h>
-#include <DiMP/sbdimp.h>
-#include <SprGraphics/sbsprgraphics.h>
-
 class RobotArm;
+class Workspace;
 
 class MyModule : public Module {
 public:
 	// 構築するロボットアームの選択
 	enum {
-		Reaching2D,		//< 平面上のロボットアームのリーチング
-		Reaching3D,		//< 3D上のロボットアームのリーチング＋障害物回避
-		Toss3D,			//< 3D上の複数のロボットアームの物体搬送
+		Reaching2D,		    //< 平面上のロボットアームのリーチング
+		Reaching3D,		    //< 3D上のロボットアームのリーチング＋障害物回避
+        Reaching3DTwoStage, //< 3D上のロボットアームのリーチング＋障害物回避　＋局所軌道計画
+		Toss3D,			    //< 3D上の複数のロボットアームの物体搬送
 		Welding,
 	};
 
@@ -44,27 +41,15 @@ public:
 		Welding  welding;
 	};
 
+    string          sceneName;
 	int             sceneSelect;
 	string          sceneFilename;
 	string          confFilename;
 
 	Config          conf;
 
-	SceneLocal      scene;
-	TypeDB          typedb;
-	ModelContainer  models;
-	Builder         builder;
-
-	AdaptorDiMP		adaptorDiMP;
-	AdaptorSprGR	adaptorSprGR;
-
-	typedef vector< UTRef<RobotArm> >	Robots;
-	Robots                      robot;			///< robotic arms;
-	vector<DiMP::Object*>       target;		    ///< target objects
-	vector<DiMP::Object*>       obstacle;		///< obstacles
-	vector<DiMP::TimeSlot*>     timeSlot;		///< time slots
-	vector<DiMP::MatchTask*>    matchTask;		///< match tasks
-	vector<DiMP::AvoidTask*>    avoidTask;      ///< avoid tasks
+    typedef vector< UTRef<Workspace> >  Workspaces;
+    Workspaces      workspace;
 
 	vector<vec3_t>  weldingPoints;   ///< weldingにおける溶接点列
 
