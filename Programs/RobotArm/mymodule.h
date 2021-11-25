@@ -61,6 +61,7 @@ public:
 	vector<vec3_t>  weldingPoints;   ///< welding‚É‚¨‚¯‚é—nÚ“_—ñ
 
     int             planPhase;       ///< two phase‚É‚¨‚¯‚éŒv‰æH’ö
+    real_t          localPlanTime;   ///< local planning‚Ì‘ÎÛŽž
 
 public:
 	void Read(XML& xml);

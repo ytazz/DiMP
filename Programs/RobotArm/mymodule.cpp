@@ -27,7 +27,8 @@ MyModule::Config::Welding::Welding() {
 MyModule::MyModule() {
 	sceneSelect = Reaching2D;
 
-    planPhase = PlanPhase::Global;
+    planPhase     = PlanPhase::Global;
+    localPlanTime = 0.0;
 
 	reqManager->Add("enable" )->AddArg("mode", ArgType::String);
     reqManager->Add("disable")->AddArg("mode", ArgType::String);
@@ -280,6 +281,12 @@ void MyModule::SwitchPhase(string phase){
     }
 }
 
+void MyModule::SetTime(real_t t){
+    if(sceneSelect == Reaching3DTwoPhase){
+        localPlanTime = t;
+    }
+}
+
 bool MyModule::OnRequest() {
 	string name           = reqManager->name;
     vector<ArgData>& args = reqManager->args;
@@ -300,16 +307,26 @@ bool MyModule::OnRequest() {
     if(name == "switch"){
         SwitchPhase(args[0].str);
     }
+    if(name == "settime"){
+        real_t t;
+        Converter::FromString(args[0].str, t);
+        SetTime(t);
+    }
 
     return ret | Module::OnRequest(); 
 }
 
 void MyModule::OnStep() {
     if(sceneSelect == Reaching3DTwoPhase){
-        if(planPhase == PlanPhase::Global)
+        if(planPhase == PlanPhase::Global){
             graph = workspace[0]->graph;
-        if(planPhase == PlanPhase::Local)
+        }
+        if(planPhase == PlanPhase::Local){
             graph = workspace[1]->graph;
+
+            // ‚±‚±‚Å‹ÇŠŒv‰æ‚É•K—v‚È‚¨‚º‚ñ—§‚Ä‚ğ‚â‚é
+
+        }
     }
 
 	Module::OnStep();
