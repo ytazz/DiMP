@@ -9,12 +9,14 @@
 </scene>
 -->
 
+<!--
 <scene
   name = "reaching3d"
   conf_filename = ""
   >
   <workspace filename = "conf/robotarm/scene_reaching3d.xml"/>
 </scene>
+-->
 
 <!--
 <scene
@@ -25,12 +27,12 @@
 </scene>
 -->
 
-<!--
 <scene
-	name          = "reaching_twostage"
+	name          = "reaching3d_twophase"
 	conf_filename = ""
 	>
 	<workspace filename = "conf/robotarm/scene_reaching3d.xml"/>
 	<workspace filename = "conf/robotarm/scene_reaching3d_local.xml" />
 </scene>
+<!--
 -->

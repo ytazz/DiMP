@@ -11,7 +11,7 @@ public:
 	enum {
 		Reaching2D,		    //< 平面上のロボットアームのリーチング
 		Reaching3D,		    //< 3D上のロボットアームのリーチング＋障害物回避
-        Reaching3DTwoStage, //< 3D上のロボットアームのリーチング＋障害物回避　＋局所軌道計画
+        Reaching3DTwoPhase, //< 3D上のロボットアームのリーチング＋障害物回避　＋局所軌道計画
 		Toss3D,			    //< 3D上の複数のロボットアームの物体搬送
 		Welding,
 	};
@@ -41,6 +41,13 @@ public:
 		Welding  welding;
 	};
 
+    struct PlanPhase{
+        enum{
+            Global = 0,
+            Local  = 1,
+        };
+    };
+
     string          sceneName;
 	int             sceneSelect;
 	string          sceneFilename;
@@ -53,12 +60,15 @@ public:
 
 	vector<vec3_t>  weldingPoints;   ///< weldingにおける溶接点列
 
+    int             planPhase;       ///< two phaseにおける計画工程
+
 public:
 	void Read(XML& xml);
 
 	void DrawSnapshot(real_t time);
 
 	void EnableConstraints (string mode, bool enable);
+    void SwitchPhase(string phase);
 	void Report();
 
 public:

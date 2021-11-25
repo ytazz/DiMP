@@ -27,8 +27,11 @@ MyModule::Config::Welding::Welding() {
 MyModule::MyModule() {
 	sceneSelect = Reaching2D;
 
+    planPhase = PlanPhase::Global;
+
 	reqManager->Add("enable" )->AddArg("mode", ArgType::String);
     reqManager->Add("disable")->AddArg("mode", ArgType::String);
+    reqManager->Add("switch" )->AddArg("phase", ArgType::String);
 	reqManager->Add("report");
 }
 
@@ -67,7 +70,7 @@ bool MyModule::Build() {
     rootNode->Get(sceneName, ".name");
 	if (sceneName == "reaching2d"         ) sceneSelect = Reaching2D;
 	if (sceneName == "reaching3d"         ) sceneSelect = Reaching3D;
-	if (sceneName == "reaching3d_twostage") sceneSelect = Reaching3DTwoStage;
+	if (sceneName == "reaching3d_twophase") sceneSelect = Reaching3DTwoPhase;
 	if (sceneName == "toss3d"             ) sceneSelect = Toss3D;
 	if (sceneName == "welding"            ) sceneSelect = Welding;
 
@@ -141,14 +144,19 @@ bool MyModule::Build() {
 			weldingPoints[i] = conf.welding.mockupPos + conf.welding.mockupOri * p;
 		}
 	}
-	if(sceneSelect == Reaching2D || sceneSelect == Reaching3D){
-		DiMP::Tree* tree = new DiMP::Tree(graph, "tree");
-		tree->root = workspace[0]->robot[0]->link[0];
+	if( sceneSelect == Reaching2D ||
+        sceneSelect == Reaching3D ||
+        sceneSelect == Reaching3DTwoPhase ){
 
-		for (DiMP::Joint* jnt : workspace[0]->robot[0]->joint) {
-			jnt->param.rmin_v[0] = 0.0;
-			jnt->param.rmax_v[0] = 0.0;
-		}
+        for(Workspace* ws : workspace){
+            DiMP::Tree* tree = new DiMP::Tree(ws->graph, "tree");
+		    tree->root = ws->robot[0]->link[0];
+
+		    for (DiMP::Joint* jnt : ws->robot[0]->joint) {
+			    jnt->param.rmin_v[0] = 0.0;
+			    jnt->param.rmax_v[0] = 0.0;
+		    }
+        }
 	}
 
 	// ‰Šú‰»
@@ -263,6 +271,15 @@ void MyModule::Report(){
 	}
 }
 
+void MyModule::SwitchPhase(string phase){
+    if(sceneSelect == Reaching3DTwoPhase){
+        if(phase == "global")
+            planPhase = PlanPhase::Global;
+        if(phase == "local")
+            planPhase = PlanPhase::Local;
+    }
+}
+
 bool MyModule::OnRequest() {
 	string name           = reqManager->name;
     vector<ArgData>& args = reqManager->args;
@@ -280,11 +297,21 @@ bool MyModule::OnRequest() {
 	if(name == "report"){
 		Report();
 	}
+    if(name == "switch"){
+        SwitchPhase(args[0].str);
+    }
 
     return ret | Module::OnRequest(); 
 }
 
 void MyModule::OnStep() {
+    if(sceneSelect == Reaching3DTwoPhase){
+        if(planPhase == PlanPhase::Global)
+            graph = workspace[0]->graph;
+        if(planPhase == PlanPhase::Local)
+            graph = workspace[1]->graph;
+    }
+
 	Module::OnStep();
 }
 
