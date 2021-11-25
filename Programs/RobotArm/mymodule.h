@@ -70,6 +70,7 @@ public:
 
 	void EnableConstraints (string mode, bool enable);
     void SwitchPhase(string phase);
+    void SetTime(real_t t);
 	void Report();
 
 public:
