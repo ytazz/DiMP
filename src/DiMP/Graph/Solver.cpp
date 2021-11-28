@@ -143,7 +143,7 @@ void CustomSolver::CalcDirectionSearchDDP(){
     root->cost = V[0];
     
     for(int i = 0; i < nx; i++)
-	    root->Uxx[i][i] = 100.0;
+	    root->Uxx[i][i] = 1000.0;
 
     nodes.push_back(root);
     queue.insert(root);
@@ -202,6 +202,12 @@ void CustomSolver::CalcDirectionSearchDDP(){
 
         n = n->parent;
     }
+
+    // calc forward path to make sure dx[0] is zero
+    //dx[0].clear();
+    //for(int k = 0; k < N; k++){
+    //    dx[k+1] = fx[k]*dx[k] + fu[k]*du[k] + f_cor[k];
+    //}
 
 	for(int k = 0; k <= N; k++){
 		for(SubState* subst : state[k]->substate){

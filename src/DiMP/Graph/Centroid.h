@@ -15,8 +15,12 @@ struct CentroidTimeCon;
 struct CentroidEndPosCon;
 struct CentroidEndPosRangeCon;
 struct CentroidEndVelRangeCon;
-//struct CentroidEndVelZeroCon;
 struct CentroidEndContactCon;
+
+class CentroidCallback{
+public:
+    virtual void EnableContact(CentroidEndContactCon* con) = 0;
+};
 
 /**
 	centroidal dynamics model
@@ -69,7 +73,7 @@ public:
 	struct End{
 		CentroidKey*  key;
 		
-		//int    iface;       //< true if this end effector is in contact
+		int    iface;         //< -1: no contact, otherwise index to contact face
 		V3Var* var_pos;       //< end effector position
 		V3Var* var_vel;
 		SVar*  var_stiff;     //< contact stiffness
@@ -93,10 +97,6 @@ public:
 		real_t k_pbar_pe;
 		vec3_t k_pbar_le;
 		real_t k_lbar_le;
-		
-		//vec3_t GetPos    ();
-		//vec3_t GetForce  ();
-		//void   SetPos  (const vec3_t& p);
 	};
 
 	vector<End>  ends;
@@ -135,6 +135,9 @@ public:
         real_t  complWeightMax;
         real_t  complWeightRate;
         //real_t  complWeightDecay;
+
+        real_t  swingSlope;
+        real_t  swingHeight;
 		
 		Param();
 	};
@@ -161,10 +164,9 @@ public:
 		struct End{
 			vec3_t  pos;
 			vec3_t  vel;
-			bool    fix_pos;
-			bool    fix_vel;
-
-			End(vec3_t _pos, vec3_t _vel, bool _fix_pos, bool _fix_vel);
+			
+            End();
+			End(vec3_t _pos, vec3_t _vel);
 		};
 
 		int     k;
@@ -174,30 +176,31 @@ public:
 		quat_t  pos_r;
 		vec3_t  vel_t;
 		vec3_t  vel_r;
-		bool    fix_pos_t;
-		bool    fix_pos_r;
-		bool    fix_vel_t;
-		bool    fix_vel_r;
-
+		
 		vector<End>  ends;
 
 		Waypoint();
 		Waypoint(int _k,
-			real_t _time, vec3_t _pos_t, quat_t _pos_r, vec3_t _vel_t, vec3_t _vel_r, 
-			bool _fix_pos_t, bool _fix_pos_r, bool _fix_vel_t, bool _fix_vel_r);
+			real_t _time, vec3_t _pos_t, quat_t _pos_r, vec3_t _vel_t, vec3_t _vel_r);
 	};
 	
 	struct Snapshot{
 		struct End{
 			vec3_t  pos;
-			vec3_t  force;
-            //bool    contact;
+			vec3_t  vel;
+            real_t  stiffness;
+            vec3_t  force;
+            vec3_t  moment;
+            bool    contact;
 		};
 	
 		real_t       t;
 		vec3_t       pos;
-		quat_t       ori;
 		vec3_t       vel;
+        vec3_t       acc;
+        quat_t       ori;
+        vec3_t       angvel;
+		
 		vector<End>  ends;
 		
 		Snapshot();
@@ -212,6 +215,7 @@ public:
     vector<End>         ends;
     vector<Face>        faces;
 	vector<Waypoint>    waypoints;
+    CentroidCallback*   callback;
 	
 	Snapshot            snapshot;
 	vector<Snapshot>    trajectory;
@@ -220,8 +224,10 @@ public:
 	real_t              L;  //< length scaler
 	real_t              T;  //< time scaler
 	real_t              V;  //< velocity scaler
+    real_t              A;  //< acceleration scaler
 	real_t              F;  //< force scaler
-	real_t              M;
+	real_t              M;  //< moment scaler
+    real_t              S;  //< stiffness scaler
 
     Point*              point;  //< geometries used for internal computation
     Hull*               hull;
@@ -243,16 +249,11 @@ public:
     virtual real_t                  CalcNodeCost(CustomSolver::DDPNode* _node);
 
     //Face*  FindFace  (const vec3_t& p, vec3_t& pf, vec3_t& nf);
-	vec3_t ComPos    (real_t t, int type = Interpolate::Cubic);
-	vec3_t ComVel    (real_t t, int type = Interpolate::Cubic);
-	quat_t ComOri    (real_t t, int type = Interpolate::SlerpDiff);
-	vec3_t ComAngVel (real_t t, int type = Interpolate::Cubic);
-	vec3_t EndPos    (real_t t, int index, int type = Interpolate::LinearDiff);
-	//bool   EndContact(real_t t, int index);
-	//vec3_t EndForce (real_t t, int index, int type = Interpolate::LinearDiff);
-
-    //void  CopyVariables(Centroid* src);
-	
+	void ComState   (real_t t, vec3_t& pos, vec3_t& vel, vec3_t& acom);
+	void TorsoState (real_t t, quat_t& ori, vec3_t& angvel, int type = Interpolate::SlerpDiff);
+	void EndState   (real_t t, int index, vec3_t& pos, vec3_t& vel);
+    void EndForce   (real_t t, int index, real_t& stiff, vec3_t& moment, bool& contact);
+    
 	void CreateSnapshot(real_t t, Snapshot& s);
 	void CalcTrajectory();
 	
@@ -378,6 +379,7 @@ struct CentroidEndVelZeroCon : Constraint{
 struct CentroidEndContactCon : Constraint{
 	CentroidKey*     obj;
 	int              iend;
+    int              iface;
     Point*           point;
     Centroid::Face*  face;
 	vec3_t           pe;

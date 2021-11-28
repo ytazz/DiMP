@@ -232,6 +232,14 @@ void CentroidKey::Prepare() {
 
 	q_rhs = q*quat_t::Rot(q.Conjugated()*(w*tau));
 	w_rhs = w + msum*tau;
+
+    // contact filtering
+    for(End& end : ends){
+        for(int j = 0; j < cen->faces.size(); j++){
+            end.con_contact[j]->Prepare();
+            cen->callback->EnableContact(end.con_contact[j]);
+        }
+    }
 }
 
 void CentroidKey::Draw(Render::Canvas* canvas, Render::Config* conf) {
@@ -268,8 +276,15 @@ Centroid::Param::Param() {
 	m  = 1.0;
 	I  = 1.0;
 
+    complWeightMin  =  0.1;
+    complWeightMax  =  1.0;
+    complWeightRate = 10.0;
+
     bodyRangeMin = vec3_t(-0.1, -0.1, -0.1);
     bodyRangeMax = vec3_t( 0.1,  0.1,  0.1);
+
+    swingSlope  = 1.0;
+    swingHeight = 0.05;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -287,8 +302,7 @@ Centroid::Waypoint::Waypoint() {
 
 Centroid::Waypoint::Waypoint(
 	int _k, 
-	real_t _time, vec3_t _pos_t, quat_t _pos_r, vec3_t _vel_t, vec3_t _vel_r, 
-	bool _fix_pos_t, bool _fix_pos_r, bool _fix_vel_t, bool _fix_vel_r)
+	real_t _time, vec3_t _pos_t, quat_t _pos_r, vec3_t _vel_t, vec3_t _vel_r)
 {
 	k         = _k;
 	time      = _time;
@@ -296,17 +310,15 @@ Centroid::Waypoint::Waypoint(
 	pos_r     = _pos_r;
 	vel_t     = _vel_t;
 	vel_r     = _vel_r;
-	fix_pos_t = _fix_pos_t;
-	fix_pos_r = _fix_pos_r;
-	fix_vel_t = _fix_vel_t;
-	fix_vel_r = _fix_vel_r;
 }
 
-Centroid::Waypoint::End::End(vec3_t _pos, vec3_t _vel, bool _fix_pos, bool _fix_vel){
+Centroid::Waypoint::End::End(){
+
+}
+			
+Centroid::Waypoint::End::End(vec3_t _pos, vec3_t _vel){
 	pos     = _pos;
 	vel     = _vel;
-	fix_pos = _fix_pos;
-	fix_vel = _fix_vel;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -343,14 +355,19 @@ void Centroid::Init() {
 	L = sqrt(param.I/param.m);
 	T = sqrt(L/param.g);
 	V = L/T;
+    A = L/(T*T);
 	F = param.m*param.g;
 	M = F*L;
+    S = sqrt(F/L);
+
+    int nend  = ends .size();
+    int nface = faces.size();
 
     // end effector range
 	for (int k = 0; k < graph->ticks.size(); k++) {
 		CentroidKey* key = (CentroidKey*)traj.GetKeypoint(graph->ticks[k]);
 
-		for(int i = 0; i < key->ends.size(); i++){
+		for(int i = 0; i < nend; i++){
     		for(int j = 0; j < 3; j++){
 				key->ends[i].con_pos_range[j]->_min = ends[i].posRangeMin[j]/L;
 				key->ends[i].con_pos_range[j]->_max = ends[i].posRangeMax[j]/L;
@@ -375,7 +392,7 @@ void Centroid::Init() {
 	curve_r.SetType(Interpolate::SlerpDiff);
 	curve_end.resize(ends.size());
 
-    for(int j = 0; j < ends.size(); j++){
+    for(int j = 0; j < nend; j++){
 		curve_end[j].SetType(Interpolate::Cubic);
 	}
 
@@ -390,7 +407,7 @@ void Centroid::Init() {
 		curve_r.SetPos(i, wp.pos_r);
 		curve_r.SetVel(i, wp.vel_r);
 
-		for(int j = 0; j < ends.size(); j++){
+		for(int j = 0; j < nend; j++){
 			curve_end[j].AddPoint(wp.time);
 			curve_end[j].SetPos(i, wp.ends[j].pos);
 			curve_end[j].SetVel(i, wp.ends[j].vel);
@@ -408,16 +425,16 @@ void Centroid::Init() {
 		real_t t = graph->ticks[k]->time;
 
 		key->var_pos_t->val = curve_t.CalcPos(t)/L;
-		key->var_pos_r->val = curve_r.CalcPos(t)/L;
+		key->var_pos_r->val = curve_r.CalcPos(t);
 		key->var_vel_t->val = curve_t.CalcVel(t)/V;
-		key->var_vel_r->val = curve_r.CalcVel(t)/V;
+		key->var_vel_r->val = curve_r.CalcVel(t)/(1/T);
 
         // rotation is fixed at the moment
         key->var_pos_r->locked = true;
 	    key->var_vel_r->locked = true;
 
         key->con_des_pos_t->desired = curve_t.CalcPos(t)/L;
-        key->con_des_pos_r->desired = curve_r.CalcPos(t)/L;
+        key->con_des_pos_r->desired = curve_r.CalcPos(t);
         key->con_vel_zero ->desired = vec3_t();
         key->con_des_pos_t->weight = (key->next ? 1.0 : 10.0)*one;
         key->con_des_pos_r->weight = (key->next ? 1.0 : 10.0)*one;
@@ -437,10 +454,10 @@ void Centroid::Init() {
 
         vec3_t psum;
         real_t l2sum = 0.0;
-		for(int i = 0; i < key->ends.size(); i++){
+        for(int i = 0; i < nend; i++){
 			key->ends[i].var_pos  ->val = curve_end[i].CalcPos(t)/L;
 			key->ends[i].var_vel  ->val = curve_end[i].CalcVel(t)/V;
-			key->ends[i].var_stiff->val = 1.0/(key->var_pos_t->val.z - key->ends[i].var_pos->val.z);
+			key->ends[i].var_stiff->val = sqrt(1.0/(nend*(key->var_pos_t->val.z - key->ends[i].var_pos->val.z)));
 			key->ends[i].var_moment->val.clear();
 
             key->ends[i].con_des_pos->desired = curve_end[i].CalcPos(t)/L;
@@ -448,7 +465,7 @@ void Centroid::Init() {
 
             if(key->next){
                 key->ends[i].con_stiff_range->_min = 0.0;
-                key->ends[i].con_stiff_range->_max = ends[i].stiffnessMax;
+                key->ends[i].con_stiff_range->_max = ends[i].stiffnessMax/S;
 
                 key->ends[i].con_vel_zero   ->desired   = vec3_t();
                 key->ends[i].con_stiff_zero ->desired   = 0.0;
@@ -460,11 +477,18 @@ void Centroid::Init() {
                 key->ends[i].con_moment_zero->weight    = param.complWeightMin*one;
             }
 
-            for(int j = 0; j < faces.size(); j++){
+            for(int j = 0; j < nface; j++){
 		        key->ends[i].con_contact[j]->weight[0] = param.complWeightMin;
             }
 		}
 	}
+
+    // normalize face vertices
+    for(Face& face : faces){
+        for(vec3_t& v : face.hull->vertices)
+            v *= (1.0/L);
+        face.hull->CalcBSphere();
+    }
 
     // call prepare here so that initial trajectory is visualized properly
     Prepare();
@@ -492,97 +516,122 @@ void Centroid::Finish(){
 	TrajectoryNode::Finish();
 }
 
-vec3_t Centroid::ComPos(real_t t, int type) {
+void Centroid::ComState(real_t t, vec3_t& pos, vec3_t& vel, vec3_t& acc) {
 	if(traj.empty())
-		return vec3_t();
+		return;
 
 	KeyPair      kp = traj.GetSegment(t);
 	CentroidKey* k0 = (CentroidKey*)kp.first;
 	CentroidKey* k1 = (CentroidKey*)kp.second;
 
-	real_t dt = t/T - k0->var_time->val;
-	vec3_t pt;
-	real_t Ct = cosh(k0->lbar*(dt));
-	real_t St = sinh(k0->lbar*(dt));
-	pt = k0->pbar + Ct*(k0->p - k0->pbar) + (St/k0->lbar)*k0->v;
+    vec3_t pt, vt, at;
+
+    if(k1 == k0->next){
+	    real_t dt = t/T - k0->var_time->val;
+	    real_t Ct = cosh(k0->lbar*(dt));
+	    real_t St = sinh(k0->lbar*(dt));
 	
-	return L*pt;
-}
+        pt = k0->pbar + Ct*(k0->p - k0->pbar) + (St/k0->lbar)*k0->v;
+	    vt = k0->lbar * St*(k0->p - k0->pbar) + Ct*k0->v;
+    }
+    else{
+        pt = k0->p;
+        vt = k0->v;
+    }
 
-vec3_t Centroid::ComVel(real_t t, int type) {
-	if(traj.empty())
-		return vec3_t();
-
-	KeyPair      kp = traj.GetSegment(t);
-	CentroidKey* k0 = (CentroidKey*)kp.first;
-	CentroidKey* k1 = (CentroidKey*)kp.second;
-
-	real_t dt = t/T - k0->var_time->val;
-	vec3_t vt;
-	real_t Ct = cosh(k0->lbar*(dt));
-	real_t St = sinh(k0->lbar*(dt));
-	vt = k0->pbar + Ct*(k0->p - k0->pbar) + (St/k0->lbar)*k0->v;
+    at = (k0->lbar*k0->lbar)*(pt - k0->pbar);
 	
-	return V*vt;
+    pos = L*pt;
+	vel = V*vt;
+    acc = A*at;
 }
 
-quat_t Centroid::ComOri(real_t t, int type) {
+void Centroid::TorsoState(real_t t, quat_t& ori, vec3_t& angvel, int type) {
 	if(traj.empty())
-		return quat_t();
+		return;
 
 	KeyPair      kp = traj.GetSegment(t);
 	CentroidKey* k0 = (CentroidKey*)kp.first;
 	CentroidKey* k1 = (CentroidKey*)kp.second;
 
-	return InterpolateOri(
-		t,
-		k0->var_time->val*T, k0->var_pos_r->val, k0->var_vel_r->val/T,
-		k1->var_time->val*T, k1->var_pos_r->val, k1->var_vel_r->val/T,
-		type);
+    if(k1 == k0->next){
+        ori = InterpolateOri(
+		    t,
+		    k0->var_time->val*T, k0->var_pos_r->val, k0->var_vel_r->val/T,
+		    k1->var_time->val*T, k1->var_pos_r->val, k1->var_vel_r->val/T,
+		    type);
+
+        angvel = InterpolateAngvel(
+		    t,
+		    k0->var_time->val*T, k0->var_pos_r->val, k0->var_vel_r->val/T,
+		    k1->var_time->val*T, k1->var_pos_r->val, k1->var_vel_r->val/T,
+		    type);
+    }
+    else{
+        ori    = k0->var_pos_r->val;
+        angvel = k0->var_vel_r->val/T;
+    }
 }
 
-vec3_t Centroid::ComAngVel(real_t t, int type) {
+void Centroid::EndState(real_t t, int index, vec3_t& pos, vec3_t& vel) {
 	if(traj.empty())
-		return vec3_t();
+		return;
 
 	KeyPair      kp = traj.GetSegment(t);
 	CentroidKey* k0 = (CentroidKey*)kp.first;
 	CentroidKey* k1 = (CentroidKey*)kp.second;
 
-	return InterpolateAngvel(
-		t,
-		k0->var_time->val*T, k0->var_pos_r->val, k0->var_vel_r->val/T,
-		k1->var_time->val*T, k1->var_pos_r->val, k1->var_vel_r->val/T,
-		type);
+    if(k1 == k0->next){
+        if(k0->ends[index].iface == -1){
+            while(k0->prev && ((CentroidKey*)k0->prev)->ends[index].iface == -1)
+                k0 = (CentroidKey*)k0->prev;
+            while(k1->next && k1->ends[index].iface == -1)
+                k1 = (CentroidKey*)k1->next;
+        }
+
+        real_t t0 = k0->var_time->val*T;
+        real_t t1 = k1->var_time->val*T;
+
+        vec3_t p0 = k0->ends[index].var_pos->val*L;
+        vec3_t p1 = k1->ends[index].var_pos->val*L;
+
+        pos = InterpolatePos(t, t0, p0, vec3_t(), t1, p1, vec3_t(), Interpolate::Cubic);
+        vel = InterpolateVel(t, t0, p0, vec3_t(), t1, p1, vec3_t(), Interpolate::Cubic);
+
+        real_t d  = (p1  - p0 ).norm();
+        real_t d0 = (pos - p0 ).norm();
+        real_t d1 = (p1  - pos).norm();
+
+        real_t zmax = std::max(p0.z, p1.z) + param.swingHeight;
+        real_t s    = param.swingSlope;
+        pos.z = std::min(zmax, std::min(p0.z + s*d0, p1.z + s*d1));
+
+        real_t vh = sqrt(vel.x*vel.x + vel.y*vel.y);
+
+        if(pos.z == zmax)
+            vel.z =  0.0;
+        if(pos.z == p0.z + s*d0)
+            vel.z =  s*vh;
+        if(pos.z == p1.z + s*d1)
+            vel.z = -s*vh;
+
+    }
+    else{
+        pos = k0->ends[index].var_pos->val*L;
+        vel = k0->ends[index].var_vel->val*V;
+    }
 }
 
-vec3_t Centroid::EndPos(real_t t, int index, int type) {
-	if(traj.empty())
-		return vec3_t();
-
-	KeyPair      kp = traj.GetSegment(t);
+void Centroid::EndForce(real_t t, int index, real_t& stiff, vec3_t& moment, bool& contact){
+    KeyPair      kp = traj.GetSegment(t);
 	CentroidKey* k0 = (CentroidKey*)kp.first;
 	CentroidKey* k1 = (CentroidKey*)kp.second;
 
-	return InterpolatePos(
-		t,
-		k0->var_time->val*T, k0->ends[index].var_pos->val*L, vec3_t()/*k0->ends[index].var_vel->val*/,
-		k1->var_time->val*T, k1->ends[index].var_pos->val*L, vec3_t()/*k1->ends[index].var_vel->val*/,
-		type);
+    stiff   = k0->ends[index].var_stiff ->val*S;
+    moment  = k0->ends[index].var_moment->val*M;
+    contact = (k0->ends[index].iface != -1);
+ 
 }
-
-/*
-bool Centroid::EndContact(real_t t, int index) {
-	if(traj.empty())
-		return vec3_t();
-
-	KeyPair      kp = traj.GetSegment(t);
-	CentroidKey* k0 = (CentroidKey*)kp.first;
-	CentroidKey* k1 = (CentroidKey*)kp.second;
-
-    return k0->ends[index].iface != -1;
-}
-*/
 
 void Centroid::CalcTrajectory() {
 	real_t tf = traj.back()->tick->time;
@@ -632,33 +681,33 @@ void Centroid::Draw(Render::Canvas* canvas, Render::Config* conf) {
 			canvas->EndLayer();
 		}
 	}
-    /*
+    
     if(conf->Set(canvas, Render::Item::CentroidFace, this)){
 	    for(Face& f : faces){
 		    canvas->BeginLayer("centroid_face", true);
 		    canvas->BeginPath();
-		    canvas->MoveTo(f.pos + f.ori*vec3_t(f.rangeMin.x, f.rangeMin.y, 0.0));
-		    canvas->LineTo(f.pos + f.ori*vec3_t(f.rangeMax.x, f.rangeMin.y, 0.0));
-		    canvas->LineTo(f.pos + f.ori*vec3_t(f.rangeMax.x, f.rangeMax.y, 0.0));
-		    canvas->LineTo(f.pos + f.ori*vec3_t(f.rangeMin.x, f.rangeMax.y, 0.0));
-		    canvas->LineTo(f.pos + f.ori*vec3_t(f.rangeMin.x, f.rangeMin.y, 0.0));
+		    canvas->MoveTo(f.hull->vertices[0]*L);
+		    canvas->LineTo(f.hull->vertices[1]*L);
+		    canvas->LineTo(f.hull->vertices[2]*L);
+		    canvas->LineTo(f.hull->vertices[3]*L);
+		    canvas->LineTo(f.hull->vertices[0]*L);
 		    canvas->EndPath();
 		    canvas->EndLayer();
 	    }
     }
-    */
 }
 
 void Centroid::CreateSnapshot(real_t t, Centroid::Snapshot& s){
 	s.t = t;
-	s.pos = ComPos(t);
-	s.ori = ComOri(t);
-	s.vel = ComVel(t);
-
+    ComState  (t, s.pos, s.vel, s.acc);
+    TorsoState(t, s.ori, s.angvel);
+	
 	s.ends.resize(ends.size());
 	for(int i = 0; i < ends.size(); i++){
-		s.ends[i].pos     = EndPos    (t, i);
-        //s.ends[i].contact = EndContact(t, i);
+        EndState(t, i, s.ends[i].pos, s.ends[i].vel);
+        EndForce(t, i, s.ends[i].stiffness, s.ends[i].moment, s.ends[i].contact);
+        real_t l = s.ends[i].stiffness;
+        s.ends[i].force = l*l*(s.pos - s.ends[i].pos);
 	}
 }
 
@@ -696,12 +745,18 @@ void Centroid::DrawSnapshot(Render::Canvas* canvas, Render::Config* conf) {
     }
 
     if (conf->Set(canvas, Render::Item::CentroidEnd, this)) {
-		// lines connecting com and end
 		for(int i = 0; i < ends.size(); i++){
-			canvas->BeginPath();
+			// line connecting com and end
+		    canvas->BeginPath();
 			canvas->MoveTo(snapshot.pos);
 			canvas->LineTo(snapshot.pos + snapshot.ori*ends[i].basePos);
 			canvas->LineTo(snapshot.ends[i].pos);
+			canvas->EndPath();
+
+            // line indicating force
+            canvas->BeginPath();
+			canvas->MoveTo(snapshot.ends[i].pos);
+			canvas->LineTo(snapshot.ends[i].pos + 0.001*snapshot.ends[i].force);
 			canvas->EndPath();
 		}
 
@@ -729,22 +784,29 @@ int Centroid::NumBranches(CustomSolver::DDPNode* _node){
     int nface = faces.size();
 
     CentroidDDPNode* node = (CentroidDDPNode*)_node;
+    CentroidKey*     key  = (CentroidKey*)traj.GetKeypoint(graph->ticks[node->k]);
 
     int n = 0;
     for(int i = 0; i < nend; i++){
         if(node->count[i] == ends[i].numSwitchMax)
             continue;
 
-        if(node->contact[i] == -1)
-             n += nface;
+        if(node->contact[i] == -1){
+            for(int j = 0; j < nface; j++){
+                if(key->ends[i].con_contact[j]->enabled){
+                    n++;
+                }
+            }
+        }
         else n++;
     }
     return n;
 }
 
 CustomSolver::DDPNode* Centroid::CreateNode(CustomSolver::DDPNode* _parent, CustomSolver* _solver, int idx, int nx, int nu){
-    CentroidDDPNode* n  = new CentroidDDPNode();
-    CentroidDDPNode* np = (CentroidDDPNode*)_parent;
+    CentroidDDPNode* n   = new CentroidDDPNode();
+    CentroidDDPNode* np  = (CentroidDDPNode*)_parent;
+
     n->parent  = np;
     n->solver  = _solver;
 
@@ -762,24 +824,35 @@ CustomSolver::DDPNode* Centroid::CreateNode(CustomSolver::DDPNode* _parent, Cust
         n->k       = np->k + 1;
         n->contact = np->contact;
         n->count   = np->count;
+    }
+    
+    CentroidKey*     key = (CentroidKey*)traj.GetKeypoint(graph->ticks[n->k]);
 
-        //if(idx == 0){
+    //if(idx == 0){
         //    // nochange
         //}
         //else{
         //    idx--;
-
+    if(np){
         for(int i = 0; i < nend; i++){
             if(n->count[i] == ends[i].numSwitchMax)
                 continue;
 
             if(n->contact[i] == -1){
-                if(idx < nface){
-                    n->contact[i] = idx;
-                    n->count[i]++;
-                    break;
+                bool found = false;
+                for(int j = 0; j < nface; j++){
+                    if(key->ends[i].con_contact[j]->enabled){
+                        if(idx == 0){
+                            n->contact[i] = j;
+                            n->count[i]++;
+                            found = true;
+                            break;
+                        }
+                        else idx--;
+                    }
                 }
-                else idx -= nface;
+                if(found)
+                    break;
             }
             else{
                 if(idx == 0){
@@ -802,8 +875,6 @@ CustomSolver::DDPNode* Centroid::CreateNode(CustomSolver::DDPNode* _parent, Cust
     n->Luu.clear();
     n->Lux.clear();
     
-    CentroidKey* key = (CentroidKey*)traj.GetKeypoint(graph->ticks[n->k]);
-
     // weights on variables
     for(Solver::SubState* subst : _solver->state[n->k]->substate){
         n->Lxx += subst->Lxx;
@@ -848,9 +919,11 @@ CustomSolver::DDPNode* Centroid::CreateNode(CustomSolver::DDPNode* _parent, Cust
         }
 
         for(int j = 0; j < nface; j++){
-            n->L   += w_c2 * key->ends[i].subcost_face[j]->L;
-            n->Lx  += w_c2 * key->ends[i].subcost_face[j]->Lx;
-            n->Lxx += w_c2 * key->ends[i].subcost_face[j]->Lxx;
+            real_t w_f = (n->contact[i] == j ? complWeight/param.complWeightMin : 1.0);
+            real_t w_f2 = w_f*w_f;
+            n->L   += w_f2 * key->ends[i].subcost_face[j]->L;
+            n->Lx  += w_f2 * key->ends[i].subcost_face[j]->Lx;
+            n->Lxx += w_f2 * key->ends[i].subcost_face[j]->Lxx;
         }
     }
 
@@ -858,11 +931,13 @@ CustomSolver::DDPNode* Centroid::CreateNode(CustomSolver::DDPNode* _parent, Cust
 }
 
 void Centroid::FinishNode(CustomSolver::DDPNode* _node){
-    CentroidDDPNode* n = (CentroidDDPNode*)_node;
+    CentroidDDPNode* n   = (CentroidDDPNode*)_node;
+    CentroidKey*     key = (CentroidKey*)traj.GetKeypoint(graph->ticks[n->k]);
 
     DSTR << "contact: ";
     for(int i = 0; i < n->contact.size(); i++){
         DSTR << n->contact[i] << " ";
+        key->ends[i].iface = n->contact[i];
     }
     DSTR << endl;
 
@@ -935,7 +1010,9 @@ real_t Centroid::CalcNodeCost(CustomSolver::DDPNode* _node){
         }
 
         for(int j = 0; j < nface; j++){
-            obj += w_c2 * key->ends[i].subcost_face[j]->con->y.square();
+            real_t w_f = (n->contact[i] == j ? complWeight/param.complWeightMin : 1.0);
+            real_t w_f2 = w_f*w_f;
+            obj += w_f2 * key->ends[i].subcost_face[j]->con->y.square();
         }
     }
 
@@ -1053,6 +1130,7 @@ CentroidEndContactCon::CentroidEndContactCon(Solver* solver, string _name, Centr
 	Constraint(solver, 1, ID(ConTag::CentroidEndContact, _obj->node, _obj->tick, _name), _scale){
 	obj   = _obj;
 	iend  = _iend;
+    iface = _iface;
     point =  obj->cen->ends [iend].point;
     face  = &obj->cen->faces[_iface];
     // = _ihull;
@@ -1095,7 +1173,13 @@ void CentroidEndContactCon::Prepare(){
     CalcNearest(point, face->hull, pose_t(), pose_t(), sup0, sup1, dist);
 
     pf = sup1;
-    nf = face->normal;
+    vec3_t d = pe - pf;
+    real_t dnorm = d.norm();
+    if(dnorm < 1.0e-10)
+         nf = face->normal;
+    else nf = d/dnorm;
+
+    //nf = face->normal;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1189,8 +1273,6 @@ void CentroidEndVelZeroCon::CalcCoef(){
 }
 */
 void CentroidEndContactCon::CalcCoef(){
-	Prepare();
-
 	((R3Link*)links[0])->SetCoef(nf);
 }
 
