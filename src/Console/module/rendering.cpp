@@ -18,6 +18,9 @@ RenderingManager::RenderingManager(){
 	consoleMessageCol   = 60;
 	consoleMessageDepth = 5;
 	consoleInputRow     = 50;
+
+    joystick = 0;
+    fill(joystickValues, joystickValues + JoystickAxis::End, 0);
 }
 
 RenderingManager::~RenderingManager(){
@@ -69,6 +72,15 @@ bool RenderingManager::Init(){
 	//Message::Out("OpenGL initialized as version %d.%d", device->GetGLMajorVersion(), device->GetGLMinorVersion());
 	
 	render->Reshape(Vec2f(), Vec2f(windowWidth, windowHeight));
+
+    //
+    joystick = SDL_JoystickOpen(0);
+    if(joystick){
+		Message::Out("joystick(gamepad) detected: %s", SDL_JoystickName(joystick));
+		Message::Out("num of axes: %d", SDL_JoystickNumAxes   (joystick));
+		Message::Out("num of btns: %d", SDL_JoystickNumButtons(joystick));
+	}
+    SDL_JoystickEventState(SDL_ENABLE);
 
 	canvasGL  = new DiMP::Render::CanvasGL ();
 	canvasSVG = new DiMP::Render::CanvasSVG();
@@ -142,7 +154,44 @@ void RenderingManager::OnEvent(SDL_Event* ev){
 		windowHeight = ev->window.data2;
 		evResize.Set();
 	}
-	WindowManager::OnEvent(ev);
+
+    switch(ev->type){
+	case SDL_JOYAXISMOTION:{
+		int idx = ev->jaxis.axis;
+		int val = ev->jaxis.value;
+		
+		int axis = -1;
+		if(idx == 0) axis = JoystickAxis::H1;
+		if(idx == 1) axis = JoystickAxis::V1;
+		if(idx == 2) axis = JoystickAxis::H2;
+		if(idx == 3) axis = JoystickAxis::V2;
+		if(idx == 4) axis = JoystickAxis::T1;
+		if(idx == 5) axis = JoystickAxis::T2;
+		if(axis == -1)
+			break;
+
+		// •„†•t
+		joystickValues[axis] = val;
+
+		}
+		break;
+	case SDL_JOYBUTTONDOWN:{
+		int idx = ev->jbutton.button;
+		if(idx < 0 || idx >= JoystickButton::End)
+			break;
+		joystickValues[idx] = 1;
+		}
+		break;
+	case SDL_JOYBUTTONUP:{	
+		int idx = ev->jbutton.button;
+		if(idx < 0 || idx >= JoystickButton::End)
+			break;
+		joystickValues[idx] = 0;
+		}
+		break;
+	}
+
+    WindowManager::OnEvent(ev);
 }
 
 bool RenderingManager::OnEvent(GLWin::Window* win, int code){
