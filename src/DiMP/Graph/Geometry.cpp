@@ -216,6 +216,45 @@ void Point::Draw(Render::Canvas* canvas, Render::Config* conf){
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+Hull::Hull(Graph* g, const string& n):Geometry(g, n){
+
+}
+
+void Hull::Draw(Render::Canvas* canvas, Render::Config* conf){
+
+}
+
+void Hull::CalcBSphere(){
+    bsphereCenter.clear();
+    bsphereRadius = 0.0;
+
+    if(!vertices.empty()){
+        for(vec3_t& v : vertices)
+            bsphereCenter += v;
+
+        bsphereCenter *= (1.0/vertices.size());
+
+        for(vec3_t& v : vertices)
+            bsphereRadius = std::max(bsphereRadius, (v - bsphereCenter).norm());
+
+    }
+}
+
+vec3_t Hull::CalcSupport(const vec3_t& dir){
+    vec3_t sup;
+    real_t dmax = -inf;
+    for(vec3_t& v : vertices){
+        real_t d = dir*v;
+        if(d > dmax){
+            sup  = v;
+            dmax = d;
+        }
+    }
+    return sup;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
 Mesh::Mesh(Graph* g, const string& n):Geometry(g, n){
 	ntheta = 50;
 	nphi   = 50;
@@ -511,18 +550,26 @@ public:
 			
 			// projected point is close enough to origin
 			if(d < eps){
-				// calculate minimum distance to subsimplices
-				dmin2 = inf;
-				for(int ic = 0; ic < s.dim+1; ic++){
-					Project(s.Sub(ic), p2);
-					d2 = p2.d().norm();
-					if(d2 < dmin2){
-						pmin2 = p2;
-						dmin2 = d2;
-					}
-				}
-				pmin =  p2;
-				dmin = -dmin2;
+                // if simplex is full-dimensional
+                if(s.dim == 3){
+				    // calculate minimum distance to subsimplices
+				    dmin2 = inf;
+				    for(int ic = 0; ic < s.dim+1; ic++){
+					    Project(s.Sub(ic), p2);
+					    d2 = p2.d().norm();
+					    if(d2 < dmin2){
+						    pmin2 = p2;
+						    dmin2 = d2;
+					    }
+				    }
+				    pmin =  p2;
+				    dmin = -dmin2;
+                }
+                // otherwise
+                else{
+                    pmin = p;
+                    dmin = d;
+                }
 			}
 			else{
 				pmin = p;

@@ -78,6 +78,8 @@ public:
 	//vector<DiffConS* > con_range_dp;  ///< position change range
 	vector<RangeConS*> con_range_v ;  ///< velocity range
 	vector<RangeConS*> con_range_f ;  ///< torque range
+    vector<FixConS*>   con_des_p;
+    vector<FixConS*>   con_des_v;
 
 public:
 	virtual void AddVar (Solver* solver);
@@ -104,6 +106,8 @@ public:
 	};
 
 	struct Param{
+        vector<real_t>  des_p;
+        vector<real_t>  des_v;
 		vector<real_t>	rmin_p;		///< joint angle lower bound
 		vector<real_t>	rmax_p;		///< joint angle upper bound
 		//vector<real_t>	rmin_dp;	///< joint angle change lower bound

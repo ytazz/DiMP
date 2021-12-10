@@ -8,14 +8,14 @@
   <sphere   name="sphere_target"   radius="0.05"/>
   <cylinder name="cylinder_target" radius="0.01" height="0.5"/>
   
-  <body name="body_target0" dynamical="false" trn="0.9 0.9 0.5" rot="45deg@z">
-    <connector name="0" rot="90deg@x"/>
+  <body name="body_target0" dynamical="false" trn="0.9 -0.5 0.9" rot="-45deg@y">
+    <connector name="0" rot="0deg@x"/>
   </body>
-  <body name="body_target1" dynamical="false" trn="0.4 0.5 0.4" rot="0deg@x">
-    <connector name="0" rot="90deg@x"/>
+  <body name="body_target1" dynamical="false" trn="0.4 -0.4 0.5" rot="0deg@x">
+    <connector name="0" rot="0deg@x"/>
   </body>
-  <body name="body_target2" dynamical="false" trn="-0.4 0.5 0.4">
-    <connector name="0" rot="90deg@x"/>
+  <body name="body_target2" dynamical="false" trn="-0.4 -0.4 0.5">
+    <connector name="0" rot="0deg@x"/>
   </body>
   
   <!-- 以下TRO rev1,2,3設定
@@ -36,12 +36,15 @@
   
   <vmat name="mat_obstacle" colorname="lightpink"/>
   <cylinder name="cylinder_obstacle" radius="0.2" height="0.7"/>
-  <body name="body_obstacle0" dynamical="false" stationary="true" trn="-0.05 0.25 0.6">
-    <connector name="0" rot="90deg@x"/>
+  <body name="body_obstacle0" dynamical="false" stationary="true" trn="-0.05 -0.6 0.25">
+    <connector name="0" rot="0deg@x"/>
   </body>
   <attach connector="body_obstacle0/0" shape="cylinder_obstacle" vmat="mat_obstacle"/>
 
+  <!--
   <ticks time_begin="0.0" time_step="0.025" time_end="5.0"/>
+  -->
+  <ticks time_begin="0.0" time_step="0.1" time_end="5.0"/>
   <timeslot name="timeslot0"      time_begin="1.45" time_end="1.55" locked="true"/>
   <timeslot name="timeslot1"      time_begin="2.95" time_end="3.05" locked="true"/>
   <timeslot name="timeslot2"      time_begin="4.7"  time_end="4.8"  locked="true"/>
@@ -118,12 +121,12 @@
   <variable_weight   weight="0.1"/>
 
   <param name="max_step_size"    value="1.0" />
-  <param name="min_step_size"    value="1.0"/>
-  <param name="cutoff_step_size" value="1.0"/>
+  <param name="min_step_size"    value="0.1"/>
+  <param name="cutoff_step_size" value="0.1"/>
   <!--
-  <param name="method_major"     value="gauss_newton"/>
-  -->
   <param name="method_major"     value="ddp"/>
+  -->
+  <param name="method_major"     value="gauss_newton"/>
   <param name="method_minor"     value="direct"/>
   <param name="verbose"          value="true"/>
 

@@ -1,8 +1,18 @@
 #include <DiMP/DiMP.h>
+#include <DiMP/Graph/Solver.h>
 
 /**
  centroidal trajectory planning with unscheduled contact
 */
+
+const real_t inf = std::numeric_limits<real_t>::max();
+
+class MyCentroidCallback : public DiMP::CentroidCallback{
+public:
+    virtual void EnableContact(DiMP::CentroidEndContactCon* con){
+        con->enabled = true;
+    }
+};
 
 class MyApp : public DiMP::App, public DiMP::Render::Config {
 public:
@@ -18,8 +28,10 @@ public:
 		ID_SAVE,
 	};
 
-	DiMP::Centroid*	centroid;
-
+	DiMP::Centroid*	   centroid;
+    MyCentroidCallback callback;
+    FILE*              fileDuration;
+    
 public:
 	MyApp() {
 		appName = "Centroid";
@@ -35,115 +47,193 @@ public:
 	virtual ~MyApp() {}
 
 	virtual void BuildScene() {
-		centroid = new DiMP::Centroid(graph, "centroid");
-
-		vec3_t startPos(0.0, 0.0, 1.0);
+        const real_t h = 0.7;
+		vec3_t startPos(0.0, 0.0, h);
 		quat_t startOri = quat_t();
-		vec3_t goalPos (3.0, 0.0, 1.0);
-		quat_t goalOri  = quat_t::Rot(Rad(30.0), 'z');
-		real_t goalTime = 5.0;
+		vec3_t goalPos (1.0, 0.0, h + 0.05);
+		quat_t goalOri  = quat_t::Rot(Rad(0.0), 'z');
+        real_t duration = 0.3;
 		real_t spacing  = 0.2;
+        int nend = 2;
+        int N    = 10;
+        real_t goalTime = duration * N;
+		
+        centroid = new DiMP::Centroid(graph, "centroid");
+        centroid->callback = &callback;
 
 		centroid->param.g = 9.8;
-		centroid->param.m = 1.0;
-		centroid->param.I = 1.0;
+		centroid->param.m = 44.0;
+		centroid->param.I = centroid->param.m * h*h;
+
+        centroid->param.complWeightMin   = 0.1;
+        centroid->param.complWeightMax   = 10.0;
+        centroid->param.complWeightRate  = 2.0;
+        
+        // create geometry
+        centroid->point = new DiMP::Point(graph);
+        centroid->hull  = new DiMP::Hull (graph);
+
+        centroid->param.bodyRangeMin = vec3_t(-0.1, -0.1, -0.1);
+        centroid->param.bodyRangeMax = vec3_t( 0.1,  0.1,  0.3);
 		
-		const int nend = 2;
-		centroid->param.ends.resize(nend);
-		for(int i = 0; i < nend; i++){
-			if(i == 0){
-				centroid->param.ends[i].basePos     = vec3_t( 0.0, -spacing/2.0,  0.0);
-				centroid->param.ends[i].posRangeMin = vec3_t(-0.5,  0.0        , -1.2);
-				centroid->param.ends[i].posRangeMax = vec3_t( 0.5,  0.0        , -0.8);
+		centroid->ends.resize(nend);
+		for(int iend = 0; iend < nend; iend++){
+            centroid->ends[iend].point = new DiMP::Point(graph);
+			
+            if(iend == 0){
+				centroid->ends[iend].basePos     = vec3_t( 0.0, -spacing/2.0,  0.0);
+				centroid->ends[iend].posRangeMin = vec3_t(-0.5, -0.0        , -h - 0.1);
+				centroid->ends[iend].posRangeMax = vec3_t( 0.5,  0.0        , -h + 0.1);
 			}
 			else{
-				centroid->param.ends[i].basePos     = vec3_t( 0.0,  spacing/2.0,  0.0);
-				centroid->param.ends[i].posRangeMin = vec3_t(-0.5,  0.0        , -1.2);
-				centroid->param.ends[i].posRangeMax = vec3_t( 0.5,  0.0        , -0.8);
+				centroid->ends[iend].basePos     = vec3_t( 0.0,  spacing/2.0,  0.0);
+				centroid->ends[iend].posRangeMin = vec3_t(-0.5, -0.0        , -h - 0.1);
+				centroid->ends[iend].posRangeMax = vec3_t( 0.5,  0.0        , -h + 0.1);
 			}
-			centroid->param.ends[i].velRangeMin    = vec3_t(-1.5, -100.0, -100.0);
-			centroid->param.ends[i].velRangeMax    = vec3_t( 1.5,  100.0,  100.0);
+			centroid->ends[iend].velRangeMin    = vec3_t(-1.5, -100.0, -100.0);
+			centroid->ends[iend].velRangeMax    = vec3_t( 1.5,  100.0,  100.0);
 
-			centroid->param.ends[i].momentRangeMin = vec3_t(-0.0, -0.0, -1.0);
-			centroid->param.ends[i].momentRangeMax = vec3_t( 0.0,  0.0,  1.0);
+			centroid->ends[iend].momentRangeMin = vec3_t(-0.0, -0.0, -1.0);
+			centroid->ends[iend].momentRangeMax = vec3_t( 0.0,  0.0,  1.0);
+
+            centroid->ends[iend].copRangeMin = vec2_t(-0.1, -0.05);
+			centroid->ends[iend].copRangeMax = vec2_t( 0.1,  0.05);
+
+            centroid->ends[iend].stiffnessMax = 100.0;
+
+            centroid->ends[iend].numSwitchMax = N/2;
 		}
 
-        centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(-10.0, -10.0), vec2_t( 1.0, 10.0), 0.0));
-		//centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(  1.0, -10.0), vec2_t( 1.5, 10.0), 0.3));
-        centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(  2.5, -10.0), vec2_t(10.0, 10.0), 0.0));
-		//centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(1.25, -1.0), vec2_t(1.75, 1.0), 0.4));
-		//centroid->param.ends[1].rangeMin = vec3_t(-0.25,  0.0, -1.1);
-		//centroid->param.ends[1].rangeMax = vec3_t( 0.25,  0.3, -0.9);
+        // flat ground
+        //centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(-1.0, -5.0), vec2_t( 10.0, 5.0), vec3_t(0.0, 0.0, 0.0), quat_t::Rot(Rad(0.0), 'y')));
+		
+        // step
+        DiMP::Centroid::Face face;
+        face.hull = new DiMP::Hull(graph);
+        face.hull->vertices.push_back(vec3_t(-1.0, -5.0,  0.0));
+        face.hull->vertices.push_back(vec3_t(-1.0,  5.0,  0.0));
+        face.hull->vertices.push_back(vec3_t( 0.15,  5.0,  0.0));
+        face.hull->vertices.push_back(vec3_t( 0.15, -5.0,  0.0));
+        face.normal = vec3_t(0.0, 0.0, 1.0);
+        centroid->faces.push_back(face);
+        
+        face.hull = new DiMP::Hull(graph);
+        face.hull->vertices.push_back(vec3_t( 0.4, -5.0,  0.05));
+        face.hull->vertices.push_back(vec3_t( 0.4,  5.0,  0.05));
+        face.hull->vertices.push_back(vec3_t( 1.2,  5.0,  0.05));
+        face.hull->vertices.push_back(vec3_t( 1.2, -5.0,  0.05));
+        face.normal = vec3_t(0.0, 0.0, 1.0);
+        centroid->faces.push_back(face);
 
-		/*
-		centroid->param.faces.resize(1);
-		DiMP::Centroid::Param::Face& f = centroid->param.faces[0];
-		const real_t d = 3.0;
-		f.vertices.resize(4);
-		f.vertices[0] = vec3_t( 10.0,  10.0, 0.0);
-		f.vertices[1] = vec3_t(-10.0,  10.0, 0.0);
-		f.vertices[2] = vec3_t(-10.0, -10.0, 0.0);
-		f.vertices[3] = vec3_t( 10.0, -10.0, 0.0);
-		f.mu  = 1.0;
-		f.eta = 1.0;
-		*/
-		const int N = 25;
+        /*
+        face.hull = new DiMP::Hull(graph);
+        face.hull->vertices.push_back(vec3_t( 4.5, -5.0,  0.0));
+        face.hull->vertices.push_back(vec3_t( 4.5,  5.0,  0.0));
+        face.hull->vertices.push_back(vec3_t( 8.0,  5.0,  0.0));
+        face.hull->vertices.push_back(vec3_t( 8.0, -5.0,  0.0));
+        face.normal = vec3_t(0.0, 0.0, 1.0);
+        centroid->faces.push_back(face);
+        */
+        //hull = new DiMP::Hull(graph);
+        //hull->vertices.push_back(vec3_t( 3.6, -5.0, 0.5));
+        //hull->vertices.push_back(vec3_t( 3.6,  5.0, 0.5));
+        //hull->vertices.push_back(vec3_t( 8.0, -5.0, 0.5));
+        //hull->vertices.push_back(vec3_t( 8.0,  5.0, 0.5));
+        //centroid->hulls.push_back(hull);
+        //centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(-1.0, -5.0), vec2_t( 3.5, 5.0), vec3_t(0.0, 0.0, 0.0), quat_t()));
+		//centroid->faces.push_back(DiMP::Centroid::Face(vec2_t( 3.6, -5.0), vec2_t( 8.0, 5.0), vec3_t(0.0, 0.0, 0.5), quat_t()));
+
+        // uneven terrain
+        //centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(-10.0, -10.0), vec2_t( 1.0, 10.0), vec3_t(0.0, 0.0, 0.0), quat_t::Rot(Rad( 10.0), 'x')));
+		//centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(  2.5, -10.0), vec2_t( 3.0, 10.0), vec3_t(0.0, 0.0, 0.3), quat_t::Rot(Rad(-10.0), 'x')));
+		//centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(  4.5, -10.0), vec2_t(10.0, 10.0), vec3_t(0.0, 0.0, 0.3), quat_t::Rot(Rad(-10.0), 'x')));
+        
 		const real_t dt = goalTime/((real_t)N);
 		for(int k = 0; k <= N; k++)
 			new DiMP::Tick(graph, k*dt, "");
 		
-		centroid->waypoints.push_back(DiMP::Centroid::Waypoint(0, 0.0, startPos, startOri, vec3_t(), vec3_t(), true, true, true, true));
-		centroid->waypoints.back().ends.push_back(DiMP::Centroid::Waypoint::End(vec3_t(startPos.x, startPos.y - spacing/2.0, 0.0), vec3_t(), true, true));
-		centroid->waypoints.back().ends.push_back(DiMP::Centroid::Waypoint::End(vec3_t(startPos.x, startPos.y + spacing/2.0, 0.0), vec3_t(), true, true));
-		
-		centroid->waypoints.push_back(DiMP::Centroid::Waypoint(N, dt*N, goalPos, goalOri, vec3_t(), vec3_t(), true, true, true, true));
-		centroid->waypoints.back().ends.push_back(DiMP::Centroid::Waypoint::End(vec3_t(goalPos.x, goalPos.y - spacing/2.0, 0.0), vec3_t(), true, true));
-		centroid->waypoints.back().ends.push_back(DiMP::Centroid::Waypoint::End(vec3_t(goalPos.x, goalPos.y + spacing/2.0, 0.0), vec3_t(), true, true));
+		centroid->waypoints.push_back(DiMP::Centroid::Waypoint(0, 0.0, startPos, startOri, vec3_t(), vec3_t()));
+		centroid->waypoints.back().ends.push_back(DiMP::Centroid::Waypoint::End(vec3_t(startPos.x, startPos.y - spacing/2.0, 0.0), vec3_t()));
+		centroid->waypoints.back().ends.push_back(DiMP::Centroid::Waypoint::End(vec3_t(startPos.x, startPos.y + spacing/2.0, 0.0), vec3_t()));
+
+        //centroid->waypoints.push_back(DiMP::Centroid::Waypoint(0, 0.0, startPos, startOri, vec3_t(), vec3_t(), true, true, true, true));
+		//centroid->waypoints.back().ends.push_back(DiMP::Centroid::Waypoint::End(vec3_t(startPos.x, startPos.y - spacing/2.0, 0.0), vec3_t(), true, true));
+		//centroid->waypoints.back().ends.push_back(DiMP::Centroid::Waypoint::End(vec3_t(startPos.x, startPos.y + spacing/2.0, 0.0), vec3_t(), true, true));
+
+		centroid->waypoints.push_back(DiMP::Centroid::Waypoint(N, dt*N, goalPos, goalOri, vec3_t(), vec3_t()));
+		centroid->waypoints.back().ends.push_back(DiMP::Centroid::Waypoint::End(vec3_t(goalPos.x, goalPos.y - spacing/2.0, 0.05), vec3_t()));
+		centroid->waypoints.back().ends.push_back(DiMP::Centroid::Waypoint::End(vec3_t(goalPos.x, goalPos.y + spacing/2.0, 0.05), vec3_t()));
 		
 		graph->scale.Set(1.0, 1.0, 1.0);
 		graph->Init();
 
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidPosT    ), false);
-		graph->solver->Enable(ID(DiMP::ConTag::CentroidPosR     ), false);
+		//graph->solver->Enable(ID(DiMP::ConTag::CentroidPosR     ), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidVelT     ), false);
-		graph->solver->Enable(ID(DiMP::ConTag::CentroidVelR     ), false);
+		//graph->solver->Enable(ID(DiMP::ConTag::CentroidVelR     ), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidTime     ), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndRange ), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndPos   ), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndStiff ), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndMoment), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndContact), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndVel  ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndForce), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::CentroidEndCmpl), false);
+
+        graph->solver->callback = centroid;
 
 		graph->solver->SetCorrection(ID(), 0.5);
 		graph->solver->param.numIter[0]     = 20;
-		graph->solver->param.cutoffStepSize = 0.5;
-		graph->solver->param.minStepSize    = 0.5;
-		graph->solver->param.maxStepSize    = 1.0;
-		graph->solver->param.methodMajor    = Solver::Method::Major::GaussNewton;
+        graph->solver->param.regularization = 1.0e-5;
+		graph->solver->param.cutoffStepSize = 0.01;
+		graph->solver->param.minStepSize    = 0.01;
+		graph->solver->param.maxStepSize    = 0.1;
+        //graph->solver->param.methodMajor    = Solver::Method::Major::GaussNewton;
+        graph->solver->param.methodMajor    = DiMP::CustomSolver::CustomMethod::SearchDDP;
 		graph->solver->param.methodMinor    = Solver::Method::Minor::Direct;
-		graph->solver->param.verbose        = true;
+		graph->solver->param.verbose        = false;
+    
+        fileDuration = fopen("duration.csv", "w");
 	}
+
+    virtual void OnStep(){
+       App::OnStep();
+
+        //real_t t = 0.0;
+        //for (uint k = 0; k < graph->ticks.size(); k++) {
+		//	DiMP::CentroidKey* key = (DiMP::CentroidKey*)centroid->traj.GetKeypoint(graph->ticks[k]);
+        //    fprintf(fileDuration, "%f, ", t);
+        //    if(key->next){
+        //        t += key->var_duration->val;
+		//	}
+        //}
+        //fprintf(fileDuration, "\n");
+    }
 
 	virtual void OnAction(int menu, int id) {
 		if (menu == MENU_MAIN) {
 			if(id == ID_SAVE){
-				const char* filename = "log.csv";
+                /*
+				const char* filename = "schedule.csv";
 				FILE* file = fopen(filename, "w");
 				for (uint k = 0; k < graph->ticks.size(); k++) {
 					DiMP::CentroidKey* key = (DiMP::CentroidKey*)centroid->traj.GetKeypoint(graph->ticks[k]);
-					fprintf(file, "%f, %f, ", key->var_duration->val, key->var_time->val);
-					fprintf(file, "%f, %f, %f, ", key->var_pos_t->val.x, key->var_pos_t->val.y, key->var_pos_t->val.z);
-					fprintf(file, "%f, %f, %f, ", key->var_vel_t->val.x, key->var_vel_t->val.y, key->var_vel_t->val.z);
+                    for(int i = 0; i < key->ends.size(); i++){
+                        if(key->ends[i].iface != -1){
+                            fprintf(file, "%d, %f, %f\n", i, key->var_time->val, key->var_duration->val);
+                        }
+                    }
+					//fprintf(file, "%f, %f, %f, ", key->var_pos_t->val.x, key->var_pos_t->val.y, key->var_pos_t->val.z);
+					//fprintf(file, "%f, %f, %f, ", key->var_vel_t->val.x, key->var_vel_t->val.y, key->var_vel_t->val.z);
 					
-					for(int i = 0; i < key->ends.size(); i++){
-						fprintf(file, "%d, ", key->ends[i].contact);
-					}
-					fprintf(file, "\n");
+					//for(int i = 0; i < key->ends.size(); i++){
+					//	fprintf(file, "%d, ", key->ends[i].contact);
+					//}
+					//for(int i = 0; i < key->ends.size(); i++){
+					//	fprintf(file, "%f, ", key->ends[i].con_effort->y.norm());
+					//}
+					//fprintf(file, "\n");
 				}
 				fclose(file);
+                */
 			}
 		}
 		App::OnAction(menu, id);

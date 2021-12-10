@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<namespace name="workspace">
+  
+  <import name="robot0" filename="pa10/pa10.xml"/>
+ 
+  <vmat name="mat_target" colorname="blue"/>
+  <sphere   name="sphere_target"   radius="0.05"/>
+  <cylinder name="cylinder_target" radius="0.01" height="0.5"/>
+
+  <!-- virtual target for local planner ? -->
+  <body name="body_target0" dynamical="false" trn="0.9 -0.5 0.9" rot="-45deg@y">
+    <connector name="0" rot="0deg@x"/>
+  </body>
+  
+  <attach connector="body_target0/0" shape="cylinder_target" vmat="mat_target"/>
+  <attach connector="body_target1/0" shape="cylinder_target" vmat="mat_target"/>
+  <attach connector="body_target2/0" shape="cylinder_target" vmat="mat_target"/>
+
+  <!-- same obstacle as global planner -->
+  <vmat name="mat_obstacle" colorname="lightpink"/>
+  <cylinder name="cylinder_obstacle" radius="0.2" height="0.7"/>
+  <body name="body_obstacle0" dynamical="false" stationary="true" trn="-0.05 -0.6 0.25">
+    <connector name="0" rot="0deg@x"/>
+  </body>
+  <attach connector="body_obstacle0/0" shape="cylinder_obstacle" vmat="mat_obstacle"/>
+
+  <!-- only two ticks is enough -->
+  <ticks time_begin="0.0" time_step="0.1" time_end="0.1"/>
+
+  <!-- time slot for match and avoid -->
+  <timeslot name="timeslot0"      time_begin="0.095" time_end="0.105" locked="true"/>
+  <timeslot name="timeslot_avoid" time_begin="0.095" time_end="0.105" locked="true"/>
+  
+  <match name="task0"  obj0="workspace/robot0/body_link6" obj1="workspace/body_target0"   timeslot="timeslot0" match_tp="true" match_rp="true" match_tv="true" match_rv="true"/>
+  <avoid name="avoid0" obj0="workspace/robot0/body_link0" obj1="workspace/body_obstacle0" timeslot="timeslot_avoid" avoid_p="true" avoid_v="false" dmin="0.01"/>
+  <avoid name="avoid1" obj0="workspace/robot0/body_link1" obj1="workspace/body_obstacle0" timeslot="timeslot_avoid" avoid_p="true" avoid_v="false" dmin="0.01"/>
+  <avoid name="avoid2" obj0="workspace/robot0/body_link2" obj1="workspace/body_obstacle0" timeslot="timeslot_avoid" avoid_p="true" avoid_v="false" dmin="0.01"/>
+  <avoid name="avoid3" obj0="workspace/robot0/body_link3" obj1="workspace/body_obstacle0" timeslot="timeslot_avoid" avoid_p="true" avoid_v="false" dmin="0.01"/>
+  <avoid name="avoid4" obj0="workspace/robot0/body_link4" obj1="workspace/body_obstacle0" timeslot="timeslot_avoid" avoid_p="true" avoid_v="false" dmin="0.01"/>
+  <avoid name="avoid5" obj0="workspace/robot0/body_link5" obj1="workspace/body_obstacle0" timeslot="timeslot_avoid" avoid_p="true" avoid_v="false" dmin="0.01"/>
+  <avoid name="avoid6" obj0="workspace/robot0/body_link6" obj1="workspace/body_obstacle0" timeslot="timeslot_avoid" avoid_p="true" avoid_v="false" dmin="0.01"/>
+  
+  <scaling T="0.25" L="0.5" M="1.0"/>
+  
+  <enable  id="object_c1t"     enable="false"/>
+  <enable  id="object_c1r"     enable="false"/>
+  <enable  id="joint_c0p"      enable="true"/>
+  <enable  id="joint_c0v"      enable="false"/>
+  <enable  id="joint_c1p"      enable="false"/>
+  <enable  id="joint_f"        enable="false"/>
+  <enable  id="joint_range_p"  enable="false"/>
+  <enable  id="joint_range_v"  enable="true"/>
+  <enable  id="joint_range_f"  enable="false"/>
+  <enable  id="joint_tp"       enable="true" />
+  <enable  id="joint_rp"       enable="true" />
+  <enable  id="joint_tv"       enable="false"/>
+  <enable  id="joint_rv"       enable="false"/>
+  <enable  id="force_t"        enable="false"/>
+  <enable  id="force_r"        enable="false"/>
+  <enable  id="match_tp"       enable="true" />
+  <enable  id="match_tv"       enable="false"/>
+  <enable  id="match_rp"       enable="false"/>
+  <enable  id="match_rv"       enable="false"/>
+  <enable  id="avoid_p"        enable="true" />
+  <enable  id="avoid_v"        enable="false"/>
+
+  <correction rate="0.5"/>
+  <constraint_weight weight="1.0" />
+  <constraint_weight weight="0.1" id="joint_range_v"/>
+  <variable_weight   weight="0.1"/>
+
+  <param name="max_step_size"    value="1.0" />
+  <param name="min_step_size"    value="0.1"/>
+  <param name="cutoff_step_size" value="0.1"/>
+  <!--
+  <param name="method_major"     value="ddp"/>
+  -->
+  <param name="method_major"     value="gauss_newton"/>
+  <param name="method_minor"     value="direct"/>
+  <param name="verbose"          value="true"/>
+
+</namespace>

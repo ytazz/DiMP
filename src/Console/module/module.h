@@ -29,18 +29,18 @@ public:
 	RenderingManager*	 renManager;		///< レンダリング
 	RequestManager*		 reqManager;		///< リクエスト
 	SimulationManager*   simManager;		///< 計算
-		
+
 	Event				 evExit;			///< 終了イベント
 	CriticalSection		 cs;
 
 public:
 	static Module* Get();
 
-	void Read     (XML& xml);
-	bool Init     (int argc, char* argv[]);		///< 初期化
-	void MainLoop ();							///< メインループ
-	void Cleanup  ();							///< 終了処理
-	
+	void Read           (XML& xml);
+	bool Init           (int argc, char* argv[]);		///< 初期化
+	void MainLoop       ();							///< メインループ
+	void Cleanup        ();							///< 終了処理
+    
 	virtual bool Build    () = 0;
 	virtual bool OnRequest();	                ///< リクエスト処理
 	virtual void OnStep   ();

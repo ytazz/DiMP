@@ -25,12 +25,13 @@ struct Item{
 		BipedCom,           ///< biped CoM trajectory
 		BipedCop,           ///< biped CoP
 		BipedCmp,
-		BipedFoot,         ///< biped swing foot trajectory
+		BipedFoot,          ///< biped swing foot trajectory
 		BipedTorso,         ///< biped torso trajectory
 		CentroidPos,
 		CentroidEnd,
 		CentroidFace,
 		CentroidForce,
+        CentroidTorso,
 		Avoid,
 	};
 };

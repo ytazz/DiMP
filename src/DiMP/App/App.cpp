@@ -258,7 +258,14 @@ void App::DrawHelp(GRRenderIf* render){
 		render->DrawFont(pos, "hit \'h\' to hide help"            ); pos.y += (float)Metric::LineY;
 		render->DrawFont(pos, "hit TAB to switch menu"            ); pos.y += (float)Metric::LineY;
 		render->DrawFont(pos, "hit Up/Down key to select item"    ); pos.y += (float)Metric::LineY;
-		render->DrawFont(pos, "hit Left/Right key to change value");
+		render->DrawFont(pos, "hit Left/Right key to change value"); pos.y += (float)Metric::LineY;
+
+        char line[256];
+        float lon, lat, dist;
+        GetCurrentWin()->GetTrackball()->GetAngle(lon, lat);
+        dist = GetCurrentWin()->GetTrackball()->GetDistance();
+        sprintf(line, "view angle: lon=%3.3f, lat=%3.3f, dist=%3.3f", Deg(lon), Deg(lat), dist);
+        render->DrawFont(pos, line);
 	}
 	else render->DrawFont(pos, "hit \'h\' to show help");
 	pos.y += (float)Metric::LineY;

@@ -113,6 +113,17 @@ public:
 	Point(Graph* g, const string& n = "");
 };
 
+class Hull : public Geometry{
+public:
+    vector<vec3_t>  vertices;
+
+    virtual void   Draw       (Render::Canvas* canvas, Render::Config* conf);
+	virtual void   CalcBSphere();
+	virtual vec3_t CalcSupport(const vec3_t& dir);
+
+	Hull(Graph* g, const string& n = "");
+};
+
 /** mesh
  */
 class Mesh : public Geometry{
