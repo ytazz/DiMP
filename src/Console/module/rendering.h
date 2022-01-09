@@ -41,6 +41,22 @@ public:
 	GLWin::Viewer*  viewer;
 	GLWin::Button*  btnPlan;
 
+    /// Joystick
+    struct JoystickButton{
+        enum{
+            Y, X, B, A, L1, R1, L2, R2, Select, Start, L3, R3, End,
+        };
+    };
+    struct JoystickAxis{
+        enum{
+			H1 = JoystickButton::End, V1, H2, V2, T1, T2, End, 
+		};
+	};
+
+    SDL_Joystick*  joystick;
+    int            joystickValues[JoystickAxis::End];
+
+
 public:	
 	void Read      (XML& xml);
 	void OnEvent   (SDL_Event* ev);

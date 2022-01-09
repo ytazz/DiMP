@@ -28,6 +28,8 @@ void JointKey::AddVar(Solver* solver){
 	con_range_p .resize(n);
 	con_range_v .resize(n);
 	con_range_f .resize(n);
+    con_des_p   .resize(n);
+    con_des_v   .resize(n);
 
 	sockObj = (ObjectKey*)jnt->sock->obj->traj.GetKeypoint(tick);
 	plugObj = (ObjectKey*)jnt->plug->obj->traj.GetKeypoint(tick);
@@ -94,6 +96,13 @@ void JointKey::AddCon(Solver* solver){
 		con_range_v[i] = new RangeConS(solver, ID(ConTag::JointRangeV, node, tick, name + "_range_v" + ss.str()), vel[i]   , sv);
 		solver->AddCostCon(con_range_p[i], tick->idx);
 		solver->AddCostCon(con_range_v[i], tick->idx);
+
+        // desired value
+        con_des_p[i] = new FixConS(solver, ID(ConTag::JointDesP, node, tick, name + "_des_p" + ss.str()), pos[i], sp);
+        con_des_v[i] = new FixConS(solver, ID(ConTag::JointDesV, node, tick, name + "_des_v" + ss.str()), vel[i], sv);
+        // disabled by default
+        con_des_p[i]->enabled = false;
+        con_des_v[i]->enabled = false;
 		
 		if(next){
 			JointKey* nextJnt = (JointKey*)next;
@@ -205,6 +214,8 @@ void JointKey::Prepare(){
 		
 		con_range_p[i]->active = in && inprev;
 		con_range_v[i]->active = in && inprev;
+		con_des_p  [i]->active = in && inprev;
+		con_des_v  [i]->active = in && inprev;
 	}
 }
 
@@ -271,6 +282,8 @@ void Joint::Param::SetDof(uint dof){
 	rmax_v .resize(dof);
 	rmin_f .resize(dof);
 	rmax_f .resize(dof);
+    des_p  .resize(dof);
+    des_v  .resize(dof);
 
 	real_t inf = numeric_limits<real_t>::max();
 	for(uint i = 0; i < dof; i++){
@@ -284,6 +297,8 @@ void Joint::Param::SetDof(uint dof){
 		rmax_v [i] =  inf;
 		rmin_f [i] = -inf;
 		rmax_f [i] =  inf;
+        des_p  [i] =  0.0;
+        des_v  [i] =  0.0;
 	}
 
 	trajType = TrajectoryType::C0;
@@ -339,6 +354,10 @@ void Joint::Init(){
 					key->con_range_f [i]->_max = param.rmax_f [i];
 				}
 			}
+
+            key->con_des_p[i]->desired = param.des_p[i];
+			key->con_des_v[i]->desired = param.des_v[i];
+			
 		}
 	}
 }

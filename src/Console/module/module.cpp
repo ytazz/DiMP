@@ -103,8 +103,8 @@ bool Module::Init(int argc, char* argv[]){
 
 	renManager->glContext = SDL_GL_CreateContext(renManager->sdlWindow);
 	SDL_StartTextInput();
-	
-	// Springhead‰Šú‰»
+
+    // Springhead‰Šú‰»
 	fwSdk   = FWSdkIf::CreateSdk();
 	grSdk   = fwSdk->GetGRSdk();
 

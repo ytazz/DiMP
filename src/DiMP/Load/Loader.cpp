@@ -116,13 +116,15 @@ void Loader::LoadJoint(XMLNode* node, Graph* graph){
 	Connector* plug = graph->cons     .Find(plugName);
 	TimeSlot * ts   = graph->timeslots.Find(tsName  );
 
+    Joint* jnt;
 	if(sock && plug && ts){
-		if(type == "hinge"     ) new Hinge     (sock, plug, ts, name);
-		if(type == "slider"    ) new Slider    (sock, plug, ts, name);
-		if(type == "balljoint" ) new Balljoint (sock, plug, ts, name);
-		if(type == "planejoint") new Planejoint(sock, plug, ts, name);
-		if(type == "fixjoint"  ) new Fixjoint  (sock, plug, ts, name);
+		if(type == "hinge"     ) jnt = new Hinge     (sock, plug, ts, name);
+		if(type == "slider"    ) jnt = new Slider    (sock, plug, ts, name);
+		if(type == "balljoint" ) jnt = new Balljoint (sock, plug, ts, name);
+		if(type == "planejoint") jnt = new Planejoint(sock, plug, ts, name);
+		if(type == "fixjoint"  ) jnt = new Fixjoint  (sock, plug, ts, name);
 	}
+
 
 }
 

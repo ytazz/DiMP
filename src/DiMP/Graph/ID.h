@@ -65,6 +65,8 @@ struct ConTag{
 		JointRangeP,		///< joint position range
 		JointRangeV,		///< joint velocity range
 		JointRangeF,		///< joint force range
+        JointDesP,          ///< joint desired position
+        JointDesV,          ///< joint desired velocity
 		JointTP,			///< kinematic constraint : position
 		JointRP,			///< kinematic constraint : orientation
 		JointTV,			///< kinematic constraint : velocity
