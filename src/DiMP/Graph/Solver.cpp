@@ -404,6 +404,7 @@ void CustomSolver::CalcDirectionSearchDDP(){
             Shuffle(threads[0]->path, threads[i]->path);
         }
 
+#pragma omp parallel for
         for(int i = 0; i < numSample; i++){
             // perform DDP with previous mode sequence
             threads[i]->Backward();
