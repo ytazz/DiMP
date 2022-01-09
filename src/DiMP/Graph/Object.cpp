@@ -515,7 +515,7 @@ void Object::DrawSnapshot(const pose_t& pose, Render::Canvas* canvas, Render::Co
 //-------------------------------------------------------------------------------------------------
 
 ObjectConC1R::ObjectConC1R(Solver* solver, const string& _name, ObjectKey* _obj, int _idx, real_t _scale):
-	Constraint(solver, 3, ID(ConTag::ObjectC1R, _obj->node, _obj->tick, _name), _scale){
+	Constraint(solver, 3, ID(ConTag::ObjectC1R, _obj->node, _obj->tick, _name), Constraint::Type::Equality, _scale){
 	obj[0] = _obj;
 	obj[1] = (ObjectKey*)_obj->next;
 	idx	   = _idx;
@@ -552,7 +552,7 @@ void ObjectConC1R::CalcDeviation(){
 //-------------------------------------------------------------------------------------------------
 
 ForceConT::ForceConT(Solver* solver, const string& _name, ObjectKey* _obj, real_t _scale):
-	Constraint(solver, 3, ID(ConTag::ForceT, _obj->node, _obj->tick, _name), _scale){
+	Constraint(solver, 3, ID(ConTag::ForceT, _obj->node, _obj->tick, _name), Constraint::Type::Equality, _scale){
 	obj[0] = _obj;
 	obj[1] = (ObjectKey*)_obj->next;
 
@@ -585,7 +585,7 @@ void ForceConT::CalcDeviation(){
 //-------------------------------------------------------------------------------------------------
 
 ForceConR::ForceConR(Solver* solver, const string& _name, ObjectKey* _obj, real_t _scale):
-	Constraint(solver, 3, ID(ConTag::ForceR, _obj->node, _obj->tick, _name), _scale){
+	Constraint(solver, 3, ID(ConTag::ForceR, _obj->node, _obj->tick, _name), Constraint::Type::Equality, _scale){
 	obj[0] = _obj;
 	obj[1] = (ObjectKey*)_obj->next;
 

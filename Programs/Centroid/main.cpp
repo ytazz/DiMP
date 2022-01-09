@@ -10,7 +10,17 @@ const real_t inf = std::numeric_limits<real_t>::max();
 class MyCentroidCallback : public DiMP::CentroidCallback{
 public:
     virtual void EnableContact(DiMP::CentroidEndContactCon* con){
-        con->enabled = true;
+        if( ((con->iend == 0 || con->iend == 1) && (con->iface == 0 || con->iface == 1))
+            ||
+            ((con->iend == 2) && (con->iface == 2)) ||
+            ((con->iend == 3) && (con->iface == 3))
+            )
+        {
+            con->enabled = true;
+        }
+        else{
+            con->enabled = false;
+        }
     }
 };
 
@@ -50,15 +60,57 @@ public:
         const real_t h = 0.7;
 		vec3_t startPos(0.0, 0.0, h);
 		quat_t startOri = quat_t();
-		vec3_t goalPos (1.0, 0.0, h + 0.05);
+		vec3_t goalPos (3.5, 0.0, h + 0.0);
 		quat_t goalOri  = quat_t::Rot(Rad(0.0), 'z');
-        real_t duration = 0.3;
-		real_t spacing  = 0.2;
-        int nend = 2;
-        int N    = 10;
-        real_t goalTime = duration * N;
+        const real_t duration = 0.3;
+		const real_t legSpacing  = 0.2;
+        const real_t armSpacing  = 0.25;
+        const int nend = 4;
+        const int N    = 12;
+        const real_t goalTime = duration * N;
+
+        vec3_t endBasePos  [nend];
+        vec3_t endPosOrigin[nend];
+        vec3_t endPosMin   [nend];
+        vec3_t endPosMax   [nend];
+        int    endIni      [nend];
+        int    endTerm     [nend];
+        //int    endSwitch   [nend];
+        endBasePos  [0] = vec3_t( 0.0, -legSpacing/2.0,  0.0);
+        endBasePos  [1] = vec3_t( 0.0,  legSpacing/2.0,  0.0);
+        endBasePos  [2] = vec3_t( 0.0, -armSpacing/2.0,  0.5);
+        endBasePos  [3] = vec3_t( 0.0,  armSpacing/2.0,  0.5);
+        endPosOrigin[0] = vec3_t( 0.0,  0.0, -0.7);
+        endPosOrigin[1] = vec3_t( 0.0,  0.0, -0.7);
+        endPosOrigin[2] = vec3_t( 0.0, -0.1, -0.7);
+        endPosOrigin[3] = vec3_t( 0.0,  0.1, -0.7);
+        endPosMin   [0] = vec3_t(-0.3, -0.1, -0.8);
+        endPosMin   [1] = vec3_t(-0.3, -0.1, -0.8);
+        endPosMin   [2] = vec3_t(-0.6, -0.5, -0.7);
+        endPosMin   [3] = vec3_t(-0.6,  0.0, -0.7);
+        endPosMax   [0] = vec3_t( 0.3,  0.1, -0.2);
+        endPosMax   [1] = vec3_t( 0.3,  0.1, -0.2);
+        endPosMax   [2] = vec3_t( 0.6,  0.0,  0.0);
+        endPosMax   [3] = vec3_t( 0.6,  0.5,  0.0);
+        endIni      [0] = 0;
+        endIni      [1] = 0;
+        endIni      [2] = -1;
+        endIni      [3] = -1;
+        endTerm     [0] = 0;
+        endTerm     [1] = 0;
+        endTerm     [2] = -1;
+        endTerm     [3] = -1;
+        //endSwitch   [0] = 4;
+        //endSwitch   [1] = 4;
+        //endSwitch   [2] = 2;
+        //endSwitch   [3] = 2;
 		
         centroid = new DiMP::Centroid(graph, "centroid");
+        //centroid->contactSequence.resize(nend);
+        //centroid->contactSequence[0](0)(-1)(0)(-1)(0)(-1)(0);
+        //centroid->contactSequence[1](0)(-1)(0)(-1)(0)(-1)(0);
+        //centroid->contactSequence[2](-1)(0)(-1);
+        //centroid->contactSequence[3](-1)(0)(-1);
         centroid->callback = &callback;
 
 		centroid->param.g = 9.8;
@@ -66,32 +118,26 @@ public:
 		centroid->param.I = centroid->param.m * h*h;
 
         centroid->param.complWeightMin   = 0.1;
-        centroid->param.complWeightMax   = 10.0;
-        centroid->param.complWeightRate  = 2.0;
+        centroid->param.complWeightMax   = 100.0;
+        centroid->param.complWeightRate  = 100.0;
         
         // create geometry
         centroid->point = new DiMP::Point(graph);
         centroid->hull  = new DiMP::Hull (graph);
 
-        centroid->param.bodyRangeMin = vec3_t(-0.1, -0.1, -0.1);
-        centroid->param.bodyRangeMax = vec3_t( 0.1,  0.1,  0.3);
+        centroid->param.bodyRangeMin = vec3_t(-0.1, -0.1,  0.0);
+        centroid->param.bodyRangeMax = vec3_t( 0.1,  0.1,  0.5);
 		
 		centroid->ends.resize(nend);
 		for(int iend = 0; iend < nend; iend++){
             centroid->ends[iend].point = new DiMP::Point(graph);
 			
-            if(iend == 0){
-				centroid->ends[iend].basePos     = vec3_t( 0.0, -spacing/2.0,  0.0);
-				centroid->ends[iend].posRangeMin = vec3_t(-0.5, -0.0        , -h - 0.1);
-				centroid->ends[iend].posRangeMax = vec3_t( 0.5,  0.0        , -h + 0.1);
-			}
-			else{
-				centroid->ends[iend].basePos     = vec3_t( 0.0,  spacing/2.0,  0.0);
-				centroid->ends[iend].posRangeMin = vec3_t(-0.5, -0.0        , -h - 0.1);
-				centroid->ends[iend].posRangeMax = vec3_t( 0.5,  0.0        , -h + 0.1);
-			}
-			centroid->ends[iend].velRangeMin    = vec3_t(-1.5, -100.0, -100.0);
-			centroid->ends[iend].velRangeMax    = vec3_t( 1.5,  100.0,  100.0);
+            centroid->ends[iend].basePos     = endBasePos[iend];
+			centroid->ends[iend].posRangeMin = endPosMin [iend];
+			centroid->ends[iend].posRangeMax = endPosMax [iend];
+			
+            centroid->ends[iend].velRangeMin    = vec3_t(-1.5, -1.0, -1.0);
+			centroid->ends[iend].velRangeMax    = vec3_t( 1.5,  1.0,  1.0);
 
 			centroid->ends[iend].momentRangeMin = vec3_t(-0.0, -0.0, -1.0);
 			centroid->ends[iend].momentRangeMax = vec3_t( 0.0,  0.0,  1.0);
@@ -101,36 +147,90 @@ public:
 
             centroid->ends[iend].stiffnessMax = 100.0;
 
-            centroid->ends[iend].numSwitchMax = N/2;
+            //centroid->ends[iend].numSwitchMax    = endSwitch[iend];
+            centroid->ends[iend].contactInitial  = endIni [iend];
+            centroid->ends[iend].contactTerminal = endTerm[iend];
 		}
-
-        // flat ground
-        //centroid->faces.push_back(DiMP::Centroid::Face(vec2_t(-1.0, -5.0), vec2_t( 10.0, 5.0), vec3_t(0.0, 0.0, 0.0), quat_t::Rot(Rad(0.0), 'y')));
-		
-        // step
+        
         DiMP::Centroid::Face face;
+        // flat ground
         face.hull = new DiMP::Hull(graph);
         face.hull->vertices.push_back(vec3_t(-1.0, -5.0,  0.0));
         face.hull->vertices.push_back(vec3_t(-1.0,  5.0,  0.0));
-        face.hull->vertices.push_back(vec3_t( 0.15,  5.0,  0.0));
-        face.hull->vertices.push_back(vec3_t( 0.15, -5.0,  0.0));
+        face.hull->vertices.push_back(vec3_t( 5.0,  5.0,  0.0));
+        face.hull->vertices.push_back(vec3_t( 5.0, -5.0,  0.0));
+        face.normal = vec3_t(0.0, 0.0, 1.0);
+        face.numSwitchMax = 100;
+        centroid->faces.push_back(face);
+        // gap
+        /*
+        face.hull = new DiMP::Hull(graph);
+        face.hull->vertices.push_back(vec3_t(-1.0, -5.0,  0.0));
+        face.hull->vertices.push_back(vec3_t(-1.0,  5.0,  0.0));
+        face.hull->vertices.push_back(vec3_t( 0.5,  5.0,  0.0));
+        face.hull->vertices.push_back(vec3_t( 0.5, -5.0,  0.0));
+        face.normal = vec3_t(0.0, 0.0, 1.0);
+        face.numSwitchMax = 4;
+        centroid->faces.push_back(face);
+        
+        face.hull = new DiMP::Hull(graph);
+        face.hull->vertices.push_back(vec3_t( 2.3, -5.0,  0.0));
+        face.hull->vertices.push_back(vec3_t( 2.3,  5.0,  0.0));
+        face.hull->vertices.push_back(vec3_t( 5.0,  5.0,  0.0));
+        face.hull->vertices.push_back(vec3_t( 5.0, -5.0,  0.0));
+        face.normal = vec3_t(0.0, 0.0, 1.0);
+        face.numSwitchMax = 4;
+        centroid->faces.push_back(face);
+        
+        face.hull = new DiMP::Hull(graph);
+        face.hull->vertices.push_back(vec3_t( 0.2, -0.5,  0.6));
+        face.hull->vertices.push_back(vec3_t( 0.2, -0.15, 0.6));
+        face.hull->vertices.push_back(vec3_t( 2.3, -0.15, 0.6));
+        face.hull->vertices.push_back(vec3_t( 2.3, -0.5,  0.6));
+        face.normal = vec3_t(0.0, 0.0, 1.0);
+        face.numSwitchMax = 2;
+        centroid->faces.push_back(face);
+
+        face.hull = new DiMP::Hull(graph);
+        face.hull->vertices.push_back(vec3_t( 0.2,  0.15,  0.6));
+        face.hull->vertices.push_back(vec3_t( 0.2,  0.5,  0.6));
+        face.hull->vertices.push_back(vec3_t( 2.3,  0.5,  0.6));
+        face.hull->vertices.push_back(vec3_t( 2.3,  0.15,  0.6));
+        face.normal = vec3_t(0.0, 0.0, 1.0);
+        face.numSwitchMax = 2;
+        centroid->faces.push_back(face);
+        */
+        /*
+        // step
+        face.hull = new DiMP::Hull(graph);
+        face.hull->vertices.push_back(vec3_t(-1.0,  -0.5,  0.0));
+        face.hull->vertices.push_back(vec3_t(-1.0,   0.5,  0.0));
+        face.hull->vertices.push_back(vec3_t( 0.15,  0.5,  0.0));
+        face.hull->vertices.push_back(vec3_t( 0.15, -0.5,  0.0));
         face.normal = vec3_t(0.0, 0.0, 1.0);
         centroid->faces.push_back(face);
         
         face.hull = new DiMP::Hull(graph);
-        face.hull->vertices.push_back(vec3_t( 0.4, -5.0,  0.05));
-        face.hull->vertices.push_back(vec3_t( 0.4,  5.0,  0.05));
-        face.hull->vertices.push_back(vec3_t( 1.2,  5.0,  0.05));
-        face.hull->vertices.push_back(vec3_t( 1.2, -5.0,  0.05));
+        face.hull->vertices.push_back(vec3_t( 0.4 , -0.5,  0.10));
+        face.hull->vertices.push_back(vec3_t( 0.4 ,  0.5,  0.10));
+        face.hull->vertices.push_back(vec3_t( 0.65,  0.5,  0.10));
+        face.hull->vertices.push_back(vec3_t( 0.65, -0.5,  0.10));
         face.normal = vec3_t(0.0, 0.0, 1.0);
         centroid->faces.push_back(face);
 
-        /*
         face.hull = new DiMP::Hull(graph);
-        face.hull->vertices.push_back(vec3_t( 4.5, -5.0,  0.0));
-        face.hull->vertices.push_back(vec3_t( 4.5,  5.0,  0.0));
-        face.hull->vertices.push_back(vec3_t( 8.0,  5.0,  0.0));
-        face.hull->vertices.push_back(vec3_t( 8.0, -5.0,  0.0));
+        face.hull->vertices.push_back(vec3_t( 0.9,  -0.5,  0.20));
+        face.hull->vertices.push_back(vec3_t( 0.9,   0.5,  0.20));
+        face.hull->vertices.push_back(vec3_t( 1.15,  0.5,  0.20));
+        face.hull->vertices.push_back(vec3_t( 1.15, -0.5,  0.20));
+        face.normal = vec3_t(0.0, 0.0, 1.0);
+        centroid->faces.push_back(face);
+
+        face.hull = new DiMP::Hull(graph);
+        face.hull->vertices.push_back(vec3_t( 1.4, -0.5,  0.30));
+        face.hull->vertices.push_back(vec3_t( 1.4,  0.5,  0.30));
+        face.hull->vertices.push_back(vec3_t( 2.0,  0.5,  0.30));
+        face.hull->vertices.push_back(vec3_t( 2.0, -0.5,  0.30));
         face.normal = vec3_t(0.0, 0.0, 1.0);
         centroid->faces.push_back(face);
         */
@@ -153,16 +253,14 @@ public:
 			new DiMP::Tick(graph, k*dt, "");
 		
 		centroid->waypoints.push_back(DiMP::Centroid::Waypoint(0, 0.0, startPos, startOri, vec3_t(), vec3_t()));
-		centroid->waypoints.back().ends.push_back(DiMP::Centroid::Waypoint::End(vec3_t(startPos.x, startPos.y - spacing/2.0, 0.0), vec3_t()));
-		centroid->waypoints.back().ends.push_back(DiMP::Centroid::Waypoint::End(vec3_t(startPos.x, startPos.y + spacing/2.0, 0.0), vec3_t()));
-
-        //centroid->waypoints.push_back(DiMP::Centroid::Waypoint(0, 0.0, startPos, startOri, vec3_t(), vec3_t(), true, true, true, true));
-		//centroid->waypoints.back().ends.push_back(DiMP::Centroid::Waypoint::End(vec3_t(startPos.x, startPos.y - spacing/2.0, 0.0), vec3_t(), true, true));
-		//centroid->waypoints.back().ends.push_back(DiMP::Centroid::Waypoint::End(vec3_t(startPos.x, startPos.y + spacing/2.0, 0.0), vec3_t(), true, true));
+        for(int iend = 0; iend < nend; iend++){
+		    centroid->waypoints.back().ends.push_back(DiMP::Centroid::Waypoint::End(startPos + endBasePos[iend] + endPosOrigin[iend], vec3_t()));
+        }
 
 		centroid->waypoints.push_back(DiMP::Centroid::Waypoint(N, dt*N, goalPos, goalOri, vec3_t(), vec3_t()));
-		centroid->waypoints.back().ends.push_back(DiMP::Centroid::Waypoint::End(vec3_t(goalPos.x, goalPos.y - spacing/2.0, 0.05), vec3_t()));
-		centroid->waypoints.back().ends.push_back(DiMP::Centroid::Waypoint::End(vec3_t(goalPos.x, goalPos.y + spacing/2.0, 0.05), vec3_t()));
+        for(int iend = 0; iend < nend; iend++){
+		    centroid->waypoints.back().ends.push_back(DiMP::Centroid::Waypoint::End(goalPos + endBasePos[iend] + endPosOrigin[iend], vec3_t()));
+        }
 		
 		graph->scale.Set(1.0, 1.0, 1.0);
 		graph->Init();
@@ -182,11 +280,11 @@ public:
 
 		graph->solver->SetCorrection(ID(), 0.5);
 		graph->solver->param.numIter[0]     = 20;
-        graph->solver->param.regularization = 1.0e-5;
-		graph->solver->param.cutoffStepSize = 0.01;
-		graph->solver->param.minStepSize    = 0.01;
-		graph->solver->param.maxStepSize    = 0.1;
-        //graph->solver->param.methodMajor    = Solver::Method::Major::GaussNewton;
+        graph->solver->param.regularization = 1.0e-1;
+		graph->solver->param.cutoffStepSize = 0.1;
+		graph->solver->param.minStepSize    = 0.5;
+		graph->solver->param.maxStepSize    = 0.5;
+        //graph->solver->param.methodMajor    = Solver::Method::Major::DDP;
         graph->solver->param.methodMajor    = DiMP::CustomSolver::CustomMethod::SearchDDP;
 		graph->solver->param.methodMinor    = Solver::Method::Minor::Direct;
 		graph->solver->param.verbose        = false;
@@ -197,15 +295,7 @@ public:
     virtual void OnStep(){
        App::OnStep();
 
-        //real_t t = 0.0;
-        //for (uint k = 0; k < graph->ticks.size(); k++) {
-		//	DiMP::CentroidKey* key = (DiMP::CentroidKey*)centroid->traj.GetKeypoint(graph->ticks[k]);
-        //    fprintf(fileDuration, "%f, ", t);
-        //    if(key->next){
-        //        t += key->var_duration->val;
-		//	}
-        //}
-        //fprintf(fileDuration, "\n");
+       graph->solver->param.complRelaxation = std::max(0.00001, 0.5*graph->solver->param.complRelaxation);
     }
 
 	virtual void OnAction(int menu, int id) {

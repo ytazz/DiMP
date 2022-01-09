@@ -80,8 +80,8 @@ public:
 		V3Var* var_moment;
 
 		CentroidEndPosCon*              con_pos;
-		CentroidEndPosRangeCon*         con_pos_range[3];
-		CentroidEndVelRangeCon*         con_vel_range[3];
+		CentroidEndPosRangeCon*         con_pos_range[3][2];
+		CentroidEndVelRangeCon*         con_vel_range[3][2];
 		RangeConS*                      con_stiff_range;
 		RangeConV3*                     con_moment_range[3];
         FixConS*                        con_stiff_zero;
@@ -99,7 +99,7 @@ public:
 		real_t k_lbar_le;
 	};
 
-	vector<End>  ends;
+	vector<End>    ends;
 	
 public:
     virtual void AddVar(Solver* solver);
@@ -110,18 +110,22 @@ public:
 	CentroidKey();
 };
 
-class CentroidDDPNode : public CustomSolver::DDPNode{
+class CentroidDDPState : public DDPState{
 public:
-    vector<int>  contact;  //< for each iend, -1: not in contact, otherwise index of face in contact with
-    vector<int>  count;    //< for each iend, number of contact switches so far
+	Centroid*    cen;
+	vector<int>  contact;
+	
+	virtual bool IsIdentical(const DDPState* st);
+	virtual bool IsTerminal ();
+	virtual void CalcCost   ();
+	virtual void Finish     ();
+	virtual void Print      ();
 
-public:
-    
-             CentroidDDPNode();
-    virtual ~CentroidDDPNode();
+             CentroidDDPState(Centroid* _cen, CustomSolver* _solver);
+    virtual ~CentroidDDPState();
 };
 
-class Centroid : public TrajectoryNode, public CustomSolver::DDPCallback{
+class Centroid : public TrajectoryNode, public DDPCallback{
 public:
 	struct Param {
 		real_t	m;  //< mass
@@ -134,8 +138,7 @@ public:
         real_t  complWeightMin;
         real_t  complWeightMax;
         real_t  complWeightRate;
-        //real_t  complWeightDecay;
-
+        
         real_t  swingSlope;
         real_t  swingHeight;
 		
@@ -153,8 +156,9 @@ public:
         vec2_t  copRangeMin;
         vec2_t  copRangeMax;
         real_t  stiffnessMax;
-        int     numSwitchMax;
-
+        int     contactInitial;
+        int     contactTerminal;
+		
         Point*  point;
 
         End();
@@ -209,6 +213,9 @@ public:
     struct Face{
         vec3_t normal;
         Hull*  hull;
+        int    numSwitchMax;
+
+        Face();
     };
 
     Param	            param;
@@ -216,7 +223,7 @@ public:
     vector<Face>        faces;
 	vector<Waypoint>    waypoints;
     CentroidCallback*   callback;
-	
+
 	Snapshot            snapshot;
 	vector<Snapshot>    trajectory;
 	bool                trajReady;
@@ -243,11 +250,9 @@ public:
 	virtual void        Draw          (Render::Canvas* canvas, Render::Config* conf);
 
     // DDPCallback
-    virtual int                     NumBranches (CustomSolver::DDPNode* _parent);
-    virtual CustomSolver::DDPNode*  CreateNode  (CustomSolver::DDPNode* _parent, CustomSolver* _solver, int idx, int nx, int nu);
-    virtual void                    FinishNode  (CustomSolver::DDPNode* _node);
-    virtual real_t                  CalcNodeCost(CustomSolver::DDPNode* _node);
-
+	virtual DDPState*  CreateInitialState();
+	virtual void       CreateNextStates  (DDPState* _state, vector<DDPState*>& _next);
+	
     //Face*  FindFace  (const vec3_t& p, vec3_t& pf, vec3_t& nf);
 	void ComState   (real_t t, vec3_t& pos, vec3_t& vel, vec3_t& acom);
 	void TorsoState (real_t t, quat_t& ori, vec3_t& angvel, int type = Interpolate::SlerpDiff);
@@ -327,14 +332,12 @@ struct CentroidEndPosRangeCon : Constraint{
 	quat_t       q;
 	vec3_t       pbase;
 	vec3_t       pend;
-	real_t       _min, _max;
-	bool	     on_lower, on_upper;
-
+    real_t       bound;
+	
 	void Prepare();
 
 	virtual void  CalcCoef();
 	virtual void  CalcDeviation();
-	virtual void  Project(real_t& l, uint k);
 
 	CentroidEndPosRangeCon(Solver* solver, string _name, CentroidKey* _obj, int _iend, vec3_t _dir, real_t _scale);
 };
@@ -347,14 +350,12 @@ struct CentroidEndVelRangeCon : Constraint{
 	quat_t       q;
 	vec3_t       v;
 	vec3_t       vend;
-	real_t       _min, _max;
-	bool	     on_lower, on_upper;
-
+    real_t       bound;
+	
 	void Prepare();
 
 	virtual void  CalcCoef();
 	virtual void  CalcDeviation();
-	virtual void  Project(real_t& l, uint k);
 
 	CentroidEndVelRangeCon(Solver* solver, string _name, CentroidKey* _obj, int _iend, vec3_t _dir, real_t _scale);
 };

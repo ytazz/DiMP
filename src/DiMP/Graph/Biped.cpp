@@ -1418,7 +1418,7 @@ void BipedLIP::DrawSnapshot(Render::Canvas* canvas, Render::Config* conf) {
 
 // Constructors
 BipedLipCon::BipedLipCon(Solver* solver, int _tag, string _name, BipedLIPKey* _obj, real_t _scale) :
-	Constraint(solver, 3, ID(_tag, _obj->node, _obj->tick, _name), _scale) {
+	Constraint(solver, 3, ID(_tag, _obj->node, _obj->tick, _name), Constraint::Type::Equality, _scale) {
 	obj[0] = _obj;
 	obj[1] = (_obj->next ? (BipedLIPKey*)_obj->next : 0);
 }
@@ -1478,7 +1478,7 @@ BipedLipMomCon::BipedLipMomCon(Solver* solver, string _name, BipedLIPKey* _obj, 
 }
 
 BipedComConP::BipedComConP(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale) :
-	Constraint(solver, 2, ID(ConTag::BipedComPos, _obj->node, _obj->tick, _name), _scale) {
+	Constraint(solver, 2, ID(ConTag::BipedComPos, _obj->node, _obj->tick, _name), Constraint::Type::Equality, _scale) {
 
 	obj = _obj;
 
@@ -1489,7 +1489,7 @@ BipedComConP::BipedComConP(Solver* solver, string _name, BipedLIPKey* _obj, real
 }
 
 BipedComConV::BipedComConV(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale) :
-	Constraint(solver, 2, ID(ConTag::BipedComVel, _obj->node, _obj->tick, _name), _scale) {
+	Constraint(solver, 2, ID(ConTag::BipedComVel, _obj->node, _obj->tick, _name), Constraint::Type::Equality, _scale) {
 
 	obj = _obj;
 
@@ -1498,7 +1498,7 @@ BipedComConV::BipedComConV(Solver* solver, string _name, BipedLIPKey* _obj, real
 }
 
 BipedRangeCon::BipedRangeCon(Solver* solver, int _tag, string _name, BipedLIPKey* _obj, vec3_t _dir, real_t _scale) :
-	Constraint(solver, 1, ID(_tag, _obj->node, _obj->tick, _name), _scale) {
+	Constraint(solver, 1, ID(_tag, _obj->node, _obj->tick, _name), Constraint::Type::InequalityPenalty, _scale) {
 	obj = _obj;
 	dir = _dir;
 }
@@ -1556,7 +1556,7 @@ BipedMomRangeCon::BipedMomRangeCon(Solver* solver, string _name, BipedLIPKey* _o
 }
 
 BipedFootHeightCon::BipedFootHeightCon(Solver* solver, string _name, BipedLIPKey* _obj, uint _side, real_t _scale) :
-	Constraint(solver, 1, ID(ConTag::BipedFootHeight, _obj->node, _obj->tick, _name), _scale) {
+	Constraint(solver, 1, ID(ConTag::BipedFootHeight, _obj->node, _obj->tick, _name), Constraint::Type::Equality, _scale) {
 
 	obj  = _obj;
 	side = _side;
@@ -1565,7 +1565,7 @@ BipedFootHeightCon::BipedFootHeightCon(Solver* solver, string _name, BipedLIPKey
 }
 
 BipedTimeCon::BipedTimeCon(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale) :
-	Constraint(solver, 1, ID(ConTag::BipedTime, _obj->node, _obj->tick, _name), _scale) {
+	Constraint(solver, 1, ID(ConTag::BipedTime, _obj->node, _obj->tick, _name), Constraint::Type::Equality, _scale) {
 
 	obj[0] = _obj;
 	obj[1] = (BipedLIPKey*)_obj->next;

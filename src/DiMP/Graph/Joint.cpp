@@ -730,7 +730,7 @@ void Genericjoint::OnDraw(real_t* pos, Render::Canvas* canvas){
 //-------------------------------------------------------------------------------------------------
 // constructors
 
-JointCon::JointCon(Solver* solver, uint n, ID id, JointKey* _jnt, real_t _scale):Constraint(solver, n, id, _scale){
+JointCon::JointCon(Solver* solver, uint n, ID id, JointKey* _jnt, real_t _scale):Constraint(solver, n, id, Constraint::Type::Equality, _scale){
 	jnt = _jnt;
 }
 
