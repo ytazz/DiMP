@@ -385,7 +385,7 @@ void CustomSolver::CalcDirectionSearchDDP(){
         }
     }
 
-    const int numSample = 50;
+    const int numSample = 100;
 
     // for the first time, compute initial guess of mode sequence
     if(threads.empty()){
@@ -404,7 +404,7 @@ void CustomSolver::CalcDirectionSearchDDP(){
             Shuffle(threads[0]->path, threads[i]->path);
         }
 
-#pragma omp parallel for
+#pragma omp parallel for  num_threads(20)
         for(int i = 0; i < numSample; i++){
             // perform DDP with previous mode sequence
             threads[i]->Backward();
