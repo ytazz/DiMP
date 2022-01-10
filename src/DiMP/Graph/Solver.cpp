@@ -3,6 +3,9 @@
 #include <sbtimer.h>
 #include <sbrandom.h>
 
+#include <algorithm>
+#include <random>
+
 namespace DiMP{;
 
 static const real_t inf = numeric_limits<real_t>::max();
@@ -314,11 +317,39 @@ void CustomSolver::CalcDirection(){
     }
 }
 
-void CustomSolver::Shuffle(const vector<DDPState*>& path0, vector<DDPState*>& path1){
-    static Sampler sampler;
-    path1 = path0;
-    vector<DDPState*> st_int;
+//void CustomSolver::Shuffle(const vector<DDPState*>& path0, vector<DDPState*>& path1){
+void CustomSolver::Shuffle(){
+    vector< vector<DDPState*> > st_int;
+    st_int.resize(N);
+    vector< pair<int, DDPState*> >  idx;
+    
+    const vector<DDPState*>& path0 = threads[0]->path;
+    for(int k = 1; k <= N-1; k++){
+        st_int[k].resize(std::min(path0[k-1]->next.size(), path0[k+1]->prev.size()));
+        vector<DDPState*>::iterator it = set_intersection(
+            path0[k-1]->next.begin(), path0[k-1]->next.end(),
+            path0[k+1]->prev.begin(), path0[k+1]->prev.end(),
+            st_int[k].begin());
+        st_int[k].resize(it - st_int[k].begin());
+        st_int[k].erase(find(st_int[k].begin(), st_int[k].end(), path0[k]));
 
+        for(DDPState* st : st_int[k])
+            idx.push_back(make_pair(k, st));
+
+    }
+
+    static std::default_random_engine urng(0);
+    shuffle(idx.begin(), idx.end(), urng);
+    
+    for(int i = 1; i < threads.size(); i++){
+        threads[i]->path = threads[0]->path;
+        int j = (i-1)%idx.size();
+        threads[i]->path[idx[j].first] = idx[j].second;
+    }
+    /*
+    static Sampler sampler;
+    vector<DDPState*> st_int;
+    path1 = path0;
     while(true){
         int k = sampler.SampleInt(1, N-1);
         st_int.resize(std::min(path0[k-1]->next.size(), path0[k+1]->prev.size()));
@@ -329,13 +360,13 @@ void CustomSolver::Shuffle(const vector<DDPState*>& path0, vector<DDPState*>& pa
         st_int.resize(it - st_int.begin());
         st_int.erase(find(st_int.begin(), st_int.end(), path0[k]));
 
-        if(st_int.size() == 1)
+        if(st_int.size() == 0)
             continue;
 
         path1[k] = st_int[sampler.SampleInt(0, st_int.size()-1)];
         break;
     }
-
+    */
 }    
 
 void CustomSolver::CompDP(vector<DDPState*>& path){
@@ -385,7 +416,7 @@ void CustomSolver::CalcDirectionSearchDDP(){
         }
     }
 
-    const int numSample = 100;
+    const int numSample = 50;
 
     // for the first time, compute initial guess of mode sequence
     if(threads.empty()){
@@ -400,11 +431,12 @@ void CustomSolver::CalcDirectionSearchDDP(){
     
     while(true){
         // create shuffled sequences
-        for(int i = 1; i < numSample; i++){
-            Shuffle(threads[0]->path, threads[i]->path);
-        }
+        Shuffle();
+        //for(int i = 1; i < numSample; i++){
+        //    Shuffle(threads[0]->path, threads[i]->path);
+        //}
 
-#pragma omp parallel for  num_threads(20)
+//#pragma omp parallel for  num_threads(20)
         for(int i = 0; i < numSample; i++){
             // perform DDP with previous mode sequence
             threads[i]->Backward();

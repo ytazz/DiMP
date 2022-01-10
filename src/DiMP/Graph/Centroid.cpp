@@ -555,9 +555,9 @@ void Centroid::Init() {
         key->con_des_pos_t->desired = curve_t.CalcPos(t)/L;
         key->con_des_pos_r->desired = curve_r.CalcPos(t);
         key->con_vel_zero ->desired = vec3_t();
-        key->con_des_pos_t->weight = (!key->prev ? 10.0 : (key->next ? 5.0 : 10.0))*one;
-        key->con_des_pos_r->weight = (!key->prev ? 10.0 : (key->next ? 5.0 : 10.0))*one;
-        key->con_vel_zero ->weight = (!key->prev ? 10.0 : (key->next ? 5.0 : 10.0))*one;
+        key->con_des_pos_t->weight = (!key->prev ? 100.0 : (key->next ? 100.0 : 100.0))*one;
+        key->con_des_pos_r->weight = (!key->prev ? 100.0 : (key->next ? 10.0 : 100.0))*one;
+        key->con_vel_zero ->weight = (!key->prev ? 100.0 : (key->next ? 0.0 : 10.0))*one;
 
 		key->var_time->val = t/T;
 		if(key->next){
@@ -587,7 +587,7 @@ void Centroid::Init() {
 			key->ends[i].var_moment->val.clear();
 
             key->ends[i].con_des_pos->desired = curve_end[i].CalcPos(t)/L;
-            key->ends[i].con_des_pos->weight  = (!key->prev ? 10.0 : (key->next ? 5.0 : 10.0))*one;
+            key->ends[i].con_des_pos->weight  = (!key->prev ? 100.0 : (key->next ? 10.0 : 100.0))*one;
 
             //if(k == 0){
             //    key->ends[i].var_pos->locked = true;

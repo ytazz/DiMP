@@ -127,7 +127,8 @@ public:
 
 public:
     void   CalcDirectionSearchDDP();
-    void   Shuffle(const vector<DDPState*>& path0, vector<DDPState*>& path1);
+    //void   Shuffle(const vector<DDPState*>& path0, vector<DDPState*>& path1);
+    void   Shuffle();
     void   CompDP (vector<DDPState*>& path);
             
     virtual void    Init();

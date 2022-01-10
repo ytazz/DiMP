@@ -66,7 +66,7 @@ public:
 		const real_t legSpacing  = 0.2;
         const real_t armSpacing  = 0.25;
         const int nend = 4;
-        const int N    = 16;
+        const int N    = 18;
         const real_t goalTime = duration * N;
 
         vec3_t endBasePos  [nend];
