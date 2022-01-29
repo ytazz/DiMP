@@ -10,7 +10,7 @@ const real_t inf = std::numeric_limits<real_t>::max();
 class MyCentroidCallback : public DiMP::CentroidCallback{
 public:
     virtual void EnableContact(DiMP::CentroidEndContactCon* con){
-        if( ((con->iend == 0 || con->iend == 1) && (con->iface == 0 || con->iface == 1))
+        /*if( ((con->iend == 0 || con->iend == 1) && (con->iface == 0 || con->iface == 1))
             ||
             ((con->iend == 2) && (con->iface == 2)) ||
             ((con->iend == 3) && (con->iface == 3))
@@ -21,6 +21,11 @@ public:
         else{
             con->enabled = false;
         }
+        */
+        //if(con->iend == 2 || con->iend == 3)
+        //     con->enabled = false;
+        //else
+        con->enabled = true;
     }
 };
 
@@ -60,13 +65,13 @@ public:
         const real_t h = 0.7;
 		vec3_t startPos(0.0, 0.0, h);
 		quat_t startOri = quat_t();
-		vec3_t goalPos (3.5, 0.0, h + 0.0);
+		vec3_t goalPos (1.7, 0.0, h + 0.0);
 		quat_t goalOri  = quat_t::Rot(Rad(0.0), 'z');
         const real_t duration = 0.3;
 		const real_t legSpacing  = 0.2;
         const real_t armSpacing  = 0.25;
         const int nend = 4;
-        const int N    = 18;
+        const int N    = 12;
         const real_t goalTime = duration * N;
 
         vec3_t endBasePos  [nend];
@@ -118,7 +123,7 @@ public:
 		centroid->param.I = centroid->param.m * h*h;
 
         centroid->param.complWeightMin   = 0.1;
-        centroid->param.complWeightMax   = 100.0;
+        centroid->param.complWeightMax   = 1000.0;
         centroid->param.complWeightRate  = 100.0;
         
         // create geometry
@@ -162,6 +167,7 @@ public:
         face.normal = vec3_t(0.0, 0.0, 1.0);
         face.numSwitchMax = 100;
         centroid->faces.push_back(face);
+        
         // gap
         /*
         face.hull = new DiMP::Hull(graph);
@@ -200,9 +206,8 @@ public:
         face.numSwitchMax = 2;
         centroid->faces.push_back(face);
         */
-        /*
         // step
-        face.hull = new DiMP::Hull(graph);
+        /*face.hull = new DiMP::Hull(graph);
         face.hull->vertices.push_back(vec3_t(-1.0,  -0.5,  0.0));
         face.hull->vertices.push_back(vec3_t(-1.0,   0.5,  0.0));
         face.hull->vertices.push_back(vec3_t( 0.15,  0.5,  0.0));

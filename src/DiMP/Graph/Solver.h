@@ -22,17 +22,17 @@ public:
 
     real_t  L;
         
-    vvec_t  Lx;
-    vvec_t  Lu;
-    vmat_t  Lxx;
-    vmat_t  Luu;
-    vmat_t  Lux;
+    //vvec_t  Lx;
+    //vvec_t  Lu;
+    //vmat_t  Lxx;
+    //vmat_t  Luu;
+    //vmat_t  Lux;
         
-    Vector  _Lx;
-    Vector  _Lu;
-    Matrix  _Lxx;
-    Matrix  _Luu;
-    Matrix  _Lux;
+    Vector  Lx;
+    Vector  Lu;
+    Matrix  Lxx;
+    Matrix  Luu;
+    Matrix  Lux;
     //Vector  _Lxx_dx;
     //Vector  _Luu_du;
     //Vector  _Lux_dx;
@@ -57,14 +57,8 @@ public:
     DDPStage*      next;
     vector< UTRef<DDPState> >  states;
     
-    int     k;
-    Vector  fcor;
-    Matrix  fx;
-    Matrix  fu;
-
-    void Init    ();
-    void Prepare ();
-
+    int k;
+    
                 DDPStage(CustomSolver* _solver);
     virtual ~DDPStage();
 };

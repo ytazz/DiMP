@@ -46,9 +46,7 @@ public:
     FixConV3*           con_des_pos_t;
     FixConQ*            con_des_pos_r;
     FixConV3*           con_vel_zero;
-    vector<Solver::SubCost*>  subcost_u;
-    vector<Solver::SubCost*>  subcost_x;
-
+    
 	real_t C;
 	real_t S;
 	real_t lbar;
@@ -90,11 +88,12 @@ public:
 		FixConV3*                       con_vel_zero;
         vector<CentroidEndContactCon*>  con_contact;
 
-        vector<Solver::SubCost*>  subcost_c;     ///< costs active when in contact
-        vector<Solver::SubCost*>  subcost_nc;    ///< costs active when not in contact
-        vector<Solver::SubCost*>  subcost_face;  ///< cost active when in contact with each face
+		Solver::SubInput*  subin_stiff;
+		Solver::SubInput*  subin_moment;
+		Solver::SubInput*  subin_vel;
+		Solver::SubState*  subst_pos;
 
-		real_t k_pbar_pe;
+        real_t k_pbar_pe;
 		vec3_t k_pbar_le;
 		real_t k_lbar_le;
 	};

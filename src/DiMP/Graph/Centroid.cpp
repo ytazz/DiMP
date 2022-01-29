@@ -65,19 +65,16 @@ void CentroidKey::AddVar(Solver* solver) {
 		ends[i].var_stiff ->weight[0] = damping;
 		ends[i].var_moment->weight    = damping*one;
 
-        solver->AddStateVar(ends[i].var_pos, tick->idx);
+        ends[i].subst_pos    = solver->AddStateVar(ends[i].var_pos, tick->idx);
 
-        solver->AddInputVar(ends[i].var_vel   , tick->idx);
-        solver->AddInputVar(ends[i].var_stiff , tick->idx);
-        solver->AddInputVar(ends[i].var_moment, tick->idx);
+        ends[i].subin_vel    = solver->AddInputVar(ends[i].var_vel   , tick->idx);
+        ends[i].subin_stiff  = solver->AddInputVar(ends[i].var_stiff , tick->idx);
+        ends[i].subin_moment = solver->AddInputVar(ends[i].var_moment, tick->idx);
 	}
 }
 
 void CentroidKey::AddCon(Solver* solver) {
 	CentroidKey* nextObj = (CentroidKey*)next;
-
-    subcost_u.clear();
-    subcost_x.clear();
 
     int nend  = cen->ends .size();
     int nface = cen->faces.size();
@@ -104,18 +101,14 @@ void CentroidKey::AddCon(Solver* solver) {
     con_des_pos_t = new FixConV3(solver, ID(ConTag::CentroidPosT, node, tick, name + "_des_pos_t"), var_pos_t, 1.0);
     con_des_pos_r = new FixConQ (solver, ID(ConTag::CentroidPosR, node, tick, name + "_des_pos_r"), var_pos_r, 1.0);
 
-    subcost_x.push_back(solver->AddCostCon(con_vel_zero , tick->idx));
-    subcost_x.push_back(solver->AddCostCon(con_des_pos_t, tick->idx));
-    subcost_x.push_back(solver->AddCostCon(con_des_pos_r, tick->idx));
+	solver->AddCostCon(con_vel_zero , tick->idx);
+    solver->AddCostCon(con_des_pos_t, tick->idx);
+    solver->AddCostCon(con_des_pos_r, tick->idx);
 
 	stringstream ss;
 	for(int i = 0; i < nend; i++){
 		ss.str("");
 		ss << name << "_end" << i;
-
-        ends[i].subcost_c   .clear();
-        ends[i].subcost_nc  .clear();
-        ends[i].subcost_face.resize(nface);
 
         /// non-complementary constraints
 		if(next){
@@ -134,10 +127,10 @@ void CentroidKey::AddCon(Solver* solver) {
 		    //ends[i].con_vel_range[2][0] = new CentroidEndVelRangeCon(solver, ss.str() + "_vel_range2_min", this, i, vec3_t( 0.0,  0.0,  1.0), node->graph->scale.vel_t);
 		    //ends[i].con_vel_range[2][1] = new CentroidEndVelRangeCon(solver, ss.str() + "_vel_range2_max", this, i, vec3_t( 0.0,  0.0, -1.0), node->graph->scale.vel_t);
 
-            subcost_u.push_back(solver->AddCostCon(ends[i].con_stiff_range    , tick->idx));
-            subcost_u.push_back(solver->AddCostCon(ends[i].con_moment_range[0], tick->idx));
-            subcost_u.push_back(solver->AddCostCon(ends[i].con_moment_range[1], tick->idx));
-            subcost_u.push_back(solver->AddCostCon(ends[i].con_moment_range[2], tick->idx));
+			solver->AddCostCon(ends[i].con_stiff_range    , tick->idx);
+            solver->AddCostCon(ends[i].con_moment_range[0], tick->idx);
+            solver->AddCostCon(ends[i].con_moment_range[1], tick->idx);
+            solver->AddCostCon(ends[i].con_moment_range[2], tick->idx);
 
             //subcost_u.push_back(solver->AddCostCon(ends[i].con_vel_range[0][0], tick->idx));
             //subcost_u.push_back(solver->AddCostCon(ends[i].con_vel_range[0][1], tick->idx));
@@ -163,7 +156,7 @@ void CentroidKey::AddCon(Solver* solver) {
 
         ends[i].con_des_pos = new FixConV3(solver, ID(ConTag::CentroidEndPos, node, tick, name + "_des_pos"), ends[i].var_pos, 1.0);
 
-        subcost_x.push_back(solver->AddCostCon(ends[i].con_des_pos, tick->idx));
+		solver->AddCostCon(ends[i].con_des_pos, tick->idx);
 
         /// complimentary constraints
         if(next){
@@ -171,16 +164,16 @@ void CentroidKey::AddCon(Solver* solver) {
             ends[i].con_stiff_zero  = new FixConS (solver, ID(ConTag::CentroidEndStiff , node, tick, name + "_stiff_zero" ), ends[i].var_stiff , 1.0);
             ends[i].con_moment_zero = new FixConV3(solver, ID(ConTag::CentroidEndMoment, node, tick, name + "_moment_zero"), ends[i].var_moment, 1.0);
 
-            ends[i].subcost_c .push_back(solver->AddCostCon(ends[i].con_vel_zero   , tick->idx));
-            ends[i].subcost_nc.push_back(solver->AddCostCon(ends[i].con_stiff_zero , tick->idx));
-            ends[i].subcost_nc.push_back(solver->AddCostCon(ends[i].con_moment_zero, tick->idx));
+            solver->AddCostCon(ends[i].con_vel_zero   , tick->idx);
+            solver->AddCostCon(ends[i].con_stiff_zero , tick->idx);
+            solver->AddCostCon(ends[i].con_moment_zero, tick->idx);
         }
         
         ends[i].con_contact.resize(nface);
         for(int j = 0; j < nface; j++){
 		    ends[i].con_contact[j] = new CentroidEndContactCon(solver, name + "_contact", this, i, j, 1.0);
             
-            ends[i].subcost_face[j] = solver->AddCostCon(ends[i].con_contact[j], tick->idx);
+			solver->AddCostCon(ends[i].con_contact[j], tick->idx);
         }
         
 	}
@@ -365,69 +358,57 @@ void CentroidDDPState::CalcCost(){
 	int k = stage->k;
 	CentroidKey* key = (CentroidKey*)cen->traj.GetKeypoint(cen->graph->ticks[k]);
 
-	L = 0.0;
-	Lx .clear();
-	Lu .clear();
-	Lxx.clear();
-	Luu.clear();
-	Lux.clear();
-    
-	// weights on variables
-	for(Solver::SubState* subst : solver->state[k]->substate){
-		Lxx += subst->Lxx;
-	}
+	L = solver->L[k];
+	vec_copy(solver->Lx [k], Lx );
+	mat_copy(solver->Lxx[k], Lxx);
 	if(k < solver->N){
-		for(Solver::SubInput* subin : solver->input[k]->subinput){
-			Luu += subin->Luu;
-		}
-	}
-
-	for(Solver::SubCost* subcost : key->subcost_x){
-		if(subcost->con->enabled && subcost->con->active){
-			L   += subcost->L;
-			Lx  += subcost->Lx;
-			Lxx += subcost->Lxx;
-		}
-	}
-	for(Solver::SubCost* subcost : key->subcost_u){
-		if(subcost->con->enabled && subcost->con->active){
-			L   += subcost->L;
-			Lu  += subcost->Lu;
-			Luu += subcost->Luu;
-		}
+		vec_copy(solver->Lu [k], Lu );
+		mat_copy(solver->Luu[k], Luu);
+		mat_copy(solver->Lux[k], Lux);
 	}
 
 	int nend  = cen->ends .size();
 	int nface = cen->faces.size();
-	//real_t wr = cen->complWeight/cen->param.complWeightMin;
-	real_t wr = cen->param.complWeightMax/cen->param.complWeightMin;
+	real_t w  = cen->param.complWeightMax;
+	real_t w2 = w*w;
 
 	for(int i = 0; i < nend; i++){
-		real_t w_c , w_c2 ;
-		real_t w_nc, w_nc2;
-		w_c   = (contact[i] == -1 ? 1.0 : wr );
-		w_nc  = (contact[i] == -1 ? wr  : 1.0);
-		w_c2  = w_c*w_c;
-		w_nc2 = w_nc*w_nc;
+		CentroidKey::End& end = key->ends[i];
 
-		for(Solver::SubCost* subcost : key->ends[i].subcost_c){
-			L   += w_c2 * subcost->L;
-			Lu  += w_c2 * subcost->Lu;
-			Luu += w_c2 * subcost->Luu;
-		}
-		for(Solver::SubCost* subcost : key->ends[i].subcost_nc){
-			L   += w_nc2 * subcost->L;
-			Lu  += w_nc2 * subcost->Lu;
-			Luu += w_nc2 * subcost->Luu;
-		}
+		if(contact[i] == -1){
+			real_t l  = end.var_stiff ->val;
+			vec3_t m  = end.var_moment->val;
+			int    il = end.subin_stiff ->index;
+			int    im = end.subin_moment->index;
+			
+			L += (1.0/2.0)*w2*(l*l + m.square());
 
-		for(int j = 0; j < nface; j++){
-			real_t w_f, w_f2;
-			w_f  = (contact[i] == j ? wr : 1.0);
-			w_f2 = w_f*w_f;
-			L   += w_f2 * key->ends[i].subcost_face[j]->L;
-			Lx  += w_f2 * key->ends[i].subcost_face[j]->Lx;
-			Lxx += w_f2 * key->ends[i].subcost_face[j]->Lxx;
+			Lu (il)    += w2*l;
+			Luu(il,il) += w2;
+
+			for(int j = 0; j < 3; j++){
+				Lu (im+j)      += w2*m[j];
+				Luu(im+j,im+j) += w2;
+			}
+		}
+		else{
+			vec3_t v  = end.var_vel->val;
+			real_t d  = end.con_contact[contact[i]]->y[0];
+			vec3_t nf = end.con_contact[contact[i]]->nf;
+			int    iv = end.subin_vel->index;
+			int    ip = end.subst_pos->index;
+
+			L += (1.0/2.0)*w2*(v.square() + d*d);
+
+			for(int j = 0; j < 3; j++){
+				Lu (iv+j)      += w2*v[j];
+				Luu(iv+j,iv+j) += w2;
+
+				Lx(ip+j)       += w2*d*nf[j];
+			}
+			for(int j0 = 0; j0 < 3; j0++)for(int j1 = 0; j1 < 3; j1++){
+				Lxx(ip+j0,ip+j1) += w2*nf[j0]*nf[j1];
+			}
 		}
 	}
 
