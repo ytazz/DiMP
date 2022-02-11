@@ -32,6 +32,7 @@ find_package(Springhead)
 find_package(Scenebuilder)
 find_package(SDL2     REQUIRED COMPONENTS SDL2::SDL2)
 find_package(SDL2_ttf REQUIRED COMPONENTS SDL2_ttf::SDL2_ttf)
+find_package(SuiteSparse)
 
 if(WIN32)
     set(Boost_USE_STATIC_LIBS        ON)

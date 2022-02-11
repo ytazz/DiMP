@@ -550,26 +550,30 @@ public:
 			
 			// projected point is close enough to origin
 			if(d < eps){
-                // if simplex is full-dimensional
-                if(s.dim == 3){
-				    // calculate minimum distance to subsimplices
-				    dmin2 = inf;
-				    for(int ic = 0; ic < s.dim+1; ic++){
-					    Project(s.Sub(ic), p2);
-					    d2 = p2.d().norm();
-					    if(d2 < dmin2){
-						    pmin2 = p2;
-						    dmin2 = d2;
-					    }
-				    }
-				    pmin =  p2;
-				    dmin = -dmin2;
-                }
-                // otherwise
-                else{
-                    pmin = p;
-                    dmin = d;
-                }
+                //// if simplex is full-dimensional
+                //if(s.dim == 3){
+
+				// note: simplex containing the origin may not be full-dimensional (i.e. degenerated)
+				//  calculate peneration depth by calculating minimum distance to subsimplices
+				//  there might be a better way...
+				dmin2 = inf;
+				for(int ic = 0; ic < s.dim+1; ic++){
+					Project(s.Sub(ic), p2);
+					d2 = p2.d().norm();
+					if(d2 < dmin2){
+						pmin2 = p2;
+						dmin2 = d2;
+					}
+				}
+				pmin =  p2;
+				dmin = -dmin2;
+
+                //}
+                //// otherwise
+                //else{
+                //    pmin = p;
+                //    dmin = d;
+                //}
 			}
 			else{
 				pmin = p;
