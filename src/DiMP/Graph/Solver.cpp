@@ -419,7 +419,7 @@ void CustomSolver::CalcDirectionSearchDDP(){
         for(DDPState* st : stset)
             st->CalcCost();
             */
-#pragma omp parallel for  num_threads(20)
+//#pragma omp parallel for  num_threads(20)
         for(int i = 0; i < numSample; i++){
             // perform DDP with previous mode sequence
             threads[i]->Backward();

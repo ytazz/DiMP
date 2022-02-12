@@ -25,7 +25,7 @@ public:
         //if(con->iend == 2 || con->iend == 3)
         //     con->enabled = false;
         //else
-        con->enabled = true;
+            con->enabled = true;
     }
 };
 
@@ -65,13 +65,13 @@ public:
         const real_t h = 0.7;
 		vec3_t startPos(0.0, 0.0, h);
 		quat_t startOri = quat_t();
-		vec3_t goalPos (1.7, 0.0, h + 0.0);
+		vec3_t goalPos (3.0, 0.0, h + 0.0);
 		quat_t goalOri  = quat_t::Rot(Rad(0.0), 'z');
         const real_t duration = 0.3;
 		const real_t legSpacing  = 0.2;
         const real_t armSpacing  = 0.25;
         const int nend = 4;
-        const int N    = 12;
+        const int N    = 20;
         const real_t goalTime = duration * N;
 
         vec3_t endBasePos  [nend];
@@ -101,8 +101,8 @@ public:
         endIni      [1] = 0;
         endIni      [2] = -1;
         endIni      [3] = -1;
-        endTerm     [0] = 0;
-        endTerm     [1] = 0;
+        endTerm     [0] = 1;
+        endTerm     [1] = 1;
         endTerm     [2] = -1;
         endTerm     [3] = -1;
         //endSwitch   [0] = 4;
@@ -123,7 +123,7 @@ public:
 		centroid->param.I = centroid->param.m * h*h;
 
         centroid->param.complWeightMin   = 0.1;
-        centroid->param.complWeightMax   = 1000.0;
+        centroid->param.complWeightMax   = 10.0;
         centroid->param.complWeightRate  = 100.0;
         
         // create geometry
@@ -159,6 +159,7 @@ public:
         
         DiMP::Centroid::Face face;
         // flat ground
+        /*
         face.hull = new DiMP::Hull(graph);
         face.hull->vertices.push_back(vec3_t(-1.0, -5.0,  0.0));
         face.hull->vertices.push_back(vec3_t(-1.0,  5.0,  0.0));
@@ -167,9 +168,8 @@ public:
         face.normal = vec3_t(0.0, 0.0, 1.0);
         face.numSwitchMax = 100;
         centroid->faces.push_back(face);
-        
+        */
         // gap
-        /*
         face.hull = new DiMP::Hull(graph);
         face.hull->vertices.push_back(vec3_t(-1.0, -5.0,  0.0));
         face.hull->vertices.push_back(vec3_t(-1.0,  5.0,  0.0));
@@ -205,7 +205,7 @@ public:
         face.normal = vec3_t(0.0, 0.0, 1.0);
         face.numSwitchMax = 2;
         centroid->faces.push_back(face);
-        */
+        
         // step
         /*face.hull = new DiMP::Hull(graph);
         face.hull->vertices.push_back(vec3_t(-1.0,  -0.5,  0.0));
@@ -286,7 +286,7 @@ public:
 		graph->solver->SetCorrection(ID(), 0.5);
 		graph->solver->param.numIter[0]     = 20;
         graph->solver->param.regularization = 1.0e-1;
-		graph->solver->param.cutoffStepSize = 0.1;
+		graph->solver->param.cutoffStepSize = 0.5;
 		graph->solver->param.minStepSize    = 0.5;
 		graph->solver->param.maxStepSize    = 0.5;
         //graph->solver->param.methodMajor    = Solver::Method::Major::DDP;
