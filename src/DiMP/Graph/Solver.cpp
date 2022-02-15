@@ -24,6 +24,234 @@ DDPStage::~DDPStage(){
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+DDPStep::DDPStep(DDPThread* _thread){
+    thread = _thread;
+}
+
+void DDPStep::Init(){
+    int N  = thread->solver->N;
+    int nx = thread->solver->state[0]->dim;
+    int nu = thread->solver->input[0]->dim;
+
+    if(k < N){
+        du              .Allocate(nu);
+        Qx              .Allocate(nx);
+	    Qu              .Allocate(nu);
+	    Qxx             .Allocate(nx, nx);
+	    Quu             .Allocate(nu, nu);
+	    Qux             .Allocate(nu, nx);
+	    Quuinv          .Allocate(nu, nu);
+	    Quuinv_Qu       .Allocate(nu);
+        Quuinv_Qux      .Allocate(nu, nx);
+        Vxx_fcor        .Allocate(nx);
+        Vxx_fx          .Allocate(nx, nx);
+        Vxx_fu          .Allocate(nx, nu);
+        Vx_plus_Vxx_fcor.Allocate(nx);
+        Qu_plus_Qux_dx  .Allocate(nu);
+
+        Px        .Allocate(nx);
+	    Pu        .Allocate(nu);
+	    Pxx       .Allocate(nx, nx);
+	    Puu       .Allocate(nu, nu);
+	    Pux       .Allocate(nu, nx);
+	    Puuinv    .Allocate(nu, nu);
+	    Puuinv_Pu .Allocate(nu);
+        Puuinv_Pux.Allocate(nu, nx);
+        Lx_plus_Ux                           .Allocate(nx);
+        Lxx_plus_Uxx                         .Allocate(nx, nx);
+        Lxx_plus_Uxx_fcor_rev                .Allocate(nx);
+        Lx_plus_Ux_plus_Lxx_plus_Uxx_fcor_rev.Allocate(nx);
+        Lxx_plus_Uxx_fx_rev                  .Allocate(nx, nx);
+        Lxx_plus_Uxx_fu_rev                  .Allocate(nx, nu);
+        Lux_fx_rev                           .Allocate(nu, nx);
+    }
+    dx       .Allocate(nx);
+	Vx       .Allocate(nx);
+	Vxx      .Allocate(nx, nx);
+    Vxxinv   .Allocate(nx, nx);
+    //Vxxinv_Vx.Allocate(nx);
+	Ux       .Allocate(nx);
+	Uxx      .Allocate(nx, nx);
+    Uxxinv   .Allocate(nx, nx);
+    Ux_plus_Vx                 .Allocate(nx);
+    Uxx_plus_Vxx               .Allocate(nx, nx);
+    Uxx_plus_Vxx_inv           .Allocate(nx, nx);
+    Uxx_plus_Vxx_inv_Ux_plus_Vx.Allocate(nx);
+}
+
+void DDPStep::CalcValueForward(){
+    if(!prev){
+        U = 0.0;
+        vec_clear(Ux );
+        mat_clear(Uxx);
+
+        //for(int i = 0; i < Uxx.m; i++)
+	    //    Uxx(i,i) = 1000.0;
+    }
+    if(next){
+        vec_copy   (state->Lx , Lx_plus_Ux  );
+        vec_add    (Ux        , Lx_plus_Ux  );
+        mat_copy   (state->Lxx, Lxx_plus_Uxx);
+        mat_add    (Uxx       , Lxx_plus_Uxx);
+        mat_vec_mul(Lxx_plus_Uxx, thread->fcor_rev[k], Lxx_plus_Uxx_fcor_rev, 1.0, 0.0);
+        vec_copy   (Lx_plus_Ux           , Lx_plus_Ux_plus_Lxx_plus_Uxx_fcor_rev);
+        vec_add    (Lxx_plus_Uxx_fcor_rev, Lx_plus_Ux_plus_Lxx_plus_Uxx_fcor_rev);
+        mat_mat_mul(Lxx_plus_Uxx, thread->fx_rev[k], Lxx_plus_Uxx_fx_rev, 1.0, 0.0);
+        mat_mat_mul(Lxx_plus_Uxx, thread->fu_rev[k], Lxx_plus_Uxx_fu_rev, 1.0, 0.0);
+        mat_mat_mul(state->Lux  , thread->fx_rev[k], Lux_fx_rev, 1.0, 0.0);
+
+        P = state->L + U + vec_dot(Lx_plus_Ux, thread->fcor_rev[k]) + (1.0/2.0)*vec_dot(thread->fcor_rev[k], Lxx_plus_Uxx_fcor_rev);
+        
+        mattr_vec_mul(thread->fx_rev[k], Lx_plus_Ux_plus_Lxx_plus_Uxx_fcor_rev, Px, 1.0, 0.0);
+        //Px[k] = fx_rev[k].trans()*(Lx [k] + Ux [k] + (Lxx[k] + Uxx[k])*fcor_rev[k]);
+        
+        vec_copy(state->Lu, Pu);
+        mattr_vec_mul(thread->fu_rev[k], Lx_plus_Ux_plus_Lxx_plus_Uxx_fcor_rev, Pu, 1.0, 1.0);
+        //Pu[k] = fu_rev[k].trans()*(Lx [k] + Ux [k] + (Lxx[k] + Uxx[k])*fcor_rev[k]) + Lu[k];
+        
+        mattr_mat_mul(thread->fx_rev[k], Lxx_plus_Uxx_fx_rev, Pxx, 1.0, 0.0);
+        //Pxx[k] = fx_rev[k].trans()*(Lxx[k] + Uxx[k])*fx_rev[k];
+        
+        mat_copy(state->Luu, Puu);
+        mattr_mat_mul(thread->fu_rev[k], Lxx_plus_Uxx_fu_rev, Puu, 1.0, 1.0);
+        //Puu[k] = fu_rev[k].trans()*(Lxx[k] + Uxx[k])*fu_rev[k] + Luu[k];
+        
+        mat_copy(Lux_fx_rev, Pux);
+        mattr_mat_mul(thread->fu_rev[k], Lxx_plus_Uxx_fx_rev, Pux, 1.0, 1.0);
+        //Pux[k] = (fu_rev[k].trans()*(Lxx[k] + Uxx[k]) + Lux[k])*fx_rev[k];
+
+        for(int i = 0; i < Puu.m; i++)
+		    Puu(i,i) += thread->solver->param.regularization;
+    	
+	    mat_inv_pd(Puu, Puuinv);
+
+        symmat_vec_mul(Puuinv, Pu , Puuinv_Pu , 1.0, 0.0);
+	    symmat_mat_mul(Puuinv, Pux, Puuinv_Pux, 1.0, 0.0);
+        //Puuinv_Pu[k] = Puuinv[k]*Pu[k];
+        
+	    next->U = P - (1.0/2.0)*vec_dot(Pu, Puuinv_Pu);
+	    
+        vec_copy(Px, next->Ux);
+        mattr_vec_mul(Pux, Puuinv_Pu, next->Ux, -1.0, 1.0);
+        //Ux [k+1] = Px [k] - Pux[k].trans()*Puuinv_Pu[k];
+	    
+        mat_copy(Pxx, next->Uxx);
+        mattr_mat_mul(Pux, Puuinv_Pux, next->Uxx, -1.0, 1.0);
+        //Uxx[k+1] = Pxx[k] - Pux[k].trans()*Puuinv[k]*Pux[k];
+		
+        // enforce symmetry of Uxx
+	    for(int i = 1; i < next->Uxx.m; i++) for(int j = 0; j < i; j++)
+		    next->Uxx(i,j) = next->Uxx(j,i);
+
+    }
+
+    // add terminal cost
+    //U  [N] += L  [N];
+    //Ux [N] += Lx [N];
+    //Uxx[N] += Lxx[N];
+    //mat_inv_sym(Uxx[N], Uxxinv);
+}
+
+void DDPStep::CalcValueBackward(){
+    if(!next){
+        V = state->L;
+        vec_copy(state->Lx , Vx );
+        mat_copy(state->Lxx, Vxx);
+    }
+    else{
+        mat_vec_mul(next->Vxx, thread->fcor[k], Vxx_fcor, 1.0, 0.0);
+        mat_mat_mul(next->Vxx, thread->fx  [k], Vxx_fx  , 1.0, 0.0);
+        mat_mat_mul(next->Vxx, thread->fu  [k], Vxx_fu  , 1.0, 0.0);
+        vec_copy(next->Vx, Vx_plus_Vxx_fcor);
+        vec_add (Vxx_fcor, Vx_plus_Vxx_fcor);
+
+        Q = state->L + next->V + vec_dot(next->Vx, thread->fcor[k]) + (1.0/2.0)*vec_dot(thread->fcor[k], Vxx_fcor);
+        
+        vec_copy(state->Lx, Qx);
+        mattr_vec_mul(thread->fx[k], Vx_plus_Vxx_fcor, Qx, 1.0, 1.0);
+
+        vec_copy(state->Lu, Qu);
+        mattr_vec_mul(thread->fu[k], Vx_plus_Vxx_fcor, Qu, 1.0, 1.0);
+
+        mat_copy(state->Lxx, Qxx);
+        mattr_mat_mul(thread->fx[k], Vxx_fx, Qxx, 1.0, 1.0);
+
+        mat_copy(state->Luu, Quu);
+        mattr_mat_mul(thread->fu[k], Vxx_fu, Quu, 1.0, 1.0);
+
+        mat_copy(state->Lux, Qux);
+        mattr_mat_mul(thread->fu[k], Vxx_fx, Qux, 1.0, 1.0);
+
+        for(int i = 0; i < Quu.m; i++)
+		    Quu(i,i) += thread->solver->param.regularization;
+    	
+        mat_inv_pd(Quu, Quuinv);
+        
+        symmat_vec_mul(Quuinv, Qu , Quuinv_Qu , 1.0, 0.0);
+	    symmat_mat_mul(Quuinv, Qux, Quuinv_Qux, 1.0, 0.0);
+        
+        V = Q - (1.0/2.0)*vec_dot(Qu, Quuinv_Qu);
+        
+        vec_copy(Qx, Vx);
+        mattr_vec_mul(Qux, Quuinv_Qu, Vx, -1.0, 1.0);
+	    
+        mat_copy(Qxx, Vxx);
+        mattr_mat_mul(Qux, Quuinv_Qux, Vxx, -1.0, 1.0);
+        
+        // enforce symmetry of Uxx
+	    for(int i = 1; i < Vxx.m; i++) for(int j = 0; j < i; j++)
+		    Vxx(i,j) = Vxx(j,i);
+    }
+
+    //symmat_vec_mul(Vxxinv, Vx, Vxxinv_Vx, 1.0, 0.0);
+    //Vmin = V - (1.0/2.0)*vec_dot(Vx, Vxxinv_Vx);
+
+}
+
+void DDPStep::CalcStateForward(){
+    if(!prev){
+        mat_inv_pd(Vxx, Vxxinv);
+        symmat_vec_mul(Vxxinv, Vx, dx, -1.0, 0.0);
+        //vec_clear(dx);
+    }
+
+    if(next){
+        vec_copy(Qu, Qu_plus_Qux_dx);
+        mat_vec_mul(Qux, dx, Qu_plus_Qux_dx, 1.0, 1.0);
+        symmat_vec_mul(Quuinv, Qu_plus_Qux_dx, du, -1.0, 0.0);
+
+        vec_copy   (thread->fcor[k], next->dx);
+        mat_vec_mul(thread->fx  [k], dx, next->dx, 1.0, 1.0);
+        mat_vec_mul(thread->fu  [k], du, next->dx, 1.0, 1.0);
+
+        //du[k  ] = -n->Quuinv*(n->Qu + n->Qux*dx[k]);
+        //dx[k+1] = fx[k]*dx[k] + fu[k]*du[k] + f_cor[k];
+    }   
+}
+
+void DDPStep::Apply(){
+    thread->steps[k]->state = state;
+}
+
+void DDPStep::CalcCost(){
+    CalcValueBackward();
+
+    U_plus_V = thread->steps[k]->U + V;
+    
+    vec_copy(thread->steps[k]->Ux, Ux_plus_Vx);
+    vec_add (Vx, Ux_plus_Vx);
+    
+    mat_copy(thread->steps[k]->Uxx, Uxx_plus_Vxx);
+    mat_add (Vxx, Uxx_plus_Vxx);
+
+    mat_inv_pd(Uxx_plus_Vxx, Uxx_plus_Vxx_inv);
+    symmat_vec_mul(Uxx_plus_Vxx_inv, Ux_plus_Vx, Uxx_plus_Vxx_inv_Ux_plus_Vx, 1.0, 0.0);
+
+    cost = U_plus_V - (1.0/2.0)*vec_dot(Ux_plus_Vx, Uxx_plus_Vxx_inv_Ux_plus_Vx);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
 DDPThread::DDPThread(CustomSolver* _solver){
     solver = _solver;
 }
@@ -37,140 +265,69 @@ void DDPThread::Init(){
     int nx = solver->state[0]->dim;
     int nu = solver->input[0]->dim;
     
-    path.resize(N+1);
-
-    dx.resize(N+1);
-    du.resize(N);
-
-    Q         .resize(N);
-	Qx        .resize(N);
-	Qu        .resize(N);
-	Qxx       .resize(N);
-	Quu       .resize(N);
-	Qux       .resize(N);
-	Quuinv    .resize(N);
-	Quuinv_Qu .resize(N);
-    Quuinv_Qux.resize(N);
-	V         .resize(N+1);
-	Vx        .resize(N+1);
-	Vxx       .resize(N+1);
-    Vxxinv    .resize(N+1);
-    
-    Vxx_fcor        .resize(N);
-    Vxx_fx          .resize(N);
-    Vxx_fu          .resize(N);
-    Vx_plus_Vxx_fcor.resize(N);
-    Qu_plus_Qux_dx  .resize(N);
-
+    steps.resize(N+1);
     for(int k = 0; k <= N; k++){
-        if(k < N){
-            du              [k].Allocate(nu);
-            Qx              [k].Allocate(nx);
-	        Qu              [k].Allocate(nu);
-	        Qxx             [k].Allocate(nx, nx);
-	        Quu             [k].Allocate(nu, nu);
-	        Qux             [k].Allocate(nu, nx);
-	        Quuinv          [k].Allocate(nu, nu);
-	        Quuinv_Qu       [k].Allocate(nu);
-            Quuinv_Qux      [k].Allocate(nu, nx);
-            Vxx_fcor        [k].Allocate(nx);
-            Vxx_fx          [k].Allocate(nx, nx);
-            Vxx_fu          [k].Allocate(nx, nu);
-            Vx_plus_Vxx_fcor[k].Allocate(nx);
-            Qu_plus_Qux_dx  [k].Allocate(nu);
+        steps[k] = new DDPStep(this);
+        steps[k]->k = k;
+        steps[k]->Init();
+    }
+    for(int k = 0; k <= N; k++){
+        steps[k]->prev = (k > 0 ? steps[k-1] : 0);
+        steps[k]->next = (k < N ? steps[k+1] : 0);
+    }
 
-        }
-        dx    [k].Allocate(nx);
-	    Vx    [k].Allocate(nx);
-	    Vxx   [k].Allocate(nx, nx);
-        Vxxinv[k].Allocate(nx, nx);
+    fx      .resize(N);
+	fu      .resize(N);
+	fcor    .resize(N);
+    fx_rev  .resize(N);
+	fu_rev  .resize(N);
+	fcor_rev.resize(N);
+    for(int k = 0; k < N; k++){
+        fx      [k].Allocate(nx, nx);
+		fu      [k].Allocate(nx, nu);
+		fcor    [k].Allocate(nx    );
+        fx_rev  [k].Allocate(nx, nx);
+        fu_rev  [k].Allocate(nx, nu);
+        fcor_rev[k].Allocate(nx);    
     }
 }
 
-void DDPThread::Backward(){
-    int N = solver->N;
-
-    V[N] = path[N]->L;
-    vec_copy(path[N]->Lx , Vx [N]);
-    mat_copy(path[N]->Lxx, Vxx[N]);
-
-    for(int k = N-1; k >= 0; k--){
-        mat_vec_mul(Vxx[k+1], solver->fcor[k], Vxx_fcor[k], 1.0, 0.0);
-        mat_mat_mul(Vxx[k+1], solver->fx  [k], Vxx_fx  [k], 1.0, 0.0);
-        mat_mat_mul(Vxx[k+1], solver->fu  [k], Vxx_fu  [k], 1.0, 0.0);
-        vec_copy(Vx[k+1]    , Vx_plus_Vxx_fcor[k]);
-        vec_add (Vxx_fcor[k], Vx_plus_Vxx_fcor[k]);
-
-        Q[k] = path[k]->L + V[k+1] + vec_dot(Vx[k+1], solver->fcor[k]) + (1.0/2.0)*vec_dot(solver->fcor[k], Vxx_fcor[k]);
-        
-        vec_copy(path[k]->Lx, Qx[k]);
-        mattr_vec_mul(solver->fx[k], Vx_plus_Vxx_fcor[k], Qx[k], 1.0, 1.0);
-
-        vec_copy(path[k]->Lu, Qu[k]);
-        mattr_vec_mul(solver->fu[k], Vx_plus_Vxx_fcor[k], Qu[k], 1.0, 1.0);
-
-        mat_copy(path[k]->Lxx, Qxx[k]);
-        mattr_mat_mul(solver->fx[k], Vxx_fx[k], Qxx[k], 1.0, 1.0);
-
-        mat_copy(path[k]->Luu, Quu[k]);
-        mattr_mat_mul(solver->fu[k], Vxx_fu[k], Quu[k], 1.0, 1.0);
-
-        mat_copy(path[k]->Lux, Qux[k]);
-        mattr_mat_mul(solver->fu[k], Vxx_fx[k], Qux[k], 1.0, 1.0);
-
-        //Q   = state->L   + np->V + np->Vx*solver->f_cor[k] + (1.0/2.0)*(solver->f_cor[k]*(np->Vxx*solver->f_cor[k]));
-        //Qx  = state->Lx  + solver->fx[k].trans()*(np->Vx + np->Vxx*solver->f_cor[k]);
-        //Qu  = state->Lu  + solver->fu[k].trans()*(np->Vx + np->Vxx*solver->f_cor[k]);
-        //Qxx = state->Lxx + solver->fx[k].trans()*(np->Vxx)*solver->fx[k];
-        //Quu = state->Luu + solver->fu[k].trans()*(np->Vxx)*solver->fu[k];
-        //Qux = state->Lux + solver->fu[k].trans()*(np->Vxx)*solver->fx[k];
-
-	    for(int i = 0; i < Quu[k].m; i++)
-		    Quu[k](i,i) += solver->param.regularization;
-    	
-        mat_inv_pd(Quu[k], Quuinv[k]);
-        
-        symmat_vec_mul(Quuinv[k], Qu[k], Quuinv_Qu[k], 1.0, 0.0);
-	    //Quuinv_Qu = Quuinv*Qu;
-
-        V[k] = Q[k] - (1.0/2.0)*vec_dot(Qu[k], Quuinv_Qu[k]);
-        
-        vec_copy(Qx[k], Vx[k]);
-        mattr_vec_mul(Qux[k], Quuinv_Qu[k], Vx[k], -1.0, 1.0);
-	    
-        mat_copy(Qxx[k], Vxx[k]);
-        symmat_mat_mul(Quuinv[k], Qux[k], Quuinv_Qux[k], 1.0, 0.0);
-        mattr_mat_mul(Qux[k], Quuinv_Qux[k], Vxx[k], -1.0, 1.0);
-        //V   = Q   - (1.0/2.0)*(Qu*Quuinv_Qu);
-	    //Vx  = Qx  - Qux.trans()*Quuinv_Qu ;
-	    //Vxx = Qxx - Qux.trans()*Quuinv*Qux;
-		
-        // enforce symmetry of Uxx
-	    for(int i = 1; i < Vxx[k].m; i++) for(int j = 0; j < i; j++)
-		    Vxx[k](i,j) = Vxx[k](j,i);
-    }
-}
-
-void DDPThread::Forward(){
-    int N = solver->N;
-
-    mat_inv_pd(Vxx[0], Vxxinv[0]);
-    symmat_vec_mul(Vxxinv[0], Vx[0], dx[0], -1.0, 0.0);
-    //vec_clear(dx);
+void DDPThread::Prepare(){
+    int N  = solver->N;
 
     for(int k = 0; k < N; k++){
-        vec_copy(Qu[k], Qu_plus_Qux_dx[k]);
-        mat_vec_mul(Qux[k], dx[k], Qu_plus_Qux_dx[k], 1.0, 1.0);
-        symmat_vec_mul(Quuinv[k], Qu_plus_Qux_dx[k], du[k], -1.0, 0.0);
+        mat_copy(solver->fx  [k], fx  [k]);
+        mat_copy(solver->fu  [k], fu  [k]);
+        vec_copy(solver->fcor[k], fcor[k]);
 
-        vec_copy   (solver->fcor[k], dx[k+1]);
-        mat_vec_mul(solver->fx  [k], dx[k], dx[k+1], 1.0, 1.0);
-        mat_vec_mul(solver->fu  [k], du[k], dx[k+1], 1.0, 1.0);
-
-        //du[k  ] = -n->Quuinv*(n->Qu + n->Qux*dx[k]);
-        //dx[k+1] = fx[k]*dx[k] + fu[k]*du[k] + f_cor[k];
+        mat_inv_gen(fx    [k], fx_rev[k]);
+        mat_mat_mul(fx_rev[k], fu  [k], fu_rev  [k], -1.0, 0.0);
+        mat_vec_mul(fx_rev[k], fcor[k], fcor_rev[k], -1.0, 0.0);
     }
-    
+}
+
+void DDPThread::CalcValueForward(){
+    int N = solver->N;
+
+    for(int k = 0; k <= N; k++){
+        steps[k]->CalcValueForward();
+    }
+}
+
+void DDPThread::CalcValueBackward(){
+    int N = solver->N;
+
+    for(int k = N; k >= 0; k--){
+        steps[k]->CalcValueBackward();
+    }
+}
+
+void DDPThread::CalcStateForward(){
+    int N = solver->N;
+
+    for(int k = 0; k <= N; k++){
+        steps[k]->CalcStateForward();
+    }    
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -187,37 +344,15 @@ void DDPState::Init(){
     int nx = solver->state[0]->dim;
     int nu = solver->input[0]->dim;
 
-    //Lx .resize(nx);
-    //Lu .resize(nu);
-    //Lxx.resize(nx, nx);
-    //Luu.resize(nu, nu);
-    //Lux.resize(nu, nx);
-
     Lx .Allocate(nx);
     Lu .Allocate(nu);
     Lxx.Allocate(nx, nx);
     Luu.Allocate(nu, nu);
     Lux.Allocate(nu, nx);
-    //_Lxx_dx.Allocate(nx);
-    //_Luu_du.Allocate(nu);
-    //_Lux_dx.Allocate(nu);
 }
 
 void DDPState::CalcCost(){
-    //vec_copy(Lx , _Lx );
-    //vec_copy(Lu , _Lu );
-    //mat_copy(Lxx, _Lxx);
-    //mat_copy(Luu, _Luu);
-    //mat_copy(Lux, _Lux);
 
-    //mat_vec_mul(_Lxx, stage->dx, _Lxx_dx, 1.0, 0.0);
-    //mat_vec_mul(_Luu, stage->du, _Luu_du, 1.0, 0.0);
-    //mat_vec_mul(_Lux, stage->dx, _Lux_dx, 1.0, 0.0);
-
-    //J = L + vec_dot(_Lx, stage->dx) + vec_dot(_Lu, stage->du)
-    //    + (1.0/2.0)*vec_dot(stage->dx, _Lxx_dx)
-    //    + (1.0/2.0)*vec_dot(stage->du, _Luu_du)
-    //    +           vec_dot(stage->du, _Lux_dx);
 }
 
 void DDPState::Finish(){
@@ -275,7 +410,6 @@ void CustomSolver::Init(){
                 }
             }
         }
-
     }
 }
 
@@ -291,60 +425,42 @@ void CustomSolver::CalcDirection(){
     }
 }
 
-//void CustomSolver::Shuffle(const vector<DDPState*>& path0, vector<DDPState*>& path1){
 void CustomSolver::Shuffle(){
     vector< vector<DDPState*> > st_int;
     st_int.resize(N);
     vector< pair<int, DDPState*> >  idx;
     
-    const vector<DDPState*>& path0 = threads[0]->path;
     for(int k = 1; k <= N-1; k++){
-        st_int[k].resize(std::min(path0[k-1]->next.size(), path0[k+1]->prev.size()));
+        DDPState* stcur  = thread->steps[k  ]->state;
+        DDPState* stprev = thread->steps[k-1]->state;
+        DDPState* stnext = thread->steps[k+1]->state;
+        st_int[k].resize(std::min(stprev->next.size(), stnext->prev.size()));
         vector<DDPState*>::iterator it = set_intersection(
-            path0[k-1]->next.begin(), path0[k-1]->next.end(),
-            path0[k+1]->prev.begin(), path0[k+1]->prev.end(),
+            stprev->next.begin(), stprev->next.end(),
+            stnext->prev.begin(), stnext->prev.end(),
             st_int[k].begin());
         st_int[k].resize(it - st_int[k].begin());
-        st_int[k].erase(find(st_int[k].begin(), st_int[k].end(), path0[k]));
+        st_int[k].erase(find(st_int[k].begin(), st_int[k].end(), stcur));
 
         for(DDPState* st : st_int[k])
             idx.push_back(make_pair(k, st));
 
     }
 
-    static std::default_random_engine urng(0);
-    shuffle(idx.begin(), idx.end(), urng);
+    //static std::default_random_engine urng(0);
+    //shuffle(idx.begin(), idx.end(), urng);
     
-    for(int i = 1; i < threads.size(); i++){
-        threads[i]->path = threads[0]->path;
-        int j = (i-1)%idx.size();
-        threads[i]->path[idx[j].first] = idx[j].second;
+    for(int i = 0; i < samples.size(); i++){
+        int j = i%idx.size();
+        samples[i]->k     = idx[j].first;
+        samples[i]->state = idx[j].second;
+        samples[i]->next  = thread->steps[samples[i]->k+1];
     }
-/*    static Sampler sampler;
-    vector<DDPState*> st_int;
-    path1 = path0;
-    while(true){
-        int k = sampler.SampleInt(1, N-1);
-        st_int.resize(std::min(path0[k-1]->next.size(), path0[k+1]->prev.size()));
-        vector<DDPState*>::iterator it = set_intersection(
-            path0[k-1]->next.begin(), path0[k-1]->next.end(),
-            path0[k+1]->prev.begin(), path0[k+1]->prev.end(),
-            st_int.begin());
-        st_int.resize(it - st_int.begin());
-        st_int.erase(find(st_int.begin(), st_int.end(), path0[k]));
-
-        if(st_int.size() == 0)
-            continue;
-
-        path1[k] = st_int[sampler.SampleInt(0, st_int.size()-1)];
-        break;
-    }
-    */
 }    
 
-void CustomSolver::CompDP(vector<DDPState*>& path){
+void CustomSolver::CompDP(){
     for(DDPState* st : stages[N]->states){
-        st->Jopt    = (st->IsTerminal() ? st->L : 1000000);
+        st->Jopt    = (st->IsTerminal() ? st->L : 1000000000);
         st->nextOpt = 0;
     }
 
@@ -360,10 +476,10 @@ void CustomSolver::CompDP(vector<DDPState*>& path){
         }
     }
 
-    path.clear();
     DDPState* st = stages[0]->states[0];
+    DSTR << "Jopt: " << st->Jopt << endl;
     while(st){
-        path.push_back(st);
+        thread->steps[st->stage->k]->state = st;
         st = st->nextOpt;
     }
 
@@ -375,6 +491,7 @@ void CustomSolver::CalcDirectionSearchDDP(){
 		con->CalcCorrection();
 
     PrepareDDP ();
+
     int timePrepare1 = timer.CountUS();
 
     int nx = state[0]->dim;
@@ -392,56 +509,59 @@ void CustomSolver::CalcDirectionSearchDDP(){
     const int numSample = 100;
 
     // for the first time, compute initial guess of mode sequence
-    if(threads.empty()){
-        threads.resize(numSample);
+    if(samples.empty()){
+        thread = new DDPThread(this);
+        thread->Init();
+
+        samples.resize(numSample);
         for(int i = 0; i < numSample; i++){
-            threads[i] = new DDPThread(this);
-            threads[i]->Init();
+            samples[i] = new DDPStep(thread);
+            samples[i]->k = 0;
+            samples[i]->Init();
         }
 
-        CompDP(threads[0]->path);
+        CompDP();
+        for(int k = 0; k <= N; k++)
+            thread->steps[k]->state->Print();
+        DSTR << endl;
     }
     
     timer.CountUS();
-    set<DDPState*> stset;
+    real_t Jopt_prev = inf;
     while(true){
         // create shuffled sequences
         Shuffle();
-        /*for(int i = 1; i < numSample; i++){
-            Shuffle(threads[0]->path, threads[i]->path);
-        }*/
-        /*stset.clear();
-        for(int i = 0; i < numSample; i++){
-            for(DDPState* st : threads[i]->path){
-                stset.insert(st);
-            }
-        }
-        for(DDPState* st : stset)
-            st->CalcCost();
-            */
-//#pragma omp parallel for  num_threads(20)
+
+        thread->Prepare();
+        thread->CalcValueBackward();
+        thread->CalcValueForward ();
+        thread->CalcStateForward ();
+
+        #pragma omp parallel for  num_threads(20)
         for(int i = 0; i < numSample; i++){
             // perform DDP with previous mode sequence
-            threads[i]->Backward();
+            samples[i]->CalcCost();
+            DSTR << "sample " << i << ": " << samples[i]->cost << endl;
         }
 
         int    iopt = -1;
         real_t Jopt;
         for(int i = 0; i < numSample; i++){
-            if(iopt == -1 || threads[i]->V[0] < Jopt){
+            if(iopt == -1 || samples[i]->cost < Jopt){
                 iopt = i;
-                Jopt = threads[i]->V[0];
+                Jopt = samples[i]->cost;
             }
         }
 
         for(int k = 0; k <= N; k++)
-            threads[iopt]->path[k]->Print();
+            thread->steps[k]->state->Print();
         DSTR << Jopt << endl;
         
-        if(iopt == 0)
+        if(Jopt_prev <= Jopt)
             break;
 
-        threads[0]->path = threads[iopt]->path;
+        samples[iopt]->Apply();
+        Jopt_prev = Jopt;
     }
     int timeIter = timer.CountUS();
 
@@ -449,10 +569,11 @@ void CustomSolver::CalcDirectionSearchDDP(){
     DSTR << "prepare2: " << timePrepare2 << endl;
     DSTR << "iter    : " << timeIter     << endl;
 
-    threads[0]->Forward();
+    thread->CalcValueBackward();
+    thread->CalcStateForward ();
 
     for(int k = 0; k <= N; k++)
-        threads[0]->path[k]->Finish();
+        thread->steps[k]->state->Finish();
 
 	for(int k = 0; k <= N; k++){
 		for(SubState* subst : state[k]->substate){
@@ -461,7 +582,7 @@ void CustomSolver::CalcDirectionSearchDDP(){
 
 			int j0 = subst->index;
 			for(int j = 0; j < subst->var->nelem; j++){
-				subst->var->dx[j] = threads[0]->dx[k](j0+j);
+				subst->var->dx[j] = thread->steps[k]->dx(j0+j);
 			}
 		}
 	}
@@ -472,7 +593,7 @@ void CustomSolver::CalcDirectionSearchDDP(){
 
 			int j0 = subin->index;
 			for(int j = 0; j < subin->var->nelem; j++){
-				subin->var->dx[j] = threads[0]->du[k](j0+j);
+				subin->var->dx[j] = thread->steps[k]->du(j0+j);
 			}
 		}
 		

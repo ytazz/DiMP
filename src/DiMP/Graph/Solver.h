@@ -21,23 +21,11 @@ public:
     DDPState*          nextOpt;
 
     real_t  L;
-        
-    //vvec_t  Lx;
-    //vvec_t  Lu;
-    //vmat_t  Lxx;
-    //vmat_t  Luu;
-    //vmat_t  Lux;
-        
     Vector  Lx;
     Vector  Lu;
     Matrix  Lxx;
     Matrix  Luu;
     Matrix  Lux;
-    //Vector  _Lxx_dx;
-    //Vector  _Luu_du;
-    //Vector  _Lux_dx;
-
-    //real_t  J;
     real_t  Jopt;
 
     virtual bool IsIdentical(const DDPState* st) = 0;
@@ -59,44 +47,107 @@ public:
     
     int k;
     
-                DDPStage(CustomSolver* _solver);
+             DDPStage(CustomSolver* _solver);
     virtual ~DDPStage();
+};
+
+class DDPThread;
+
+class DDPStep : public UTRefCount{
+public:
+    DDPThread*  thread;
+
+    int        k;
+    DDPState*  state;
+    real_t     cost;
+    DDPStep*   next;
+    DDPStep*   prev;
+    
+    Vector    dx;
+    Vector    du;
+
+    real_t    Q;
+	Vector    Qx;
+	Vector    Qu;
+	Matrix    Qxx;
+	Matrix    Quu;
+	Matrix    Qux;
+	Matrix    Quuinv;
+	Vector    Quuinv_Qu;
+    Matrix    Quuinv_Qux;
+	real_t    V;
+    //real_t    Vmin;
+	Vector    Vx;
+	Matrix    Vxx;
+    Matrix    Vxxinv;
+    //Vector    Vxxinv_Vx;
+        
+    real_t    P;
+	Vector    Px;
+	Vector    Pu;
+	Matrix    Pxx;
+	Matrix    Puu;
+	Matrix    Pux;
+	Matrix    Puuinv;
+	Vector    Puuinv_Pu;
+    Matrix    Puuinv_Pux;
+	real_t    U;
+	Vector    Ux;
+	Matrix    Uxx;
+    Matrix    Uxxinv;
+
+    Vector    Vxx_fcor;
+    Matrix    Vxx_fx;
+    Matrix    Vxx_fu;
+    Vector    Vx_plus_Vxx_fcor;
+    Vector    Qu_plus_Qux_dx;
+
+    Vector    Lx_plus_Ux;
+    Matrix    Lxx_plus_Uxx;
+    Vector    Lxx_plus_Uxx_fcor_rev;
+    Vector    Lx_plus_Ux_plus_Lxx_plus_Uxx_fcor_rev;
+    Matrix    Lxx_plus_Uxx_fx_rev;
+    Matrix    Lxx_plus_Uxx_fu_rev;
+    Matrix    Lux_fx_rev;
+
+    real_t    U_plus_V;
+    Vector    Ux_plus_Vx;
+    Matrix    Uxx_plus_Vxx;
+    Matrix    Uxx_plus_Vxx_inv;
+    Vector    Uxx_plus_Vxx_inv_Ux_plus_Vx;
+    
+public:
+    void  Init             ();
+    void  Prepare          ();
+    void  CalcValueForward ();
+    void  CalcValueBackward();
+    void  CalcStateForward ();
+    void  CalcCost         ();
+    void  Apply            ();
+
+    DDPStep(DDPThread* _thread);
 };
 
 class DDPThread : public UTRefCount{
 public:
     CustomSolver*  solver;
         
-    vector<DDPState*>  path;
+    vector<Matrix>    fx;
+	vector<Matrix>    fu;
+	vector<Vector>    fcor;
+    vector<Matrix>    fx_rev;
+	vector<Matrix>    fu_rev;
+	vector<Vector>    fcor_rev;
 
-    vector<Vector>  dx;
-    vector<Vector>  du;
+    vector< UTRef<DDPStep> >  steps;
 
-    vector<real_t>  Q;
-	vector<Vector>  Qx;
-	vector<Vector>  Qu;
-	vector<Matrix>  Qxx;
-	vector<Matrix>  Quu;
-	vector<Matrix>  Qux;
-	vector<Matrix>  Quuinv;
-	vector<Vector>  Quuinv_Qu;
-    vector<Matrix>  Quuinv_Qux;
-	vector<real_t>  V;
-	vector<Vector>  Vx;
-	vector<Matrix>  Vxx;
-    vector<Matrix>  Vxxinv;
+    void   Init             ();
+    void   Prepare          ();
+    void   CalcValueForward ();
+    void   CalcValueBackward();
+    void   CalcStateForward ();
         
-    vector<Vector>  Vxx_fcor;
-    vector<Matrix>  Vxx_fx;
-    vector<Matrix>  Vxx_fu;
-    vector<Vector>  Vx_plus_Vxx_fcor;
-    vector<Vector>  Qu_plus_Qux_dx;
-
-    void   Init    ();
-    void   Backward();
-    void   Forward ();
-        
-                DDPThread(CustomSolver* _solver);
+             DDPThread(CustomSolver* _solver);
     virtual ~DDPThread();
 };
     
@@ -115,15 +166,15 @@ public:
     };
 
     vector< UTRef<DDPStage > > stages;
-    vector< UTRef<DDPThread> > threads;
+    UTRef<DDPThread>           thread;
+    vector< UTRef<DDPStep> >   samples;
 
     DDPCallback*               callback;
 
 public:
     void   CalcDirectionSearchDDP();
-    //void   Shuffle(const vector<DDPState*>& path0, vector<DDPState*>& path1);
     void   Shuffle();
-    void   CompDP (vector<DDPState*>& path);
+    void   CompDP ();
             
     virtual void    Init();
 	virtual void    CalcDirection();
