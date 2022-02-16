@@ -35,7 +35,7 @@ public:
     virtual void Finish     ();
     virtual void Print      ();
 
-                DDPState(CustomSolver* _solver);
+             DDPState(CustomSolver* _solver);
     virtual ~DDPState();
 };
 
@@ -76,11 +76,9 @@ public:
 	Vector    Quuinv_Qu;
     Matrix    Quuinv_Qux;
 	real_t    V;
-    //real_t    Vmin;
-	Vector    Vx;
+    Vector    Vx;
 	Matrix    Vxx;
     Matrix    Vxxinv;
-    //Vector    Vxxinv_Vx;
         
     real_t    P;
 	Vector    Px;

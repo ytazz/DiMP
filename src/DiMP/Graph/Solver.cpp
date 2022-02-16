@@ -69,8 +69,7 @@ void DDPStep::Init(){
 	Vx       .Allocate(nx);
 	Vxx      .Allocate(nx, nx);
     Vxxinv   .Allocate(nx, nx);
-    //Vxxinv_Vx.Allocate(nx);
-	Ux       .Allocate(nx);
+    Ux       .Allocate(nx);
 	Uxx      .Allocate(nx, nx);
     Uxxinv   .Allocate(nx, nx);
     Ux_plus_Vx                 .Allocate(nx);
@@ -84,9 +83,6 @@ void DDPStep::CalcValueForward(){
         U = 0.0;
         vec_clear(Ux );
         mat_clear(Uxx);
-
-        //for(int i = 0; i < Uxx.m; i++)
-	    //    Uxx(i,i) = 1000.0;
     }
     if(next){
         vec_copy   (state->Lx , Lx_plus_Ux  );
@@ -103,21 +99,22 @@ void DDPStep::CalcValueForward(){
         P = state->L + U + vec_dot(Lx_plus_Ux, thread->fcor_rev[k]) + (1.0/2.0)*vec_dot(thread->fcor_rev[k], Lxx_plus_Uxx_fcor_rev);
         
         mattr_vec_mul(thread->fx_rev[k], Lx_plus_Ux_plus_Lxx_plus_Uxx_fcor_rev, Px, 1.0, 0.0);
-        //Px[k] = fx_rev[k].trans()*(Lx [k] + Ux [k] + (Lxx[k] + Uxx[k])*fcor_rev[k]);
         
         vec_copy(state->Lu, Pu);
         mattr_vec_mul(thread->fu_rev[k], Lx_plus_Ux_plus_Lxx_plus_Uxx_fcor_rev, Pu, 1.0, 1.0);
-        //Pu[k] = fu_rev[k].trans()*(Lx [k] + Ux [k] + (Lxx[k] + Uxx[k])*fcor_rev[k]) + Lu[k];
         
         mattr_mat_mul(thread->fx_rev[k], Lxx_plus_Uxx_fx_rev, Pxx, 1.0, 0.0);
-        //Pxx[k] = fx_rev[k].trans()*(Lxx[k] + Uxx[k])*fx_rev[k];
         
         mat_copy(state->Luu, Puu);
         mattr_mat_mul(thread->fu_rev[k], Lxx_plus_Uxx_fu_rev, Puu, 1.0, 1.0);
-        //Puu[k] = fu_rev[k].trans()*(Lxx[k] + Uxx[k])*fu_rev[k] + Luu[k];
         
         mat_copy(Lux_fx_rev, Pux);
         mattr_mat_mul(thread->fu_rev[k], Lxx_plus_Uxx_fx_rev, Pux, 1.0, 1.0);
+
+        //Px[k] = fx_rev[k].trans()*(Lx [k] + Ux [k] + (Lxx[k] + Uxx[k])*fcor_rev[k]);
+        //Pu[k] = fu_rev[k].trans()*(Lx [k] + Ux [k] + (Lxx[k] + Uxx[k])*fcor_rev[k]) + Lu[k];
+        //Pxx[k] = fx_rev[k].trans()*(Lxx[k] + Uxx[k])*fx_rev[k];
+        //Puu[k] = fu_rev[k].trans()*(Lxx[k] + Uxx[k])*fu_rev[k] + Luu[k];
         //Pux[k] = (fu_rev[k].trans()*(Lxx[k] + Uxx[k]) + Lux[k])*fx_rev[k];
 
         for(int i = 0; i < Puu.m; i++)
@@ -127,16 +124,17 @@ void DDPStep::CalcValueForward(){
 
         symmat_vec_mul(Puuinv, Pu , Puuinv_Pu , 1.0, 0.0);
 	    symmat_mat_mul(Puuinv, Pux, Puuinv_Pux, 1.0, 0.0);
-        //Puuinv_Pu[k] = Puuinv[k]*Pu[k];
         
 	    next->U = P - (1.0/2.0)*vec_dot(Pu, Puuinv_Pu);
 	    
         vec_copy(Px, next->Ux);
         mattr_vec_mul(Pux, Puuinv_Pu, next->Ux, -1.0, 1.0);
-        //Ux [k+1] = Px [k] - Pux[k].trans()*Puuinv_Pu[k];
 	    
         mat_copy(Pxx, next->Uxx);
         mattr_mat_mul(Pux, Puuinv_Pux, next->Uxx, -1.0, 1.0);
+
+        //Puuinv_Pu[k] = Puuinv[k]*Pu[k];
+        //Ux [k+1] = Px [k] - Pux[k].trans()*Puuinv_Pu[k];
         //Uxx[k+1] = Pxx[k] - Pux[k].trans()*Puuinv[k]*Pux[k];
 		
         // enforce symmetry of Uxx
@@ -202,10 +200,6 @@ void DDPStep::CalcValueBackward(){
 	    for(int i = 1; i < Vxx.m; i++) for(int j = 0; j < i; j++)
 		    Vxx(i,j) = Vxx(j,i);
     }
-
-    //symmat_vec_mul(Vxxinv, Vx, Vxxinv_Vx, 1.0, 0.0);
-    //Vmin = V - (1.0/2.0)*vec_dot(Vx, Vxxinv_Vx);
-
 }
 
 void DDPStep::CalcStateForward(){

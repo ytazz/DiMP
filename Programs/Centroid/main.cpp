@@ -101,8 +101,8 @@ public:
         endIni      [1] = 0;
         endIni      [2] = -1;
         endIni      [3] = -1;
-        endTerm     [0] = 0;
-        endTerm     [1] = 0;
+        endTerm     [0] = 1;
+        endTerm     [1] = 1;
         endTerm     [2] = -1;
         endTerm     [3] = -1;
         //endSwitch   [0] = 4;
@@ -159,6 +159,7 @@ public:
         
         DiMP::Centroid::Face face;
         // flat ground
+        /*
         face.hull = new DiMP::Hull(graph);
         face.hull->vertices.push_back(vec3_t(-1.0, -5.0,  0.0));
         face.hull->vertices.push_back(vec3_t(-1.0,  5.0,  0.0));
@@ -167,9 +168,8 @@ public:
         face.normal = vec3_t(0.0, 0.0, 1.0);
         face.numSwitchMax = 100;
         centroid->faces.push_back(face);
-        
+        */
         // gap
-        /*
         face.hull = new DiMP::Hull(graph);
         face.hull->vertices.push_back(vec3_t(-1.0, -5.0,  0.0));
         face.hull->vertices.push_back(vec3_t(-1.0,  5.0,  0.0));
@@ -205,7 +205,6 @@ public:
         face.normal = vec3_t(0.0, 0.0, 1.0);
         face.numSwitchMax = 2;
         centroid->faces.push_back(face);
-        */
         // step
         /*face.hull = new DiMP::Hull(graph);
         face.hull->vertices.push_back(vec3_t(-1.0,  -0.5,  0.0));
