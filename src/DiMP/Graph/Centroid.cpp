@@ -140,19 +140,19 @@ void CentroidKey::AddCon(Solver* solver) {
             //subcost_u.push_back(solver->AddCostCon(ends[i].con_vel_range[2][1], tick->idx));
         }
 	
-        //ends[i].con_pos_range[0][0] = new CentroidEndPosRangeCon(solver, ss.str() + "_pos_range0_min", this, i, vec3_t( 1.0,  0.0,  0.0), node->graph->scale.pos_t);
-        //ends[i].con_pos_range[0][1] = new CentroidEndPosRangeCon(solver, ss.str() + "_pos_range0_max", this, i, vec3_t(-1.0,  0.0,  0.0), node->graph->scale.pos_t);
-		//ends[i].con_pos_range[1][0] = new CentroidEndPosRangeCon(solver, ss.str() + "_pos_range1_min", this, i, vec3_t( 0.0,  1.0,  0.0), node->graph->scale.pos_t);
-		//ends[i].con_pos_range[1][1] = new CentroidEndPosRangeCon(solver, ss.str() + "_pos_range1_max", this, i, vec3_t( 0.0, -1.0,  0.0), node->graph->scale.pos_t);
-		//ends[i].con_pos_range[2][0] = new CentroidEndPosRangeCon(solver, ss.str() + "_pos_range2_min", this, i, vec3_t( 0.0,  0.0,  1.0), node->graph->scale.pos_t);
-		//ends[i].con_pos_range[2][1] = new CentroidEndPosRangeCon(solver, ss.str() + "_pos_range2_max", this, i, vec3_t( 0.0,  0.0, -1.0), node->graph->scale.pos_t);
+        ends[i].con_pos_range[0][0] = new CentroidEndPosRangeCon(solver, ss.str() + "_pos_range0_min", this, i, vec3_t( 1.0,  0.0,  0.0), node->graph->scale.pos_t);
+        ends[i].con_pos_range[0][1] = new CentroidEndPosRangeCon(solver, ss.str() + "_pos_range0_max", this, i, vec3_t(-1.0,  0.0,  0.0), node->graph->scale.pos_t);
+		ends[i].con_pos_range[1][0] = new CentroidEndPosRangeCon(solver, ss.str() + "_pos_range1_min", this, i, vec3_t( 0.0,  1.0,  0.0), node->graph->scale.pos_t);
+		ends[i].con_pos_range[1][1] = new CentroidEndPosRangeCon(solver, ss.str() + "_pos_range1_max", this, i, vec3_t( 0.0, -1.0,  0.0), node->graph->scale.pos_t);
+		ends[i].con_pos_range[2][0] = new CentroidEndPosRangeCon(solver, ss.str() + "_pos_range2_min", this, i, vec3_t( 0.0,  0.0,  1.0), node->graph->scale.pos_t);
+		ends[i].con_pos_range[2][1] = new CentroidEndPosRangeCon(solver, ss.str() + "_pos_range2_max", this, i, vec3_t( 0.0,  0.0, -1.0), node->graph->scale.pos_t);
         
-        //subcost_x.push_back(solver->AddCostCon(ends[i].con_pos_range[0][0], tick->idx));
-        //subcost_x.push_back(solver->AddCostCon(ends[i].con_pos_range[0][1], tick->idx));
-        //subcost_x.push_back(solver->AddCostCon(ends[i].con_pos_range[1][0], tick->idx));
-        //subcost_x.push_back(solver->AddCostCon(ends[i].con_pos_range[1][1], tick->idx));
-        //subcost_x.push_back(solver->AddCostCon(ends[i].con_pos_range[2][0], tick->idx));
-        //subcost_x.push_back(solver->AddCostCon(ends[i].con_pos_range[2][1], tick->idx));
+        solver->AddCostCon(ends[i].con_pos_range[0][0], tick->idx);
+        solver->AddCostCon(ends[i].con_pos_range[0][1], tick->idx);
+        solver->AddCostCon(ends[i].con_pos_range[1][0], tick->idx);
+        solver->AddCostCon(ends[i].con_pos_range[1][1], tick->idx);
+        solver->AddCostCon(ends[i].con_pos_range[2][0], tick->idx);
+        solver->AddCostCon(ends[i].con_pos_range[2][1], tick->idx);
 
         ends[i].con_des_pos = new FixConV3(solver, ID(ConTag::CentroidEndPos, node, tick, name + "_des_pos"), ends[i].var_pos, 1.0);
 
@@ -474,8 +474,8 @@ void Centroid::Init() {
 
 		for(int i = 0; i < nend; i++){
     		for(int j = 0; j < 3; j++){
-				//key->ends[i].con_pos_range[j][0]->bound =  ends[i].posRangeMin[j]/L;
-				//key->ends[i].con_pos_range[j][1]->bound = -ends[i].posRangeMax[j]/L;
+				key->ends[i].con_pos_range[j][0]->bound =  ends[i].posRangeMin[j]/L;
+				key->ends[i].con_pos_range[j][1]->bound = -ends[i].posRangeMax[j]/L;
 
                 if(key->next){
 				    key->ends[i].con_moment_range[j]->_min = ends[i].momentRangeMin[j]/M;
@@ -1243,6 +1243,7 @@ void CentroidEndPosCon::CalcDeviation(){
 
 void CentroidEndPosRangeCon::CalcDeviation(){
     y[0] = dir_abs*(pend - (p + q*pbase)) - bound;
+	DSTR << "posrange: " << y[0] << endl;
 
 	/*
     y[0]   = 0.0;
