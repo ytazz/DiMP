@@ -371,7 +371,7 @@ void CustomSolver::Init(){
         }
         for(int k = 0; k <= N; k++){
             stages[k]->k = k;
-            stages[k]->next = (k < N ? stages[k+1] : (DDPStage*)0);
+            stages[k]->next = (k < N ? (DDPStage*)stages[k+1] : (DDPStage*)0);
         }
 
         DDPState* st = callback->CreateInitialState();
