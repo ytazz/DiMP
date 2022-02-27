@@ -1243,51 +1243,11 @@ void CentroidEndPosCon::CalcDeviation(){
 
 void CentroidEndPosRangeCon::CalcDeviation(){
     y[0] = dir_abs*(pend - (p + q*pbase)) - bound;
-	DSTR << "posrange: " << y[0] << endl;
-
-	/*
-    y[0]   = 0.0;
-	on_lower = on_upper = active = false;
-
-	real_t r = dir_abs*(pend - (p + q*pbase));
-	if(r < _min){
-		y[0]     = r - _min;
-		on_lower = true;
-		active   = true;
-	}
-	else if(r > _max){
-		y[0]     = r - _max;
-		on_upper = true;
-		active   = true;
-	}
-    */
 }
 
 void CentroidEndVelRangeCon::CalcDeviation(){
     y[0] = dir_abs*(vend - v) - bound;
-
-    /*
-    y[0]   = 0.0;
-	on_lower = on_upper = active = false;
-
-	real_t r = dir_abs*(vend - v);
-	if(r < _min){
-		y[0]     = r - _min;
-		on_lower = true;
-		active   = true;
-	}
-	else if(r > _max){
-		y[0]     = r - _max;
-		on_upper = true;
-		active   = true;
-	}
-    */
 }
-/*
-void CentroidEndVelZeroCon::CalcDeviation(){
-	y[0] = dir_abs*(vend - v);
-}
-*/
 void CentroidEndContactCon::CalcDeviation(){
 	y[0] = nf*(pe - pf);
 }

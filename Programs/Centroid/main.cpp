@@ -79,7 +79,7 @@ public:
 		const real_t legSpacing  = 0.2;
         const real_t armSpacing  = 0.25;
         const int nend = 4;
-        const int N    = 20;
+        const int N    = 12;
         const real_t goalTime = duration * N;
         const int  sceneSelect = Scene::Steps;
 

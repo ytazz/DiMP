@@ -27,6 +27,7 @@ bool Config::Set(Canvas* canvas, int attr, Node* node){
 	else if(attr == Item::BipedCmp        ){ c = "green"  ; lw = 1.0f; }
 	else if(attr == Item::BipedTorso      ){ c = "blue"   ; lw = 2.0f; }
 	else if(attr == Item::BipedFoot       ){ c = "black"  ; lw = 1.0f; }
+	else if(attr == Item::BipedFootCop    ){ c = "magenta"; lw = 1.0f; }
 	else if(attr == Item::CentroidPos     ){ c = "black"  ; lw = 3.0f; }
 	else if(attr == Item::CentroidEnd     ){ c = "black"  ; lw = 1.0f; }
 	else if(attr == Item::CentroidFace    ){ c = "green"  ; lw = 1.0f; }
