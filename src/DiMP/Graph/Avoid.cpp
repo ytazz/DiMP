@@ -199,7 +199,7 @@ void AvoidTask::Prepare(){
 //-------------------------------------------------------------------------------------------------
 // constructors
 
-AvoidCon::AvoidCon(Solver* solver, ID id, AvoidKey* _key, GeometryPair* _gp, real_t _scale):Constraint(solver, 1, id, _scale){
+AvoidCon::AvoidCon(Solver* solver, ID id, AvoidKey* _key, GeometryPair* _gp, real_t _scale):Constraint(solver, 1, id, Constraint::Type::InequalityPenalty, _scale){
 	key = _key;
 	gp  = _gp;
 }

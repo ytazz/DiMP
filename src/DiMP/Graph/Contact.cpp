@@ -110,7 +110,7 @@ void Contact::CalcJacobian(real_t* pos, vec3_t* Jv, vec3_t* Jw){
 //-------------------------------------------------------------------------------------------------
 
 FrictionCon::FrictionCon(Solver* solver, ID id, SVar* _fn, SVar* _ft0, SVar* _ft1, real_t _mu, real_t _scale):
-	Constraint(solver, 1, id, _scale){
+	Constraint(solver, 1, id, Constraint::Type::InequalityPenalty, _scale){
 	fn    = _fn;
 	ft[0] = _ft0;
 	ft[1] = _ft1;

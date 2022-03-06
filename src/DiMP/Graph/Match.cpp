@@ -99,7 +99,7 @@ void MatchTask::Draw(Render::Canvas* canvas){
 // constructors
 
 MatchCon::MatchCon(Solver* solver, ID id, MatchTaskKey* _key, int _mode, real_t _scale)
-	:Constraint(solver, 3, id, _scale){
+	:Constraint(solver, 3, id, Constraint::Type::Equality, _scale){
 	key  = _key;
 	mode = _mode;
 }
