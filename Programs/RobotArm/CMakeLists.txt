@@ -4,7 +4,7 @@ find_package(glwin)
 find_package(sbdimp)
 find_package(sbsprgraphics)
 find_package(PNG)
-find_package(Curses)
+#find_package(Curses)
 #find_package(Freetype)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON) 
@@ -50,7 +50,7 @@ target_link_libraries(RobotArm
     ${LAPACK_LIBRARIES}
     ${PNG_LIBRARIES}
     ${ZLIB_LIBRARIES}
-    ${CURSES_LIBRARIES}
+    #${CURSES_LIBRARIES}
     )
 
 if(UNIX)
