@@ -560,6 +560,8 @@ namespace DiMP {
 				key->var_foot_pos_r[j]->locked = wp.fix_foot_pos_r[j];
 			}
 		}
+
+		Prepare();
 	}
 
 	void BipedRunning::Prepare() {

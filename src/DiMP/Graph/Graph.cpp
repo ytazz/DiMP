@@ -195,6 +195,7 @@ void Graph::Clear(){
 	objects  .clear();
 	cons     .clear();
 	bipeds   .clear();
+	runners  .clear();
 	centroids.clear();
 	trees    .clear();
 	joints   .clear();
@@ -213,6 +214,7 @@ void Graph::Prepare(){
 	objects  .Prepare();
 	cons     .Prepare();
 	bipeds   .Prepare();
+	runners  .Prepare();
 	centroids.Prepare();
 	trees    .Prepare();
 	joints   .Prepare();
