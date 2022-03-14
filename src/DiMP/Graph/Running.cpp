@@ -59,10 +59,6 @@ namespace DiMP {
 		var_com_pos->weight = eps * one;
 		var_com_vel->weight = eps * one;
 
-		// angular momentum
-		//var_mom = new V3Var(solver, ID(VarTag::BipedMom, node, tick, name + "_mom"), node->graph->scale.vel_r);  //< no proper matching scale for angular momentum...
-		//var_mom->weight = eps * one;
-
 		// CoP position
 		var_cop_pos = new V3Var(solver, ID(VarTag::BipedFootCopP, node, tick, name + "_cop_p"), node->graph->scale.pos_t);
 		var_cop_pos->weight = eps * one;
@@ -119,7 +115,6 @@ namespace DiMP {
 			solver->AddTransitionCon(con_lip_vel, tick->idx);
 			solver->AddTransitionCon(con_lip_cop, tick->idx);
 			solver->AddTransitionCon(con_lip_cmp, tick->idx);
-			//solver->AddTransitionCon(con_lip_mom, tick->idx);
 		}
 
 		con_foot_range_t[0][0] = new RunnerFootRangeConT(solver, name + "_foot_range_r_t", this, 0, vec3_t(1.0, 0.0, 0.0), node->graph->scale.pos_t);
@@ -168,14 +163,6 @@ namespace DiMP {
 		solver->AddCostCon(con_acc_range[1], tick->idx);
 		solver->AddCostCon(con_acc_range[2], tick->idx);
 
-		// mom range constraint
-		/*con_mom_range[0] = new RunnerMomRangeCon(solver, name + "_mom_range", this, vec3_t(1.0, 0.0, 0.0), node->graph->scale.vel_t);
-		con_mom_range[1] = new RunnerMomRangeCon(solver, name + "_mom_range", this, vec3_t(0.0, 1.0, 0.0), node->graph->scale.vel_t);
-		con_mom_range[2] = new RunnerMomRangeCon(solver, name + "_mom_range", this, vec3_t(0.0, 0.0, 1.0), node->graph->scale.vel_t);
-		solver->AddCostCon(con_mom_range[0], tick->idx);
-		solver->AddCostCon(con_mom_range[1], tick->idx);
-		solver->AddCostCon(con_mom_range[2], tick->idx);*/
-
 		if (next) {
 			con_duration_range = new RangeConS(solver, ID(ConTag::BipedDurationRange, node, tick, name + "_duration"), var_duration, node->graph->scale.time);
 			solver->AddCostCon(con_duration_range, tick->idx);
@@ -205,11 +192,6 @@ namespace DiMP {
 		solver->AddCostCon(con_com_pos, tick->idx);
 		solver->AddCostCon(con_com_vel, tick->idx);
 
-		//con_lip_acc = new BipedLipAccCon(solver, name + "_com_acc", this, node->graph->scale.pos_t);
-		//solver->AddCostCon(con_lip_acc, tick->idx);
-		//
-		//con_mom_zero = new FixConV2(solver, ID(ConTag::BipedLipMom, node, tick, name + "_mom_zero"), var_cmp_pos, node->graph->scale.pos_t);
-		//con_mom_zero->desired.clear();
 	}
 
 	void BipedRunKey::Prepare() {
@@ -233,7 +215,6 @@ namespace DiMP {
 		pcom.x = (float)var_com_pos->val.x;
 		pcom.y = (float)var_com_pos->val.y;
 		pcom.z = (float)var_com_pos->val.z;
-		//pcom.z = (float)((BipedLIP*)node)->param.comHeight;
 		canvas->Point(pcom);
 
 		// feet
@@ -466,10 +447,6 @@ namespace DiMP {
 				// acceleration range
 				key->con_acc_range[j]->_min = param.accMin[j];
 				key->con_acc_range[j]->_max = param.accMax[j];
-
-				// angular momentum range
-				/*key->con_mom_range[j]->_min = param.momMin[j];
-				key->con_mom_range[j]->_max = param.momMax[j];*/
 			}
 
 			// cop is unconstrained for D phase to enable it to be inside the convex hull of both feet
@@ -534,21 +511,12 @@ namespace DiMP {
 			// cop (actually vrp) is place at the same place as the com
 			key->var_cop_pos->val = vec3_t(key->var_com_pos->val.x, key->var_com_pos->val.y, elevation[key->tick->idx]);
 
-			// cop is initialized to be at the center of the support region
-			//vec3_t c = (param.copMin + param.copMax)/2.0;
-			//if (phase[k] == Phase::R || phase[k] == Phase::RL)
-			//	 key->var_cop_pos->val = key->var_foot_pos_t[0]->val + mat3_t::Rot(key->var_foot_pos_r[0]->val, 'z')*c;
-			//else key->var_cop_pos->val = key->var_foot_pos_t[1]->val + mat3_t::Rot(key->var_foot_pos_r[1]->val, 'z')*c;
-
 			real_t mt = param.torsoMass;
 			real_t mf = param.footMass;
 			key->var_torso_pos_t->val = (1.0 + 2.0 * (mf / mt)) * key->var_com_pos->val - (mf / mt) * (key->var_foot_pos_t[0]->val + key->var_foot_pos_t[1]->val);
 			key->var_torso_vel_t->val = (1.0 + 2.0 * (mf / mt)) * key->var_com_vel->val;
 			//key->var_com_pos->val = (mt * key->var_torso_pos_t->val + mf * (key->var_foot_pos_t[0]->val + key->var_foot_pos_t[1]->val)) / (mt + 2.0*mf);
 			//key->var_com_vel->val = (mt * key->var_torso_vel_t->val) / (mt + 2.0*mf);
-
-			// angular momentum is initialized to zero
-			//key->var_mom->val.clear();
 
 			// cmp is initialized to zero
 			key->var_cmp_pos->val.clear();
@@ -574,7 +542,6 @@ namespace DiMP {
 			key->var_torso_pos_r->locked = wp.fix_torso_pos_r;
 			key->var_cop_pos->locked = wp.fix_cop_pos;
 			key->var_cmp_pos->locked = wp.fix_cmp_pos;
-			//key->var_mom->locked = wp.fix_mom;
 
 			if (wp.fix_cop_pos) {
 				key->var_cop_pos->val = wp.cop_pos;
@@ -749,137 +716,6 @@ namespace DiMP {
 		return (1.0 / tmp) * fresnelS(tmp * d);
 	}
 
-	void BipedRunning::FootRotation(
-		real_t px0, real_t pz0,
-		real_t cp, real_t cv, real_t ca,
-		vec3_t& pos, vec3_t& angle, vec3_t& vel, vec3_t& angvel, vec3_t& acc, vec3_t& angacc,
-		int& contact)
-	{
-		// po : position of foot origin
-		// cp : position of contact point
-		// cv : velocity of contact point
-
-		real_t l0 = param.ankleToToe;
-		real_t l1 = param.ankleToHeel;
-		real_t rho0 = param.toeCurvature;
-		real_t rho1 = param.heelCurvature;
-		real_t r0 = 1.0 / rho0;
-		real_t r1 = 1.0 / rho1;
-		real_t kappa0 = param.toeCurvatureRate;
-		real_t kappa1 = param.heelCurvatureRate;
-
-		real_t d;                 //< rolling distance
-		real_t phi_max;           //< upper limit of rotation angle
-		vec2_t u, ud, udd;        //< foot center to contact point on the ground, and its derivative w.r.t. d
-		vec2_t v, vd, vdd;        //< foot center to contact point on the foot, and its derivative w.r.t. d
-		real_t phi, phid, phidd;  //< foot rotation and its derivative w.r.t. d
-
-		phi = phid = phidd = 0.0;
-
-		// current cop is on heel
-		if (cp < px0 - l1) {
-			d = cp - (px0 - l1);
-			phi_max = param.heelRotationMax;
-
-			if (param.footCurveType == FootCurveType::Arc) {
-				phi = std::max(-phi_max, d / r1);
-				d = r1 * phi;
-				u = vec2_t(-l1 + d, 0.0);
-				v = vec2_t(-l1 + r1 * sin(phi), r1 * (1.0 - cos(phi)));
-
-				if (phi != -phi_max) {
-					phid = 1.0 / r1;
-					ud = vec2_t(1.0, 0.0);
-					vd = vec2_t(cos(phi), sin(phi));
-
-					phidd = 0.0;
-					udd = vec2_t(0.0, 0.0);
-					vdd = vec2_t(-sin(phi), cos(phi)) * phid;
-				}
-			}
-			if (param.footCurveType == FootCurveType::Clothoid) {
-				phi = std::max(-phi_max, -0.5 * kappa1 * d * d);
-				d = -sqrt(-2.0 * phi / kappa1);
-				u = vec2_t(-l1 + d, 0.0);
-				v = vec2_t(-l1 - clothoid_x(-d, kappa1), clothoid_y(-d, kappa1));
-
-				if (phi != -phi_max) {
-					phid = -kappa1 * d;
-					ud = vec2_t(1.0, 0.0);
-					vd = vec2_t(cos(phi), sin(phi));
-
-					phidd = -kappa1;
-					udd = vec2_t(0.0, 0.0);
-					vdd = vec2_t(-sin(phi), cos(phi)) * phid;
-				}
-			}
-
-			contact = ContactState::Heel;
-		}
-		// current cop is on toe
-		else if (cp > px0 + l0) {
-			d = cp - (px0 + l0);
-			phi_max = param.toeRotationMax;
-
-			if (param.footCurveType == FootCurveType::Arc) {
-				phi = std::min(phi_max, d / r0);
-				d = r0 * phi;
-				u = vec2_t(l0 + d, 0.0);
-				v = vec2_t(l0 + r0 * sin(phi), r0 * (1.0 - cos(phi)));
-
-				if (phi != phi_max) {
-					phid = 1.0 / r0;
-					ud = vec2_t(1.0, 0.0);
-					vd = vec2_t(cos(phi), sin(phi));
-
-					phidd = 0.0;
-					udd = vec2_t(0.0, 0.0);
-					vdd = vec2_t(-sin(phi), cos(phi)) * phid;
-				}
-			}
-			if (param.footCurveType == FootCurveType::Clothoid) {
-				phi = std::min(phi_max, 0.5 * kappa0 * d * d);
-				d = sqrt(2.0 * phi / kappa0);
-				u = vec2_t(l0 + d, 0.0);
-				v = vec2_t(l0 + clothoid_x(d, kappa0), clothoid_y(d, kappa0));
-
-				if (phi != phi_max) {
-					phid = kappa0 * d;
-					ud = vec2_t(1.0, 0.0);
-					vd = vec2_t(cos(phi), sin(phi));
-
-					phidd = kappa0;
-					udd = vec2_t(0.0, 0.0);
-					vdd = vec2_t(-sin(phi), cos(phi)) * phid;
-				}
-			}
-
-			contact = ContactState::Toe;
-		}
-		// current cop is in the middle
-		else {
-			phi = phid = phidd = 0.0;
-			u = ud = udd = vec2_t();
-			v = vd = vdd = vec2_t();
-
-			contact = ContactState::Surface;
-		}
-
-		vec2_t pos2 = u - mat2_t::Rot(-phi) * v;
-		vec2_t vel2 = (ud - mat2_t::Rot(-phi) * vd + mat2_t::Rot(-phi + (pi / 2.0)) * v * phid) * cv;
-		vec2_t acc2 = (ud - mat2_t::Rot(-phi) * vd + mat2_t::Rot(-phi + (pi / 2.0)) * v * phid) * ca
-			+ (udd - mat2_t::Rot(-phi) * (vdd - v * phid * phid) + mat2_t::Rot(-phi + (pi / 2.0)) * (2.0 * vd * phid + v * phidd)) * (cv * cv);
-
-		pos.x = pos2[0] + px0;
-		pos.z = pos2[1] + pz0;
-		vel.x = vel2[0];
-		vel.z = vel2[1];
-		acc.x = acc2[0];
-		acc.z = acc2[1];
-		angle.y = phi;
-		angvel.y = phid * cv;
-		angacc.y = phidd * cv * cv + phid * ca;
-	}
 
 	// cubic or quintic interpolation
 	void Interpolate(
@@ -956,7 +792,7 @@ namespace DiMP {
 		a = ka * C / h2;
 	}
 
-	// TODO: footpose of running must be modified if time duration set automatically
+	// swing leg trajectory
 	void BipedRunning::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& angvel, vec3_t& acc, vec3_t& angacc, int& contact) {
 		BipedRunKey* keym2 = 0;
 		BipedRunKey* keym1 = 0;
@@ -1006,60 +842,89 @@ namespace DiMP {
 		real_t h0 = param.swingHeight[0];
 		real_t h1 = param.swingHeight[1];
 
-		if (param.swingProfile == SwingProfile::Wedge) {
-			// double support
-			if (ph == Phase::LR || ph == Phase::RL || ph == Phase::D) {
+		if (param.swingProfile == SwingProfile::Cycloid) {
+
+			vec3_t c0 = key0->var_cop_pos->val;
+			vec3_t c1 = key1->var_cop_pos->val;
+			real_t ct = c0.x + (c1.x - c0.x) * s;
+			real_t cv = (c1.x - c0.x) / tau0;
+
+			//double support
+			if (ph == Phase::D) {
 				pos = p0;
 
 				contact = ContactState::Surface;
 			}
-			// support foot of single support
+			//support foot of single support
 			if ((ph == Phase::R && side == 0) ||
 				(ph == Phase::L && side == 1)) {
 				pos = p0;
-
 				contact = ContactState::Surface;
 			}
-			// swing foot of single support
-			if ((ph == Phase::R && side == 1) ||
-				(ph == Phase::L && side == 0)) {
-				pos.x = p0.x + (p1.x - p0.x) * s;
-				pos.y = p0.y + (p1.y - p0.y) * s;
-				vel.x = (p1.x - p0.x) / tau0;
-				vel.y = (p1.y - p0.y) / tau0;
+			//first swing foot
+			if ((ph == Phase::R && keym1 && phase[keym1->tick->idx] == Phase::D && side == 1) ||
+				(ph == Phase::L && keym1 && phase[keym1->tick->idx] == Phase::D && side == 0) ||
+				(ph == Phase::RL && keym2 && phase[keym2->tick->idx] == Phase::D && side == 1) ||
+				(ph == Phase::LR && keym2 && phase[keym2->tick->idx] == Phase::D && side == 0)) {
 
-				if (dt < tau0 / 2.0) {
-					pos.z = p0.z + h0;
-					vel.z = 0.0;
+				real_t tau1;
+				if (ph == Phase::R || ph == Phase::L)
+				{
+					p1 = key2->var_foot_pos_t[side]->val;
+					tau1 = key1->var_duration->val;
+					s = dt / (tau0 + tau1);
 				}
-				else {
-					real_t a = dt / (tau0 / 2.0) - 1.0;
-					pos.z = (1 - a) * (p0.z + h0) + a * (p1.z + h1);
-					vel.z = ((p1.z + h1) - (p0.z + h0)) / (tau0 / 2.0);
+				if ((ph == Phase::RL || ph == Phase::LR) && keym1) {
+					p0 = keym1->var_foot_pos_t[side]->val;
+					dt = std::max(t - keym1->var_time->val, 0.0);
+					tau1 = keym1->var_duration->val;
+					s = dt / (tau0 + tau1);
 				}
+
+				real_t ds = 1 / (tau0 + tau1);
+				real_t ch = (s - sin(_2pi * s) / _2pi);
+				real_t cv = (1 - cos(_2pi * s)) / 2.0;
+
+					pos = vec3_t(
+						p0.x + (p1.x - p0.x) * ch,
+						p0.y + (p1.y - p0.y) * ch,
+						p0.z + (p1.z - p0.z) * ch + h0 * cv
+					);
+					vel = vec3_t(
+						((p1.x - p0.x) * ds) * (1.0 - cos(_2pi * s)),
+						((p1.y - p0.y) * ds) * (1.0 - cos(_2pi * s)),
+						((p1.z - p0.z) * ds) * (1.0 - cos(_2pi * s)) + (h0 / (2.0 / ds)) * _2pi * sin(_2pi * s)
+					);
+					acc = vec3_t(
+						((p1.x - p0.x) * (ds * ds)) * _2pi * sin(_2pi * s),
+						((p1.y - p0.y) * (ds * ds)) * _2pi * sin(_2pi * s),
+						((p1.z - p0.z) * (ds * ds)) * _2pi * sin(_2pi * s) + (h0 / (2.0 / ds / ds)) * (_2pi * _2pi) * cos(_2pi * s)
+					);
 
 				contact = ContactState::Float;
 			}
+			//last swing foot
+			else if ((ph == Phase::RL && key2 && phase[key2->tick->idx] == Phase::D && side == 0) ||
+				(ph == Phase::LR && key2 && phase[key2->tick->idx] == Phase::D && side == 1) ||
+				(ph == Phase::L && phase[key1->tick->idx] == Phase::D && side == 0) ||
+				(ph == Phase::R && phase[key1->tick->idx] == Phase::D && side == 1)) {
 
-		}
-		if (param.swingProfile == SwingProfile::Cycloid) {
+				real_t tau1;
+				if (ph == Phase::RL || ph == Phase::LR) {
+					p1 = key2->var_foot_pos_t[side]->val;
+					tau1 = key1->var_duration->val;
+					s = dt / (tau0 + tau1);
+				}
+				if ((ph == Phase::R || ph == Phase::L) && keym1) {
+					p0 = keym1->var_foot_pos_t[side]->val;
+					dt = std::max(t - keym1->var_time->val, 0.0);
+					tau1 = keym1->var_duration->val;
+					s = dt / (tau0 + tau1);
+				}
 
-			// double support
-			if (ph == Phase::LR || ph == Phase::RL || ph == Phase::D) {
-				pos = p0;
-
-				contact = ContactState::Surface;
-			}
-			// support foot of single support
-			if ((ph == Phase::R && side == 0) ||
-				(ph == Phase::L && side == 1)) {
-				pos = p0;
-
-				contact = ContactState::Surface;
-			}
-			// swing foot of single support
-			if ((ph == Phase::R && side == 1) ||
-				(ph == Phase::L && side == 0)) {
+				//real_t tau1 = (key2 ? key1->var_duration->val : keym1->var_duration->val);
+				real_t ds = 1 / (tau0 + tau1);
+				//real_t ds = s / dt;
 				real_t ch = (s - sin(_2pi * s) / _2pi);
 				real_t cv = (1 - cos(_2pi * s)) / 2.0;
 
@@ -1069,22 +934,72 @@ namespace DiMP {
 					p0.z + (p1.z - p0.z) * ch + h0 * cv
 				);
 				vel = vec3_t(
-					((p1.x - p0.x) / tau0) * (1.0 - cos(_2pi * s)),
-					((p1.y - p0.y) / tau0) * (1.0 - cos(_2pi * s)),
-					((p1.z - p0.z) / tau0) * (1.0 - cos(_2pi * s)) + (h0 / (2.0 * tau0)) * _2pi * sin(_2pi * s)
+					((p1.x - p0.x) * ds) * (1.0 - cos(_2pi * s)),
+					((p1.y - p0.y) * ds) * (1.0 - cos(_2pi * s)),
+					((p1.z - p0.z) * ds) * (1.0 - cos(_2pi * s)) + (h0 / (2.0 / ds)) * _2pi * sin(_2pi * s)
 				);
 				acc = vec3_t(
-					((p1.x - p0.x) / (tau0 * tau0)) * _2pi * sin(_2pi * s),
-					((p1.y - p0.y) / (tau0 * tau0)) * _2pi * sin(_2pi * s),
-					((p1.z - p0.z) / (tau0 * tau0)) * _2pi * sin(_2pi * s) + (h0 / (2.0 * tau0 * tau0)) * (_2pi * _2pi) * cos(_2pi * s)
+					((p1.x - p0.x) * (ds * ds)) * _2pi * sin(_2pi * s),
+					((p1.y - p0.y) * (ds * ds)) * _2pi * sin(_2pi * s),
+					((p1.z - p0.z) * (ds * ds)) * _2pi * sin(_2pi * s) + (h0 / (2.0 / ds / ds)) * (_2pi * _2pi) * cos(_2pi * s)
+				);
+
+				contact = ContactState::Float;
+			}
+			//swing foot
+			else if ((ph == Phase::RL) ||
+				(ph == Phase::LR) ||
+				(ph == Phase::L && side == 0) ||
+				(ph == Phase::R && side == 1)) {
+
+				if ((ph == Phase::RL && side == 0) ||
+					(ph == Phase::LR && side == 1)) {
+					if (key3) p1 = key3->var_foot_pos_t[side]->val;
+				}
+				if ((ph == Phase::L && side == 0) ||
+					(ph == Phase::R && side == 1)) {
+					if (keym1) {
+						p0 = keym1->var_foot_pos_t[side]->val;
+						dt = std::max(t - keym1->var_time->val, 0.0);
+					}
+					if (key2) p1 = key2->var_foot_pos_t[side]->val;
+				}
+				if ((ph == Phase::RL && side == 1) ||
+					(ph == Phase::LR && side == 0)) {
+					if (keym2) {
+						p0 = keym2->var_foot_pos_t[side]->val;
+						dt = std::max(t - keym2->var_time->val, 0.0);
+					}
+
+				}
+				real_t tau1 = key1->var_duration->val;
+				s = (ph == Phase::R || ph == Phase::L ? dt / (tau0 + tau1 * 2) : dt / (tau0 * 2 + tau1));
+				real_t ds = (ph == Phase::R || ph == Phase::L ? 1 / (tau0 + tau1 * 2) : 1 / (tau0 * 2 + tau1));
+				real_t ch = (s - sin(_2pi * s) / _2pi);
+				real_t cv = (1 - cos(_2pi * s)) / 2.0;
+
+				pos = vec3_t(
+					p0.x + (p1.x - p0.x) * ch,
+					p0.y + (p1.y - p0.y) * ch,
+					p0.z + (p1.z - p0.z) * ch + h0 * cv
+				);
+				vel = vec3_t(
+					((p1.x - p0.x) * ds) * (1.0 - cos(_2pi * s)),
+					((p1.y - p0.y) * ds) * (1.0 - cos(_2pi * s)),
+					((p1.z - p0.z) * ds) * (1.0 - cos(_2pi * s)) + (h0 / (2.0 / ds)) * _2pi * sin(_2pi * s)
+				);
+				acc = vec3_t(
+					((p1.x - p0.x) * (ds * ds)) * _2pi * sin(_2pi * s),
+					((p1.y - p0.y) * (ds * ds)) * _2pi * sin(_2pi * s),
+					((p1.z - p0.z) * (ds * ds)) * _2pi * sin(_2pi * s) + (h0 / (2.0 / ds / ds)) * (_2pi * _2pi) * cos(_2pi * s)
 				);
 
 				contact = ContactState::Float;
 			}
 		}
 
-		// for running only. don't use in TrajectoryMode::Walk	
-		if (param.trajectoryMode == TrajectoryMode::Run && param.swingProfile == SwingProfile::Run) {
+		// experimental profile (may not work correctly)	
+		if (param.swingProfile == SwingProfile::Experiment) {
 
 			vec3_t c0 = key0->var_cop_pos->val;
 			vec3_t c1 = key1->var_cop_pos->val;
@@ -1269,122 +1184,6 @@ namespace DiMP {
 				acc.z += dacc_z;
 
 				contact = ContactState::Float;
-			}
-		}
-		if (param.swingProfile == SwingProfile::HeelToe) {
-			vec3_t c0 = key0->var_cop_pos->val;
-			vec3_t c1 = key1->var_cop_pos->val;
-			real_t ct = c0.x + (c1.x - c0.x) * s;
-			real_t cv = (c1.x - c0.x) / tau0;
-
-			vec3_t theta0, theta1;             //< foot angle at lift-off and landing
-			vec3_t omega0, omega1;             //< foot angular velocity at lift-off and landing
-			vec3_t alpha0, alpha1;             //< foot angular acceleration at lift-off and landing
-			vec3_t p00, p11;                   //< foot position at lift-off and landing
-			vec3_t v00, v11;                   //< foot velocity at lift-off and landing
-			vec3_t a00, a11;                   //< foot acceleration at lift-off and landing
-
-			// support foot of single support phase
-			if ((ph == Phase::R && side == 0) ||
-				(ph == Phase::L && side == 1)) {
-
-				FootRotation(p0.x, p0.z, ct, cv, 0.0, pos, angle, vel, angvel, acc, angacc, contact);
-
-			}
-			// swing foot of single support phase
-			if ((ph == Phase::L && side == 0) ||
-				(ph == Phase::R && side == 1)) {
-				real_t cvm2 = 0.0;               //< cop velocity of previous single support phase
-				real_t cv2 = 0.0;               //< cop velocity of next single support phase
-				real_t c0 = 0.0;               //< cop position at lift-off
-				real_t c1 = 0.0;               //< cop position at landing
-				//real_t lambda = 0.0;               //< offset of foot position in y axis
-				int    con0, con1;
-
-				if (keym2 && keym1) cvm2 = std::max(0.0, keym1->var_cop_pos->val.x - keym2->var_cop_pos->val.x) / (keym2->var_duration->val);
-				if (key2 && key3) cv2 = std::max(0.0, key3->var_cop_pos->val.x - key2->var_cop_pos->val.x) / (key2->var_duration->val);
-
-				if (keym1) c0 = std::max(p0.x, (keym1->var_cop_pos->val.x + cvm2 * keym1->var_duration->val));
-				if (key2) c1 = std::min(p1.x, (key2->var_cop_pos->val.x - cv2 * key1->var_duration->val));
-				//if(key0 ) lambda = std::min(std::abs(key0->var_foot_pos_t[!side]->val.y - p0.y), std::abs(key0->var_foot_pos_t[!side]->val.y - p1.y));
-
-				FootRotation(p0.x, p0.z, c0, cvm2, 0.0, p00, theta0, v00, omega0, a00, alpha0, con0);
-				FootRotation(p1.x, p1.z, c1, cv2, 0.0, p11, theta1, v11, omega1, a11, alpha1, con1);
-
-
-				// interpolate between endpoints with cubic polynomial
-				Interpolate(t, pos.x, vel.x, acc.x, t0, p00.x, v00.x, a00.x, t1, p11.x, v11.x, a11.x, param.swingInterpolation);
-				Interpolate(t, pos.z, vel.z, acc.z, t0, p00.z, v00.z, a00.z, t1, p11.z, v11.z, a11.z, param.swingInterpolation);
-				Interpolate(t, angle.y, angvel.y, angacc.y, t0, theta0.y, omega0.y, alpha0.y, t1, theta1.y, omega1.y, alpha1.y, param.swingInterpolation);
-
-				// add cycloid movement to z to avoid scuffing the ground
-				real_t dpos_z, dvel_z, dacc_z;
-				Interpolate2(t, dpos_z, dvel_z, dacc_z, t0, t1, h0, param.swingInterpolation);
-				//real_t tmid = (t0 + t1)/2.0;
-				//if(t < tmid){
-				//    Interpolate(t, dpos_z, dvel_z, dacc_z, t0, 0.0, 0.0, 0.0, tmid, h0, 0.0, 0.0, param.swingInterpolation);
-				//}
-				//else{
-				//    Interpolate(t, dpos_z, dvel_z, dacc_z, tmid, h0, 0.0, 0.0, t1, 0.0, 0.0, 0.0, param.swingInterpolation);
-				//}
-				pos.z += dpos_z;
-				vel.z += dvel_z;
-				acc.z += dacc_z;
-				//pos.z += h0*(1 - cos(_2pi*s))/2.0;
-				//vel.z += (h0/(2.0*tau))*_2pi*sin(_2pi*s);
-				//acc.z += (h0/(2.0*tau*tau))*(_2pi*_2pi)*cos(_2pi*s);
-
-				// define movement in y to avoid scuffing support leg
-				real_t a = p1.y - p0.y;
-				real_t b = p1.x - p0.x;
-				real_t c = p0.y * p1.x - p0.x * p1.y;
-				real_t foot_dist = abs(a * key0->var_foot_pos_t[!side]->val.x - b * key0->var_foot_pos_t[!side]->val.y + c) / sqrt(a * a + b * b);
-				real_t avoid_y = (foot_dist < param.minSpacing) ? param.swingMargin + (param.minSpacing - foot_dist) : param.swingMargin;
-				//real_t avoid_y = (lambda < param.minSpacing) ? param.swingMargin + (param.minSpacing - lambda) : param.swingMargin;
-				real_t sign = (ph == Phase::R ? 1.0 : -1.0);
-				pos.y = p0.y + (p1.y - p0.y) * s + sign * avoid_y * (1 - cos(_2pi * s)) / 2.0;
-				vel.y = (p1.y - p0.y) / tau0 + (sign * avoid_y / (2.0 * tau0)) * _2pi * sin(_2pi * s);
-				acc.y = (sign * avoid_y / (2.0 * tau0 * tau0)) * (_2pi * _2pi) * cos(_2pi * s);
-
-				contact = ContactState::Float;
-			}
-			// lifting-off foot of double support phase
-			if ((ph == Phase::RL && side == 0) ||
-				(ph == Phase::LR && side == 1)) {
-
-				// cop velocity of previous single support phase
-				real_t cvm1 = 0.0;
-				if (keym1) cvm1 = std::max(0.0, key0->var_cop_pos->val.x - keym1->var_cop_pos->val.x) / (keym1->var_duration->val);
-
-				real_t ct = c0.x + cvm1 * dt;
-
-				FootRotation(p0.x, p0.z, ct, cvm1, 0.0, pos, angle, vel, angvel, acc, angacc, contact);
-
-			}
-			// landed foot of double support phase
-			if ((ph == Phase::LR && side == 0) ||
-				(ph == Phase::RL && side == 1)) {
-
-				// cop velocity of next single support phase
-				real_t cv1 = 0.0;
-				if (key2) cv1 = std::max(0.0, key2->var_cop_pos->val.x - key1->var_cop_pos->val.x) / (key1->var_duration->val);
-
-				real_t ct = c1.x - cv1 * (tau0 - dt);
-
-				FootRotation(p0.x, p0.z, ct, cv1, 0.0, pos, angle, vel, angvel, acc, angacc, contact);
-
-			}
-			// double support
-			if (ph == Phase::D) {
-				pos = vec3_t(p0.x, p0.y, p0.z);
-				contact = ContactState::Surface;
-			}
-
-			if ((ph != Phase::L || side == 1) &&
-				(ph != Phase::R || side == 0)) {
-				pos.y = p0.y + (p1.y - p0.y) * s;
-				vel.y = (p1.y - p0.y) / tau0;
-				acc.y = 0;
 			}
 		}
 

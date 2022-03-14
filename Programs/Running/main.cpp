@@ -87,14 +87,13 @@ public:
 		biped->param.swingHeight[0] = 0.10;
 		biped->param.swingHeight[1] = 0.10;
 		//biped->param.swingProfile = DiMP::BipedRunning::SwingProfile::Wedge;
-		biped->param.swingProfile = DiMP::BipedRunning::SwingProfile::Run;
-		//biped->param.swingProfile       = DiMP::BipedRunning::SwingProfile::Cycloid;
+		biped->param.swingProfile       = DiMP::BipedRunning::SwingProfile::Cycloid;
 		//biped->param.swingInterpolation = DiMP::BipedRunning::SwingInterpolation::Cubic;
 		biped->param.swingInterpolation = DiMP::BipedRunning::SwingInterpolation::Quintic;
 		biped->param.comHeightProfile = DiMP::BipedRunning::ComHeightProfile::Constant;
 		//biped->param.comHeightProfile = DiMP::BipedRunning::ComHeightProfile::Compass;
-		biped->param.copMin = vec3_t(-0.100, 0.00, 0.00);
-		biped->param.copMax = vec3_t(0.150, 0.01, 0.00);
+		biped->param.copMin = vec3_t(-0.100, -0.02, 0.00);
+		biped->param.copMax = vec3_t(0.150, 0.02, 0.00);
 		biped->param.accMin = vec3_t(-10.0, -1.0, -1.0);
 		biped->param.accMax = vec3_t(10.0, 1.0, 1.0);
 		biped->param.momMin = vec3_t(-0.0, -0.0, -1.0);
@@ -227,9 +226,9 @@ public:
 		graph->scale.Set(1.0, 1.0, 1.0);
 		graph->Init();
 
-		graph->solver->SetConstraintWeight(ID(DiMP::ConTag::Any), 1.0);
-		graph->solver->SetConstraintWeight(ID(DiMP::ConTag::Any), 1.0);
-		//graph->solver->Enable(ID(DiMP::ConTag::BipedAccRange), false);
+		/*graph->solver->SetConstraintWeight(ID(DiMP::ConTag::Any), 1.0);
+		graph->solver->SetConstraintWeight(ID(DiMP::ConTag::Any), 1.0);*/
+		//graph->solver->Enable(ID(DiMP::ConTag::Any), false);
 
 		graph->solver->SetCorrection(ID(), 0.5);
 		graph->solver->param.numIter[0] = 20;
