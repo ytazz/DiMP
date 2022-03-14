@@ -261,15 +261,15 @@ namespace DiMP {
 	BipedRunning::Param::Param() {
 		gravity = vec3_t(0.0, 0.0, 9.8);
 		comHeight = 1.0;
-		T = sqrt(comHeight / gravity.z);
+		T[0] = sqrt(comHeight/gravity.z);
+		T[1] = sqrt(comHeight/gravity.z);
+		T[2] = sqrt(comHeight/gravity.z);
 		torsoMass = 10.0;
 		footMass = 5.0;
-		trajectoryMode = TrajectoryMode::Run;
 		swingProfile = SwingProfile::Cycloid;
 		swingInterpolation = SwingInterpolation::Cubic;
 		swingHeight[0] = 0.1; //0: maximum swing foot height
 		swingHeight[1] = 0.1; //1: swing foot height before landing (Wedge only)
-		comHeightProfile = ComHeightProfile::Constant;
 		durationMin[Phase::R] = 0.1; // duration minimum at single support
 		durationMax[Phase::R] = 0.8; // duration maximum at single support
 		durationMin[Phase::L] = 0.1;
@@ -307,17 +307,6 @@ namespace DiMP {
 		momMin = vec3_t(-1.0, 1.0, 0.0);
 		momMax = vec3_t(-1.0, 1.0, 0.0);
 
-		ankleToToe = 0.1;
-		ankleToHeel = 0.1;
-		toeCurvature = 10.0;
-		heelCurvature = 10.0;
-		toeCurvatureRate = 0.0;
-		heelCurvatureRate = 0.0;
-		toeRotationMax = 1.0;
-		heelRotationMax = 1.0;
-
-		minSpacing = 0.0;
-		swingMargin = 0.0;
 	}
 
 	//-------------------------------------------------------------------------------------------------
@@ -377,9 +366,6 @@ namespace DiMP {
 
 	void BipedRunning::Init() {
 		TrajectoryNode::Init();
-
-		// time constant of inverted pendulum
-		//param.T = sqrt(param.comHeight / param.gravity.z)*param.coefficientT;
 
 		real_t durationAve[Phase::Num];
 		for (int i = 0; i < Phase::Num; i++)
@@ -584,15 +570,16 @@ namespace DiMP {
 
 		real_t dt = t - key0->var_time->val;
 		//real_t T = param.T;
-		real_t T = param.T;
+		real_t T;
 		if (!key0->prev || !key1->next)
 		{
-			T = 0.3231; //0.3316;
+			T = param.T[0]; //0.3316;
 		}
 		else if (!key0->prev->prev || !key1->next->next)
 		{
-			T = 0.2654; //0.2659 0.2807;
+			T = param.T[1]; //0.2659 0.2807;
 		}
+		else T = param.T[2];
 		real_t T2 = T * T;
 
 		if (key1 == key0->next) {
@@ -604,7 +591,7 @@ namespace DiMP {
 			vec3_t cmv0 = key0->var_cmp_vel->val;
 			int ph = phase[key0->tick->idx];
 
-			if (param.trajectoryMode == TrajectoryMode::Run && (ph == Phase::LR || ph == Phase::RL)) {
+			if (ph == Phase::LR || ph == Phase::RL) {
 				pos = p0 + v0 * dt - 0.5 * param.gravity * dt * dt;
 				vel = v0 - param.gravity * dt;
 				acc = -param.gravity;
@@ -1634,7 +1621,7 @@ namespace DiMP {
 
 	void RunnerLipPosCon::CalcLhs() {
 		Prepare();
-		if (mode == BipedRunning::TrajectoryMode::Run && (ph == BipedRunning::Phase::LR || ph == BipedRunning::Phase::RL))
+		if (ph == BipedRunning::Phase::LR || ph == BipedRunning::Phase::RL)
 			obj[1]->var_com_pos->val = p0 + v0 * tau - 0.5 * g * tau * tau;
 		else
 			obj[1]->var_com_pos->val = (c0 + cm0) + (cv0 + cmv0) * tau + C * (p0 - (c0 + cm0)) + (S * T) * (v0 - (cv0 + cmv0));
@@ -1642,7 +1629,7 @@ namespace DiMP {
 
 	void RunnerLipVelCon::CalcLhs() {
 		Prepare();
-		if (mode == BipedRunning::TrajectoryMode::Run && (ph == BipedRunning::Phase::LR || ph == BipedRunning::Phase::LR))
+		if (ph == BipedRunning::Phase::LR || ph == BipedRunning::Phase::LR)
 			obj[1]->var_com_vel->val = v0 - g * tau;
 		else
 			obj[1]->var_com_vel->val = (cv0 + cmv0) + (S / T) * (p0 - (c0 + cm0)) + C * (v0 - (cv0 + cmv0));
@@ -1675,13 +1662,13 @@ namespace DiMP {
 		ph = phase[obj[0]->tick->idx];
 		if (ph == BipedRunning::Phase::D)
 		{
-			T = 0.3231; //0.3144 for h=0.9; // 0.3316 for h=1.0, tau0=0.30, tau1=0.10
+			T = param.T[0]; //0.3144 for h=0.9; // 0.3316 for h=1.0, tau0=0.30, tau1=0.10
 		}
 		else if (!obj[0]->prev->prev || !obj[1]->next->next)
 		{
-			T = 0.2654;//0.2659 for h=0.9; // 0.2807 for h=1.0, tau0=0.30, tau1=0.10
+			T = param.T[1];//0.2659 for h=0.9; // 0.2807 for h=1.0, tau0=0.30, tau1=0.10
 		}
-		else T = param.T;
+		else T = param.T[2];
 		g = param.gravity;
 		mode = param.trajectoryMode;
 		ez = vec3_t(0.0, 0.0, 1.0);
@@ -1717,7 +1704,7 @@ namespace DiMP {
 
 	void RunnerLipPosCon::CalcCoef() {
 		Prepare();
-		if (mode == BipedRunning::TrajectoryMode::Run && (ph == BipedRunning::Phase::LR || ph == BipedRunning::Phase::RL))
+		if (ph == BipedRunning::Phase::LR || ph == BipedRunning::Phase::RL)
 		{
 			((SLink*)links[0])->SetCoef(1.0);
 			((SLink*)links[1])->SetCoef(-1.0);
@@ -1744,7 +1731,7 @@ namespace DiMP {
 
 	void RunnerLipVelCon::CalcCoef() {
 		Prepare();
-		if (mode == BipedRunning::TrajectoryMode::Run && (ph == BipedRunning::Phase::LR || ph == BipedRunning::Phase::RL))
+		if (ph == BipedRunning::Phase::LR || ph == BipedRunning::Phase::RL)
 		{
 			((SLink*)links[0])->SetCoef(1.0);
 			((SLink*)links[1])->SetCoef(0.0);
@@ -1861,10 +1848,11 @@ namespace DiMP {
 		((SLink*)links[1])->SetCoef((ez % dir_abs) * r);
 	}
 
+	// TODO : support of changing time constant
 	void RunnerAccRangeCon::CalcCoef() {
 		BipedRunning::Param& param = ((BipedRunning*)obj->node)->param;
 
-		real_t T = param.T;
+		real_t T = param.T[2];
 		vec3_t p = obj->var_com_pos->val;
 		vec3_t c = obj->var_cop_pos->val;
 		vec3_t cm = obj->var_cmp_pos->val;
@@ -1902,14 +1890,14 @@ namespace DiMP {
 	//-------------------------------------------------------------------------------------------------
 
 	void RunnerLipPosCon::CalcDeviation() {
-		if (mode == BipedRunning::TrajectoryMode::Run && (ph == BipedRunning::Phase::LR || ph == BipedRunning::Phase::RL))
+		if (ph == BipedRunning::Phase::LR || ph == BipedRunning::Phase::RL)
 			y = p1 - (p0 + v0 * tau - 0.5 * g * tau * tau);
 		else
 			y = p1 - ((c0 + cm0) + (cv0 + cmv0) * tau + C * (p0 - (c0 + cm0)) + (T * S) * (v0 - (cv0 + cmv0)));
 	}
 
 	void RunnerLipVelCon::CalcDeviation() {
-		if (mode == BipedRunning::TrajectoryMode::Run && (ph == BipedRunning::Phase::LR || ph == BipedRunning::Phase::RL))
+		if (ph == BipedRunning::Phase::LR || ph == BipedRunning::Phase::RL)
 			y = v1 - (v0 - g * tau);
 		else
 			y = v1 - ((cv0 + cmv0) + (S / T) * (p0 - (c0 + cm0)) + C * (v0 - (cv0 + cmv0)));

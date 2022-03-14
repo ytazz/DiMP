@@ -63,7 +63,9 @@ public:
 		biped = new DiMP::BipedRunning(graph, "biped");
 		biped->param.gravity = vec3_t(0.0, 0.0, 9.8);
 		biped->param.comHeight = 0.95;
-		biped->param.T = 0.2588; // h=0.90 :0.2590; // calculated for specific duration and CoM height settings by external program 
+		biped->param.T[0] = 0.3231;
+		biped->param.T[1] = 0.2654;
+		biped->param.T[2] = 0.2588; // h=0.90 :0.2590; // calculated from specific duration and CoM height settings by external program 
 		biped->param.torsoMass = mt;
 		biped->param.footMass = mf;
 		biped->param.durationMin[DiMP::BipedRunning::Phase::R] = 0.40;
@@ -90,30 +92,13 @@ public:
 		biped->param.swingProfile       = DiMP::BipedRunning::SwingProfile::Cycloid;
 		//biped->param.swingInterpolation = DiMP::BipedRunning::SwingInterpolation::Cubic;
 		biped->param.swingInterpolation = DiMP::BipedRunning::SwingInterpolation::Quintic;
-		biped->param.comHeightProfile = DiMP::BipedRunning::ComHeightProfile::Constant;
-		//biped->param.comHeightProfile = DiMP::BipedRunning::ComHeightProfile::Compass;
 		biped->param.copMin = vec3_t(-0.100, -0.02, 0.00);
 		biped->param.copMax = vec3_t(0.150, 0.02, 0.00);
 		biped->param.accMin = vec3_t(-10.0, -1.0, -1.0);
 		biped->param.accMax = vec3_t(10.0, 1.0, 1.0);
 		biped->param.momMin = vec3_t(-0.0, -0.0, -1.0);
 		biped->param.momMax = vec3_t(0.0, 0.0, 1.0);
-		//biped->param.footCurveType = DiMP::BipedLIP::FootCurveType::Arc;
-		//biped->param.ankleToToe    = 0.100;
-		//biped->param.ankleToHeel   = 0.070;
-		//biped->param.toeCurvature  = 10.0;
-		//biped->param.heelCurvature = 10.0;
-		biped->param.footCurveType = DiMP::BipedRunning::FootCurveType::Clothoid;
-		biped->param.ankleToToe = 0.070;
-		biped->param.ankleToHeel = 0.040;
-		biped->param.toeCurvatureRate = 156.0;
-		biped->param.heelCurvatureRate = 156.0;
-		biped->param.toeRotationMax = Rad(45.0);
-		biped->param.heelRotationMax = Rad(45.0);
-		biped->param.minSpacing = 0.0;
-		biped->param.swingMargin = 0.0;
-		biped->param.trajectoryMode = DiMP::BipedRunning::TrajectoryMode::Run;
-
+		
 		/*
 		 D -> R -> RL -> L -> LR ... -> RL -> D
 		 */
