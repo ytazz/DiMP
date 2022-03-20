@@ -101,9 +101,7 @@ public:
 		biped->param.ankleToHeel       = 0.040;
 		biped->param.toeCurvatureRate  = 156.0;
 		biped->param.heelCurvatureRate = 156.0;
-        biped->param.toeRotationMax    = Rad(45.0);
-        biped->param.heelRotationMax   = Rad(45.0);
-		
+        
 		/*
 		 D -> RL -> L -> LR -> R ... -> RL -> D
 		 */

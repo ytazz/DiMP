@@ -155,8 +155,6 @@ namespace DiMP {;
 			real_t  heelCurvature;
 			real_t  toeCurvatureRate ;       ///< toe|heel curvature rate (for clothoid)
 			real_t  heelCurvatureRate;
-            real_t  toeRotationMax;          ///< upper limit of toe|heel rotation angle
-            real_t  heelRotationMax;         
             
 			real_t  minSpacing;   ///< minimum lateral spacing of feet with which swing foot does not collide with support foot
 			real_t  swingMargin;  ///< 
