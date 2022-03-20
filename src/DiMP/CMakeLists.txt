@@ -21,6 +21,7 @@ set(DIMP_HEADERS_GRAPH
 	Graph/Node.h
 	Graph/Object.h
 	Graph/Octtree.h
+	Graph/Running.h
 	Graph/Solver.h
 	Graph/Task.h
 	Graph/Timing.h
@@ -51,6 +52,7 @@ set(DIMP_SOURCES_GRAPH
 	Graph/Node.cpp
 	Graph/Object.cpp
 	Graph/Octtree.cpp
+	Graph/Running.cpp
 	Graph/Solver.cpp
 	Graph/Task.cpp
 	Graph/Timing.cpp

@@ -157,6 +157,7 @@ namespace DiMP {;
 			real_t  heelCurvatureRate;
             
 			real_t  minSpacing;   ///< minimum lateral spacing of feet with which swing foot does not collide with support foot
+			real_t  minDist;      ///< minimum distance between each foot with which swing foot does not collide with support foot
 			real_t  swingMargin;  ///< 
 
 			Param();

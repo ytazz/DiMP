@@ -18,6 +18,7 @@ class Geometry ;
 class TimeSlot ;
 class Object   ;
 class BipedLIP ;
+class BipedRunning;
 class Centroid ;
 class Joint    ;
 class Task     ;
@@ -27,6 +28,7 @@ typedef NodeArray<Geometry >  Geometries;
 typedef NodeArray<TimeSlot >  TimeSlots ;
 typedef NodeArray<Object   >  Objects   ;
 typedef NodeArray<BipedLIP >  Bipeds    ;
+typedef NodeArray<BipedRunning >  Runners    ;
 typedef NodeArray<Centroid >  Centroids ;
 typedef NodeArray<Joint    >  Joints    ;
 typedef NodeArray<Task     >  Tasks     ;
@@ -80,6 +82,7 @@ public:
 	Objects			objects;		///< objects
 	Connectors      cons;
 	Bipeds			bipeds;         ///< bipeds
+	Runners         runners;        ///< runners
 	Centroids       centroids;      ///< centroids
 	Trees			trees;			///< trees
 	Joints			joints;			///< joints
