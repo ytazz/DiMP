@@ -216,15 +216,16 @@ namespace DiMP {;
 		virtual void        DrawSnapshot  (Render::Canvas* canvas, Render::Config* conf);
 		virtual void        Draw          (Render::Canvas* canvas, Render::Config* conf);
 		
-		int    Phase        (real_t t);
-		void   ComState     (real_t t, vec3_t& pos, vec3_t& vel, vec3_t& acc);
-		void   CopState     (real_t t, vec3_t& pos, vec3_t& vel, vec3_t& acc);
-		void   TorsoState   (real_t t, real_t& ori, real_t& angvel, real_t& angacc);
-		void   FootRotation (real_t px0, real_t pz0, real_t cp, real_t cv, real_t ca, vec3_t& pos, vec3_t& angle, vec3_t& vel, vec3_t& angvel, vec3_t& acc, vec3_t& angacc, int& contact);
-		void   FootPose     (real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& angvel, vec3_t& acc, vec3_t& angacc, int& contact);
-		void   FootCopState (real_t t, int side, vec3_t& pos, vec3_t& vel, real_t& weight);
-		real_t TimeToLiftoff(real_t t, int side);
-		real_t TimeToLanding(real_t t, int side);
+		int    Phase          (real_t t);
+		void   ComState       (real_t t, vec3_t& pos, vec3_t& vel, vec3_t& acc);
+		void   CopState       (real_t t, vec3_t& pos, vec3_t& vel, vec3_t& acc);
+		void   TorsoState     (real_t t, real_t& ori, real_t& angvel, real_t& angacc);
+		void   FootRotation   (real_t cp, real_t cv, real_t ca, vec3_t& pos, vec3_t& vel, vec3_t& acc, vec3_t& ori, vec3_t& angvel, vec3_t& angacc, int& contact);
+		void   FootRotationInv(real_t ori, real_t angvel, real_t angacc, real_t& cp, real_t& cv, real_t& ca);
+		void   FootPose       (real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& angvel, vec3_t& acc, vec3_t& angacc, int& contact);
+		void   FootCopState   (real_t t, int side, vec3_t& pos, vec3_t& vel, real_t& weight);
+		real_t TimeToLiftoff  (real_t t, int side);
+		real_t TimeToLanding  (real_t t, int side);
 		
 		vec3_t TorsoPos(const vec3_t& pcom, const vec3_t& psup, const vec3_t& pswg);
 		vec3_t TorsoVel(const vec3_t& vcom, const vec3_t& vsup, const vec3_t& vswg);
