@@ -16,7 +16,7 @@ namespace DiMP {
 	const real_t eps = 0.1;
 
 	//-------------------------------------------------------------------------------------------------
-	// BipedLIPKey
+	// BipedRunKey
 
 	BipedRunKey::BipedRunKey() {
 
@@ -264,8 +264,10 @@ namespace DiMP {
 		T[0] = sqrt(comHeight/gravity.z);
 		T[1] = sqrt(comHeight/gravity.z);
 		T[2] = sqrt(comHeight/gravity.z);
+		T[3] = sqrt(comHeight/gravity.z);
 		torsoMass = 10.0;
 		footMass = 5.0;
+		//gaitType = GaitType::Walk;
 		swingProfile = SwingProfile::Cycloid;
 		swingInterpolation = SwingInterpolation::Cubic;
 		swingHeight[0] = 0.1; //0: maximum swing foot height
@@ -564,22 +566,38 @@ namespace DiMP {
 		return phase[key->tick->idx];
 	}
 
+	bool BipedRunning::OnTransition(real_t t) {
+		BipedRunKey* key0 = (BipedRunKey*)traj.GetSegment(t).first;
+		BipedRunKey* key1 = (BipedRunKey*)traj.GetSegment(t).second;
+		BipedRunKey* keym1 = 0;
+
+		if (key0->prev) {
+			keym1 = (BipedRunKey*)key0->prev;
+			if (gaittype[key0->tick->idx] != gaittype[key1->tick->idx] || gaittype[key0->tick->idx] != gaittype[keym1->tick->idx]) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	void BipedRunning::ComState(real_t t, vec3_t& pos, vec3_t& vel, vec3_t& acc) {
 		BipedRunKey* key0 = (BipedRunKey*)traj.GetSegment(t).first;
 		BipedRunKey* key1 = (BipedRunKey*)traj.GetSegment(t).second;
+		int gtype = gaittype[key0->tick->idx];
+		int ph = phase[key0->tick->idx];
 
 		real_t dt = t - key0->var_time->val;
 		//real_t T = param.T;
 		real_t T;
-		if (!key0->prev || !key1->next)
-		{
+		if (gtype == GaitType::Walk && !OnTransition(t))
+			T = param.T[3];
+		else if (!key0->prev || !key1->next || (OnTransition(t) && (ph == Phase::RL || ph == Phase::LR)))
 			T = param.T[0]; //0.3316;
-		}
-		else if (!key0->prev->prev || !key1->next->next)
-		{
+		else if (!key0->prev->prev || !key1->next->next || (OnTransition(t) && (ph == Phase::R || ph == Phase::L)))
 			T = param.T[1]; //0.2659 0.2807;
-		}
-		else T = param.T[2];
+		else
+			T = param.T[2];
+
 		real_t T2 = T * T;
 
 		if (key1 == key0->next) {
@@ -589,9 +607,8 @@ namespace DiMP {
 			vec3_t cm0 = key0->var_cmp_pos->val;
 			vec3_t cv0 = key0->var_cop_vel->val;
 			vec3_t cmv0 = key0->var_cmp_vel->val;
-			int ph = phase[key0->tick->idx];
 
-			if (ph == Phase::LR || ph == Phase::RL) {
+			if (gtype == GaitType::Run && (ph == Phase::LR || ph == Phase::RL)) {
 				pos = p0 + v0 * dt - 0.5 * param.gravity * dt * dt;
 				vel = v0 - param.gravity * dt;
 				acc = -param.gravity;
@@ -1621,7 +1638,8 @@ namespace DiMP {
 
 	void RunnerLipPosCon::CalcLhs() {
 		Prepare();
-		if (ph == BipedRunning::Phase::LR || ph == BipedRunning::Phase::RL)
+		//int gtype = ((BipedRunning*)obj[0]->node)->gaittype;
+		if (gtype == BipedRunning::GaitType::Run && (ph == BipedRunning::Phase::LR || ph == BipedRunning::Phase::RL))
 			obj[1]->var_com_pos->val = p0 + v0 * tau - 0.5 * g * tau * tau;
 		else
 			obj[1]->var_com_pos->val = (c0 + cm0) + (cv0 + cmv0) * tau + C * (p0 - (c0 + cm0)) + (S * T) * (v0 - (cv0 + cmv0));
@@ -1629,7 +1647,8 @@ namespace DiMP {
 
 	void RunnerLipVelCon::CalcLhs() {
 		Prepare();
-		if (ph == BipedRunning::Phase::LR || ph == BipedRunning::Phase::LR)
+		BipedRunning::Param& param = ((BipedRunning*)obj[0]->node)->param;
+		if (gtype == BipedRunning::GaitType::Run && (ph == BipedRunning::Phase::LR || ph == BipedRunning::Phase::RL))
 			obj[1]->var_com_vel->val = v0 - g * tau;
 		else
 			obj[1]->var_com_vel->val = (cv0 + cmv0) + (S / T) * (p0 - (c0 + cm0)) + C * (v0 - (cv0 + cmv0));
@@ -1659,18 +1678,28 @@ namespace DiMP {
 	void RunnerLipCon::Prepare() {
 		BipedRunning::Param& param = ((BipedRunning*)obj[0]->node)->param;
 		std::vector<int>& phase = ((BipedRunning*)obj[0]->node)->phase;
+		std::vector<int>& gaittype = ((BipedRunning*)obj[0]->node)->gaittype;
 		ph = phase[obj[0]->tick->idx];
-		if (ph == BipedRunning::Phase::D)
+		gtype = gaittype[obj[0]->tick->idx];
+		int gtype1 = gaittype[obj[1]->tick->idx];
+		int gtypem1 = -1;
+		if (obj[0]->prev) gtypem1 = gaittype[obj[0]->prev->tick->idx];
+
+		bool transition = (gtype != gtype1 || gtype != gtypem1);
+		if (gtype == BipedRunning::GaitType::Walk && !transition)
+		{
+			T = param.T[3];
+		}
+		else if (ph == BipedRunning::Phase::D || (transition && (ph == BipedRunning::Phase::RL || ph == BipedRunning::Phase::LR)))
 		{
 			T = param.T[0]; //0.3144 for h=0.9; // 0.3316 for h=1.0, tau0=0.30, tau1=0.10
 		}
-		else if (!obj[0]->prev->prev || !obj[1]->next->next)
+		else if (!obj[0]->prev->prev || !obj[1]->next->next || (transition && (ph == BipedRunning::Phase::R || BipedRunning::Phase::L)))
 		{
 			T = param.T[1];//0.2659 for h=0.9; // 0.2807 for h=1.0, tau0=0.30, tau1=0.10
 		}
 		else T = param.T[2];
 		g = param.gravity;
-		mode = param.trajectoryMode;
 		ez = vec3_t(0.0, 0.0, 1.0);
 		//L0 = obj[0]->var_mom->val;
 		p0 = obj[0]->var_com_pos->val;
@@ -1704,7 +1733,7 @@ namespace DiMP {
 
 	void RunnerLipPosCon::CalcCoef() {
 		Prepare();
-		if (ph == BipedRunning::Phase::LR || ph == BipedRunning::Phase::RL)
+		if (gtype == BipedRunning::GaitType::Run && (ph == BipedRunning::Phase::LR || ph == BipedRunning::Phase::RL))
 		{
 			((SLink*)links[0])->SetCoef(1.0);
 			((SLink*)links[1])->SetCoef(-1.0);
@@ -1731,7 +1760,7 @@ namespace DiMP {
 
 	void RunnerLipVelCon::CalcCoef() {
 		Prepare();
-		if (ph == BipedRunning::Phase::LR || ph == BipedRunning::Phase::RL)
+		if (gtype == BipedRunning::GaitType::Run && (ph == BipedRunning::Phase::LR || ph == BipedRunning::Phase::RL))
 		{
 			((SLink*)links[0])->SetCoef(1.0);
 			((SLink*)links[1])->SetCoef(0.0);
@@ -1890,14 +1919,14 @@ namespace DiMP {
 	//-------------------------------------------------------------------------------------------------
 
 	void RunnerLipPosCon::CalcDeviation() {
-		if (ph == BipedRunning::Phase::LR || ph == BipedRunning::Phase::RL)
+		if (gtype == BipedRunning::GaitType::Run && (ph == BipedRunning::Phase::LR || ph == BipedRunning::Phase::RL))
 			y = p1 - (p0 + v0 * tau - 0.5 * g * tau * tau);
 		else
 			y = p1 - ((c0 + cm0) + (cv0 + cmv0) * tau + C * (p0 - (c0 + cm0)) + (T * S) * (v0 - (cv0 + cmv0)));
 	}
 
 	void RunnerLipVelCon::CalcDeviation() {
-		if (ph == BipedRunning::Phase::LR || ph == BipedRunning::Phase::RL)
+		if (gtype == BipedRunning::GaitType::Run && (ph == BipedRunning::Phase::LR || ph == BipedRunning::Phase::RL))
 			y = v1 - (v0 - g * tau);
 		else
 			y = v1 - ((cv0 + cmv0) + (S / T) * (p0 - (c0 + cm0)) + C * (v0 - (cv0 + cmv0)));

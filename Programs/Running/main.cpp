@@ -63,6 +63,7 @@ public:
 		biped = new DiMP::BipedRunning(graph, "biped");
 		biped->param.gravity = vec3_t(0.0, 0.0, 9.8);
 		biped->param.comHeight = 0.95;
+		//biped->param.gaitType = DiMP::BipedRunning::GaitType::Run;
 		biped->param.T[0] = 0.3231;
 		biped->param.T[1] = 0.2654;
 		biped->param.T[2] = 0.2588; // h=0.90 :0.2590; // calculated from specific duration and CoM height settings by external program 
@@ -106,6 +107,7 @@ public:
 			new DiMP::Tick(graph, 0.0, "");
 
 		biped->phase.resize(nphase);
+		biped->gaittype.resize(nphase);
 		biped->elevation.resize(nphase);
 
 		real_t zg = 0.0;
@@ -127,6 +129,12 @@ public:
 		biped->phase[nphase - 1] = DiMP::BipedRunning::Phase::D;
 		biped->elevation[nphase - 2] = zg;
 		biped->elevation[nphase - 1] = zg;
+
+		for (uint i = 0; i < nphase; i++)
+		{
+			if (i < 12) biped->gaittype[i] = DiMP::BipedRunning::GaitType::Walk;
+			else biped->gaittype[i] = DiMP::BipedRunning::GaitType::Run;
+		}
 
 		real_t spacing = 0.18 / 2;
 		//vec2_t goalPos(3.0, 0.0);
@@ -177,6 +185,8 @@ public:
 		biped->waypoints[2].foot_pos_t[1] = vec3_t(dist_acc, spacing, (nstep_idle + nstep_acc) * stepHeight);
 		biped->waypoints[2].foot_pos_r[1] = 0.0;
 		biped->waypoints[2].cop_pos = vec3_t(dist_acc, 0.0, (nstep_idle + nstep_acc) * stepHeight);
+		biped->waypoints[2].fix_com_pos = true;
+		biped->waypoints[2].fix_cop_pos = true;
 
 		biped->waypoints[3].k = 1 + 2 * (nstep_idle + nstep_acc + nstep_cruise);
 		biped->waypoints[3].com_pos = vec3_t(dist_acc + dist_cruise, 0.0, biped->param.comHeight + (nstep_idle + nstep_acc + nstep_cruise) * stepHeight);
