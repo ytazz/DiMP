@@ -58,7 +58,6 @@ public:
 		const real_t dist_acc = 0.5 * acc * Tacc * Tacc;
 		const real_t dist_cruise = vmax * Tcruise;
 		const real_t dist_dec = vmax * Tdec - 0.5 * dec * Tdec * Tdec;
-		const real_t stepHeight = 0.00;
 
 		biped = new DiMP::BipedRunning(graph, "biped");
 		biped->param.gravity = vec3_t(0.0, 0.0, 9.8);
@@ -108,33 +107,27 @@ public:
 
 		biped->phase.resize(nphase);
 		biped->gaittype.resize(nphase);
-		biped->elevation.resize(nphase);
 
-		real_t zg = 0.0;
 		biped->phase[0] = DiMP::BipedRunning::Phase::D;
-		biped->elevation[0] = zg;
 		for (uint i = 1; i < nphase - 3; i++) {
 
-			biped->elevation[i] = zg;
 
 			switch ((i - 1) % 4) {
-			case 0: { biped->phase[i] = DiMP::BipedRunning::Phase::R; zg += stepHeight; break; }
-			case 1: { biped->phase[i] = DiMP::BipedRunning::Phase::RL;                   break; }
-			case 2: { biped->phase[i] = DiMP::BipedRunning::Phase::L; zg += stepHeight; break; }
-			case 3: { biped->phase[i] = DiMP::BipedRunning::Phase::LR;                   break; }
+			case 0: { biped->phase[i] = DiMP::BipedRunning::Phase::R;  break; }
+			case 1: { biped->phase[i] = DiMP::BipedRunning::Phase::RL; break; }
+			case 2: { biped->phase[i] = DiMP::BipedRunning::Phase::L;  break; }
+			case 3: { biped->phase[i] = DiMP::BipedRunning::Phase::LR; break; }
 			}
 		}
 		biped->phase[nphase - 3] = DiMP::BipedRunning::Phase::R;
 		biped->phase[nphase - 2] = DiMP::BipedRunning::Phase::D;
 		biped->phase[nphase - 1] = DiMP::BipedRunning::Phase::D;
-		biped->elevation[nphase - 2] = zg;
-		biped->elevation[nphase - 1] = zg;
 
 		for (uint i = 0; i < nphase; i++)
 		{
-			/*if (i < 12) biped->gaittype[i] = DiMP::BipedRunning::GaitType::Walk;
-			else biped->gaittype[i] = DiMP::BipedRunning::GaitType::Run;*/
-			biped->gaittype[i] = DiMP::BipedRunning::GaitType::Run;
+			if (i < 12) biped->gaittype[i] = DiMP::BipedRunning::GaitType::Run;
+			else biped->gaittype[i] = DiMP::BipedRunning::GaitType::Walk;
+			//biped->gaittype[i] = DiMP::BipedRunning::GaitType::Walk;
 		}
 
 		real_t spacing = 0.18 / 2;
@@ -168,46 +161,46 @@ public:
 		biped->waypoints[0].fix_mom = true;
 
 		biped->waypoints[1].k = 1 + 2 * nstep_idle;
-		biped->waypoints[1].com_pos = vec3_t(0.0, 0.0, biped->param.comHeight + nstep_idle * stepHeight);
+		biped->waypoints[1].com_pos = vec3_t(0.0, 0.0, biped->param.comHeight);
 		biped->waypoints[1].com_vel = vec3_t(0.0, 0.0, -0.735);
 		biped->waypoints[1].torso_pos_r = 0.0;
-		biped->waypoints[1].foot_pos_t[0] = vec3_t(0.0, -spacing, nstep_idle * stepHeight);
+		biped->waypoints[1].foot_pos_t[0] = vec3_t(0.0, -spacing, 0);
 		biped->waypoints[1].foot_pos_r[0] = 0.0;
-		biped->waypoints[1].foot_pos_t[1] = vec3_t(0.0, spacing, nstep_idle * stepHeight);
+		biped->waypoints[1].foot_pos_t[1] = vec3_t(0.0, spacing, 0);
 		biped->waypoints[1].foot_pos_r[1] = 0.0;
-		biped->waypoints[1].cop_pos = vec3_t(0.0, 0.0, nstep_idle * stepHeight);
+		biped->waypoints[1].cop_pos = vec3_t(0.0, 0.0, 0.0);
 
 		biped->waypoints[2].k = 1 + 2 * (nstep_idle + nstep_acc);
-		biped->waypoints[2].com_pos = vec3_t(dist_acc, 0.0, biped->param.comHeight + (nstep_idle + nstep_acc) * stepHeight);
+		biped->waypoints[2].com_pos = vec3_t(dist_acc, 0.0, biped->param.comHeight);
 		biped->waypoints[2].com_vel = vec3_t(vmax, 0.0, 0.0);
 		biped->waypoints[2].torso_pos_r = 0.0;
-		biped->waypoints[2].foot_pos_t[0] = vec3_t(dist_acc, -spacing, (nstep_idle + nstep_acc) * stepHeight);
+		biped->waypoints[2].foot_pos_t[0] = vec3_t(dist_acc, -spacing, 0.0);
 		biped->waypoints[2].foot_pos_r[0] = 0.0;
-		biped->waypoints[2].foot_pos_t[1] = vec3_t(dist_acc, spacing, (nstep_idle + nstep_acc) * stepHeight);
+		biped->waypoints[2].foot_pos_t[1] = vec3_t(dist_acc, spacing, 0.0);
 		biped->waypoints[2].foot_pos_r[1] = 0.0;
-		biped->waypoints[2].cop_pos = vec3_t(dist_acc, 0.0, (nstep_idle + nstep_acc) * stepHeight);
+		biped->waypoints[2].cop_pos = vec3_t(dist_acc, 0.0, 0.0);
 		biped->waypoints[2].fix_com_pos = true;
 		biped->waypoints[2].fix_cop_pos = true;
 
 		biped->waypoints[3].k = 1 + 2 * (nstep_idle + nstep_acc + nstep_cruise);
-		biped->waypoints[3].com_pos = vec3_t(dist_acc + dist_cruise, 0.0, biped->param.comHeight + (nstep_idle + nstep_acc + nstep_cruise) * stepHeight);
+		biped->waypoints[3].com_pos = vec3_t(dist_acc + dist_cruise, 0.0, biped->param.comHeight);
 		biped->waypoints[3].com_vel = vec3_t(vmax, 0.0, 0.0);
 		biped->waypoints[3].torso_pos_r = 0.0;
-		biped->waypoints[3].foot_pos_t[0] = vec3_t(dist_acc + dist_cruise, -spacing, (nstep_idle + nstep_acc + nstep_cruise) * stepHeight);
+		biped->waypoints[3].foot_pos_t[0] = vec3_t(dist_acc + dist_cruise, -spacing, 0.0);
 		biped->waypoints[3].foot_pos_r[0] = 0.0;
-		biped->waypoints[3].foot_pos_t[1] = vec3_t(dist_acc + dist_cruise, spacing, (nstep_idle + nstep_acc + nstep_cruise) * stepHeight);
+		biped->waypoints[3].foot_pos_t[1] = vec3_t(dist_acc + dist_cruise, spacing, 0.0);
 		biped->waypoints[3].foot_pos_r[1] = 0.0;
-		biped->waypoints[3].cop_pos = vec3_t(dist_acc + dist_cruise, 0.0, (nstep_idle + nstep_acc + nstep_cruise) * stepHeight);
+		biped->waypoints[3].cop_pos = vec3_t(dist_acc + dist_cruise, 0.0, 0.0);
 
 		biped->waypoints[4].k = nphase - 1;
-		biped->waypoints[4].com_pos = vec3_t(dist_acc + dist_cruise + dist_dec, 0.0, biped->param.comHeight + nstep * stepHeight);
+		biped->waypoints[4].com_pos = vec3_t(dist_acc + dist_cruise + dist_dec, 0.0, biped->param.comHeight);
 		biped->waypoints[4].com_vel = vec3_t(0.0, 0.0, 0.0);
 		biped->waypoints[4].torso_pos_r = 0.0;
-		biped->waypoints[4].foot_pos_t[0] = vec3_t(dist_acc + dist_cruise + dist_dec, -spacing, nstep * stepHeight);
+		biped->waypoints[4].foot_pos_t[0] = vec3_t(dist_acc + dist_cruise + dist_dec, -spacing, 0.0);
 		biped->waypoints[4].foot_pos_r[0] = 0.0;
-		biped->waypoints[4].foot_pos_t[1] = vec3_t(dist_acc + dist_cruise + dist_dec, spacing, nstep * stepHeight);
+		biped->waypoints[4].foot_pos_t[1] = vec3_t(dist_acc + dist_cruise + dist_dec, spacing, 0.0);
 		biped->waypoints[4].foot_pos_r[1] = 0.0;
-		biped->waypoints[4].cop_pos = vec3_t(dist_acc + dist_cruise + dist_dec, 0.0, nstep * stepHeight);
+		biped->waypoints[4].cop_pos = vec3_t(dist_acc + dist_cruise + dist_dec, 0.0, 0.0);
 		biped->waypoints[4].fix_com_pos = true;
 		biped->waypoints[4].fix_com_vel = true;
 		biped->waypoints[4].fix_torso_pos_r = true;

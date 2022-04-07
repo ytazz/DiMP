@@ -496,7 +496,7 @@ namespace DiMP {
 			}
 
 			// cop (actually vrp) is place at the same place as the com
-			key->var_cop_pos->val = vec3_t(key->var_com_pos->val.x, key->var_com_pos->val.y, elevation[key->tick->idx]);
+			key->var_cop_pos->val = vec3_t(key->var_com_pos->val.x, key->var_com_pos->val.y, 0);
 
 			real_t mt = param.torsoMass;
 			real_t mf = param.footMass;
@@ -948,7 +948,7 @@ namespace DiMP {
 					(ph == Phase::L && phase[key1->tick->idx] == Phase::D && side == 0) ||
 					(ph == Phase::R && phase[key1->tick->idx] == Phase::D && side == 1)) {
 
-					real_t tau1;
+					real_t tau1 = 0;
 					if (ph == Phase::RL || ph == Phase::LR) {
 						p1 = key2->var_foot_pos_t[side]->val;
 						tau1 = key1->var_duration->val;
@@ -1448,7 +1448,7 @@ namespace DiMP {
 
 	void BipedRunning::Save(const char* filename) {
 		ofstream log(filename);
-		log << "t com_pos.x com_pos.y com_pos.z com_vel.x com_vel.y com_vel.z cop_pos.x cop_pos.y cop_pos.z foot_pos0.x foot_pos0.y foot_pos0.z foot_pos1.x foot_pos1.y foot_pos1.z\n";
+		log << "t com_pos.x com_pos.y com_pos.z com_vel.x com_vel.y com_vel.z cop_pos.x cop_pos.y cop_pos.z foot_pos0.x foot_pos0.y foot_pos0.z foot_pos1.x foot_pos1.y foot_pos1.z time_const\n";
 		for (int i = 0; i < trajectory.size(); i++)
 		{
 			log << trajectory[i].t << " ";
@@ -2004,7 +2004,7 @@ namespace DiMP {
 	}
 
 	void RunnerFootHeightCon::CalcDeviation() {
-		y[0] = obj->var_foot_pos_t[side]->val.z - ((BipedRunning*)obj->node)->elevation[obj->tick->idx];
+		y[0] = obj->var_foot_pos_t[side]->val.z;
 	}
 
 	//-------------------------------------------------------------------------------------------------

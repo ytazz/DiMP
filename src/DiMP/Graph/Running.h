@@ -203,7 +203,6 @@ namespace DiMP {
 		Param	            param;
 		vector<int>	        phase;		   ///< phase at each step
 		vector<int>	        gaittype;	   ///< gaitmode at each step
-		vector<real_t>      elevation;     ///< ground z 
 		vector<Waypoint>    waypoints;
 		Snapshot            snapshot;
 		vector<Snapshot>    trajectory;
