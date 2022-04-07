@@ -64,9 +64,10 @@ public:
 		biped->param.gravity = vec3_t(0.0, 0.0, 9.8);
 		biped->param.comHeight = 0.95;
 		//biped->param.gaitType = DiMP::BipedRunning::GaitType::Run;
-		biped->param.T[0] = 0.3231;
-		biped->param.T[1] = 0.2654;
-		biped->param.T[2] = 0.2588; // h=0.90 :0.2590; // calculated from specific duration and CoM height settings by external program 
+		biped->param.T[0] = 0.383;
+		biped->param.T[1] = 0.263;
+		biped->param.T[2] = 0.2588; // h=0.90 :0.2590; // calculated from specific duration and CoM height settings by external program
+		biped->param.T[3] = sqrt(biped->param.comHeight / biped->param.gravity.z);
 		biped->param.torsoMass = mt;
 		biped->param.footMass = mf;
 		biped->param.durationMin[DiMP::BipedRunning::Phase::R] = 0.40;
@@ -77,8 +78,8 @@ public:
 		biped->param.durationMax[DiMP::BipedRunning::Phase::RL] = 0.15;
 		biped->param.durationMin[DiMP::BipedRunning::Phase::LR] = 0.15;
 		biped->param.durationMax[DiMP::BipedRunning::Phase::LR] = 0.15;
-		biped->param.durationMin[DiMP::BipedRunning::Phase::D] = 0.40;
-		biped->param.durationMax[DiMP::BipedRunning::Phase::D] = 0.40;
+		biped->param.durationMin[DiMP::BipedRunning::Phase::D] = 0.15;
+		biped->param.durationMax[DiMP::BipedRunning::Phase::D] = 0.15;
 		biped->param.footPosMin[0] = vec3_t(-0.45, -0.20, -1.5);
 		biped->param.footPosMax[0] = vec3_t(0.45, -0.09, -0.5);
 		biped->param.footPosMin[1] = vec3_t(-0.45, 0.09, -1.5);
@@ -87,8 +88,7 @@ public:
 		biped->param.footOriMax[0] = Rad(0.0);
 		biped->param.footOriMin[1] = Rad(-0.0);
 		biped->param.footOriMax[1] = Rad(0.0);
-		biped->param.swingHeight[0] = 0.10;
-		biped->param.swingHeight[1] = 0.10;
+		biped->param.swingHeight = 0.10;
 		//biped->param.swingProfile = DiMP::BipedRunning::SwingProfile::Wedge;
 		biped->param.swingProfile       = DiMP::BipedRunning::SwingProfile::Cycloid;
 		//biped->param.swingInterpolation = DiMP::BipedRunning::SwingInterpolation::Cubic;
@@ -132,8 +132,9 @@ public:
 
 		for (uint i = 0; i < nphase; i++)
 		{
-			if (i < 12) biped->gaittype[i] = DiMP::BipedRunning::GaitType::Walk;
-			else biped->gaittype[i] = DiMP::BipedRunning::GaitType::Run;
+			/*if (i < 12) biped->gaittype[i] = DiMP::BipedRunning::GaitType::Walk;
+			else biped->gaittype[i] = DiMP::BipedRunning::GaitType::Run;*/
+			biped->gaittype[i] = DiMP::BipedRunning::GaitType::Run;
 		}
 
 		real_t spacing = 0.18 / 2;

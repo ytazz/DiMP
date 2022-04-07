@@ -135,8 +135,7 @@ namespace DiMP {
 			//int     gaitType;
 			int     swingProfile;
 			int     swingInterpolation;
-			real_t  swingHeight[2];             ///< 0: maximum swing height
-												///< 1: lowest height before touch down. for wedge only
+			real_t  swingHeight;                ///< 0: maximum swing height
 			int     comHeightProfile;
 			real_t	durationMin[Phase::Num];	///< minimum duration of each phase
 			real_t	durationMax[Phase::Num];	///< maximum duration of each phase
