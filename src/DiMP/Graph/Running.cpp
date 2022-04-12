@@ -380,6 +380,7 @@ namespace DiMP {
 			key->var_time->val = t;
 
 			int ph = phase[key->tick->idx];
+			int gt = gaittype[key->tick->idx];
 
 			if (!key->prev) {
 				// initial time is fixed
@@ -393,8 +394,8 @@ namespace DiMP {
 				key->con_foot_match_t[1]->enabled = (ph != BipedRunning::Phase::R);
 				key->con_foot_match_r[1]->enabled = (ph != BipedRunning::Phase::R);
 
-				key->con_foot_height[0]->enabled = (ph == BipedRunning::Phase::R || ph == BipedRunning::Phase::D);
-				key->con_foot_height[1]->enabled = (ph == BipedRunning::Phase::L || ph == BipedRunning::Phase::D);
+				key->con_foot_height[0]->enabled = ((gt == BipedRunning::GaitType::Run && ph == BipedRunning::Phase::R || ph == BipedRunning::Phase::D) || (gt == BipedRunning::GaitType::Walk && ph != BipedRunning::Phase::L));
+				key->con_foot_height[1]->enabled = ((gt == BipedRunning::GaitType::Run && ph == BipedRunning::Phase::L || ph == BipedRunning::Phase::D) || (gt == BipedRunning::GaitType::Walk && ph != BipedRunning::Phase::R));
 			}
 
 			// initial value of step duration is set as the average of minimum and maximum
@@ -831,12 +832,8 @@ namespace DiMP {
 		int ph = phase[key0->tick->idx];
 
 		real_t t0 = key0->var_time->val;
-		//real_t taum2 = keym2->var_duration->val;
-		//real_t taum1 = keym1->var_duration->val;
 		real_t tau0 = key0->var_duration->val;  //< phase duration
-		//real_t tau1 = key1->var_duration->val;  //< phase duration of next phase
 		real_t t1 = t0 + tau0;
-		//real_t t3   = t0 + tau0 + tau1 + tau2;   
 		real_t dt = std::max(t - t0, 0.0);    //< elapsed time since phase change
 		real_t s = dt / tau0;                   //< normalized time
 		vec3_t p0 = key0->var_foot_pos_t[side]->val;
@@ -901,10 +898,10 @@ namespace DiMP {
 					contact = ContactState::Surface;
 				}
 				//first swing foot
-				if ((ph == Phase::R && keym1 && phase[keym1->tick->idx] == Phase::D && side == 1) ||
-					(ph == Phase::L && keym1 && phase[keym1->tick->idx] == Phase::D && side == 0) ||
-					(ph == Phase::RL && keym2 && phase[keym2->tick->idx] == Phase::D && side == 1) ||
-					(ph == Phase::LR && keym2 && phase[keym2->tick->idx] == Phase::D && side == 0)) {
+				if ((ph == Phase::R && keym1 && (phase[keym1->tick->idx] == Phase::D || gaittype[keym1->tick->idx] == GaitType::Walk) && side == 1) ||
+					(ph == Phase::L && keym1 && (phase[keym1->tick->idx] == Phase::D || gaittype[keym1->tick->idx] == GaitType::Walk) && side == 0) ||
+					(ph == Phase::RL && keym2 && (phase[keym2->tick->idx] == Phase::D || gaittype[keym2->tick->idx] == GaitType::Walk) && side == 1) ||
+					(ph == Phase::LR && keym2 && (phase[keym2->tick->idx] == Phase::D || gaittype[keym2->tick->idx] == GaitType::Walk) && side == 0)) {
 
 					real_t tau1;
 					if (ph == Phase::R || ph == Phase::L)
@@ -943,10 +940,10 @@ namespace DiMP {
 					contact = ContactState::Float;
 				}
 				//last swing foot
-				else if ((ph == Phase::RL && key2 && phase[key2->tick->idx] == Phase::D && side == 0) ||
-					(ph == Phase::LR && key2 && phase[key2->tick->idx] == Phase::D && side == 1) ||
-					(ph == Phase::L && phase[key1->tick->idx] == Phase::D && side == 0) ||
-					(ph == Phase::R && phase[key1->tick->idx] == Phase::D && side == 1)) {
+				else if ((ph == Phase::RL && key2 && (phase[key2->tick->idx] == Phase::D || gaittype[key2->tick->idx] == GaitType::Walk) && side == 0) ||
+					(ph == Phase::LR && key2 && (phase[key2->tick->idx] == Phase::D || gaittype[key2->tick->idx] == GaitType::Walk) && side == 1) ||
+					(ph == Phase::L && (phase[key1->tick->idx] == Phase::D || gaittype[key1->tick->idx] == GaitType::Walk) && side == 0) ||
+					(ph == Phase::R && (phase[key1->tick->idx] == Phase::D || gaittype[key1->tick->idx] == GaitType::Walk) && side == 1)) {
 
 					real_t tau1 = 0;
 					if (ph == Phase::RL || ph == Phase::LR) {
