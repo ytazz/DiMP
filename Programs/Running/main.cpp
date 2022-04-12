@@ -16,7 +16,6 @@ public:
 
 	DiMP::BipedRunning* biped;
 
-	vec3_t  targetPos;
 	uint    curIdx;
 	string  saveFilename;
 
@@ -45,8 +44,8 @@ public:
 		const real_t Td = 0.2;
 		const int    nstep_idle = 2;  //< number of steps to step in place
 		const int    nstep_acc = 3;  //< number of steps to accelerate
-		const int    nstep_cruise = 3;  //< number of steps to walk in constant speed
-		const int    nstep_dec = 2;  //< number of steps to decelerate
+		const int    nstep_cruise = 5;  //< number of steps to walk in constant speed
+		const int    nstep_dec = 4;  //< number of steps to decelerate
 		const int    nstep = nstep_idle + nstep_acc + nstep_cruise + nstep_dec;
 		const int    nphase = 2 * nstep + 4;  //< 2 phases per step + (one D at the beginning) + (one R or L + two D at the end)
 		const real_t vmax = 0.8 * (1.0 + (2.0 * mf) / mt);    //< walking distance
@@ -125,9 +124,9 @@ public:
 
 		for (uint i = 0; i < nphase; i++)
 		{
-			if (i < 12) biped->gaittype[i] = DiMP::BipedRunning::GaitType::Run;
-			else biped->gaittype[i] = DiMP::BipedRunning::GaitType::Walk;
-			//biped->gaittype[i] = DiMP::BipedRunning::GaitType::Walk;
+			if      (i <= 10) biped->gaittype[i] = DiMP::BipedRunning::GaitType::Walk;
+			else if (i <= 21) biped->gaittype[i] = DiMP::BipedRunning::GaitType::Run;
+			else              biped->gaittype[i] = DiMP::BipedRunning::GaitType::Walk;
 		}
 
 		real_t spacing = 0.18 / 2;
@@ -162,13 +161,13 @@ public:
 
 		biped->waypoints[1].k = 1 + 2 * nstep_idle;
 		biped->waypoints[1].com_pos = vec3_t(0.0, 0.0, biped->param.comHeight);
-		biped->waypoints[1].com_vel = vec3_t(0.0, 0.0, -0.735);
+		biped->waypoints[1].com_vel = vec3_t(0.0, 0.0, 0.0);
 		biped->waypoints[1].torso_pos_r = 0.0;
 		biped->waypoints[1].foot_pos_t[0] = vec3_t(0.0, -spacing, 0);
 		biped->waypoints[1].foot_pos_r[0] = 0.0;
 		biped->waypoints[1].foot_pos_t[1] = vec3_t(0.0, spacing, 0);
 		biped->waypoints[1].foot_pos_r[1] = 0.0;
-		biped->waypoints[1].cop_pos = vec3_t(0.0, 0.0, 0.0);
+		biped->waypoints[1].cop_pos = vec3_t(0.1, 0.0, 0.0);
 
 		biped->waypoints[2].k = 1 + 2 * (nstep_idle + nstep_acc);
 		biped->waypoints[2].com_pos = vec3_t(dist_acc, 0.0, biped->param.comHeight);
@@ -229,8 +228,6 @@ public:
 		//graph->solver->param.methodMajor = Solver::Method::Major::DDP;
 		graph->solver->param.methodMinor = Solver::Method::Minor::Direct;
 		graph->solver->param.verbose = true;
-
-		targetPos = vec3_t(0.0, 0.6, -0.2);
 	}
 
 	virtual void OnAction(int menu, int id) {

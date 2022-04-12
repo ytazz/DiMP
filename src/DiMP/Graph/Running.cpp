@@ -3,7 +3,7 @@
 #include <DiMP/Render/Config.h>
 #include <DiMP/Render/Canvas.h>
 
-#include<stdio.h>
+#include <stdio.h>
 
 #include <sbrollpitchyaw.h>
 
