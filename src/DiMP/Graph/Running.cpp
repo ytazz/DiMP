@@ -305,8 +305,8 @@ namespace DiMP {
 		accMax = vec3_t(-1.0, 1.0, 0.0);
 
 		// range of angular momentum
-		momMin = vec3_t(-1.0, 1.0, 0.0);
-		momMax = vec3_t(-1.0, 1.0, 0.0);
+		/*momMin = vec3_t(-1.0, 1.0, 0.0);
+		momMax = vec3_t(-1.0, 1.0, 0.0);*/
 
 	}
 
@@ -1713,7 +1713,7 @@ namespace DiMP {
 		ph = phase[obj[0]->tick->idx];
 		gtype = gaittype[obj[0]->tick->idx];
 		int gtype1 = gaittype[obj[1]->tick->idx];
-		int gtypem1 = -1;
+		int gtypem1 = gtype;
 		if (obj[0]->prev) gtypem1 = gaittype[obj[0]->prev->tick->idx];
 
 		bool transition = (gtype != gtype1 || gtype != gtypem1);
@@ -1911,8 +1911,30 @@ namespace DiMP {
 	// TODO : support of changing time constant
 	void RunnerAccRangeCon::CalcCoef() {
 		BipedRunning::Param& param = ((BipedRunning*)obj->node)->param;
+		std::vector<int>& phase = ((BipedRunning*)obj->node)->phase;
+		std::vector<int>& gaittype = ((BipedRunning*)obj->node)->gaittype;
+		int ph = phase[obj->tick->idx];
+		int gtype = gaittype[obj->tick->idx];
+		int gtype1 = gtype;
+		if (obj->next) gaittype[obj->next->tick->idx];
+		int gtypem1 = gtype;
+		if (obj->prev) gtypem1 = gaittype[obj->prev->tick->idx];
+		bool transition = (gtype != gtype1 || gtype != gtypem1);
 
-		real_t T = param.T[2];
+		real_t T;
+		if (gtype == BipedRunning::GaitType::Walk && !transition)
+		{
+			T = param.T[3];
+		}
+		else if (!obj->prev || !obj->next->next || (transition && (ph == BipedRunning::Phase::RL || ph == BipedRunning::Phase::LR)))
+		{
+			T = param.T[0]; //0.3144 for h=0.9; // 0.3316 for h=1.0, tau0=0.30, tau1=0.10
+		}
+		else if (!obj->prev->prev || !obj->next->next->next || (transition && (ph == BipedRunning::Phase::R || BipedRunning::Phase::L)))
+		{
+			T = param.T[1];//0.2659 for h=0.9; // 0.2807 for h=1.0, tau0=0.30, tau1=0.10
+		}
+		else T = param.T[2];
 		vec3_t p = obj->var_com_pos->val;
 		vec3_t c = obj->var_cop_pos->val;
 		vec3_t cm = obj->var_cmp_pos->val;
