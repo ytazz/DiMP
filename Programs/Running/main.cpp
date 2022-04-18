@@ -93,8 +93,8 @@ public:
 		biped->param.swingInterpolation = DiMP::BipedRunning::SwingInterpolation::Quintic;
 		biped->param.copMin = vec3_t(-0.100, -0.04, 0.00);
 		biped->param.copMax = vec3_t(0.150, 0.04, 0.00);
-		biped->param.accMin = vec3_t(-10.0, -10.0, -10.0);
-		biped->param.accMax = vec3_t(10.0, 10.0, 10.0);
+		/*biped->param.accMin = vec3_t(-10.0, -10.0, -10.0);
+		biped->param.accMax = vec3_t(10.0, 10.0, 10.0);*/
 		//biped->param.momMin = vec3_t(-0.0, -0.0, -1.0);
 		//biped->param.momMax = vec3_t(0.0, 0.0, 1.0);
 		

@@ -156,12 +156,12 @@ namespace DiMP {
 		solver->AddCostCon(con_cmp_range[2], tick->idx);
 
 		// acc range constraint
-		con_acc_range[0] = new RunnerAccRangeCon(solver, name + "_acc_range", this, vec3_t(1.0, 0.0, 0.0), node->graph->scale.acc_t);
+		/*con_acc_range[0] = new RunnerAccRangeCon(solver, name + "_acc_range", this, vec3_t(1.0, 0.0, 0.0), node->graph->scale.acc_t);
 		con_acc_range[1] = new RunnerAccRangeCon(solver, name + "_acc_range", this, vec3_t(0.0, 1.0, 0.0), node->graph->scale.acc_t);
 		con_acc_range[2] = new RunnerAccRangeCon(solver, name + "_acc_range", this, vec3_t(0.0, 0.0, 1.0), node->graph->scale.acc_t);
 		solver->AddCostCon(con_acc_range[0], tick->idx);
 		solver->AddCostCon(con_acc_range[1], tick->idx);
-		solver->AddCostCon(con_acc_range[2], tick->idx);
+		solver->AddCostCon(con_acc_range[2], tick->idx);*/
 
 		if (next) {
 			con_duration_range = new RangeConS(solver, ID(ConTag::BipedDurationRange, node, tick, name + "_duration"), var_duration, node->graph->scale.time);
@@ -301,8 +301,8 @@ namespace DiMP {
 		cmpMax = vec3_t(0.0, 0.0, 0.0);
 
 		// range of com acceleration
-		accMin = vec3_t(-1.0, 1.0, 0.0);
-		accMax = vec3_t(-1.0, 1.0, 0.0);
+		/*accMin = vec3_t(-1.0, 1.0, 0.0);
+		accMax = vec3_t(-1.0, 1.0, 0.0);*/
 
 		// range of angular momentum
 		/*momMin = vec3_t(-1.0, 1.0, 0.0);
@@ -433,8 +433,8 @@ namespace DiMP {
 				key->con_cmp_range[j]->_max = param.cmpMax[j];
 
 				// acceleration range
-				key->con_acc_range[j]->_min = param.accMin[j];
-				key->con_acc_range[j]->_max = param.accMax[j];
+			/*	key->con_acc_range[j]->_min = param.accMin[j];
+				key->con_acc_range[j]->_max = param.accMax[j];*/
 			}
 
 			// cop is unconstrained for D phase to enable it to be inside the convex hull of both feet
@@ -1629,14 +1629,14 @@ namespace DiMP {
 		AddSLink(obj->var_torso_pos_r);
 	}
 
-	RunnerAccRangeCon::RunnerAccRangeCon(Solver* solver, string _name, BipedRunKey* _obj, vec3_t _dir, real_t _scale) :
+	/*RunnerAccRangeCon::RunnerAccRangeCon(Solver* solver, string _name, BipedRunKey* _obj, vec3_t _dir, real_t _scale) :
 		RunnerRangeCon(solver, ConTag::Any, _name, _obj, _dir, _scale) {
 
 		AddR3Link(obj->var_com_pos);
 		AddR3Link(obj->var_cop_pos);
 		AddR3Link(obj->var_cmp_pos);
 		AddSLink(obj->var_torso_pos_r);
-	}
+	}*/
 
 	RunnerMomRangeCon::RunnerMomRangeCon(Solver* solver, string _name, BipedRunKey* _obj, vec3_t _dir, real_t _scale) :
 		RunnerRangeCon(solver, ConTag::Any, _name, _obj, _dir, _scale) {
@@ -1909,45 +1909,45 @@ namespace DiMP {
 	}
 
 	// TODO : support of changing time constant
-	void RunnerAccRangeCon::CalcCoef() {
-		BipedRunning::Param& param = ((BipedRunning*)obj->node)->param;
-		std::vector<int>& phase = ((BipedRunning*)obj->node)->phase;
-		std::vector<int>& gaittype = ((BipedRunning*)obj->node)->gaittype;
-		int ph = phase[obj->tick->idx];
-		int gtype = gaittype[obj->tick->idx];
-		int gtype1 = gtype;
-		if (obj->next) gaittype[obj->next->tick->idx];
-		int gtypem1 = gtype;
-		if (obj->prev) gtypem1 = gaittype[obj->prev->tick->idx];
-		bool transition = (gtype != gtype1 || gtype != gtypem1);
+	//void RunnerAccRangeCon::CalcCoef() {
+	//	BipedRunning::Param& param = ((BipedRunning*)obj->node)->param;
+	//	std::vector<int>& phase = ((BipedRunning*)obj->node)->phase;
+	//	std::vector<int>& gaittype = ((BipedRunning*)obj->node)->gaittype;
+	//	int ph = phase[obj->tick->idx];
+	//	int gtype = gaittype[obj->tick->idx];
+	//	int gtype1 = gtype;
+	//	if (obj->next) gaittype[obj->next->tick->idx];
+	//	int gtypem1 = gtype;
+	//	if (obj->prev) gtypem1 = gaittype[obj->prev->tick->idx];
+	//	bool transition = (gtype != gtype1 || gtype != gtypem1);
 
-		real_t T;
-		if (gtype == BipedRunning::GaitType::Walk && !transition)
-		{
-			T = param.T[3];
-		}
-		else if (!obj->prev || !obj->next->next || (transition && (ph == BipedRunning::Phase::RL || ph == BipedRunning::Phase::LR)))
-		{
-			T = param.T[0]; //0.3144 for h=0.9; // 0.3316 for h=1.0, tau0=0.30, tau1=0.10
-		}
-		else if (!obj->prev->prev || !obj->next->next->next || (transition && (ph == BipedRunning::Phase::R || BipedRunning::Phase::L)))
-		{
-			T = param.T[1];//0.2659 for h=0.9; // 0.2807 for h=1.0, tau0=0.30, tau1=0.10
-		}
-		else T = param.T[2];
-		vec3_t p = obj->var_com_pos->val;
-		vec3_t c = obj->var_cop_pos->val;
-		vec3_t cm = obj->var_cmp_pos->val;
-		r = (1.0 / (T * T)) * (p - (c + vec3_t(0.0, 0.0, param.comHeight) + cm));
-		theta = obj->var_torso_pos_r->val;
+	//	real_t T;
+	//	if (gtype == BipedRunning::GaitType::Walk && !transition)
+	//	{
+	//		T = param.T[3];
+	//	}
+	//	else if (!obj->prev || !obj->next->next || (transition && (ph == BipedRunning::Phase::RL || ph == BipedRunning::Phase::LR)))
+	//	{
+	//		T = param.T[0]; //0.3144 for h=0.9; // 0.3316 for h=1.0, tau0=0.30, tau1=0.10
+	//	}
+	//	else if (!obj->prev->prev || !obj->next->next->next || (transition && (ph == BipedRunning::Phase::R || BipedRunning::Phase::L)))
+	//	{
+	//		T = param.T[1];//0.2659 for h=0.9; // 0.2807 for h=1.0, tau0=0.30, tau1=0.10
+	//	}
+	//	else T = param.T[2];
+	//	vec3_t p = obj->var_com_pos->val;
+	//	vec3_t c = obj->var_cop_pos->val;
+	//	vec3_t cm = obj->var_cmp_pos->val;
+	//	r = (1.0 / (T * T)) * (p - (c + vec3_t(0.0, 0.0, param.comHeight) + cm));
+	//	theta = obj->var_torso_pos_r->val;
 
-		Prepare();
+	//	Prepare();
 
-		((R3Link*)links[0])->SetCoef(dir_abs);
-		((R3Link*)links[1])->SetCoef(-dir_abs);
-		((R3Link*)links[2])->SetCoef(-dir_abs);
-		((SLink*)links[3])->SetCoef((ez % dir_abs) * r);
-	}
+	//	((R3Link*)links[0])->SetCoef(dir_abs);
+	//	((R3Link*)links[1])->SetCoef(-dir_abs);
+	//	((R3Link*)links[2])->SetCoef(-dir_abs);
+	//	((SLink*)links[3])->SetCoef((ez % dir_abs) * r);
+	//}
 
 	void RunnerMomRangeCon::CalcCoef() {
 		r = obj->var_mom->val;

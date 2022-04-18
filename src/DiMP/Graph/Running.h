@@ -147,8 +147,8 @@ namespace DiMP {
 			vec3_t  copMax;
 			vec3_t  cmpMin;                  ///< admissible range of CoP relative to foot
 			vec3_t  cmpMax;
-			vec3_t  accMin;                  ///< admissible range of CoM acceleration
-			vec3_t  accMax;
+			//vec3_t  accMin;                  ///< admissible range of CoM acceleration
+			//vec3_t  accMax;
 			vec3_t  momMin;                  ///< admissible range of angular momentum
 			vec3_t  momMax;
 
@@ -386,12 +386,12 @@ namespace DiMP {
 	};
 
 	/// CoM acceleration range constraint
-	struct RunnerAccRangeCon : RunnerRangeCon {
+	/*struct RunnerAccRangeCon : RunnerRangeCon {
 
 		virtual void CalcCoef();
 
 		RunnerAccRangeCon(Solver* solver, string _name, BipedRunKey* _obj, vec3_t _dir, real_t _scale);
-	};
+	};*/
 
 	/// angular momentum range constraint
 	struct RunnerMomRangeCon : RunnerRangeCon {
