@@ -86,6 +86,13 @@ namespace DiMP {
 
 	class BipedRunning : public TrajectoryNode {
 	public:
+		/// gait type
+		struct GaitType {
+			enum {
+				Walk, //< walking gait
+				Run,  //< running gait
+			};
+		};
 		/// phase
 		struct Phase {
 			enum {
@@ -121,15 +128,14 @@ namespace DiMP {
 
 		struct Param {
 			vec3_t	gravity;				///< gravity (positive)
-			real_t  T[3];                   ///< time constant of LIP ([start1, start2, cyclic])
+			real_t  T[4];                   ///< time constant of LIP ([start1, start2, cyclic run, walk])
 			real_t  comHeight;
 			real_t  torsoMass;
 			real_t  footMass;
-			int     trajectoryMode;
+			//int     gaitType;
 			int     swingProfile;
 			int     swingInterpolation;
-			real_t  swingHeight[2];             ///< 0: maximum swing height
-												///< 1: lowest height before touch down. for wedge only
+			real_t  swingHeight;                ///< 0: maximum swing height
 			int     comHeightProfile;
 			real_t	durationMin[Phase::Num];	///< minimum duration of each phase
 			real_t	durationMax[Phase::Num];	///< maximum duration of each phase
@@ -141,8 +147,8 @@ namespace DiMP {
 			vec3_t  copMax;
 			vec3_t  cmpMin;                  ///< admissible range of CoP relative to foot
 			vec3_t  cmpMax;
-			vec3_t  accMin;                  ///< admissible range of CoM acceleration
-			vec3_t  accMax;
+			//vec3_t  accMin;                  ///< admissible range of CoM acceleration
+			//vec3_t  accMax;
 			vec3_t  momMin;                  ///< admissible range of angular momentum
 			vec3_t  momMax;
 
@@ -195,8 +201,8 @@ namespace DiMP {
 		};
 
 		Param	            param;
-		vector<int>	        phase;		   ///< walking phase at each step
-		vector<real_t>      elevation;     ///< ground z 
+		vector<int>	        phase;		   ///< phase at each step
+		vector<int>	        gaittype;	   ///< gaitmode at each step
 		vector<Waypoint>    waypoints;
 		Snapshot            snapshot;
 		vector<Snapshot>    trajectory;
@@ -214,6 +220,7 @@ namespace DiMP {
 		//vec3_t ComPos       (real_t t);
 		//vec3_t ComVel       (real_t t);
 		//vec3_t ComAcc       (real_t t);
+		bool   OnTransition(real_t t);
 		void   ComState(real_t t, vec3_t& pos, vec3_t& vel, vec3_t& acc);
 		real_t TorsoOri(real_t t);
 		real_t TorsoAngVel(real_t t);
@@ -244,7 +251,7 @@ namespace DiMP {
 
 		real_t T;
 		vec3_t g;
-		int    mode;
+		int    gtype;
 		int    ph;
 		vec3_t ez;
 		real_t tau;
@@ -379,12 +386,12 @@ namespace DiMP {
 	};
 
 	/// CoM acceleration range constraint
-	struct RunnerAccRangeCon : RunnerRangeCon {
+	/*struct RunnerAccRangeCon : RunnerRangeCon {
 
 		virtual void CalcCoef();
 
 		RunnerAccRangeCon(Solver* solver, string _name, BipedRunKey* _obj, vec3_t _dir, real_t _scale);
-	};
+	};*/
 
 	/// angular momentum range constraint
 	struct RunnerMomRangeCon : RunnerRangeCon {
