@@ -1638,12 +1638,12 @@ namespace DiMP {
 		AddSLink(obj->var_torso_pos_r);
 	}*/
 
-	RunnerMomRangeCon::RunnerMomRangeCon(Solver* solver, string _name, BipedRunKey* _obj, vec3_t _dir, real_t _scale) :
+	/*RunnerMomRangeCon::RunnerMomRangeCon(Solver* solver, string _name, BipedRunKey* _obj, vec3_t _dir, real_t _scale) :
 		RunnerRangeCon(solver, ConTag::Any, _name, _obj, _dir, _scale) {
 
 		AddR3Link(obj->var_mom);
 		AddSLink(obj->var_torso_pos_r);
-	}
+	}*/
 
 	RunnerFootHeightCon::RunnerFootHeightCon(Solver* solver, string _name, BipedRunKey* _obj, uint _side, real_t _scale) :
 		Constraint(solver, 1, ID(ConTag::Any, _obj->node, _obj->tick, _name), Constraint::Type::Equality, _scale) {

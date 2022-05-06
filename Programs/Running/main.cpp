@@ -178,8 +178,8 @@ public:
 		biped->waypoints[2].foot_pos_t[1] = vec3_t(dist_acc, spacing, 0.0);
 		biped->waypoints[2].foot_pos_r[1] = 0.0;
 		biped->waypoints[2].cop_pos = vec3_t(dist_acc, 0.0, 0.0);
-		biped->waypoints[2].fix_com_pos = true;
-		biped->waypoints[2].fix_cop_pos = true;
+		//biped->waypoints[2].fix_com_pos = true;
+		//biped->waypoints[2].fix_cop_pos = true;
 
 		biped->waypoints[3].k = 1 + 2 * (nstep_idle + nstep_acc + nstep_cruise);
 		biped->waypoints[3].com_pos = vec3_t(dist_acc + dist_cruise, 0.0, biped->param.comHeight);
