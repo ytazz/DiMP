@@ -590,9 +590,9 @@ namespace DiMP {
 		real_t T;
 		if (gtype == GaitType::Walk && !OnTransition(t))
 			T = param.T[3];
-		else if (!key0->prev || !key1->next || (OnTransition(t) && (ph == Phase::RL || ph == Phase::LR)))
+		else if (OnTransition(t) && (ph == Phase::RL || ph == Phase::LR))
 			T = param.T[0]; //0.3316;
-		else if (!key0->prev->prev || !key1->next->next || (OnTransition(t) && (ph == Phase::R || ph == Phase::L)))
+		else if (OnTransition(t) && (ph == Phase::R || ph == Phase::L))
 			T = param.T[1]; //0.2659 0.2807;
 		else
 			T = param.T[2];
@@ -1721,11 +1721,11 @@ namespace DiMP {
 		{
 			T = param.T[3];
 		}
-		else if (!obj[0]->prev || !obj[1]->next || (transition && (ph == BipedRunning::Phase::RL || ph == BipedRunning::Phase::LR)))
+		else if (transition && (ph == BipedRunning::Phase::RL || ph == BipedRunning::Phase::LR))
 		{
 			T = param.T[0]; //0.3144 for h=0.9; // 0.3316 for h=1.0, tau0=0.30, tau1=0.10
 		}
-		else if (!obj[0]->prev->prev || !obj[1]->next->next || (transition && (ph == BipedRunning::Phase::R || BipedRunning::Phase::L)))
+		else if (transition && (ph == BipedRunning::Phase::R || BipedRunning::Phase::L))
 		{
 			T = param.T[1];//0.2659 for h=0.9; // 0.2807 for h=1.0, tau0=0.30, tau1=0.10
 		}
