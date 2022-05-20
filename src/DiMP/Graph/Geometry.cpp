@@ -257,8 +257,11 @@ vec3_t Hull::CalcSupport(const vec3_t& dir){
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 Mesh::Mesh(Graph* g, const string& n):Geometry(g, n){
-	ntheta = 50;
-	nphi   = 50;
+	//ntheta = 50;
+	//nphi   = 50;
+	// temporarily set small values for speed
+	ntheta = 10;
+	nphi   = 10;
 }
 
 void Mesh::CreateSupportMap(){
