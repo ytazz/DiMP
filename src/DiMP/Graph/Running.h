@@ -20,7 +20,7 @@ namespace DiMP {
 	struct RunnerCopRangeCon;
 	struct RunnerCmpRangeCon;
 	struct RunnerAccRangeCon;
-	struct RunnerMomRangeCon;
+	//struct RunnerMomRangeCon;
 	struct RunnerFootHeightCon;
 	struct RunnerTimeCon;
 
@@ -64,7 +64,7 @@ namespace DiMP {
 		RunnerCopRangeCon* con_cop_range[3];   ///< range constraint on CoP relative to support foot, [x|y|z]
 		RunnerAccRangeCon* con_acc_range[3];   ///< range constraint on CoM acceleration, [x|y|z]
 		RunnerCmpRangeCon* con_cmp_range[3];   ///< range constraint on CMP, [x|y|z]
-		RunnerMomRangeCon* con_mom_range[3];   ///< range constraint on angular momentum, [x|y|z]
+		//RunnerMomRangeCon* con_mom_range[3];   ///< range constraint on angular momentum, [x|y|z]
 
 		RunnerTimeCon* con_time;			   ///< relates step duration and cumulative time
 		RangeConS* con_duration_range;   ///< range constraint on step period
@@ -96,11 +96,13 @@ namespace DiMP {
 		/// phase
 		struct Phase {
 			enum {
-				R,  //< right support
-				L,  //< left support
+				R,   //< right support
+				L,   //< left support
 				RL,  //< double support: transition from R to L
 				LR,  //< double support: trabsition from L to R
-				D,  //< double support for starting and stopping
+				RLF, //< flight (substitution of RL)
+				LRF, //< filght (substitution of LR)
+				D,   //< double support for starting and stopping
 				Num
 			};
 		};
@@ -394,12 +396,12 @@ namespace DiMP {
 	};*/
 
 	/// angular momentum range constraint
-	struct RunnerMomRangeCon : RunnerRangeCon {
+	/*struct RunnerMomRangeCon : RunnerRangeCon {
 
 		virtual void CalcCoef();
 
 		RunnerMomRangeCon(Solver* solver, string _name, BipedRunKey* _obj, vec3_t _dir, real_t _scale);
-	};
+	};*/
 
 	/// foot height constraint
 	struct RunnerFootHeightCon : Constraint {

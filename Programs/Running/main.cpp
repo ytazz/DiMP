@@ -76,6 +76,10 @@ public:
 		biped->param.durationMax[DiMP::BipedRunning::Phase::RL] = 0.15;
 		biped->param.durationMin[DiMP::BipedRunning::Phase::LR] = 0.15;
 		biped->param.durationMax[DiMP::BipedRunning::Phase::LR] = 0.15;
+		biped->param.durationMin[DiMP::BipedRunning::Phase::RLF] = 0.15;
+		biped->param.durationMax[DiMP::BipedRunning::Phase::RLF] = 0.15;
+		biped->param.durationMin[DiMP::BipedRunning::Phase::LRF] = 0.15;
+		biped->param.durationMax[DiMP::BipedRunning::Phase::LRF] = 0.15;
 		biped->param.durationMin[DiMP::BipedRunning::Phase::D] = 0.15;
 		biped->param.durationMax[DiMP::BipedRunning::Phase::D] = 0.15;
 		biped->param.footPosMin[0] = vec3_t(-0.45, -0.20, -1.5);
@@ -86,48 +90,43 @@ public:
 		biped->param.footOriMax[0] = Rad(0.0);
 		biped->param.footOriMin[1] = Rad(-0.0);
 		biped->param.footOriMax[1] = Rad(0.0);
-		biped->param.swingHeight = 0.10;
-		//biped->param.swingProfile = DiMP::BipedRunning::SwingProfile::Wedge;
-		biped->param.swingProfile       = DiMP::BipedRunning::SwingProfile::Cycloid;
+		biped->param.swingHeight = 0.05;
+		//biped->param.swingProfile       = DiMP::BipedRunning::SwingProfile::Cycloid;
+		biped->param.swingProfile       = DiMP::BipedRunning::SwingProfile::Experiment;
 		//biped->param.swingInterpolation = DiMP::BipedRunning::SwingInterpolation::Cubic;
 		biped->param.swingInterpolation = DiMP::BipedRunning::SwingInterpolation::Quintic;
 		biped->param.copMin = vec3_t(-0.100, -0.04, 0.00);
 		biped->param.copMax = vec3_t(0.150, 0.04, 0.00);
-		/*biped->param.accMin = vec3_t(-10.0, -10.0, -10.0);
-		biped->param.accMax = vec3_t(10.0, 10.0, 10.0);*/
-		//biped->param.momMin = vec3_t(-0.0, -0.0, -1.0);
-		//biped->param.momMax = vec3_t(0.0, 0.0, 1.0);
 		
-		/*
-		 D -> R -> RL -> L -> LR ... -> RL -> D
-		 */
 		for (uint i = 0; i < nphase; i++)
 			new DiMP::Tick(graph, 0.0, "");
 
-		biped->phase.resize(nphase);
 		biped->gaittype.resize(nphase);
-
-		biped->phase[0] = DiMP::BipedRunning::Phase::D;
-		for (uint i = 1; i < nphase - 3; i++) {
-
-
-			switch ((i - 1) % 4) {
-			case 0: { biped->phase[i] = DiMP::BipedRunning::Phase::R;  break; }
-			case 1: { biped->phase[i] = DiMP::BipedRunning::Phase::RL; break; }
-			case 2: { biped->phase[i] = DiMP::BipedRunning::Phase::L;  break; }
-			case 3: { biped->phase[i] = DiMP::BipedRunning::Phase::LR; break; }
-			}
-		}
-		biped->phase[nphase - 3] = DiMP::BipedRunning::Phase::R;
-		biped->phase[nphase - 2] = DiMP::BipedRunning::Phase::D;
-		biped->phase[nphase - 1] = DiMP::BipedRunning::Phase::D;
-
+		// set gait type on each phase
 		for (uint i = 0; i < nphase; i++)
 		{
 			if      (i <= 10) biped->gaittype[i] = DiMP::BipedRunning::GaitType::Walk;
 			else if (i <= 21) biped->gaittype[i] = DiMP::BipedRunning::GaitType::Run;
 			else              biped->gaittype[i] = DiMP::BipedRunning::GaitType::Walk;
 		}
+
+		/*
+		 D -> R -> RL -> L -> LR ... -> RL -> D
+		 */
+		biped->phase.resize(nphase);
+		biped->phase[0] = DiMP::BipedRunning::Phase::D;
+		for (uint i = 1; i < nphase - 3; i++) {
+			switch ((i - 1) % 4) {
+			case 0: { biped->phase[i] = DiMP::BipedRunning::Phase::R;  break; }
+			case 1: { biped->phase[i] = (biped->gaittype[i] == DiMP::BipedRunning::GaitType::Walk ? DiMP::BipedRunning::Phase::RL : DiMP::BipedRunning::Phase::RLF); break; }
+			case 2: { biped->phase[i] = DiMP::BipedRunning::Phase::L;  break; }
+			case 3: { biped->phase[i] = (biped->gaittype[i] == DiMP::BipedRunning::GaitType::Walk ? DiMP::BipedRunning::Phase::LR : DiMP::BipedRunning::Phase::LRF); break; }
+			}
+		}
+		biped->phase[nphase - 3] = DiMP::BipedRunning::Phase::R;
+		biped->phase[nphase - 2] = DiMP::BipedRunning::Phase::D;
+		biped->phase[nphase - 1] = DiMP::BipedRunning::Phase::D;
+
 
 		real_t spacing = 0.18 / 2;
 		//vec2_t goalPos(3.0, 0.0);
