@@ -1072,14 +1072,7 @@ namespace DiMP {
 
 				Interpolate(t, pos.x, vel.x, acc.x, t0, p0.x, 0.0, 0.0, t0 + tau0 + tau1, p1.x, 0.0, 0.0, param.swingInterpolation);
 				Interpolate(t, pos.y, vel.y, acc.y, t0, p0.y, 0.0, 0.0, t0 + tau0 + tau1, p1.y, 0.0, 0.0, param.swingInterpolation);
-				Interpolate(t, pos.z, vel.z, acc.z, t0, p0.z, 0.0, 0.0, t0 + tau0 + tau1, p1.z, 0.0, 0.0, param.swingInterpolation);
-
-				// pos.z = 1.2922619 * ds - 4.81607143 * ds * ds + 6.202 * ds * ds * ds - 2.67857 * ds * ds * ds * ds;
-				real_t dpos_z, dvel_z, dacc_z;
-				Interpolate2(t, dpos_z, dvel_z, dacc_z, t0, t0 + tau0 + tau1, h0, param.swingInterpolation);
-				pos.z += dpos_z;
-				vel.z += dvel_z;
-				acc.z += dacc_z;
+				Interpolate2(t, pos.z, vel.z, acc.z, t0, t0 + tau0 + tau1, h0, param.swingInterpolation);
 
 				contact = ContactState::Float;
 			}
@@ -1104,26 +1097,20 @@ namespace DiMP {
 
 				Interpolate(t, pos.x, vel.x, acc.x, t0, p0.x, 0.0, 0.0, t0 + tau0 + tau1, p1.x, 0.0, 0.0, param.swingInterpolation);
 				Interpolate(t, pos.y, vel.y, acc.y, t0, p0.y, 0.0, 0.0, t0 + tau0 + tau1, p1.y, 0.0, 0.0, param.swingInterpolation);
-				Interpolate(t, pos.z, vel.z, acc.z, t0, p0.z, v0.z, 0.0, t0 + tau0 + tau1, p1.z, 0.0, 0.0, param.swingInterpolation);
-
-				//pos.z = 1.2922619 * ds - 4.81607143 * ds * ds + 6.202 * ds * ds * ds - 2.67857 * ds * ds * ds * ds;
-				real_t dpos_z, dvel_z, dacc_z;
-				Interpolate2(t, dpos_z, dvel_z, dacc_z, t0, t0 + tau0 + tau1, h0, param.swingInterpolation);
-				pos.z += dpos_z;
-				vel.z += dvel_z;
-				acc.z += dacc_z;
-
+				Interpolate2(t, pos.z, vel.z, acc.z, t0, t0 + tau0 + tau1, h0, param.swingInterpolation);
 				contact = ContactState::Float;
 			}
 			//swing foot
 			else if ((ph == Phase::RLF) || (ph == Phase::LRF) || (ph == Phase::L && side == 0) || (ph == Phase::R && side == 1)) {
 				if ((ph == Phase::RLF && side == 0) ||
 					(ph == Phase::LRF && side == 1)) {
+					Interpolate(t, pos.z, vel.z, acc.z, t0, p0.z, 0.0, 0.0, t0 + tau0, h0, 0.0, -9.8, param.swingInterpolation);
 					if (key3) p1 = key3->var_foot_pos_t[side]->val;
 				}
 				if ((ph == Phase::L && side == 0) ||
 					(ph == Phase::R && side == 1)) {
 					if (keym1) {
+						Interpolate(t, pos.z, vel.z, acc.z, t0, h0, 0.0, -9.8, t0 + tau0, 0.7*h0, 0.0, 0.0, param.swingInterpolation);
 						p0 = keym1->var_foot_pos_t[side]->val;
 						dt = std::max(t - keym1->var_time->val, 0.0);
 						t0 = keym1->var_time->val;
@@ -1134,22 +1121,24 @@ namespace DiMP {
 				if ((ph == Phase::RLF && side == 1) ||
 					(ph == Phase::LRF && side == 0)) {
 					if (keym2) {
+						Interpolate(t, pos.z, vel.z, acc.z, t0, 0.7*h0, 0.0, 0.0, t0 + tau0, p1.z, 0.0, 0.0, param.swingInterpolation);
 						p0 = keym2->var_foot_pos_t[side]->val;
 						dt = std::max(t - keym2->var_time->val, 0.0);
 						t0 = keym2->var_time->val;
+						v0 = keym2->var_com_vel->val;
 					}
 				}
 				real_t tau1 = key1->var_duration->val;
 				real_t ptime = (ph == Phase::R || ph == Phase::L ? (tau0 + tau1 * 2) : (tau0 * 2 + tau1));
-				Interpolate(t, pos.x, vel.x, acc.x, t0, p0.x, 0.0, 0.0, t0 + ptime, p1.x, 0.0, -0.2, param.swingInterpolation);
+				Interpolate(t, pos.x, vel.x, acc.x, t0, p0.x, 0.0, 0.0, t0 + ptime, p1.x, 0.0, 0.0, param.swingInterpolation);
 				Interpolate(t, pos.y, vel.y, acc.y, t0, p0.y, 0.0, 0.0, t0 + ptime, p1.y, 0.0, 0.0, param.swingInterpolation);
-				Interpolate(t, pos.z, vel.z, acc.z, t0, p0.z, v0.z, 0.0, t0 + ptime, p1.z, 0.0, 0.0, param.swingInterpolation);
+				//Interpolate(t, pos.z, vel.z, acc.z, t0, p0.z, v0.z, 0.0, t0 + ptime, p1.z, 0.0, 0.0, param.swingInterpolation);
 
 				real_t dpos_z, dvel_z, dacc_z;
-				Interpolate2(t, dpos_z, dvel_z, dacc_z, t0, t0 + ptime, h0, param.swingInterpolation);
-				pos.z += dpos_z;
+				//Interpolate2(t, dpos_z, dvel_z, dacc_z, t0, t0 + ptime, h0, param.swingInterpolation);
+				/*pos.z += dpos_z;
 				vel.z += dvel_z;
-				acc.z += dacc_z;
+				acc.z += dacc_z;*/
 
 				contact = ContactState::Float;
 			}
