@@ -90,7 +90,7 @@ public:
 		biped->param.footOriMax[0] = Rad(0.0);
 		biped->param.footOriMin[1] = Rad(-0.0);
 		biped->param.footOriMax[1] = Rad(0.0);
-		biped->param.swingHeight = 0.05;
+		biped->param.swingHeight = 0.15;
 		//biped->param.swingProfile       = DiMP::BipedRunning::SwingProfile::Cycloid;
 		biped->param.swingProfile       = DiMP::BipedRunning::SwingProfile::Experiment;
 		//biped->param.swingInterpolation = DiMP::BipedRunning::SwingInterpolation::Cubic;
