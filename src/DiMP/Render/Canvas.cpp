@@ -366,6 +366,7 @@ void CanvasSVG::Line(const Vec3f& p0, const Vec3f& p1){
 }
 void CanvasSVG::BeginPath(){
 	svg.SetStrokeWidth(lineWidth);
+	svg.SetStrokeColor(lineColor[0].name);
 	svg.BeginPath();
 }
 void CanvasSVG::EndPath(){

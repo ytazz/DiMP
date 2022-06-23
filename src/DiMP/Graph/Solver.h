@@ -153,6 +153,7 @@ class DDPCallback{
 public:
     virtual DDPState* CreateInitialState() = 0;
 	virtual void      CreateNextStates  (DDPState* _state, vector<DDPState*>& _next) = 0;
+    virtual void      OnThreadUpdate    (DDPThread* _thread) = 0;
 };
 
 class CustomSolver : public Solver{
@@ -166,6 +167,7 @@ public:
     vector< UTRef<DDPStage > > stages;
     UTRef<DDPThread>           thread;
     vector< UTRef<DDPStep> >   samples;
+    int                        numSample;
 
     DDPCallback*               callback;
 

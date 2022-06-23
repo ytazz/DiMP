@@ -412,7 +412,7 @@ void CustomSolver::CalcDirection(){
         timer2.CountUS();
 		CalcDirectionSearchDDP();
         int timeDir = timer2.CountUS();
-        DSTR << "time dir: " << timeDir << endl;
+        //DSTR << "time dir: " << timeDir << endl;
     }
     else{
         Solver::CalcDirection();
@@ -443,11 +443,17 @@ void CustomSolver::Shuffle(){
 
     //static std::default_random_engine urng(0);
     //shuffle(idx.begin(), idx.end(), urng);
+    //DSTR << "num adj: " << idx.size() << endl;
+    //for(int i = 0; i <idx.size(); i++){
+    //    DSTR << idx[i].first << endl;
+    //    idx[i].second->Print();
+    //}
+
+    numSample = std::min(idx.size(), samples.size());
     
-    for(int i = 0; i < samples.size(); i++){
-        int j = i%idx.size();
-        samples[i]->k     = idx[j].first;
-        samples[i]->state = idx[j].second;
+    for(int i = 0; i < numSample; i++){
+        samples[i]->k     = idx[i].first;
+        samples[i]->state = idx[i].second;
         samples[i]->next  = thread->steps[samples[i]->k+1];
     }
 }    
@@ -471,7 +477,7 @@ void CustomSolver::CompDP(){
     }
 
     DDPState* st = stages[0]->states[0];
-    DSTR << "Jopt: " << st->Jopt << endl;
+    //DSTR << "Jopt: " << st->Jopt << endl;
     while(st){
         thread->steps[st->stage->k]->state = st;
         st = st->nextOpt;
@@ -500,28 +506,29 @@ void CustomSolver::CalcDirectionSearchDDP(){
     }
     int timePrepare2 = timer.CountUS();
 
-    const int numSample = 100;
+    const int numSampleMax = 100;
 
     // for the first time, compute initial guess of mode sequence
     if(samples.empty()){
         thread = new DDPThread(this);
         thread->Init();
 
-        samples.resize(numSample);
-        for(int i = 0; i < numSample; i++){
+        samples.resize(numSampleMax);
+        for(int i = 0; i < numSampleMax; i++){
             samples[i] = new DDPStep(thread);
             samples[i]->k = 0;
             samples[i]->Init();
         }
 
         CompDP();
-        for(int k = 0; k <= N; k++)
-            thread->steps[k]->state->Print();
-        DSTR << endl;
+        //for(int k = 0; k <= N; k++)
+        //    thread->steps[k]->state->Print();
+        //DSTR << endl;
     }
     
     timer.CountUS();
     real_t Jopt_prev = inf;
+    int subiterCount = 0;
     while(true){
         // create shuffled sequences
         Shuffle();
@@ -535,7 +542,7 @@ void CustomSolver::CalcDirectionSearchDDP(){
         for(int i = 0; i < numSample; i++){
             // perform DDP with previous mode sequence
             samples[i]->CalcCost();
-            DSTR << "sample " << i << ": " << samples[i]->cost << endl;
+            //DSTR << "sample " << i << ": " << samples[i]->cost << endl;
         }
 
         int    iopt = -1;
@@ -550,6 +557,8 @@ void CustomSolver::CalcDirectionSearchDDP(){
         for(int k = 0; k <= N; k++)
             thread->steps[k]->state->Print();
         DSTR << Jopt << endl;
+
+        callback->OnThreadUpdate(thread);
         
         if(Jopt_prev <= Jopt)
             break;
@@ -558,6 +567,10 @@ void CustomSolver::CalcDirectionSearchDDP(){
         Jopt_prev = Jopt;
     }
     int timeIter = timer.CountUS();
+
+    //for(int k = 0; k <= N; k++)
+    //    thread->steps[k]->state->Print();
+    //DSTR << Jopt << endl;
 
     DSTR << "prepare1: " << timePrepare1 << endl;
     DSTR << "prepare2: " << timePrepare2 << endl;

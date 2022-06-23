@@ -9,8 +9,23 @@ const real_t inf = std::numeric_limits<real_t>::max();
 
 class MyCentroidCallback : public DiMP::CentroidCallback{
 public:
-    virtual void EnableContact(DiMP::CentroidEndContactCon* con){
-        /*if( ((con->iend == 0 || con->iend == 1) && (con->iface == 0 || con->iface == 1))
+    virtual bool IsValidState(DiMP::CentroidDDPState* st){
+        bool valid[4][4] = {
+            {true, true, false, false},
+            {true, true, false, false},
+            {false, false, true, false},
+            {false, false, false, true}
+        };
+        for(int i = 0; i < 4; i++){
+            if(st->contact[i] != -1 && !valid[i][st->contact[i]])
+                return false;
+        }
+        if(st->contact[0] == -1 && st->contact[1] == -1 && !(st->contact[2] == 2 && st->contact[3] == 3))
+            return false;
+
+        return true;
+        /*
+        if( ((con->iend == 0 || con->iend == 1) && (con->iface == 0 || con->iface == 1))
             ||
             ((con->iend == 2) && (con->iface == 2)) ||
             ((con->iend == 3) && (con->iface == 3))
@@ -22,10 +37,15 @@ public:
             con->enabled = false;
         }
         */
-        //if(con->iend == 2 || con->iend == 3)
-        //     con->enabled = false;
-        //else
-            con->enabled = true;
+    }
+
+    virtual bool IsValidTransition(DiMP::CentroidDDPState* st0, DiMP::CentroidDDPState* st1){
+        int ndiff = 0;
+        for(int i = 0; i < 4; i++){
+            if(st0->contact[i] != st1->contact[i])
+                ndiff++;
+        }
+        return ndiff <= 1;
     }
 };
 
@@ -47,13 +67,16 @@ public:
         enum{
             Flat,
             Gap,
-            Steps
+            GapWithRail,
+            GapWithWall,
+            Stairs
         };
     };
 
 	DiMP::Centroid*	   centroid;
     MyCentroidCallback callback;
     FILE*              fileDuration;
+    FILE*              fileCost;
     
 public:
 	MyApp() {
@@ -73,20 +96,23 @@ public:
         const real_t h = 0.7;
 		vec3_t startPos(0.0, 0.0, h);
 		quat_t startOri = quat_t();
-		vec3_t goalPos (4.0, 0.0, h + 0.0);
+		vec3_t goalPos (2.0, 0.0, h + 0.0);
 		quat_t goalOri  = quat_t::Rot(Rad(0.0), 'z');
         const real_t duration = 0.3;
 		const real_t legSpacing  = 0.2;
         const real_t armSpacing  = 0.25;
         const int nend = 4;
-        const int N    = 12;
+        const int N    = 18;
         const real_t goalTime = duration * N;
-        const int  sceneSelect = Scene::Steps;
+        const int  sceneSelect = Scene::GapWithRail;
 
         vec3_t endBasePos  [nend];
         vec3_t endPosOrigin[nend];
         vec3_t endPosMin   [nend];
         vec3_t endPosMax   [nend];
+        vec3_t endVelMin   [nend];
+        vec3_t endVelMax   [nend];
+        real_t endStiffMax [nend];
         int    endIni      [nend];
         int    endTerm     [nend];
         //int    endSwitch   [nend];
@@ -96,34 +122,49 @@ public:
         endBasePos  [3] = vec3_t( 0.0,  armSpacing/2.0,  0.5);
         endPosOrigin[0] = vec3_t( 0.0,  0.0, -0.7);
         endPosOrigin[1] = vec3_t( 0.0,  0.0, -0.7);
-        endPosOrigin[2] = vec3_t( 0.0, -0.1, -0.7);
-        endPosOrigin[3] = vec3_t( 0.0,  0.1, -0.7);
-        endPosMin   [0] = vec3_t(-0.3, -0.1, -0.8);
-        endPosMin   [1] = vec3_t(-0.3, -0.1, -0.8);
-        endPosMin   [2] = vec3_t(-0.4, -0.5, -0.7);
-        endPosMin   [3] = vec3_t(-0.4,  0.0, -0.7);
-        endPosMax   [0] = vec3_t( 0.3,  0.1, -0.2);
-        endPosMax   [1] = vec3_t( 0.3,  0.1, -0.2);
-        endPosMax   [2] = vec3_t( 0.4,  0.0,  0.0);
-        endPosMax   [3] = vec3_t( 0.4,  0.5,  0.0);
-		
+        endPosOrigin[2] = vec3_t( 0.0, -0.1, -0.5);
+        endPosOrigin[3] = vec3_t( 0.0,  0.1, -0.5);
+        endPosMin   [0] = vec3_t(-0.2, -0.05, -0.75);
+        endPosMin   [1] = vec3_t(-0.2, -0.05, -0.75);
+        endPosMin   [2] = vec3_t(-0.2, -0.3, -0.6);
+        endPosMin   [3] = vec3_t(-0.2,  0.0, -0.6);
+        endPosMax   [0] = vec3_t( 0.2,  0.05, -0.55);
+        endPosMax   [1] = vec3_t( 0.2,  0.05, -0.55);
+        endPosMax   [2] = vec3_t( 0.2,  0.0,  0.5);
+        endPosMax   [3] = vec3_t( 0.2,  0.3,  0.5);
+        endVelMin   [0] = vec3_t(-1.0, -1.0, -1.0);
+        endVelMin   [1] = vec3_t(-1.0, -1.0, -1.0);
+        endVelMin   [2] = vec3_t(-1.0, -1.0, -1.0);
+        endVelMin   [3] = vec3_t(-1.0, -1.0, -1.0);
+        endVelMax   [0] = vec3_t( 1.0 , 1.0,  1.0);
+        endVelMax   [1] = vec3_t( 1.0 , 1.0,  1.0);
+        endVelMax   [2] = vec3_t( 1.0 , 1.0,  1.0);
+        endVelMax   [3] = vec3_t( 1.0 , 1.0,  1.0);
+		endStiffMax [0] = 50.0;
+        endStiffMax [1] = 50.0;
+        endStiffMax [2] = 50.0;
+        endStiffMax [3] = 50.0;
         centroid = new DiMP::Centroid(graph, "centroid");
         centroid->callback = &callback;
 
 		centroid->param.g = 9.8;
 		centroid->param.m = 44.0;
 		centroid->param.I = centroid->param.m * h*h;
+        centroid->param.swingHeight = 0.1;
 
-        centroid->param.complWeightMin   = 0.1;
+        centroid->param.complWeightMin   = 0.01;
         centroid->param.complWeightMax   = 100.0;
         centroid->param.complWeightRate  = 2.0;
+
+        centroid->param.durationMin = 0.4;
+        centroid->param.durationMax = 0.5;
         
         // create geometry
         centroid->point = new DiMP::Point(graph);
         centroid->hull  = new DiMP::Hull (graph);
 
-        centroid->param.bodyRangeMin = vec3_t(-0.1, -0.1,  0.0);
-        centroid->param.bodyRangeMax = vec3_t( 0.1,  0.1,  0.5);
+        centroid->param.bodyRangeMin = vec3_t(-0.05, -0.05,  0.0);
+        centroid->param.bodyRangeMax = vec3_t( 0.05,  0.05,  0.5);
 		
 		DiMP::Centroid::Face face;
         // flat ground
@@ -145,6 +186,7 @@ public:
             endTerm[1] = 0;
             endTerm[2] = -1;
             endTerm[3] = -1;
+            endTerm[3] = -1;
         }
         // gap
         if(sceneSelect == Scene::Gap){
@@ -158,8 +200,37 @@ public:
             centroid->faces.push_back(face);
         
             face.hull = new DiMP::Hull(graph);
-            face.hull->vertices.push_back(vec3_t( 2.3, -5.0,  0.0));
-            face.hull->vertices.push_back(vec3_t( 2.3,  5.0,  0.0));
+            face.hull->vertices.push_back(vec3_t( 1.3, -5.0,  0.0));
+            face.hull->vertices.push_back(vec3_t( 1.3,  5.0,  0.0));
+            face.hull->vertices.push_back(vec3_t( 5.0,  5.0,  0.0));
+            face.hull->vertices.push_back(vec3_t( 5.0, -5.0,  0.0));
+            face.normal = vec3_t(0.0, 0.0, 1.0);
+            face.numSwitchMax = 4;
+            centroid->faces.push_back(face);
+        
+            endIni [0] = 0;
+            endIni [1] = 0;
+            endIni [2] = -1;
+            endIni [3] = -1;
+            endTerm[0] = 1;
+            endTerm[1] = 1;
+            endTerm[2] = -1;
+            endTerm[3] = -1;
+        }
+        // gap with rail
+        if(sceneSelect == Scene::GapWithRail){
+            face.hull = new DiMP::Hull(graph);
+            face.hull->vertices.push_back(vec3_t(-1.0, -5.0,  0.0));
+            face.hull->vertices.push_back(vec3_t(-1.0,  5.0,  0.0));
+            face.hull->vertices.push_back(vec3_t( 0.5,  5.0,  0.0));
+            face.hull->vertices.push_back(vec3_t( 0.5, -5.0,  0.0));
+            face.normal = vec3_t(0.0, 0.0, 1.0);
+            face.numSwitchMax = 4;
+            centroid->faces.push_back(face);
+        
+            face.hull = new DiMP::Hull(graph);
+            face.hull->vertices.push_back(vec3_t( 1.3, -5.0,  0.0));
+            face.hull->vertices.push_back(vec3_t( 1.3,  5.0,  0.0));
             face.hull->vertices.push_back(vec3_t( 5.0,  5.0,  0.0));
             face.hull->vertices.push_back(vec3_t( 5.0, -5.0,  0.0));
             face.normal = vec3_t(0.0, 0.0, 1.0);
@@ -167,19 +238,19 @@ public:
             centroid->faces.push_back(face);
         
             face.hull = new DiMP::Hull(graph);
-            face.hull->vertices.push_back(vec3_t( 0.2, -0.5,  0.6));
-            face.hull->vertices.push_back(vec3_t( 0.2, -0.15, 0.6));
-            face.hull->vertices.push_back(vec3_t( 2.3, -0.15, 0.6));
-            face.hull->vertices.push_back(vec3_t( 2.3, -0.5,  0.6));
+            face.hull->vertices.push_back(vec3_t( 0.85, -0.5,  0.5));
+            face.hull->vertices.push_back(vec3_t( 0.85, -0.25, 0.5));
+            face.hull->vertices.push_back(vec3_t( 0.95, -0.25, 0.5));
+            face.hull->vertices.push_back(vec3_t( 0.95, -0.5,  0.5));
             face.normal = vec3_t(0.0, 0.0, 1.0);
             face.numSwitchMax = 2;
             centroid->faces.push_back(face);
 
             face.hull = new DiMP::Hull(graph);
-            face.hull->vertices.push_back(vec3_t( 0.2,  0.15,  0.6));
-            face.hull->vertices.push_back(vec3_t( 0.2,  0.5,  0.6));
-            face.hull->vertices.push_back(vec3_t( 2.3,  0.5,  0.6));
-            face.hull->vertices.push_back(vec3_t( 2.3,  0.15,  0.6));
+            face.hull->vertices.push_back(vec3_t( 0.85,  0.25,  0.5));
+            face.hull->vertices.push_back(vec3_t( 0.85,  0.5,   0.5));
+            face.hull->vertices.push_back(vec3_t( 0.95,  0.5,   0.5));
+            face.hull->vertices.push_back(vec3_t( 0.95,  0.25,  0.5));
             face.normal = vec3_t(0.0, 0.0, 1.0);
             face.numSwitchMax = 2;
             centroid->faces.push_back(face);
@@ -193,8 +264,55 @@ public:
             endTerm[2] = -1;
             endTerm[3] = -1;
         }
+        // gap with wall
+        if(sceneSelect == Scene::GapWithWall){
+            face.hull = new DiMP::Hull(graph);
+            face.hull->vertices.push_back(vec3_t(-1.0, -5.0,  0.0));
+            face.hull->vertices.push_back(vec3_t(-1.0,  5.0,  0.0));
+            face.hull->vertices.push_back(vec3_t( 0.5,  5.0,  0.0));
+            face.hull->vertices.push_back(vec3_t( 0.5, -5.0,  0.0));
+            face.normal = vec3_t(0.0, 0.0, 1.0);
+            face.numSwitchMax = 4;
+            centroid->faces.push_back(face);
+        
+            face.hull = new DiMP::Hull(graph);
+            face.hull->vertices.push_back(vec3_t( 1.5, -5.0,  0.0));
+            face.hull->vertices.push_back(vec3_t( 1.5,  5.0,  0.0));
+            face.hull->vertices.push_back(vec3_t( 5.0,  5.0,  0.0));
+            face.hull->vertices.push_back(vec3_t( 5.0, -5.0,  0.0));
+            face.normal = vec3_t(0.0, 0.0, 1.0);
+            face.numSwitchMax = 4;
+            centroid->faces.push_back(face);
+        
+            face.hull = new DiMP::Hull(graph);
+            face.hull->vertices.push_back(vec3_t( 0.5, -0.35, 0.0));
+            face.hull->vertices.push_back(vec3_t( 0.5, -0.35, 2.0));
+            face.hull->vertices.push_back(vec3_t( 1.5, -0.35, 2.0));
+            face.hull->vertices.push_back(vec3_t( 1.5, -0.35, 0.0));
+            face.normal = vec3_t(0.0, 1.0, 0.0);
+            face.numSwitchMax = 2;
+            centroid->faces.push_back(face);
+
+            face.hull = new DiMP::Hull(graph);
+            face.hull->vertices.push_back(vec3_t( 0.5,  0.35, 0.0));
+            face.hull->vertices.push_back(vec3_t( 0.5,  0.35, 2.0));
+            face.hull->vertices.push_back(vec3_t( 1.5,  0.35, 2.0));
+            face.hull->vertices.push_back(vec3_t( 1.5,  0.35, 0.0));
+            face.normal = vec3_t(0.0, -1.0, 0.0);
+            face.numSwitchMax = 2;
+            centroid->faces.push_back(face);
+
+            endIni [0] = 0;
+            endIni [1] = 0;
+            endIni [2] = -1;
+            endIni [3] = -1;
+            endTerm[0] = 1;
+            endTerm[1] = 1;
+            endTerm[2] = -1;
+            endTerm[3] = -1;
+        }
         // step
-        if(sceneSelect == Scene::Steps){
+        if(sceneSelect == Scene::Stairs){
             face.hull = new DiMP::Hull(graph);
             face.hull->vertices.push_back(vec3_t(-1.0,  -0.5,  0.0));
             face.hull->vertices.push_back(vec3_t(-1.0,   0.5,  0.0));
@@ -257,19 +375,23 @@ public:
             centroid->ends[iend].point = new DiMP::Point(graph);
 			
             centroid->ends[iend].basePos     = endBasePos[iend];
-			centroid->ends[iend].posRangeMin = endPosMin [iend];
-			centroid->ends[iend].posRangeMax = endPosMax [iend];
 			
-            centroid->ends[iend].velRangeMin    = vec3_t(-1.5, -1.0, -1.0);
-			centroid->ends[iend].velRangeMax    = vec3_t( 1.5,  1.0,  1.0);
-
+            //centroid->ends[iend].jointPosRange.resize(3);
+			//centroid->ends[iend].jointVelRange.resize(3);
+            for(int j = 0; j < 3; j++){
+                centroid->ends[iend].jointPosMin[j] = endPosMin[iend][j];
+                centroid->ends[iend].jointPosMax[j] = endPosMax[iend][j];
+                centroid->ends[iend].jointVelMin[j] = endVelMin[iend][j];
+			    centroid->ends[iend].jointVelMax[j] = endVelMax[iend][j];
+            }
+			
 			centroid->ends[iend].momentRangeMin = vec3_t(-0.0, -0.0, -1.0);
 			centroid->ends[iend].momentRangeMax = vec3_t( 0.0,  0.0,  1.0);
 
-            centroid->ends[iend].copRangeMin = vec2_t(-0.1, -0.05);
-			centroid->ends[iend].copRangeMax = vec2_t( 0.1,  0.05);
+            centroid->ends[iend].copRangeMin = vec2_t(-0.01, -0.01);
+			centroid->ends[iend].copRangeMax = vec2_t( 0.01,  0.01);
 
-            centroid->ends[iend].stiffnessMax = 100.0;
+            centroid->ends[iend].stiffnessMax = endStiffMax[iend];
 
             centroid->ends[iend].contactInitial  = endIni [iend];
             centroid->ends[iend].contactTerminal = endTerm[iend];
@@ -308,8 +430,8 @@ public:
 		graph->solver->SetCorrection(ID(), 0.5);
 		graph->solver->param.numIter[0]     = 20;
         graph->solver->param.regularization = 1.0e-1;
-		graph->solver->param.cutoffStepSize = 0.5;
-		graph->solver->param.minStepSize    = 0.5;
+		graph->solver->param.cutoffStepSize = 0.1;
+		graph->solver->param.minStepSize    = 0.1;
 		graph->solver->param.maxStepSize    = 0.5;
         //graph->solver->param.methodMajor    = Solver::Method::Major::DDP;
         graph->solver->param.methodMajor    = DiMP::CustomSolver::CustomMethod::SearchDDP;
@@ -317,12 +439,15 @@ public:
 		graph->solver->param.verbose        = false;
     
         fileDuration = fopen("duration.csv", "w");
+        fileCost     = fopen("cost.csv", "w");
 	}
 
     virtual void OnStep(){
        App::OnStep();
 
-       graph->solver->param.complRelaxation = std::max(0.00001, 1.0*graph->solver->param.complRelaxation);
+       fprintf(fileCost, "%f, %f\n", graph->solver->status.obj, centroid->complWeight);
+       fflush(fileCost);
+       //graph->solver->param.complRelaxation = std::max(0.1, 0.99*graph->solver->param.complRelaxation);
     }
 
 	virtual void OnAction(int menu, int id) {

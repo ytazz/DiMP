@@ -30,6 +30,7 @@ struct Item{
 		BipedTorso,         ///< biped torso trajectory
 		CentroidPos,
 		CentroidEnd,
+		CentroidEndTraj,
 		CentroidFace,
 		CentroidForce,
         CentroidTorso,

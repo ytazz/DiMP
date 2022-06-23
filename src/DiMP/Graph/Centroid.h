@@ -11,15 +11,23 @@ struct CentroidPosConT;
 struct CentroidPosConR;
 struct CentroidVelConT;
 struct CentroidVelConR;
+struct CentroidAccConT;
 struct CentroidTimeCon;
+struct CentroidJointPosCon;
 struct CentroidEndPosCon;
-struct CentroidEndPosRangeCon;
-struct CentroidEndVelRangeCon;
+struct CentroidJointPosRangeCon;
+//struct CentroidJointVelRangeCon;
+//struct CentroidEndVelZeroCon;
+struct CentroidEndKinematicsCon;
 struct CentroidEndContactCon;
+
+class CentroidDDPState;
 
 class CentroidCallback{
 public:
-    virtual void EnableContact(CentroidEndContactCon* con) = 0;
+    //virtual void EnableContact (CentroidEndContactCon* con) = 0;
+	virtual bool IsValidState     (CentroidDDPState* st){ return true; }
+	virtual bool IsValidTransition(CentroidDDPState* st0, CentroidDDPState* st1){ return true; }
 };
 
 /**
@@ -41,12 +49,18 @@ public:
 	CentroidPosConR*    con_pos_r;
 	CentroidVelConT*    con_vel_t;
 	CentroidVelConR*    con_vel_r;
+	CentroidAccConT*    con_acc_t;
 	CentroidTimeCon*    con_time;
 	RangeConS*          con_duration_range;
     FixConV3*           con_des_pos_t;
     FixConQ*            con_des_pos_r;
-    FixConV3*           con_vel_zero;
-    
+    FixConV3*           con_des_vel_t;
+
+	//Solver::SubState*   subst_pos_t;
+	//Solver::SubState*   subst_pos_r;
+	//Solver::SubState*   subst_vel_t;
+	//Solver::SubState*   subst_vel_r;
+
 	real_t C;
 	real_t S;
 	real_t lbar;
@@ -56,7 +70,9 @@ public:
 	vec3_t p, p_rhs;
 	quat_t q, q_rhs;
 	vec3_t v, v_rhs;
+	vec3_t    a_rhs;
 	vec3_t w, w_rhs;
+	mat3_t R;
 	real_t k_p_p   ;
 	real_t k_p_v   ;
 	vec3_t k_p_tau ;
@@ -67,25 +83,41 @@ public:
 	vec3_t k_v_tau ;
 	real_t k_v_pbar;
 	vec3_t k_v_lbar;
+	//real_t k_a_p   ;
+	//real_t k_a_pbar;
+	//vec3_t k_a_lbar;
+	//vec3_t k_pbar_q;
 	
 	struct End{
 		CentroidKey*  key;
 		
 		int    iface;         //< -1: no contact, otherwise index to contact face
-		V3Var* var_pos;       //< end effector position
-		V3Var* var_vel;
+		V3Var* var_pos;       //< end effector position (in global coordinate)
+		V3Var* var_vel;       //< end effector velocity (in global coordinate)
+		SVar*  var_joint_pos[3]; //< end effector position (in local coordinate)
+		SVar*  var_joint_vel[3]; //< end effector velocity (in local coordinate)
+		//QVar*  var_ori;
+		//V3Var* var_angvel;
+		//V3Var* var_cop;
 		SVar*  var_stiff;     //< contact stiffness
 		V3Var* var_moment;
 
 		CentroidEndPosCon*              con_pos;
-		CentroidEndPosRangeCon*         con_pos_range[3][2];
-		CentroidEndVelRangeCon*         con_vel_range[3][2];
+		CentroidJointPosCon*            con_joint[3];
+		//vector<RangeConS*>              con_joint_pos_range;
+		CentroidJointPosRangeCon*       con_joint_pos_range[3][2];
+		//CentroidEndVelRangeCon*         con_vel_range[3][2];
+		//CentroidEndCopRangeCon*         con_cop_range[3][2];
 		RangeConS*                      con_stiff_range;
 		RangeConV3*                     con_moment_range[3];
         FixConS*                        con_stiff_zero;
         FixConV3*                       con_moment_zero;
 		FixConV3*                       con_des_pos;
+		FixConV3*                       con_des_vel;
 		FixConV3*                       con_vel_zero;
+		FixConS*                        con_joint_vel_zero[3];
+		CentroidEndKinematicsCon*       con_kin;
+		//CentroidEndVelZeroCon*          con_vel_zero;
         vector<CentroidEndContactCon*>  con_contact;
 
 		Solver::SubInput*  subin_stiff;
@@ -104,6 +136,7 @@ public:
     virtual void AddVar(Solver* solver);
 	virtual void AddCon(Solver* solver);
 	virtual void Prepare();
+	virtual void Finish ();
 	virtual void Draw(Render::Canvas* canvas, Render::Config* conf);
 
 	CentroidKey();
@@ -112,7 +145,9 @@ public:
 class CentroidDDPState : public DDPState{
 public:
 	Centroid*    cen;
-	vector<int>  contact;
+	vector<int>  contact;  //< contact state of each end effector
+	int          end_sw;   //< end effector which is changing contact state. -1 if none
+	int          face_sw;  //< face which the end effector indicated by end_sw is making contact to. -1 if lifting off
 	
 	virtual bool IsIdentical(const DDPState* st);
 	virtual bool IsTerminal ();
@@ -137,6 +172,9 @@ public:
         real_t  complWeightMin;
         real_t  complWeightMax;
         real_t  complWeightRate;
+
+		real_t  durationMin;
+		real_t  durationMax;
         
         real_t  swingSlope;
         real_t  swingHeight;
@@ -146,10 +184,10 @@ public:
 	
    	struct End{
 		vec3_t  basePos;
-		vec3_t  posRangeMin;
-		vec3_t  posRangeMax;
-		vec3_t  velRangeMin;
-		vec3_t  velRangeMax;
+		vec3_t  jointPosMin;
+		vec3_t  jointPosMax;
+		vec3_t  jointVelMin;
+		vec3_t  jointVelMax;
 		vec3_t  momentRangeMin;
 		vec3_t  momentRangeMax;
         vec2_t  copRangeMin;
@@ -222,6 +260,7 @@ public:
     vector<Face>        faces;
 	vector<Waypoint>    waypoints;
     CentroidCallback*   callback;
+	vector< vector<int> >  validContacts;
 
 	Snapshot            snapshot;
 	vector<Snapshot>    trajectory;
@@ -251,12 +290,14 @@ public:
     // DDPCallback
 	virtual DDPState*  CreateInitialState();
 	virtual void       CreateNextStates  (DDPState* _state, vector<DDPState*>& _next);
+	virtual void       OnThreadUpdate    (DDPThread* _thread);
 	
     //Face*  FindFace  (const vec3_t& p, vec3_t& pf, vec3_t& nf);
-	void ComState   (real_t t, vec3_t& pos, vec3_t& vel, vec3_t& acom);
-	void TorsoState (real_t t, quat_t& ori, vec3_t& angvel, int type = Interpolate::SlerpDiff);
-	void EndState   (real_t t, int index, vec3_t& pos, vec3_t& vel);
-    void EndForce   (real_t t, int index, real_t& stiff, vec3_t& moment, bool& contact);
+	void ComState       (real_t t, vec3_t& pos, vec3_t& vel, vec3_t& acom);
+	void TorsoState     (real_t t, quat_t& ori, vec3_t& angvel, int type = Interpolate::SlerpDiff);
+	void EndState       (real_t t, int index, vec3_t& pos, vec3_t& vel);
+    void EndForce       (real_t t, int index, real_t& stiff, vec3_t& moment, bool& contact);
+	void EndSwitchTiming(real_t t, int index, real_t& tprev, real_t& tnext);
     
 	void CreateSnapshot(real_t t, Snapshot& s);
 	void CalcTrajectory();
@@ -296,6 +337,13 @@ struct CentroidVelConT : CentroidCon{
 	CentroidVelConT(Solver* solver, string _name, CentroidKey* _obj, real_t _scale);
 };
 
+struct CentroidAccConT : CentroidCon{
+	virtual void  CalcCoef();
+	virtual void  CalcDeviation();
+		
+	CentroidAccConT(Solver* solver, string _name, CentroidKey* _obj, real_t _scale);
+};
+
 struct CentroidVelConR : CentroidCon{
 	virtual void  CalcCoef();
 	virtual void  CalcDeviation();
@@ -312,8 +360,36 @@ struct CentroidTimeCon : CentroidCon{
 	CentroidTimeCon(Solver* solver, string _name, CentroidKey* _obj, real_t _scale);
 };
 
+struct CentroidJointPosCon : CentroidCon{
+	int    iend;
+	int    idx;
+	real_t q0, q1;
+	real_t qd0;
+	real_t tau;
+	//real_t qmin;
+	//real_t qmax;
+	//real_t sig_min;
+	//real_t sig_max;
+	//real_t sig;
+	//bool   on_lower;
+	//bool   on_upper;
+
+	void Prepare();
+
+	virtual void  CalcCoef();
+	virtual void  CalcDeviation();
+	virtual void  CalcLhs();
+		
+	CentroidJointPosCon(Solver* solver, string _name, CentroidKey* _obj, int _iend, int _idx, real_t _scale);
+};
+
 struct CentroidEndPosCon : CentroidCon{
-	int iend;
+	int    iend;
+	vec3_t pe0, pe1;
+	vec3_t ve0;
+	real_t tau;
+
+	void Prepare();
 
 	virtual void  CalcCoef();
 	virtual void  CalcDeviation();
@@ -322,25 +398,23 @@ struct CentroidEndPosCon : CentroidCon{
 	CentroidEndPosCon(Solver* solver, string _name, CentroidKey* _obj, int _iend, real_t _scale);
 };
 
-struct CentroidEndPosRangeCon : Constraint{
+struct CentroidJointPosRangeCon : Constraint{
 	CentroidKey* obj;
 	int          iend;
-	vec3_t       dir;
-	vec3_t       dir_abs;
-	vec3_t       p;
-	quat_t       q;
-	vec3_t       pbase;
-	vec3_t       pend;
-    real_t       bound;
+	int          idx;
+	real_t       dir;
+	real_t       q;
+	real_t       bound;
 	
 	void Prepare();
 
 	virtual void  CalcCoef();
 	virtual void  CalcDeviation();
 
-	CentroidEndPosRangeCon(Solver* solver, string _name, CentroidKey* _obj, int _iend, vec3_t _dir, real_t _scale);
+	CentroidJointPosRangeCon(Solver* solver, string _name, CentroidKey* _obj, int _iend, int _idx, real_t _dir, real_t _scale);
 };
 
+/*
 struct CentroidEndVelRangeCon : Constraint{
 	CentroidKey* obj;
 	int          iend;
@@ -358,24 +432,26 @@ struct CentroidEndVelRangeCon : Constraint{
 
 	CentroidEndVelRangeCon(Solver* solver, string _name, CentroidKey* _obj, int _iend, vec3_t _dir, real_t _scale);
 };
-/*
-struct CentroidEndVelZeroCon : Constraint{
-	CentroidKey* obj;
-	int          iend;
-	vec3_t       dir;
-	vec3_t       dir_abs;
-	quat_t       q;
-    vec3_t       v;
-	vec3_t       vend;
+*/
+
+struct CentroidEndKinematicsCon : Constraint{
+	CentroidKey*    obj;
+	int             iend;
+	vec3_t          p;
+	quat_t          q;
+	vector<real_t>  qj;
+	vector<vec3_t>  dir, dir_abs;
+	vec3_t          pe_local, pe;
+	vec3_t          pe_base;
 	
 	void Prepare();
 
 	virtual void  CalcCoef();
 	virtual void  CalcDeviation();
 	
-	CentroidEndVelZeroCon(Solver* solver, string _name, CentroidKey* _obj, int _iend, vec3_t _dir, real_t _scale);
+	CentroidEndKinematicsCon(Solver* solver, string _name, CentroidKey* _obj, int _iend, real_t _scale);
 };
-*/
+
 struct CentroidEndContactCon : Constraint{
 	CentroidKey*     obj;
 	int              iend;

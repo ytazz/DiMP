@@ -14,6 +14,7 @@ namespace DiMP{;
 
 const real_t inf = numeric_limits<real_t>::max();
 const real_t pi  = M_PI;
+const real_t eps = 1.0e-10;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -40,7 +41,6 @@ void Sphere::CalcBSphere(){
 }
 
 vec3_t Sphere::CalcSupport(const vec3_t& dir){
-	const real_t eps = 1.0e-10;
 	real_t dnorm = dir.norm();
 	if(dnorm < eps)
 		return radius * vec3_t(1.0, 0.0, 0.0);
@@ -91,7 +91,6 @@ void Cylinder::CalcBSphere(){
 }
 
 vec3_t Cylinder::CalcSupport(const vec3_t& dir){
-	const real_t eps = 1.0e-10;
 	real_t dnorm = sqrt(dir.x*dir.x + dir.y*dir.y);
 	if(dnorm < eps){
 		return vec3_t(0.0, 0.0, (dir.z == 0.0 ? 0.0 : (dir.z > 0.0 ? +1.0 : -1.0)*(0.5*length)));
@@ -118,7 +117,6 @@ void Capsule::CalcBSphere(){
 }
 
 vec3_t Capsule::CalcSupport(const vec3_t& dir){
-	const real_t eps = 1.0e-10;
 	real_t dnorm = dir.norm();
 	if(dnorm < eps)
 		return vec3_t(radius, 0.0, 0.0);
@@ -202,7 +200,6 @@ void Point::CalcBSphere(){
 }
 
 vec3_t Point::CalcSupport(const vec3_t& dir){
-	const real_t eps = 1.0e-10;
 	real_t dnorm = dir.norm();
 	if(dnorm < eps)
 		return radius * vec3_t(1.0, 0.0, 0.0);
@@ -538,7 +535,6 @@ public:
 	//        if origin is inside  s => negative of minimum distance between o and the boundary of S
 	//
 	void CalcNearest(S s, S& smin, VP& pmin, real_t& dmin){
-		const real_t eps = 1.0e-10;
 		real_t d2, dmin2;
 		VP p, p2, pmin2;
 		S smin2;
@@ -616,8 +612,6 @@ public:
 };
 
 void CalcNearest(Geometry* g0, Geometry* g1, const pose_t& pose0, const pose_t& pose1, vec3_t& sup0, vec3_t& sup1, real_t& dist){
-	const real_t eps = 1.0e-10;
-
 	// simplex vertices
 	Simplex simplex;
 	Simplex::VP pmin;
@@ -656,7 +650,8 @@ void CalcNearest(Geometry* g0, Geometry* g1, const pose_t& pose0, const pose_t& 
 		// calculate nearest point of simplex to origin
 		real_t      dmin = 0.0;
 		simplex.CalcNearest(pmin, dmin);
-		if(dmin < 0.0){
+		//if(dmin < 0.0){
+		if(dmin < eps){
 			// if simplex contains origin
 			sup0 = pmin.p();
 			sup1 = pmin.q();
