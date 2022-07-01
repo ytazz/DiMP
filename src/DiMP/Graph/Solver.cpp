@@ -538,7 +538,7 @@ void CustomSolver::CalcDirectionSearchDDP(){
         thread->CalcValueForward ();
         thread->CalcStateForward ();
 
-        #pragma omp parallel for  num_threads(20)
+        #pragma omp parallel for
         for(int i = 0; i < numSample; i++){
             // perform DDP with previous mode sequence
             samples[i]->CalcCost();
@@ -556,7 +556,7 @@ void CustomSolver::CalcDirectionSearchDDP(){
 
         for(int k = 0; k <= N; k++)
             thread->steps[k]->state->Print();
-        DSTR << Jopt << endl;
+        //DSTR << Jopt << endl;
 
         callback->OnThreadUpdate(thread);
         
@@ -572,9 +572,9 @@ void CustomSolver::CalcDirectionSearchDDP(){
     //    thread->steps[k]->state->Print();
     //DSTR << Jopt << endl;
 
-    DSTR << "prepare1: " << timePrepare1 << endl;
-    DSTR << "prepare2: " << timePrepare2 << endl;
-    DSTR << "iter    : " << timeIter     << endl;
+    //DSTR << "prepare1: " << timePrepare1 << endl;
+    //DSTR << "prepare2: " << timePrepare2 << endl;
+    //DSTR << "iter    : " << timeIter     << endl;
 
     thread->CalcValueBackward();
     thread->CalcStateForward ();

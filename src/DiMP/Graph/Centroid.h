@@ -55,6 +55,7 @@ public:
     FixConV3*           con_des_pos_t;
     FixConQ*            con_des_pos_r;
     FixConV3*           con_des_vel_t;
+	FixConS*            con_des_time;
 
 	//Solver::SubState*   subst_pos_t;
 	//Solver::SubState*   subst_pos_r;
