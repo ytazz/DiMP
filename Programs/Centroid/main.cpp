@@ -430,9 +430,9 @@ public:
 		graph->solver->SetCorrection(ID(), 0.5);
 		graph->solver->param.numIter[0]     = 20;
         graph->solver->param.regularization = 1.0e-1;
-		graph->solver->param.cutoffStepSize = 0.1;
-		graph->solver->param.minStepSize    = 0.1;
-		graph->solver->param.maxStepSize    = 0.5;
+		graph->solver->param.cutoffStepSize = 0.5;
+		graph->solver->param.minStepSize    = 0.5;
+		graph->solver->param.maxStepSize    = 1.0;
         //graph->solver->param.methodMajor    = Solver::Method::Major::DDP;
         graph->solver->param.methodMajor    = DiMP::CustomSolver::CustomMethod::SearchDDP;
 		graph->solver->param.methodMinor    = Solver::Method::Minor::Direct;
@@ -445,7 +445,11 @@ public:
     virtual void OnStep(){
        App::OnStep();
 
-       fprintf(fileCost, "%f, %f\n", graph->solver->status.obj, centroid->complWeight);
+       fprintf(fileCost, "%f, %d, %d, %f\n",
+           graph->solver->status.obj,
+           graph->solver->status.timeDir,
+           graph->solver->status.timeStep,
+           centroid->complWeight);
        fflush(fileCost);
        //graph->solver->param.complRelaxation = std::max(0.1, 0.99*graph->solver->param.complRelaxation);
     }

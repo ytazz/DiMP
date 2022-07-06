@@ -119,10 +119,12 @@ void CentroidKey::AddCon(Solver* solver) {
     con_des_pos_t = new FixConV3(solver, ID(ConTag::CentroidPosT, node, tick, name + "_des_pos_t"), var_pos_t, 1.0);
     con_des_pos_r = new FixConQ (solver, ID(ConTag::CentroidPosR, node, tick, name + "_des_pos_r"), var_pos_r, 1.0);
 	con_des_vel_t = new FixConV3(solver, ID(ConTag::CentroidVelT, node, tick, name + "_des_vel_t"), var_vel_t, 1.0);
+	con_des_time  = new FixConS (solver, ID(ConTag::CentroidTime, node, tick, name + "_des_time" ), var_time , 1.0);
 
 	solver->AddCostCon(con_des_pos_t, tick->idx);
     solver->AddCostCon(con_des_pos_r, tick->idx);
 	solver->AddCostCon(con_des_vel_t, tick->idx);
+    solver->AddCostCon(con_des_time , tick->idx);
     
 	stringstream ss;
 	for(int i = 0; i < nend; i++){
@@ -306,7 +308,7 @@ void CentroidKey::Finish(){
 			//end.var_joint_vel[j]->val = std::min(cen->ends[i].jointVelMax[j]/cen->V, end.var_joint_vel[j]->val);
 		}
 	}
-	DSTR << "max violation: " << dmax << endl;
+	//DSTR << "max violation: " << dmax << endl;
 }
 
 void CentroidKey::Draw(Render::Canvas* canvas, Render::Config* conf) {
@@ -495,10 +497,10 @@ void CentroidDDPState::Finish(){
 }
 
 void CentroidDDPState::Print(){
-	int nend = cen->ends.size();
-	for(int i = 0; i < nend; i++)
-		DSTR << contact[i] << " ";
-	DSTR << endl;
+	//int nend = cen->ends.size();
+	//for(int i = 0; i < nend; i++)
+	//	DSTR << contact[i] << " ";
+	//DSTR << endl;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -622,6 +624,7 @@ void Centroid::Init() {
 			key->con_des_pos_r->weight[j] = (!key->prev ? 100.0 : (key->next ? 0.1 : 100.0));
 			key->con_des_vel_t->weight[j] = (!key->prev ? 100.0 : (key->next ? 1.0 : 100.0));
 		}
+		key->con_des_time ->weight[0] = (!key->prev ? 100.0 : 0.0);
 
 		key->var_time->val = t/T;
 		if(key->next){
@@ -668,8 +671,8 @@ void Centroid::Init() {
 
             key->ends[i].con_des_pos->desired = pe/L;
             key->ends[i].con_des_vel->desired = ve/V;
-            key->ends[i].con_des_pos->weight  = (!key->prev ? 100.0 : (key->next ? 0.01 : 100.0))*one;
-			key->ends[i].con_des_vel->weight  = (!key->prev ? 100.0 : (key->next ? 0.01 : 100.0))*one;
+            key->ends[i].con_des_pos->weight  = (!key->prev ? 1000.0 : (key->next ? 0.01 : 100.0))*one;
+			key->ends[i].con_des_vel->weight  = (!key->prev ? 1000.0 : (key->next ? 0.01 : 100.0))*one;
 
 			for(int j = 0; j < 3; j++){
 				key->ends[i].con_joint_pos_range[j][0]->weight[0] = 100.0;
