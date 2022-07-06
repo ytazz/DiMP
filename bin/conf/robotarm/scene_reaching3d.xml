@@ -124,9 +124,9 @@
   <param name="min_step_size"    value="0.1"/>
   <param name="cutoff_step_size" value="0.1"/>
   <!--
-  <param name="method_major"     value="ddp"/>
-  -->
   <param name="method_major"     value="gauss_newton"/>
+  -->
+  <param name="method_major"     value="ddp"/>
   <param name="method_minor"     value="direct"/>
   <param name="verbose"          value="true"/>
 

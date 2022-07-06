@@ -1,4 +1,5 @@
 ﻿#include <DiMP/Graph/Solver.h>
+#include <DiMP/Graph/Graph.h>
 
 #include <sbtimer.h>
 #include <sbrandom.h>
@@ -417,6 +418,12 @@ void CustomSolver::CalcDirection(){
     else{
         Solver::CalcDirection();
     }
+}
+
+real_t CustomSolver::CalcObjective(){
+    graph->Prepare();
+
+    return Solver::CalcObjective();
 }
 
 void CustomSolver::Shuffle(){

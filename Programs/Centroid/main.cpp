@@ -20,8 +20,8 @@ public:
             if(st->contact[i] != -1 && !valid[i][st->contact[i]])
                 return false;
         }
-        if(st->contact[0] == -1 && st->contact[1] == -1 && !(st->contact[2] == 2 && st->contact[3] == 3))
-            return false;
+        //if(st->contact[0] == -1 && st->contact[1] == -1 && !(st->contact[2] == 2 && st->contact[3] == 3))
+        //    return false;
 
         return true;
         /*
@@ -104,7 +104,7 @@ public:
         const int nend = 4;
         const int N    = 18;
         const real_t goalTime = duration * N;
-        const int  sceneSelect = Scene::GapWithRail;
+        const int  sceneSelect = Scene::Gap;
 
         vec3_t endBasePos  [nend];
         vec3_t endPosOrigin[nend];
@@ -154,7 +154,7 @@ public:
 
         centroid->param.complWeightMin   = 0.01;
         centroid->param.complWeightMax   = 100.0;
-        centroid->param.complWeightRate  = 2.0;
+        centroid->param.complWeightRate  = 10000.0;
 
         centroid->param.durationMin = 0.4;
         centroid->param.durationMax = 0.5;

@@ -149,8 +149,8 @@ Graph::Param::Param(){
 
 Graph::Graph(){
 	solver = new CustomSolver();
-	//solver->graph = this;
-
+	solver->graph = this;
+	
 	conf = new Render::Config();
 }
 
@@ -211,6 +211,9 @@ void Graph::Reset(){
 }
 
 void Graph::Prepare(){
+	// compute forward kinematics
+	trees.ForwardKinematics();
+
 	objects  .Prepare();
 	cons     .Prepare();
 	bipeds   .Prepare();
@@ -387,7 +390,7 @@ void Graph::ExtractGeometryPairs(){
 void Graph::Finish(){
 	nodes.Finish();
 
-	// ツリーについて順キネ計算
+	// compute forward kinematics
 	trees.ForwardKinematics();
 }
 

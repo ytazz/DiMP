@@ -11,6 +11,7 @@ namespace DiMP{;
 
 class CustomSolver;
 class DDPStage;
+class Graph;
 
 class DDPState : public UTRefCount{
 public:
@@ -164,6 +165,8 @@ public:
         };
     };
 
+    Graph*  graph;
+
     vector< UTRef<DDPStage > > stages;
     UTRef<DDPThread>           thread;
     vector< UTRef<DDPStep> >   samples;
@@ -178,6 +181,7 @@ public:
             
     virtual void    Init();
 	virtual void    CalcDirection();
+    virtual real_t  CalcObjective();
 
 };
 
