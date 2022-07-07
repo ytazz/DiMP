@@ -140,6 +140,7 @@ void Graph::Scale::Set(real_t T, real_t L, real_t M){
 
 Graph::Param::Param(){
 	gravity      = vec3_t( 0.0,  0.0,  0.0);
+	supportMapResolution = 50;
 	//bbmin        = vec3_t(-1.0, -1.0, -1.0);
 	//bbmax        = vec3_t( 1.0,  1.0,  1.0);
 	//octtreeDepth = 8;

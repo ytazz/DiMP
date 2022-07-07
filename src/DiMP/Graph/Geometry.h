@@ -136,7 +136,9 @@ public:
 
 public:
 	void CreateSupportMap();
-
+	bool LoadSupportMap();
+	bool SaveSupportMap();
+	
 	virtual void   Draw       (Render::Canvas* canvas, Render::Config* conf);
 	virtual void   CalcBSphere();
 	virtual vec3_t CalcSupport(const vec3_t& dir);

@@ -42,6 +42,7 @@ public:
 	/// physical parameters
 	struct Param{
 		vec3_t	 gravity;  ///< gravity
+		int      supportMapResolution;
 		//vec3_t   bbmin;    ///< range of global bounding box
 		//vec3_t   bbmax;
 		//int      octtreeDepth;

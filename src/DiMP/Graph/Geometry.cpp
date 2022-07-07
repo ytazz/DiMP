@@ -3,6 +3,8 @@
 #include <DiMP/Render/Config.h>
 #include <DiMP/Render/Canvas.h>
 
+#include <sbpath.h>
+
 #ifdef _WIN32
 # include <mkl_lapacke.h>
 #else
@@ -254,11 +256,9 @@ vec3_t Hull::CalcSupport(const vec3_t& dir){
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 Mesh::Mesh(Graph* g, const string& n):Geometry(g, n){
+	// overridden by Graph::Param::supportMapResolution
 	//ntheta = 50;
 	//nphi   = 50;
-	// temporarily set small values for speed
-	ntheta = 10;
-	nphi   = 10;
 }
 
 void Mesh::CreateSupportMap(){
@@ -291,6 +291,40 @@ void Mesh::CreateSupportMap(){
 	}
 }
 
+bool Mesh::LoadSupportMap(){
+	string filename = Path(name).File() + ".map";
+	FILE* file = fopen(filename.c_str(), "rb");
+	if(!file)
+		return false;
+
+	fseek(file, 0, SEEK_END);
+	size_t sz = ftell(file);
+	fseek(file, 0, SEEK_SET);
+
+	// check if size matches
+	if(sz != sizeof(pair<int,int>)*nphi*ntheta)
+		return false;
+
+	supportMap.resize(nphi*ntheta);
+	fread(&supportMap[0], 1, sz, file);
+
+	fclose(file);
+	return true;
+}
+
+bool Mesh::SaveSupportMap(){
+	string filename = Path(name).File() + ".map";
+	FILE* file = fopen(filename.c_str(), "wb");
+	if(!file)
+		return false;
+	
+	size_t sz = sizeof(pair<int,int>)*nphi*ntheta;
+	fwrite(&supportMap[0], 1, sz, file);
+
+	fclose(file);
+	return true;
+}
+
 void Mesh::CalcBSphere(){
 	bsphereCenter = vec3_t();
 	bsphereRadius = 0.0;
@@ -308,8 +342,15 @@ void Mesh::CalcBSphere(){
 }
 
 vec3_t Mesh::CalcSupport(const vec3_t& dir){
-	if(supportMap.empty())
-		CreateSupportMap();
+	if(supportMap.empty()){
+		ntheta = graph->param.supportMapResolution;
+		nphi   = graph->param.supportMapResolution;
+
+		if(!LoadSupportMap()){
+			CreateSupportMap();
+			SaveSupportMap();
+		}
+	}
 
 	real_t theta = atan2(dir.y, dir.x);
 	real_t phi   = atan2(dir.z, sqrt(dir.x*dir.x + dir.y*dir.y));
