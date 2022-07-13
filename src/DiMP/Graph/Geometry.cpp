@@ -346,9 +346,13 @@ vec3_t Mesh::CalcSupport(const vec3_t& dir){
 		ntheta = graph->param.supportMapResolution;
 		nphi   = graph->param.supportMapResolution;
 
-		if(!LoadSupportMap()){
+		if(LoadSupportMap()){
+		    printf("%s: support map loaded\n", name.c_str());
+		}
+		else{
 			CreateSupportMap();
 			SaveSupportMap();
+		    printf("%s: support map saved\n", name.c_str());
 		}
 	}
 
