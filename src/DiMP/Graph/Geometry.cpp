@@ -292,7 +292,11 @@ void Mesh::CreateSupportMap(){
 }
 
 bool Mesh::LoadSupportMap(){
-	string filename = Path(name).File() + ".map";
+	//string filename = Path(name).File() + ".map";
+	string filename = name + ".map";
+	
+	printf("load filename: %s\n", filename.c_str());
+	
 	FILE* file = fopen(filename.c_str(), "rb");
 	if(!file)
 		return false;
@@ -300,6 +304,8 @@ bool Mesh::LoadSupportMap(){
 	fseek(file, 0, SEEK_END);
 	size_t sz = ftell(file);
 	fseek(file, 0, SEEK_SET);
+	
+	printf("size check: %d %d\n", sz, sizeof(pair<int,int>)*nphi*ntheta);
 
 	// check if size matches
 	if(sz != sizeof(pair<int,int>)*nphi*ntheta)
@@ -313,7 +319,11 @@ bool Mesh::LoadSupportMap(){
 }
 
 bool Mesh::SaveSupportMap(){
-	string filename = Path(name).File() + ".map";
+	//string filename = Path(name).File() + ".map";
+    string filename = name + ".map";
+
+	printf("save filename: %s\n", filename.c_str());
+
 	FILE* file = fopen(filename.c_str(), "wb");
 	if(!file)
 		return false;
