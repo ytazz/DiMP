@@ -1,7 +1,7 @@
 #pragma once
 
 #include <DiMP/Graph/Node.h>
-#include <DiMP/Graph/Biped.h>
+//#include <DiMP/Graph/Biped.h>
 
 namespace DiMP {;
 
@@ -15,34 +15,81 @@ namespace DiMP {;
 	struct RunnerFootPosConT;
 	struct RunnerFootPosConR;
 	struct RunnerFootCopPosCon;
-	struct RunnerFootCoPVelCon;
+	struct RunnerFootCopVelCon;
 	struct RunnerFootPosRangeConT;
 	struct RunnerFootPosRangeConR;
 	struct RunnerFootCopRangeCon;
-	struct RunnerTimeCon;
 
-
-	struct RunnerFootRangeConT;
-	struct RunnerFootRangeConR;
-	//struct BipedFootCopPosCon;
-	struct RunnerCopRangeCon;
-	struct RunnerCmpRangeCon;
-	struct RunnerAccRangeCon;
-	//struct RunnerMomRangeCon;
-	struct RunnerFootHeightCon;
 	struct RunnerTimeCon;
 
 	/**
 	linear inverted pendulum model
 	*/
-	class BipedRunKey : public BipedLIPKey {
+	class BipedRunKey : public Keypoint {
+	public:
+		struct Foot {
+			V3Var* var_pos_t  ;  ///< position
+			SVar*  var_pos_r  ;  ///< orientation
+			V3Var* var_vel_t  ;  ///< velocity
+			SVar*  var_vel_r  ;  ///< angular velocity
+			V3Var* var_cop_pos;
+			V3Var* var_cop_vel;
+			V3Var* var_cop_vel_diff;
+
+			RunnerFootPosConT*   con_pos_t;
+			RunnerFootPosConR*   con_pos_r;
+			RunnerFootCopPosCon* con_cop_pos;
+			RunnerFootCopVelCon* con_cop_vel;
+
+			RunnerFootPosRangeConT* con_pos_range_t[3][2];   ///< range constraint on foot position relative to torso, [x|y|z]
+			RunnerFootPosRangeConR* con_pos_range_r[2];      ///< range constraint on foot orientation relative to torso
+
+			RunnerFootCopRangeCon* con_cop_range[3][2];   ///< range constraint on CoP relative to support foot, [x|y|z]
+
+			FixConV3* con_vel_zero_t;
+			FixConS*  con_vel_zero_r;
+			FixConV3* con_cop_vel_diff_zero;
+
+			real_t  weight;
+		};
+
+		V3Var* var_torso_pos_t;    ///< position         of torso
+		SVar*  var_torso_pos_r;    ///< orientation      of torso
+		V3Var* var_torso_vel_t;    ///< velocity         of torso
+
+		V3Var* var_com_pos;        ///< position of CoM
+		V3Var* var_com_vel;        ///< velocity of CoM
+
+		SVar* var_time;           ///< time
+		SVar* var_duration;       ///< duration
+
+		Foot        foot[2];
+
+		RunnerLipPosCon* con_lip_pos;     ///< LIP position constraint
+		RunnerLipVelCon* con_lip_vel;     ///< LIP velocity constraint
+
+		RunnerComConP* con_com_pos;     ///< torso, feet, and com position constraint based on 3-mass model
+		RunnerComConV* con_com_vel;     ///< torso, feet, and com velocity constraint based on 3-mass model
+
+		RunnerTimeCon* con_time;	    ///< relates step duration and cumulative time
+		RangeConS* con_duration_range;  ///< range constraint on step period
+
+		FixConV3* con_com_vel_zero;
+
+		vec3_t  cop_pos;
+		vec3_t  cop_vel;
+		vec3_t  cop_acc;
 	public:
 		void AddVar(Solver* solver);
 		void AddCon(Solver* solver);
-		//void Draw(Render::Canvas* canvas, Render::Config* conf);
+		void Prepare();
+		void Finish();
+		void Draw(Render::Canvas* canvas, Render::Config* conf);
+
+		BipedRunKey();
 	};
 
-	class BipedRunning : public BipedLIP {
+	class BipedRunning : public TrajectoryNode {
 	public:
 		/// gait type
 		struct GaitType {
@@ -68,8 +115,30 @@ namespace DiMP {;
 		struct SwingProfile {
 			enum {
 				Cycloid,      //< flat-landing with cycloid swing profile
-				HeelToe,
+				HeelToe,      //< heel-to-toe
 				Experiment,   //< experimental (may not work correctly)
+			};
+		};
+		/// swing foot interpolation
+		struct SwingInterpolation{
+			enum {
+				Cubic = 3,
+			    Quintic = 5,
+			};
+		};
+		/// contact state
+		struct ContactState {
+			enum {
+				Float,    //< in floating state
+				Surface,  //< in surface contact
+				Heel,     //< in line contact on heel
+				Toe,      //< in line contact on toe
+			};
+		};
+		struct FootCurveType {
+			enum {
+				Arc,
+				Clothoid,
 			};
 		};
 
@@ -92,12 +161,57 @@ namespace DiMP {;
 			vec3_t  footCopMin[2];           ///< admissible range of CoP relative to foot
 			vec3_t  footCopMax[2];
 			
-			//vec3_t  accMin;                  ///< admissible range of CoM acceleration
-			//vec3_t  accMax;
-			vec3_t  momMin;                  ///< admissible range of angular momentum
-			vec3_t  momMax;
+			int     footCurveType;
+			real_t  ankleToToe;             ///< offset from foot center to the begining of toe|heel
+			real_t  ankleToHeel;
+			real_t  toeCurvature;           ///< toe|heel curvature (for arc)
+			real_t  heelCurvature;
+			real_t  toeCurvatureRate;       ///< toe|heel curvature rate (for clothoid)
+			real_t  heelCurvatureRate;
+
+			real_t  minSpacing;   ///< minimum lateral spacing of feet with which swing foot does not collide with support foot
+			real_t  minDist;      ///< minimum distance between each foot with which swing foot does not collide with support foot
+			real_t  swingMargin;  ///<
 
 			Param();
+		};
+
+		struct Waypoint {
+			int     k;
+			real_t  time;
+			vec3_t  com_pos;
+			vec3_t  com_vel;
+			real_t  torso_pos_r;
+			vec3_t  foot_pos_t[2];
+			real_t  foot_pos_r[2];
+			vec3_t  foot_cop[2];
+			vec3_t  foot_cop_min[2];
+			vec3_t  foot_cop_max[2];
+
+			bool    fix_com_pos;
+			bool    fix_com_vel;
+			bool    fix_torso_pos_r;
+			bool    fix_foot_pos_t[2];
+			bool    fix_foot_pos_r[2];
+			bool    fix_foot_cop[2];
+			bool    set_cop_range[2];
+
+			Waypoint();
+		};
+
+		struct Snapshot {
+			real_t  t;
+			vec3_t  com_pos;
+			vec3_t  com_vel;
+			vec3_t  com_acc;
+			vec3_t  cop_pos;
+			vec3_t  torso_pos_t;
+			real_t  torso_pos_r;
+			vec3_t  foot_pos_t[2];
+			quat_t  foot_pos_r[2];
+			vec3_t  foot_cop[2];
+
+			Snapshot();
 		};
 
 		Param	            param;
@@ -108,7 +222,7 @@ namespace DiMP {;
 		vector<Snapshot>    trajectory;
 		bool                trajReady;
 
-		virtual Keypoint* CreateKeypoint() { return new BipedLIPKey(); }
+		virtual Keypoint* CreateKeypoint() { return new BipedRunKey(); }
 		virtual void		Init();
 		virtual void		Prepare();
 		virtual void        Finish();
@@ -117,18 +231,17 @@ namespace DiMP {;
 		virtual void        Draw(Render::Canvas* canvas, Render::Config* conf);
 
 		int    Phase(real_t t);
-		//vec3_t ComPos       (real_t t);
-		//vec3_t ComVel       (real_t t);
-		//vec3_t ComAcc       (real_t t);
 		bool   OnTransition(real_t t);
+
 		void   ComState(real_t t, vec3_t& pos, vec3_t& vel, vec3_t& acc);
-		real_t TorsoOri(real_t t);
-		real_t TorsoAngVel(real_t t);
-		real_t TorsoAngAcc(real_t t);
+		void   CopState(real_t t, vec3_t& pos, vec3_t& vel, vec3_t& acc);
+		void   TorsoState(real_t t, real_t& ori, real_t& angvel, real_t& angacc);
+		void   FootRotation(real_t cp, real_t cv, real_t ca, vec3_t& pos, vec3_t& vel, vec3_t& acc, vec3_t& ori, vec3_t& angvel, vec3_t& angacc, int& contact);
+		void   FootRotationInv(real_t ori, real_t angvel, real_t angacc, real_t& cp, real_t& cv, real_t& ca);
 		void   FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& angvel, vec3_t& acc, vec3_t& angacc, int& contact);
+		void   FootCopState(real_t t, int side, vec3_t& pos, vec3_t& vel, real_t& weight);
 		real_t TimeToLiftoff(real_t t, int side);
 		real_t TimeToLanding(real_t t, int side);
-		vec3_t CopPos(real_t t);
 		
 
 		vec3_t TorsoPos(const vec3_t& pcom, const vec3_t& psup, const vec3_t& pswg);
@@ -145,13 +258,28 @@ namespace DiMP {;
 		virtual ~BipedRunning();
 	};
 
-	struct BipedRunCon : BipedLipCon {
+	struct BipedRunCon : Constraint {
 		BipedRunKey* obj[2];
+
+		real_t T, T2;
+		vec3_t g;
+		vec3_t ez;
+		real_t tau, tau2;
+		real_t C, S;
+		vec3_t p0, v0, p1, v1;
+		vec3_t c0, cv0, ca0, c1;
+		real_t k_p_p, k_p_v, k_p_c, k_p_cv, k_p_ca;
+		real_t k_v_p, k_v_v, k_v_c, k_v_cv, k_v_ca;
+		vec3_t k_p_tau, k_v_tau;
+		real_t k_c_c[2], k_cv_c[2], k_cv_cv[2], k_ca_cv[2];
+		vec3_t p_rhs;
+		vec3_t v_rhs;
+
 		int ph;
 		int gtype;
-		vec3_t g;
 
-		void Prepare();
+		virtual void Prepare();
+
 		BipedRunCon(Solver* solver, int _tag, string _name, BipedRunKey* _obj, real_t _scale);
 	};
 
@@ -189,6 +317,7 @@ namespace DiMP {;
 		RunnerComConV(Solver* solver, string _name, BipedRunKey* _obj, real_t _scale);
 	};
 
+	// foot position update
 	struct RunnerFootPosConT : Constraint {
 		BipedRunKey* obj[2];
 		int side;
@@ -197,13 +326,14 @@ namespace DiMP {;
 
 		void Prepare();
 
-		virtual void CalcCoeff();
+		virtual void CalcCoef();
 		virtual void CalcDeviation();
 		virtual void CalcLhs();
 
 		RunnerFootPosConT(Solver* solver, string _name, BipedRunKey* _obj, int _side, real_t _scale);
 	};
 
+	// foot orientation update
 	struct RunnerFootPosConR : Constraint {
 		BipedRunKey* obj[2];
 		int           side;
@@ -219,6 +349,7 @@ namespace DiMP {;
 		RunnerFootPosConR(Solver* solver, string _name, BipedRunKey* _obj, int _side, real_t _scale);
 	};
 
+	// CoP position update constraint
 	struct RunnerFootCopPosCon : Constraint {
 		BipedRunKey* obj[2];
 		int           side;
@@ -269,22 +400,20 @@ namespace DiMP {;
 	};
 
 	/// range limit of support foot relative to torso
-	struct RunnerFootPosRangeConT : Constraint {
+	struct RunnerFootPosRangeConR : Constraint {
 		BipedRunKey* obj;
 		int          side;
 		real_t       bound;
-		vec3_t       dir, dir_abs;
-		real_t       theta;
-		mat3_t       R;
-		vec3_t       ez;
-		vec3_t       r;
+		real_t       thetaf, thetat;
+		real_t       dir;
+		real_t       r;
 
 		void Prepare();
 
 		virtual void CalcCoef();
 		virtual void CalcDeviation();
 
-		RunnerFootPosRangeConT(Solver* solver, string _name, BipedRunKey* _obj, int _side, vec3_t _dir, real_t _scale);
+		RunnerFootPosRangeConR(Solver* solver, string _name, BipedRunKey* _obj, int _side, real_t _dir, real_t _scale);
 	};
 
 	/// CoP range constraint
