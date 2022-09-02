@@ -42,6 +42,7 @@ public:
 
 	GeometryInfos  geoInfos;
 	EdgeInfos      edgeInfos[3];
+	real_t         dminMax;
 
 	//UTRef<OcttreeNode>             octtree;
 

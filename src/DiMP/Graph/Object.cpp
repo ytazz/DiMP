@@ -195,6 +195,7 @@ void ObjectKey::PrepareGeometry(){
 		edgeInfos[0].resize(2*geoInfos.size());
 		edgeInfos[1].resize(2*geoInfos.size());
 		edgeInfos[2].resize(2*geoInfos.size());
+		dminMax = 0.0;  //< dminMax will be calculated by Graph::ExtractGeometryPairs
 	}
 
 	// absolute pose of geometries
@@ -230,8 +231,8 @@ void ObjectKey::PrepareGeometry(){
 			edgeInfos[dir][2*i+1].geoInfo = &geoInfos[i];
 			edgeInfos[dir][2*i+0].side    = 0;
 			edgeInfos[dir][2*i+1].side    = 1;
-			edgeInfos[dir][2*i+0].val     = geoInfos[i].bbmin[dir];
-			edgeInfos[dir][2*i+1].val     = geoInfos[i].bbmax[dir];
+			edgeInfos[dir][2*i+0].val     = geoInfos[i].bbmin[dir] - dminMax;
+			edgeInfos[dir][2*i+1].val     = geoInfos[i].bbmax[dir] + dminMax;
 		}
 	}
 	//sort(edgeInfos.begin(), edgeInfos.end());

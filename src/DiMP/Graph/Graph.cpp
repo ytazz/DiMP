@@ -268,7 +268,24 @@ void Graph::ExtractGeometryPairs(){
 		}
 		gpTable.Resize(geoIndex[0], geoIndex[1]);
 	}
-	
+
+    // for each object, calculate maximum dmin of avoid tasks assigned to it
+    for(Object* obj : objects){
+		for(Tick* tick : ticks){
+			ObjectKey* key = (ObjectKey*)obj->traj.GetKeypoint(tick);
+			key->dminMax = 0.0;
+        }
+    }	
+	for(AvoidTask* avoid : avoids){
+		for(Tick* tick : ticks){
+			ObjectKey* key0 = (ObjectKey*)avoid->obj0->traj.GetKeypoint(tick);
+			ObjectKey* key1 = (ObjectKey*)avoid->obj1->traj.GetKeypoint(tick);
+			
+			key0->dminMax = std::max(key0->dminMax, avoid->param.dmin);
+			key1->dminMax = std::max(key1->dminMax, avoid->param.dmin);
+        }	    
+	}
+
 	timer2.CountUS();
 	// for each dimension: merge edgeinfos of all objects and ticks, and sort it
 	for(int dir = 0; dir < 3; dir++){
