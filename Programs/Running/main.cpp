@@ -96,9 +96,15 @@ public:
 		biped->param.footCopMax[1] = vec3_t(0.150, 0.05, 0.0);
 		biped->param.swingHeight = 0.15;
 		//biped->param.swingProfile       = DiMP::BipedRunning::SwingProfile::Cycloid;
-		biped->param.swingProfile       = DiMP::BipedRunning::SwingProfile::Experiment;
+		//biped->param.swingProfile       = DiMP::BipedRunning::SwingProfile::Experiment;
+		biped->param.swingProfile       = DiMP::BipedRunning::SwingProfile::HeelToe;
 		//biped->param.swingInterpolation = DiMP::BipedRunning::SwingInterpolation::Cubic;
 		biped->param.swingInterpolation = DiMP::BipedRunning::SwingInterpolation::Quintic;
+		biped->param.footCurveType = DiMP::BipedRunning::FootCurveType::Arc;
+		biped->param.ankleToToe = 0.100;
+		biped->param.ankleToHeel = 0.070;
+		biped->param.toeCurvature = 10.0;
+		biped->param.heelCurvature = 10.0;
 		
 		for (uint i = 0; i < nphase; i++)
 			new DiMP::Tick(graph, 0.0, "");
