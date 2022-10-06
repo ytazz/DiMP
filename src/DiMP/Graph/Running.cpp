@@ -77,7 +77,7 @@ namespace DiMP {;
 
 			foot[i].var_pos_t  ->weight    = damping*one;
 			foot[i].var_pos_r  ->weight[0] = damping;
-			foot[i].var_cop_pos->weight    = damping*one;
+			foot[i].var_cop_pos->weight    = 10*damping*one;
 			foot[i].var_cop_vel->weight    = damping*one;
 
 			foot[i].var_pos_r->locked = true;
@@ -1280,6 +1280,7 @@ namespace DiMP {;
 					c1 = key2->foot[side].var_cop_pos->val;
 					cv1 = key2->foot[side].var_cop_vel->val;
 					tau1 = key1->var_duration->val;
+					t1 = key2->var_time->val;
 					s = dt / (tau0 + tau1);
 				}
 				if (ph == Phase::RLF || ph == Phase::LRF)
@@ -1287,6 +1288,7 @@ namespace DiMP {;
 					p0 = keym1->foot[side].var_pos_t->val;
 					c0 = keym1->foot[side].var_cop_pos->val;
 					if (keym2) cv0 = keym2->foot[side].var_cop_vel->val;
+					t0 = keym1->var_time->val;
 					tau1 = keym1->var_duration->val;
 					dt = std::max(t - keym1->var_time->val, 0.0);
 					s = dt / (tau0 + tau1);
@@ -1305,6 +1307,7 @@ namespace DiMP {;
 					c1 = key2->foot[side].var_cop_pos->val;
 					cv1 = key2->foot[side].var_cop_vel->val;
 					tau1 = key1->var_duration->val;
+					t1 = key2->var_time->val;
 					s = dt / (tau0 + tau1);
 				}
 				if ((ph == Phase::R || ph == Phase::L) && keym1)
@@ -1313,6 +1316,7 @@ namespace DiMP {;
 					c0 = keym1->foot[side].var_cop_pos->val;
 					if (keym2) cv0 = keym2->foot[side].var_cop_vel->val;
 					tau1 = keym1->var_duration->val;
+					t0 = keym1->var_time->val;
 					dt = std::max(t - keym1->var_time->val, 0.0);
 					s = dt / (tau0 + tau1);
 				}
@@ -1326,6 +1330,7 @@ namespace DiMP {;
 					if (key3) p1 = key3->foot[side].var_pos_t->val;
 					if (key3) c1 = key3->foot[side].var_cop_pos->val;
 					if (key3) cv1 = key3->foot[side].var_cop_vel->val;
+					if (key3) t1 = key3->var_time->val;
 					if (key1) tau1 = key1->var_duration->val;
 					s = dt / (tau0*2 + tau1);
 				}
@@ -1334,9 +1339,11 @@ namespace DiMP {;
 					if (keym1) p0 = keym1->foot[side].var_pos_t->val;
 					if (keym1) c0 = keym1->foot[side].var_cop_pos->val;
 					if (keym2) cv0 = keym2->foot[side].var_cop_vel->val;
+					if (keym1) t0 = keym1->var_time->val;
 					if (key2)  p1 = key2->foot[side].var_pos_t->val;
 					if (key2)  c1 = key2->foot[side].var_cop_pos->val;
 					if (key2)  cv1 = key2->foot[side].var_cop_vel->val;
+					if (key2)  t1 = key2->var_time->val;
 					if (key1) tau1 = key1->var_duration->val;
 					if (keym1) dt = std::max(t - keym1->var_time->val, 0.0);
 					s = dt / (tau0 + tau1*2);
@@ -1346,6 +1353,7 @@ namespace DiMP {;
 					if (keym2) p0 = keym2->foot[side].var_pos_t->val;
 					if (keym2) c0 = keym2->foot[side].var_cop_pos->val;
 					if (keym3) cv0 = keym3->foot[side].var_cop_vel->val;
+					if (keym2) t0 = keym2->var_time->val;
 					if (keym1) tau1 = keym1->var_duration->val;
 					if (keym2) dt = std::max(t - keym2->var_time->val, 0.0);
 					s = dt / (tau0*2 + tau1);
@@ -1361,10 +1369,11 @@ namespace DiMP {;
 		real_t cvd = (_2pi * sin(_2pi * s)*ds/2);
 		real_t cvdd = ((_2pi * _2pi) * cos(_2pi * s)*ds*ds/2);
 
+		// preparation for foot print rotation while stance phase
 		if (ph == Phase::LR || ph == Phase::RL || ph == Phase::D || (ph == Phase::R && side == 0) || (ph == Phase::L && side == 1))
 		{
-			c0 = key0->foot[side].var_cop_pos->val;
-			c1 = key1->foot[side].var_cop_pos->val;
+			//c0 = key0->foot[side].var_cop_pos->val;
+			//c1 = key1->foot[side].var_cop_pos->val;
 			cv0 = key0->foot[side].var_cop_vel->val;
 			cv1 = key0->foot[side].var_cop_vel->val;
 
@@ -1391,16 +1400,16 @@ namespace DiMP {;
 		}
 		else
 		{
-			real_t yaw_diff = yaw1 - yaw0; // TODO: •s³Šm
+			real_t yaw_diff = yaw1 - yaw0;
 			while (yaw_diff > pi) yaw_diff -= 2.0 * pi;
 			while (yaw_diff < -pi) yaw_diff += 2.0 * pi;
 
-			f_tp = p0 + ch * (p1 - p0) + cv * vec3_t(0.0, 0.0, param.swingHeight);
-			f_tv = chd * (p1 - p0) + cvd * vec3_t(0.0, 0.0, param.swingHeight);
-			f_ta = chdd * (p1 - p0) + cvdd * vec3_t(0.0, 0.0, param.swingHeight);
+			f_tp = p0 + ch  *(p1 - p0) + cv  *vec3_t(0.0, 0.0, param.swingHeight);
+			f_tv =      chd *(p1 - p0) + cvd *vec3_t(0.0, 0.0, param.swingHeight);
+			f_ta =      chdd*(p1 - p0) + cvdd*vec3_t(0.0, 0.0, param.swingHeight);
 			f_rp.z = yaw0 + ch * yaw_diff;
-			f_rv.z = chd * yaw_diff;
-			f_ra.z = chdd * yaw_diff;
+			f_rv.z =        chd * yaw_diff;
+			f_ra.z =        chdd * yaw_diff;
 
 			FootRotation(
 				c0.x - p0.x, cv0.x, 0.0,
@@ -1424,7 +1433,7 @@ namespace DiMP {;
 				f_rp_roll.y, f_rv_roll.y, f_ra_roll.y,
 				cp_local.x, cv_local.x, ca_local.x);
 
-			contact = ContactState::Float;
+			contact = ContactState::Float; // TODO: –³ˆÓ–¡
 		}
 
 		// relative transform from footprint to foot

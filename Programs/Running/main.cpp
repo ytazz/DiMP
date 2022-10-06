@@ -90,11 +90,11 @@ public:
 		biped->param.footOriMax[0] = Rad(0.0);
 		biped->param.footOriMin[1] = Rad(-0.0);
 		biped->param.footOriMax[1] = Rad(0.0);
-		biped->param.footCopMin[0] = vec3_t(-0.100, -0.05, 0.0);
-		biped->param.footCopMax[0] = vec3_t(0.150, 0.05, 0.0);
-		biped->param.footCopMin[1] = vec3_t(-0.100, -0.05, 0.0);
-		biped->param.footCopMax[1] = vec3_t(0.150, 0.05, 0.0);
-		biped->param.swingHeight = 0.15;
+		biped->param.footCopMin[0] = vec3_t(-0.100, -0.05, 0.00);
+		biped->param.footCopMax[0] = vec3_t(0.150, 0.05, 0.00);
+		biped->param.footCopMin[1] = vec3_t(-0.100, -0.05, 0.00);
+		biped->param.footCopMax[1] = vec3_t(0.150, 0.05, 0.00);
+		biped->param.swingHeight = 0.10;
 		//biped->param.swingProfile       = DiMP::BipedRunning::SwingProfile::Cycloid;
 		//biped->param.swingProfile       = DiMP::BipedRunning::SwingProfile::Experiment;
 		biped->param.swingProfile       = DiMP::BipedRunning::SwingProfile::HeelToe;
