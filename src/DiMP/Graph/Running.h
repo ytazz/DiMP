@@ -20,6 +20,11 @@ namespace DiMP {;
 	struct RunnerFootPosRangeConR;
 	struct RunnerFootCopRangeCon;
 
+	struct RunnerLipCmpCon;
+	struct RunnerLipMomCon;
+	struct RunnerCmpRangeCon;
+	struct RunnerMomRangeCon;
+
 	struct RunnerTimeCon;
 
 	/**
@@ -46,12 +51,17 @@ namespace DiMP {;
 
 			RunnerFootCopRangeCon* con_cop_range[3][2];   ///< range constraint on CoP relative to support foot, [x|y|z]
 
+
 			FixConV3* con_vel_zero_t;
 			FixConS*  con_vel_zero_r;
 			FixConV3* con_cop_vel_diff_zero;
 
 			real_t  weight;
 		};
+
+		V3Var* var_cmp_pos;        ///< position of CMP
+		V3Var* var_cmp_vel;        ///< velocity of CMP
+		V3Var* var_mom;            ///< angular momentum around CoM
 
 		V3Var* var_torso_pos_t;    ///< position         of torso
 		SVar*  var_torso_pos_r;    ///< orientation      of torso
@@ -67,12 +77,15 @@ namespace DiMP {;
 
 		RunnerLipPosCon* con_lip_pos;     ///< LIP position constraint
 		RunnerLipVelCon* con_lip_vel;     ///< LIP velocity constraint
+		RunnerLipCmpCon* con_lip_cmp;
 
 		RunnerComConP* con_com_pos;     ///< torso, feet, and com position constraint based on 3-mass model
 		RunnerComConV* con_com_vel;     ///< torso, feet, and com velocity constraint based on 3-mass model
 
 		RunnerTimeCon* con_time;	    ///< relates step duration and cumulative time
 		RangeConS* con_duration_range;  ///< range constraint on step period
+		
+		RunnerCmpRangeCon* con_cmp_range[3][2];         ///< range constraint on CMP offset [x|y|z]
 
 		FixConV3* con_com_vel_zero;
 
@@ -160,6 +173,11 @@ namespace DiMP {;
 			real_t  footOriMax[2];
 			vec3_t  footCopMin[2];           ///< admissible range of CoP relative to foot
 			vec3_t  footCopMax[2];
+
+			vec3_t  cmpMin;                  ///< admissible range of CoP relative to foot
+			vec3_t  cmpMax;
+			vec3_t  momMin;
+			vec3_t  momMax;
 			
 			int     footCurveType;
 			real_t  ankleToToe;             ///< offset from foot center to the begining of toe|heel
@@ -244,6 +262,8 @@ namespace DiMP {;
 		real_t TimeToLanding(real_t t, int side);
 		
 
+		vec3_t Momentum(real_t t);
+		vec3_t CmpPos(real_t t);
 		vec3_t TorsoPos(const vec3_t& pcom, const vec3_t& psup, const vec3_t& pswg);
 		vec3_t TorsoVel(const vec3_t& vcom, const vec3_t& vsup, const vec3_t& vswg);
 		vec3_t TorsoAcc(const vec3_t& acom, const vec3_t& asup, const vec3_t& aswg);
@@ -268,6 +288,7 @@ namespace DiMP {;
 		real_t C, S;
 		vec3_t p0, v0, p1, v1;
 		vec3_t c0, cv0, ca0, c1;
+		vec3_t cm0, cmv0, L0, cm1, L1;
 		real_t k_p_p, k_p_v, k_p_c, k_p_cv, k_p_ca;
 		real_t k_v_p, k_v_v, k_v_c, k_v_cv, k_v_ca;
 		vec3_t k_p_tau, k_v_tau;
@@ -299,6 +320,22 @@ namespace DiMP {;
 		virtual void CalcLhs();
 
 		RunnerLipVelCon(Solver* solver, string _name, BipedRunKey* _obj, real_t _scale);
+	};
+
+	struct RunnerLipCmpCon : BipedRunCon {
+		virtual void CalcCoef();
+		virtual void CalcDeviation();
+		virtual void CalcLhs();
+
+		RunnerLipCmpCon(Solver* solver, string _string, BipedRunKey* _obj, real_t _scale);
+	};
+
+	struct RunnerLipMomCon : BipedRunCon {
+		virtual void CalcCoef();
+		virtual void CalcDeviation();
+		virtual void CalcLhs();
+
+		RunnerLipMomCon(Solver* solver, string _string, BipedRunKey* _obj, real_t _scale);
 	};
 
 	struct RunnerComConP : Constraint {
@@ -433,6 +470,42 @@ namespace DiMP {;
 		virtual void CalcDeviation();
 
 		RunnerFootCopRangeCon(Solver* solver, string _name, BipedRunKey* _obj, int _side, vec3_t _dir, real_t _scale);
+	};
+
+	struct RunnerCmpRangeCon : Constraint {
+		BipedRunKey* obj;
+		int          side;
+		real_t       bound;
+		vec3_t       dir, dir_abs;
+		real_t       theta;
+		mat3_t       R;
+		vec3_t       ez;
+		vec3_t       r;
+
+		void Prepare();
+
+		virtual void CalcCoef();
+		virtual void CalcDeviation();
+
+		RunnerCmpRangeCon(Solver* solver, string _name, BipedRunKey* _obj, vec3_t _dir, real_t _scale);
+	};
+
+	struct RunnerMomRangeCon : Constraint {
+		BipedRunKey* obj;
+		int          side;
+		real_t       bound;
+		vec3_t       dir, dir_abs;
+		real_t       theta;
+		mat3_t       R;
+		vec3_t       ez;
+		vec3_t       r;
+
+		void Prepare();
+
+		virtual void CalcCoef();
+		virtual void CalcDeviation();
+
+		RunnerMomRangeCon(Solver* solver, string _name, BipedRunKey* _obj, vec3_t dir, real_t _scale);
 	};
 
 	/// time constraint
