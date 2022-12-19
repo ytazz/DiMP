@@ -78,6 +78,7 @@ namespace DiMP {;
 		RunnerLipPosCon* con_lip_pos;     ///< LIP position constraint
 		RunnerLipVelCon* con_lip_vel;     ///< LIP velocity constraint
 		RunnerLipCmpCon* con_lip_cmp;
+		RunnerLipMomCon* con_lip_mom;
 
 		RunnerComConP* con_com_pos;     ///< torso, feet, and com position constraint based on 3-mass model
 		RunnerComConV* con_com_vel;     ///< torso, feet, and com velocity constraint based on 3-mass model
@@ -86,6 +87,7 @@ namespace DiMP {;
 		RangeConS* con_duration_range;  ///< range constraint on step period
 		
 		RunnerCmpRangeCon* con_cmp_range[3][2];         ///< range constraint on CMP offset [x|y|z]
+		RunnerMomRangeCon* con_mom_range[3][2];         ///< range constraint on centroidal mommentum [x|y|z]
 
 		FixConV3* con_com_vel_zero;
 
@@ -205,6 +207,8 @@ namespace DiMP {;
 			vec3_t  foot_cop[2];
 			vec3_t  foot_cop_min[2];
 			vec3_t  foot_cop_max[2];
+			vec3_t  cmp_pos;
+			vec3_t  mom;
 
 			bool    fix_com_pos;
 			bool    fix_com_vel;
@@ -212,6 +216,8 @@ namespace DiMP {;
 			bool    fix_foot_pos_t[2];
 			bool    fix_foot_pos_r[2];
 			bool    fix_foot_cop[2];
+			bool    fix_cmp_pos;
+			bool    fix_mom;
 			bool    set_cop_range[2];
 
 			Waypoint();
@@ -223,6 +229,7 @@ namespace DiMP {;
 			vec3_t  com_vel;
 			vec3_t  com_acc;
 			vec3_t  cop_pos;
+			vec3_t  cmp_pos;
 			vec3_t  torso_pos_t;
 			real_t  torso_pos_r;
 			vec3_t  foot_pos_t[2];

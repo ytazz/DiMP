@@ -94,6 +94,10 @@ public:
 		biped->param.footCopMax[0] = vec3_t(0.150, 0.05, 0.00);
 		biped->param.footCopMin[1] = vec3_t(-0.100, -0.05, 0.00);
 		biped->param.footCopMax[1] = vec3_t(0.150, 0.05, 0.00);
+		biped->param.cmpMin        = vec3_t(-0.05, 0.0, 0.0);
+		biped->param.cmpMax        = vec3_t(0.05, 0.0, 0.0);
+		biped->param.momMin        = vec3_t(-0.0, 0.0, 0.0);
+		biped->param.momMax        = vec3_t(0.0, 0.0, 0.0);
 		biped->param.swingHeight = 0.10;
 		//biped->param.swingProfile       = DiMP::BipedRunning::SwingProfile::Cycloid;
 		//biped->param.swingProfile       = DiMP::BipedRunning::SwingProfile::Experiment;
@@ -148,6 +152,8 @@ public:
 		biped->waypoints[0].k = 0;
 		biped->waypoints[0].com_pos = vec3_t(0.0, 0.0, biped->param.comHeight);
 		biped->waypoints[0].com_vel = vec3_t(0.0, 0.0, 0.0);
+		biped->waypoints[0].cmp_pos = vec3_t(0.0, 0.0, 0.0);
+		biped->waypoints[0].mom     = vec3_t(0.0, 0.0, 0.0);
 		biped->waypoints[0].torso_pos_r = 0.0;
 		biped->waypoints[0].foot_pos_t[0] = vec3_t(0.0, -spacing, 0.0);
 		biped->waypoints[0].foot_pos_r[0] = 0.0;
@@ -155,6 +161,8 @@ public:
 		biped->waypoints[0].foot_pos_r[1] = 0.0;
 		biped->waypoints[0].fix_com_pos = true;
 		biped->waypoints[0].fix_com_vel = true;
+		biped->waypoints[0].fix_cmp_pos = true;
+		biped->waypoints[0].fix_mom     = true;
 		biped->waypoints[0].fix_torso_pos_r = true;
 		biped->waypoints[0].fix_foot_pos_t[0] = true;
 		biped->waypoints[0].fix_foot_pos_r[0] = true;
@@ -202,6 +210,8 @@ public:
 		biped->waypoints[4].foot_pos_r[1] = 0.0;
 		biped->waypoints[4].fix_com_pos = true;
 		biped->waypoints[4].fix_com_vel = true;
+		biped->waypoints[4].fix_cmp_pos = true;
+		biped->waypoints[4].fix_mom     = true;
 		biped->waypoints[4].fix_torso_pos_r = true;
 		biped->waypoints[4].fix_foot_pos_t[0] = true;
 		biped->waypoints[4].fix_foot_pos_r[0] = true;
