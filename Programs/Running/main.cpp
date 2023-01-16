@@ -94,8 +94,8 @@ public:
 		biped->param.footCopMax[0] = vec3_t(0.150, 0.05, 0.00);
 		biped->param.footCopMin[1] = vec3_t(-0.100, -0.05, 0.00);
 		biped->param.footCopMax[1] = vec3_t(0.150, 0.05, 0.00);
-		biped->param.cmpMin        = vec3_t(-0.05, 0.0, 0.0);
-		biped->param.cmpMax        = vec3_t(0.05, 0.0, 0.0);
+		biped->param.cmpMin        = vec3_t(-0.00, 0.0, 0.0);
+		biped->param.cmpMax        = vec3_t(0.00, 0.0, 0.0);
 		biped->param.momMin        = vec3_t(-0.0, 0.0, 0.0);
 		biped->param.momMax        = vec3_t(0.0, 0.0, 0.0);
 		biped->param.swingHeight = 0.10;

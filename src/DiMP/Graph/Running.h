@@ -267,6 +267,7 @@ namespace DiMP {;
 		void   FootCopState(real_t t, int side, vec3_t& pos, vec3_t& vel, real_t& weight);
 		real_t TimeToLiftoff(real_t t, int side);
 		real_t TimeToLanding(real_t t, int side);
+
 		
 
 		vec3_t Momentum(real_t t);
@@ -284,6 +285,10 @@ namespace DiMP {;
 		BipedRunning(Graph* g, string n);
 		virtual ~BipedRunning();
 	};
+
+	// supplementaly function
+	template <typename T>
+	void   Interpolate(real_t t, T& p, T& v, T& a, real_t t0, const T& p0, const T& v0, const T& a0, real_t t1, const T& p1, const T& v1, const T& a1, int type);
 
 	struct BipedRunCon : Constraint {
 		BipedRunKey* obj[2];
