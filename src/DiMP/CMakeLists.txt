@@ -27,6 +27,7 @@ set(DIMP_HEADERS_GRAPH
 	Graph/Timing.h
 	Graph/Tree.h
 	Graph/Vehicle.h
+	Graph/Wholebody.h
 	)
 set(DIMP_HEADERS_LOAD
 	Load/Loader.h
@@ -58,6 +59,7 @@ set(DIMP_SOURCES_GRAPH
 	Graph/Timing.cpp
 	Graph/Tree.cpp
 	Graph/Vehicle.cpp
+	Graph/Wholebody.cpp
 	)
 set(DIMP_SOURCES_LOAD
 	Load/Loader.cpp

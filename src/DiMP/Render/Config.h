@@ -35,6 +35,8 @@ struct Item{
 		CentroidForce,
         CentroidTorso,
 		Avoid,
+		WholebodyLink,
+		WholebodyLinkTraj,
 	};
 };
 

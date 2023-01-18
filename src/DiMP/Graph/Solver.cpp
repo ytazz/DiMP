@@ -497,7 +497,9 @@ void CustomSolver::CalcDirectionSearchDDP(){
     for(auto& con : cons_active)
 		con->CalcCorrection();
 
-    PrepareDDP ();
+    CalcTransitionDDP();
+    CalcCostDDP();
+    CalcCostGradientDDP();
 
     int timePrepare1 = timer.CountUS();
 

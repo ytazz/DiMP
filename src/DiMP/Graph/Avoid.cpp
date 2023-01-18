@@ -17,8 +17,7 @@ const real_t inf = numeric_limits<real_t>::max();
 // AvoidKey
 
 AvoidKey::AvoidKey(){
-	con_p = 0;
-	con_v = 0;
+
 }
 
 void AvoidKey::AddCon(Solver* solver){
@@ -32,23 +31,42 @@ void AvoidKey::AddCon(Solver* solver){
 		gp.info0 = &obj0->geoInfos[i0];
 		gp.info1 = &obj1->geoInfos[i1];
 	}*/
-	con_p = new AvoidConP(solver, name + "_p", this, 0, node->graph->scale.pos_t);
-	con_v = new AvoidConV(solver, name + "_v", this, 0, node->graph->scale.vel_t);
-	solver->AddCostCon(con_p, tick->idx);
-	solver->AddCostCon(con_v, tick->idx);
+	con_p.resize(task->param.nactive_max);
+	con_v.resize(task->param.nactive_max);
 
-	con_p->enabled = task->param.avoid_p;
-	con_v->enabled = task->param.avoid_v;
+	stringstream ss;
+	for(int i = 0; i < task->param.nactive_max; i++){
+		ss.str("");
+		ss << name << "_p" << i;
+		con_p[i] = new AvoidConP(solver, ss.str(), this, 0, node->graph->scale.pos_t);
 
+		ss.str("");
+		ss << name << "_v" << i;
+		con_v[i] = new AvoidConV(solver, ss.str(), this, 0, node->graph->scale.vel_t);
+		
+		solver->AddCostCon(con_p[i], tick->idx);
+		solver->AddCostCon(con_v[i], tick->idx);
+
+		con_p[i]->enabled = task->param.avoid_p;
+		con_v[i]->enabled = task->param.avoid_v;
+	}
 }
 
 void AvoidKey::Prepare(){
 	TaskKey::Prepare();
 
-	if(!con_p->enabled && !con_v->enabled)
+	AvoidTask* task = (AvoidTask*)node;
+
+	if(!task->param.avoid_p && !task->param.avoid_v)
 		return;
 
-	AvoidTask* task = (AvoidTask*)node;
+	// temporarily inactivate all constraints
+	for(int i = 0; i < task->param.nactive_max; i++){
+		con_p[i]->gp = 0;
+		con_v[i]->gp = 0;
+		con_p[i]->active = false;
+		con_v[i]->active = false;
+	}
 	
 	if( relation == Inside ){
 		int nocttree = 0;
@@ -56,8 +74,9 @@ void AvoidKey::Prepare(){
 		int nbox     = 0;
 		int ngjk     = 0;
 		int nactive  = 0;
-		GeometryPair* gpmax = 0;
-		real_t        dmax  = 0.0;
+		//GeometryPair* gpmax = 0;
+		//real_t        dmax  = 0.0;
+		gpactive.clear();
 
 		/*ptimer.CountUS();
 		ExtractGeometryPairs(
@@ -117,36 +136,48 @@ void AvoidKey::Prepare(){
 				if(dnorm > eps){
 					gp.normal = diff/dnorm;
 					nactive++;
-					if(dnorm > dmax){
-						gpmax = &gp;
-						dmax  = dnorm;
-					}
+					gpactive.push_back(&gp);
+					//if(dnorm > dmax){
+					//	gpmax = &gp;
+					//	dmax  = dnorm;
+					//}
 				}
 			}
 		}
 		int timeEnum = timer.CountUS();
 
-		if(gpmax){
-			con_p->gp     = gpmax;
-			con_v->gp     = gpmax;
-			con_p->active = true;
-			con_v->active = true;
-		}
-		else{
-			con_p->active = false;
-			con_v->active = false;
-		}
-
+		//if(gpmax){
+		//	con_p->gp     = gpmax;
+		//	con_v->gp     = gpmax;
+		//	con_p->active = true;
+		//	con_v->active = true;
+		//}
+		//else{
+		//	con_p->active = false;
+		//	con_v->active = false;
+		//}
 		
 		//DSTR << "bsphere: " << nsphere << " bbox: " << nbox << " gjk: " << ngjk << " active: " << nactive << endl;
-		if(gpmax){
-			DSTR << " dist: " << gpmax->dist << " normal: " << gpmax->normal << endl;
-		}
+		//if(gpmax){
+		//	DSTR << " dist: " << gpmax->dist << " normal: " << gpmax->normal << endl;
+		//}
 		//DSTR << "timeExtract: " << timeExtract << " timeEnum: " << timeEnum << endl;
 	}
-	else{
-		con_p->active = false;
-		con_v->active = false;
+	//else{
+	//	con_p->active = false;
+	//	con_v->active = false;
+	//}
+
+	// partially sort active geometry pairs in ascending order of signed distance
+	int nactive = std::min((int)gpactive.size(), task->param.nactive_max);
+	partial_sort(gpactive.begin(), gpactive.begin() + nactive, gpactive.end(),
+		[](auto lhs, auto rhs){ return lhs->dist < rhs->dist; });
+	
+	for(int i = 0; i < nactive; i++){
+		con_p[i]->gp = gpactive[i];
+		con_v[i]->gp = gpactive[i];
+		con_p[i]->active = true;
+		con_v[i]->active = true;
 	}
 }
 
@@ -169,9 +200,10 @@ void AvoidKey::Draw(Render::Canvas* canvas, Render::Config* conf){
 // AvoidTask
 
 AvoidTask::Param::Param(){
-	avoid_p = true;
-	avoid_v = true;
-	dmin    = 0.0;
+	avoid_p     = true;
+	avoid_v     = true;
+	dmin        = 0.0;
+	nactive_max = 1;
 }
 
 AvoidTask::AvoidTask(Object* _obj0, Object* _obj1, TimeSlot* _time, const string& n)
