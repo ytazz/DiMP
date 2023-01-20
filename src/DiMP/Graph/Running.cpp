@@ -669,7 +669,7 @@ namespace DiMP {;
 			else {
 				pos = c0 + cm0 + ca0*T2 + (cv0 + cmv0)*dt + (1.0 / 2.0)*ca0*dt*dt +        C*(p0 - (c0 + ca0*T2 + cm0)) +     T*S*(v0 - cv0 - cmv0);
 				vel =               cv0 + cmv0            +             ca0*dt    + (1/T )*S*(p0 - (c0 + ca0*T2 + cm0)) +       C*(v0 - cv0 - cmv0);
-				acc =                                                               (1/T2)*C*(p0 - (c0 + ca0*T2 + cm0)) + (1/T)*S*(v0 - cv0 - cmv0);
+				acc =                                                   ca0       + (1/T2)*C*(p0 - (c0 + ca0*T2 + cm0)) + (1/T)*S*(v0 - cv0 - cmv0);
 
 			}
 		}
@@ -1516,9 +1516,20 @@ namespace DiMP {;
 			while (yaw_diff > pi) yaw_diff -= 2.0 * pi;
 			while (yaw_diff < -pi) yaw_diff += 2.0 * pi;
 
-			f_tp = p0 + ch  *(p1 - p0) + cv  *vec3_t(0.0, 0.0, param.swingHeight);
+			/*f_tp = p0 + ch  *(p1 - p0) + cv  *vec3_t(0.0, 0.0, param.swingHeight);
 			f_tv =      chd *(p1 - p0) + cvd *vec3_t(0.0, 0.0, param.swingHeight);
-			f_ta =      chdd*(p1 - p0) + cvdd*vec3_t(0.0, 0.0, param.swingHeight);
+			f_ta =      chdd*(p1 - p0) + cvdd*vec3_t(0.0, 0.0, param.swingHeight);*/
+			vec3_t pcom, vcom, acom;
+			real_t dpos_z, dvel_z, dacc_z;    // additional z position
+			ComState(t0, pcom, vcom, acom);
+			Interpolate(t, f_tp.x, f_tv.x, f_ta.x, t0, p0.x, vcom.x, acom.x, t1, p1.x, 0.0, 0.0, param.swingInterpolation);
+			Interpolate(t, f_tp.y, f_tv.y, f_ta.y, t0, p0.y, vcom.y, acom.y, t1, p1.y, 0.0, 0.0, param.swingInterpolation);
+			Interpolate(t, f_tp.z, f_tv.z, f_ta.z, t0, p0.z, max(vcom.z, 0.0), acom.z, t1, p1.z, 0.0, 0.0, param.swingInterpolation);
+			Interpolate2(t, dpos_z, dvel_z, dacc_z, t0, t1, param.swingHeight, param.swingInterpolation);
+			f_tp.z += dpos_z;
+			f_tv.z += dvel_z;
+			f_ta.z += dacc_z;
+
 			f_rp.z = yaw0 + ch * yaw_diff;
 			f_rv.z =        chd * yaw_diff;
 			f_ra.z =        chdd * yaw_diff;
