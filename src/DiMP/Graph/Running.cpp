@@ -320,6 +320,10 @@ namespace DiMP {;
 		durationMax[Phase::RL] = 0.2; // duration maximum at double support
 		durationMin[Phase::LR] = 0.1;
 		durationMax[Phase::LR] = 0.2;
+		durationMin[Phase::R2] = 0.1;
+		durationMax[Phase::R2] = 0.8;
+		durationMin[Phase::L2] = 0.1;
+		durationMax[Phase::L2] = 0.8;
 		durationMin[Phase::LRF] = 0.1;
 		durationMin[Phase::RLF] = 0.1;
 		durationMax[Phase::LRF] = 0.2;
@@ -441,14 +445,14 @@ namespace DiMP {;
 
 			if (key->next) {
 				// foot velocity must be zero while in contact
-				key->foot[0].con_vel_zero_t->enabled = (ph != BipedRunning::Phase::L && ph != BipedRunning::Phase::LRF && ph != BipedRunning::Phase::RLF);
-				key->foot[0].con_vel_zero_r->enabled = (ph != BipedRunning::Phase::L && ph != BipedRunning::Phase::LRF && ph != BipedRunning::Phase::RLF);
-				key->foot[1].con_vel_zero_t->enabled = (ph != BipedRunning::Phase::R && ph != BipedRunning::Phase::LRF && ph != BipedRunning::Phase::RLF);
-				key->foot[1].con_vel_zero_r->enabled = (ph != BipedRunning::Phase::R && ph != BipedRunning::Phase::LRF && ph != BipedRunning::Phase::RLF);
+				key->foot[0].con_vel_zero_t->enabled = (ph != BipedRunning::Phase::L && ph != BipedRunning::Phase::L2 && ph != BipedRunning::Phase::LRF && ph != BipedRunning::Phase::RLF);
+				key->foot[0].con_vel_zero_r->enabled = (ph != BipedRunning::Phase::L && ph != BipedRunning::Phase::L2 && ph != BipedRunning::Phase::LRF && ph != BipedRunning::Phase::RLF);
+				key->foot[1].con_vel_zero_t->enabled = (ph != BipedRunning::Phase::R && ph != BipedRunning::Phase::R2 && ph != BipedRunning::Phase::LRF && ph != BipedRunning::Phase::RLF);
+				key->foot[1].con_vel_zero_r->enabled = (ph != BipedRunning::Phase::R && ph != BipedRunning::Phase::R2 && ph != BipedRunning::Phase::LRF && ph != BipedRunning::Phase::RLF);
 
 				// cop velocity must be constant (i.e., acceleration must be zero) while in contact
-				key->foot[0].con_cop_vel_diff_zero->enabled = (ph == BipedRunning::Phase::LR || ph == BipedRunning::Phase::R);
-				key->foot[1].con_cop_vel_diff_zero->enabled = (ph == BipedRunning::Phase::RL || ph == BipedRunning::Phase::L);
+				key->foot[0].con_cop_vel_diff_zero->enabled = (ph == BipedRunning::Phase::LR || ph == BipedRunning::Phase::R || ph == BipedRunning::Phase::R2);
+				key->foot[1].con_cop_vel_diff_zero->enabled = (ph == BipedRunning::Phase::RL || ph == BipedRunning::Phase::L || ph == BipedRunning::Phase::L2);
 			}
 
 			// initial value of step duration is set as the average of minimum and maximum
@@ -490,13 +494,13 @@ namespace DiMP {;
 				BipedRunKey* key0 = key;
 				BipedRunKey* key1 = (BipedRunKey*)key->next;
 
-				if (phase[k] == Phase::R) {
+				if (phase[k] == Phase::R || phase[k] == Phase::R2) {
 					key0->foot[0].weight = 1.0;
 					key1->foot[0].weight = 1.0;
 					key0->foot[1].weight = 0.0;
 					key1->foot[1].weight = 0.0;
 				}
-				if (phase[k] == Phase::L) {
+				if (phase[k] == Phase::L || phase[k] == Phase::L2) {
 					key0->foot[0].weight = 0.0;
 					key1->foot[0].weight = 0.0;
 					key0->foot[1].weight = 1.0;
@@ -653,7 +657,7 @@ namespace DiMP {;
 		if (key1 == key0->next) {
 			vec3_t p0 = key0->var_com_pos->val;
 			vec3_t v0 = key0->var_com_vel->val;
-			vec3_t c0 = key0->cop_pos + vec3_t(0.0, 0.0, param.gravity.z * T * T); // actually vrp
+			vec3_t c0 = key0->cop_pos + param.gravity * T2; // actually vrp
 			vec3_t cv0 = key0->cop_vel;
 			vec3_t ca0 = key0->cop_acc;
 			vec3_t cm0 = key0->var_cmp_pos->val;
@@ -1381,12 +1385,12 @@ namespace DiMP {;
 		if (gaittype[key0->tick->idx] == GaitType::Run)
 		{
 			// first swing foot
-			if ((ph == Phase::R && keym1 && gaittype[keym1->tick->idx] == GaitType::Walk && side == 1) ||
-				(ph == Phase::L && keym1 && gaittype[keym1->tick->idx] == GaitType::Walk && side == 0) ||
+			if ((ph == Phase::R2 && keym1 && gaittype[keym1->tick->idx] == GaitType::Walk && side == 1) ||
+				(ph == Phase::L2 && keym1 && gaittype[keym1->tick->idx] == GaitType::Walk && side == 0) ||
 				(ph == Phase::RLF && keym2 && gaittype[keym2->tick->idx] == GaitType::Walk && side == 1) ||
 				(ph == Phase::LRF && keym2 && gaittype[keym2->tick->idx] == GaitType::Walk && side == 0))
 			{
-				if (ph == Phase::R || ph == Phase::L)
+				if (ph == Phase::R2 || ph == Phase::L2)
 				{
 					p1 = key2->foot[side].var_pos_t->val;
 					c1 = key2->foot[side].var_cop_pos->val;
@@ -1410,8 +1414,8 @@ namespace DiMP {;
 			// last swing foot
 			else if ((ph == Phase::RLF && key2 && gaittype[key2->tick->idx] == GaitType::Walk && side == 0) ||
 				     (ph == Phase::LRF && key2 && gaittype[key2->tick->idx] == GaitType::Walk && side == 1) ||
-				     (ph == Phase::L && gaittype[key1->tick->idx]           == GaitType::Walk && side == 0) ||
-				     (ph == Phase::R && gaittype[key1->tick->idx]           == GaitType::Walk && side == 1))
+				     (ph == Phase::L2 && gaittype[key1->tick->idx]           == GaitType::Walk && side == 0) ||
+				     (ph == Phase::R2 && gaittype[key1->tick->idx]           == GaitType::Walk && side == 1))
 			{
 				if (ph == Phase::RLF || ph == Phase::LRF)
 				{
@@ -1422,7 +1426,7 @@ namespace DiMP {;
 					t1 = key2->var_time->val;
 					s = dt / (tau0 + tau1);
 				}
-				if ((ph == Phase::R || ph == Phase::L) && keym1)
+				if ((ph == Phase::R2 || ph == Phase::L2) && keym1)
 				{
 					p0 = keym1->foot[side].var_pos_t->val;
 					c0 = keym1->foot[side].var_cop_pos->val;
@@ -1435,7 +1439,7 @@ namespace DiMP {;
 			}
 
 			// swing foot
-			else if ((ph == Phase::RLF) || (ph == Phase::LRF) || (ph == Phase::L && side == 0) || (ph == Phase::R && side == 1))
+			else if ((ph == Phase::RLF) || (ph == Phase::LRF) || (ph == Phase::L2 && side == 0) || (ph == Phase::R2 && side == 1))
 			{
 				if ((ph == Phase::RLF && side == 0) || (ph == Phase::LRF && side == 1))
 				{
@@ -1446,7 +1450,7 @@ namespace DiMP {;
 					if (key1) tau1 = key1->var_duration->val;
 					s = dt / (tau0*2 + tau1);
 				}
-				if ((ph == Phase::R && side == 1) || (ph == Phase::L && side == 0))
+				if ((ph == Phase::R2 && side == 1) || (ph == Phase::L2 && side == 0))
 				{
 					if (keym1) p0 = keym1->foot[side].var_pos_t->val;
 					if (keym1) c0 = keym1->foot[side].var_cop_pos->val;
@@ -1482,7 +1486,7 @@ namespace DiMP {;
 		real_t cvdd = ((_2pi * _2pi) * cos(_2pi * s)*ds*ds/2);
 
 		// preparation for foot print rotation while stance phase
-		if (ph == Phase::LR || ph == Phase::RL || ph == Phase::D || (ph == Phase::R && side == 0) || (ph == Phase::L && side == 1))
+		if (ph == Phase::LR || ph == Phase::RL || ph == Phase::D || (ph == Phase::R && side == 0) || (ph == Phase::L && side == 1) || (ph == Phase::R2 && side == 0) || (ph == Phase::L2 && side == 1))
 		{
 			//c0 = key0->foot[side].var_cop_pos->val;
 			//c1 = key1->foot[side].var_cop_pos->val;
@@ -2137,7 +2141,7 @@ namespace DiMP {;
 		L0 = obj[0]->var_mom->val;
 		p0 = obj[0]->var_com_pos->val;
 		v0 = obj[0]->var_com_vel->val;
-		c0 = obj[0]->cop_pos + vec3_t(0.0, 0.0, T2 * g.z);  //< c0 is vrp
+		c0 = obj[0]->cop_pos + g*T2;  //< c0 is vrp
 		cm0 = obj[0]->var_cmp_pos->val;
 
 		if (obj[1]) {

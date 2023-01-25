@@ -76,6 +76,10 @@ public:
 		biped->param.durationMax[DiMP::BipedRunning::Phase::RL] = 0.15;
 		biped->param.durationMin[DiMP::BipedRunning::Phase::LR] = 0.15;
 		biped->param.durationMax[DiMP::BipedRunning::Phase::LR] = 0.15;
+		biped->param.durationMin[DiMP::BipedRunning::Phase::R2] = 0.40;
+		biped->param.durationMax[DiMP::BipedRunning::Phase::R2] = 0.40;
+		biped->param.durationMin[DiMP::BipedRunning::Phase::L2] = 0.40;
+		biped->param.durationMax[DiMP::BipedRunning::Phase::L2] = 0.40;
 		biped->param.durationMin[DiMP::BipedRunning::Phase::RLF] = 0.15;
 		biped->param.durationMax[DiMP::BipedRunning::Phase::RLF] = 0.15;
 		biped->param.durationMin[DiMP::BipedRunning::Phase::LRF] = 0.15;
@@ -130,9 +134,9 @@ public:
 		for (uint i = 1; i < nphase - 2; i++) {
 			switch ((i - 1) % 4) {
 			case 0: { biped->phase[i] = (biped->gaittype[i] == DiMP::BipedRunning::GaitType::Walk ? DiMP::BipedRunning::Phase::RL : DiMP::BipedRunning::Phase::RLF); break; }
-			case 1: { biped->phase[i] = DiMP::BipedRunning::Phase::L;  break; }
+			case 1: { biped->phase[i] = (biped->gaittype[i] == DiMP::BipedRunning::GaitType::Walk ? DiMP::BipedRunning::Phase::L  : DiMP::BipedRunning::Phase::L2 ); break; }
 			case 2: { biped->phase[i] = (biped->gaittype[i] == DiMP::BipedRunning::GaitType::Walk ? DiMP::BipedRunning::Phase::LR : DiMP::BipedRunning::Phase::LRF); break; }
-			case 3: { biped->phase[i] = DiMP::BipedRunning::Phase::R;  break; }
+			case 3: { biped->phase[i] = (biped->gaittype[i] == DiMP::BipedRunning::GaitType::Walk ? DiMP::BipedRunning::Phase::R  : DiMP::BipedRunning::Phase::R2 ); break; }
 			}
 		}
 		biped->phase[nphase - 2] = DiMP::BipedRunning::Phase::D;

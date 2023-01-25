@@ -120,6 +120,8 @@ namespace DiMP {;
 				L,   //< left support
 				RL,  //< double support: transition from R to L
 				LR,  //< double support: trabsition from L to R
+				R2,  //< right support for running
+				L2,  //< left support for running
 				RLF, //< flight (substitution of RL)
 				LRF, //< filght (substitution of LR)
 				D,   //< double support for starting and stopping
