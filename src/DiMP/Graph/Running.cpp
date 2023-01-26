@@ -61,6 +61,7 @@ namespace DiMP {;
 			// step duration
 			var_duration = new SVar(solver, ID(VarTag::BipedDuration, node, tick, name + "_duration"), node->graph->scale.time);
 			var_duration->weight[0] = damping;
+			//var_duration->locked = true;
 
 			// register input variables of ddp
 			solver->AddInputVar(var_duration, tick->idx);
@@ -79,6 +80,7 @@ namespace DiMP {;
 			foot[i].var_pos_r  ->weight[0] = damping;
 			foot[i].var_cop_pos->weight    = 10*damping*one;
 			foot[i].var_cop_vel->weight    = damping*one;
+
 
 			foot[i].var_pos_r->locked = true;
 
@@ -107,12 +109,19 @@ namespace DiMP {;
 		var_cmp_vel = new V3Var(solver, ID(VarTag::CentroidTV, node, tick, name + "_cmp_v"), node->graph->scale.vel_t);
 		var_cmp_pos->weight = damping * one;
 		var_cmp_vel->weight = damping * one;
+		
+		//var_cmp_pos->locked = true;
+		//var_cmp_vel->locked = true;
+
 		solver->AddStateVar(var_cmp_pos, tick->idx);
 		solver->AddStateVar(var_cmp_vel, tick->idx);
 
 
 		var_mom = new V3Var(solver, ID(VarTag::CentroidTP, node, tick, name + "_mom"), node->graph->scale.vel_t);
 		var_mom->weight = damping * one;
+
+		var_mom->locked = true;
+
 		solver->AddStateVar(var_mom, tick->idx);
 	}
 
