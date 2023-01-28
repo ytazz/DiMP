@@ -120,7 +120,7 @@ namespace DiMP {;
 		var_mom = new V3Var(solver, ID(VarTag::CentroidTP, node, tick, name + "_mom"), node->graph->scale.vel_t);
 		var_mom->weight = damping * one;
 
-		var_mom->locked = true;
+		//var_mom->locked = true;
 
 		solver->AddStateVar(var_mom, tick->idx);
 	}
@@ -449,7 +449,7 @@ namespace DiMP {;
 			if (!key->prev) {
 				// initial time is fixed
 				key->var_time->val = 0.0;
-				key->var_time->locked = true;
+				//key->var_time->locked = true;
 			}
 
 			if (key->next) {
