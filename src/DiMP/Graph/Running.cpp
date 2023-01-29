@@ -715,7 +715,7 @@ namespace DiMP {;
 			//Lt = L0 + vec3_t(0.0, 0.0, 1.0) % (cm0 * dt + 0.5 * dt * dt * cmv0); // it works only if vertical acceleration is zero
 			Lt = L0 + vec3_t(0.0, 0.0, 1.0) % ((g * cm0 + vt.z * cmv0) * dt + 0.5 * g * cmv0 * dt * dt);
 
-			int ph = key0->var_duration->val;
+			int ph = phase[key0->tick->idx];
 			if (ph == Phase::RLF || ph == Phase::LRF) Lt = L0;
 		}
 		else {
