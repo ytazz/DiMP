@@ -14,57 +14,80 @@ struct WholebodyPosConR;
 struct WholebodyVelConT;
 struct WholebodyVelConR;
 struct WholebodyComPosCon;
-struct WholebodyTotalForceCon;
-struct WholebodyTotalMomentCon;
+struct WholebodyComVelCon;
+struct WholebodyBasePosConR;
+struct WholebodyBaseVelConR;
+struct WholebodyDesPosConT;
+struct WholebodyDesPosConR;
+struct WholebodyDesVelConT;
+struct WholebodyDesVelConR;
 struct WholebodyLimitCon;
+struct WholebodyContactPosConT;
+struct WholebodyContactPosConR;
+struct WholebodyContactVelConT;
+struct WholebodyContactVelConR;
 struct WholebodyNormalForceCon;
 struct WholebodyFrictionForceCon;
 struct WholebodyMomentCon;
-struct WholebodyComPosMatchCon;
-struct WholebodyComVelMatchCon;
-struct WholebodyMomentumMatchCon;
 
 class WholebodyCallback;
 
 struct WholebodyData{
 	struct Link{
-		vec3_t  pos_t;
-		quat_t  pos_r;
-		vec3_t  vel_t;
-		vec3_t  vel_r;
-		vec3_t  acc_t;
-		vec3_t  acc_r;
-		vec3_t  force_t, force_t_par;
-		vec3_t  force_r, force_r_par;
-		bool    force_ready;
+		vec3_t  pos_t;  // position (base link local)
+		quat_t  pos_r;  // orientation
+		vec3_t  vel_t;  // velocity
+		vec3_t  vel_r;  // angular velocity
+		vec3_t  acc_t;  // acceleration
+		vec3_t  acc_r;  // angular acceleration
+		vec3_t  force_t, force_t_par, force_t_child;
+		vec3_t  force_r, force_r_par, force_r_child;
 	};
 
 	struct End{
-		vec3_t  pos_t_des, pos_t_ini, pos_tc;
-		quat_t  pos_r_des, pos_r_ini, pos_rc;
-		vec3_t  vel_t_des, vel_t_ini;
-		vec3_t  vel_r_des, vel_r_ini;
-		vec3_t  acc_tc  , acc_tc_des, acc_tc_ini;
-		vec3_t  acc_rc  , acc_rc_des, acc_rc_ini;
-		vec3_t  force_tc, force_tc_des, force_tc_ini;
-		vec3_t  force_rc, force_rc_des, force_rc_ini;
+		vec3_t  pos_t, pos_t_des, pos_t_ini, pos_tc;
+		quat_t  pos_r, pos_r_des, pos_r_ini, pos_rc;
+		vec3_t  vel_t, vel_t_des, vel_t_ini;
+		vec3_t  vel_r, vel_r_des, vel_r_ini;
+		vec3_t  acc_t, acc_t_des, acc_t_ini;
+		vec3_t  acc_r, acc_r_des, acc_r_ini;
+		vec3_t  force_t, force_t_des, force_t_ini;
+		vec3_t  force_r, force_r_des, force_r_ini;
 
-		vec3_t  rlc, rcc;
-		mat3_t  Rc, rlc_cross_Rc, rcc_cross_Rc;
+		vec3_t pos_t_weight, pos_r_weight;
+		vec3_t vel_t_weight, vel_r_weight;
+		vec3_t acc_t_weight, acc_r_weight;
+		vec3_t force_t_weight, force_r_weight;
+
+		//vec3_t  center;  //< contact center in link's local coordinate
+		//real_t  offset;  //< offset from contact plane to contact center
+
+		//vec3_t  rlc, rcc;
+		//mat3_t  Rc, rcc_cross_Rc;
 	
-		int             state;       ///< contact state
-		array<bool, 6>  v_or_f;      ///< velocity/force complimentarity
-		real_t          mu;          ///< friction
-		vec2_t          cop_min;
-		vec2_t          cop_max;
+		int     state;       ///< contact state
+		real_t  mu;          ///< friction
+		vec2_t  cop_min;
+		vec2_t  cop_max;
+
+		End();
 	};
 
 	vector<Link>  links;
 	vector<End>   ends;
 
-	vec3_t com_pos, com_pos_des;
-	vec3_t com_vel, com_vel_des;
-	vec3_t mom, mom_des;
+	vec3_t com_pos, com_pos_des, com_pos_ini;   ///< com position (local), desired com position (global)
+	vec3_t com_vel, com_vel_des, com_vel_ini;   ///< com velocity (local), desired com velocity (global)
+	vec3_t com_pos_weight;
+	vec3_t com_vel_weight;
+	vec3_t com_acc;
+	quat_t base_pos_r, base_pos_r_des, base_pos_r_ini;
+	vec3_t base_vel_r, base_vel_r_des, base_vel_r_ini;
+	vec3_t base_pos_r_weight;
+	vec3_t base_vel_r_weight;
+	vec3_t base_acc_r;
+	vec3_t L, Ld;                  ///< momentum (local) and its derivative
+	mat3_t I, Iinv;                ///< inertia matrix around com and its inverse
 	vvec_t q, qd, tau;
 	vvec_t e;
 
@@ -79,64 +102,69 @@ public:
 	Wholebody*  wb;
 	
 	struct End{
-		V3Var*  var_pos_t;    ///< position        
+		V3Var*  var_pos_t;    ///< position (base link: global, otherwise: base link local)
 		QVar*   var_pos_r;    ///< orientation
-		V3Var*  var_vel_t;
-		V3Var*  var_vel_r;
-		SVar*   var_compl[6];
+		V3Var*  var_vel_t;    ///< velocity
+		V3Var*  var_vel_r;    ///< angular velocity
+		V3Var*  var_acc_t;    ///< acceleration
+		V3Var*  var_acc_r;    ///< angular acceleration
+		V3Var*  var_force_t;  ///< force (contact frame)
+		V3Var*  var_force_r;  ///< moment
 		
-		FixConV3*  con_des_pos_t  ;
-		FixConQ *  con_des_pos_r  ;
-		FixConV3*  con_des_vel_t  ;
-		FixConV3*  con_des_vel_r  ;
-		FixConS *  con_des_compl[6];
+		WholebodyPosConT*     con_pos_t;
+		WholebodyPosConR*     con_pos_r;
+		WholebodyVelConT*     con_vel_t;
+		WholebodyVelConR*     con_vel_r;
 
-		WholebodyPosConT*           con_pos_t;
-		WholebodyPosConR*           con_pos_r;
-		WholebodyVelConT*           con_vel_t;
-		WholebodyVelConR*           con_vel_r;
-
+		WholebodyDesPosConT*  con_des_pos_t  ;   ///< desired position (global)
+		WholebodyDesPosConR*  con_des_pos_r  ;   ///< desired orientation
+		WholebodyDesVelConT*  con_des_vel_t  ;   ///< desired velocity
+		WholebodyDesVelConR*  con_des_vel_r  ;   ///< desired angular velocity
+		FixConV3*             con_des_acc_t  ;   ///< desired acceleration (local)
+		FixConV3*             con_des_acc_r  ;   ///< desired angular acceleration
+		FixConV3*             con_des_force_t;   ///< desired force (contact frame)
+		FixConV3*             con_des_force_r;   ///< desired moment
+		
+		WholebodyContactPosConT*    con_contact_pos_t;
+		WholebodyContactPosConR*    con_contact_pos_r;
+		WholebodyContactVelConT*    con_contact_vel_t;
+		WholebodyContactVelConR*    con_contact_vel_r;
 		WholebodyNormalForceCon*    con_force_normal;
 		WholebodyFrictionForceCon*  con_force_friction[2][2];
 		WholebodyMomentCon*         con_moment[2][2];
 	};
-
+		
 	V3Var*  var_com_pos;
 	V3Var*  var_com_vel;
-	V3Var*  var_mom;
+	QVar*   var_base_pos_r;
+	V3Var*  var_base_vel_r;
 
+	WholebodyComPosCon*    con_com_pos;
+	WholebodyComVelCon*    con_com_vel;
+	WholebodyBasePosConR*  con_base_pos_r;
+	WholebodyBaseVelConR*  con_base_vel_r;
 	FixConV3*  con_des_com_pos;
 	FixConV3*  con_des_com_vel;
-	FixConV3*  con_des_mom;
-		
-	vector<WholebodyLimitCon*>  con_limit;
-
-	WholebodyComPosCon*         con_com_pos;	
-	WholebodyTotalForceCon*     con_total_force;
-	WholebodyTotalMomentCon*    con_total_moment;
-
-	WholebodyComPosMatchCon*    con_com_pos_match;	
-	WholebodyComVelMatchCon*    con_com_vel_match;
-	WholebodyMomentumMatchCon*  con_mom_match;
+	FixConQ*   con_des_base_pos_r;
+	FixConV3*  con_des_base_vel_r;
 	
-	WholebodyData  data, data_plus, data_minus, data_tmp;
-
-	vector<mat3_t>  J_pcom_pe, J_pcom_qe, J_pcom_ve, J_pcom_we;
-	vector<mat3_t>  J_vcom_pe, J_vcom_qe, J_vcom_ve, J_vcom_we;
-	vector<mat3_t>  J_L_pe   , J_L_qe   , J_L_ve   , J_L_we   ;
-	vector<vmat_t>  J_q_pe   , J_q_qe   , J_q_ve   , J_q_we   ;
-	vector<vmat_t>  J_e_pe   , J_e_qe   , J_e_ve   , J_e_we   ;
+	vector<WholebodyLimitCon*>  con_limit;
+	
+	WholebodyData          data;
+	WholebodyData          data_tmp[3];
+	vector< vector<WholebodyData> >  data_tmp2;
+	
+	vector<vmat_t>  J_e_pe, J_e_qe;              //< jacobian from end pose to error
+	vector< vector<mat3_t> > J_pi_pe, J_pi_qe;   //< jacobian from end pose to link position
 
 	vector<End>    ends;
 	
-public:
-	void CalcIK(WholebodyData& data, bool calc_acc, bool calc_force);
-	
+public:	
     virtual void AddVar(Solver* solver);
 	virtual void AddCon(Solver* solver);
-	virtual void Prepare    ();
-	virtual void PrepareStep();
-	virtual void Finish     ();
+	virtual void Prepare     ();
+	virtual void PrepareStep ();
+	virtual void Finish      ();
 	virtual void Draw(Render::Canvas* canvas, Render::Config* conf);
 
 	WholebodyKey();
@@ -171,9 +199,10 @@ public:
 		vector<int>  ichildren;    ///< child link indices
 		int          ijoint;       ///< joint index
 		bool         is_end;
+		vec3_t       trn;          ///< translation from parent
 		vec3_t       axis;         ///< joint axis
 	
-		Link(real_t _mass = 0.0, int _iparent = -1, int _ijoint = -1, vec3_t _axis = vec3_t());
+		Link(real_t _mass = 0.0, bool _is_end = false, int _iparent = -1, int _ijoint = -1, vec3_t _trn = vec3_t(), vec3_t _axis = vec3_t());
 	};
 
 	struct End{
@@ -192,13 +221,11 @@ public:
 	};
 
 	struct Chain{
-		int           ibase;
-		int           iend;
 		vector<int>   ilink;
 		vector<int>   ilimit;
 		
 		Chain(){}
-		Chain(int _ibase, int _iend, const vector<int>& _ilink, const vector<int>& _ilimit);
+		Chain(const vector<int>& _ilink, const vector<int>& _ilimit);
 	};
 	
    	struct Snapshot{
@@ -212,6 +239,10 @@ public:
 		};
 	
 		real_t  t;
+		vec3_t  com_pos;
+		vec3_t  com_vel;
+		quat_t  base_pos_r;
+		vec3_t  base_vel_r;
 		vector<Link>  links;
 		
 		Snapshot();
@@ -221,7 +252,6 @@ public:
     vector<Link>        links;
 	vector<Joint>       joints;
 	vector<Limit>       limits;
-	vector<int>         idOrder;
 	vector<End>         ends;
 	vector<Chain>       chains;
 	WholebodyCallback*  callback;
@@ -240,7 +270,7 @@ public:
 	Snapshot            snapshot;
 	vector<Snapshot>    trajectory;
 	bool                trajReady;
-	
+
 	virtual Keypoint*	CreateKeypoint() { return new WholebodyKey(); }
 	virtual void		Init   ();
 	virtual void		Prepare();
@@ -251,8 +281,20 @@ public:
 
 	void SetScaling();
 	void Setup();
-
-	void ComState (real_t t, vec3_t& pos, vec3_t& vel);
+	void CalcPosition        (WholebodyData& d);
+	void CalcVelocity        (const WholebodyData& d0, const WholebodyData& d1, WholebodyData& d, real_t epsinv);
+	void CalcAcceleration    (const WholebodyData& d0, const WholebodyData& d1, WholebodyData& d, real_t epsinv);
+	void CalcLinkPosition    (WholebodyData& d);
+	//void CalcLinkVelocity    (WholebodyData& d, bool calc_end);
+	void CalcComAcceleration (WholebodyData& d);
+	void CalcBaseAcceleration(WholebodyData& d);
+	void CalcMomentum        (WholebodyData& d);
+	void CalcMomentumDerivative(WholebodyData& d);
+	void CalcPVA             (WholebodyData* data_tmp, WholebodyData& data);
+	void CalcForce           (WholebodyData& d);
+	
+	void ComState    (real_t t, vec3_t& pos, vec3_t& vel   );
+	void BaseState   (real_t t, quat_t& ori, vec3_t& angvel);
 	void LinkPose    (real_t t, int i, vec3_t& pos  , quat_t& ori   );
     void LinkVelocity(real_t t, int i, vec3_t& vel  , vec3_t& angvel);
     void LinkForce   (real_t t, int i, vec3_t& force, vec3_t& moment);
@@ -268,7 +310,7 @@ public:
 class WholebodyCallback{
 public:
 	virtual void   CalcIK(WholebodyData& data) = 0;
-	virtual void   Setup (real_t t, WholebodyData& data) = 0;
+	virtual void   Setup (int k, real_t t, WholebodyData& data) = 0;
 };
 
 struct WholebodyCon : Constraint {
@@ -334,60 +376,206 @@ struct WholebodyVelConR : WholebodyCon{
 };
 
 struct WholebodyComPosCon : WholebodyCon{
-	vec3_t pc0, vc0, pc1, pc_rhs;
+	vec3_t pc0, pc1, pc_rhs;
+	vec3_t vc0;
 
 	void Prepare();
 
 	virtual void  CalcCoef();
 	virtual void  CalcDeviation();
 	virtual void  CalcLhs();
-	
+		
 	WholebodyComPosCon(Solver* solver, string _name, WholebodyKey* _obj, real_t _scale);
 };
 
-struct WholebodyTotalForceCon : WholebodyCon{
-	//real_t  m;
-	vec3_t  fsum;
-	vec3_t  vc_rhs;
-
+struct WholebodyComVelCon : WholebodyCon{
+	quat_t q0;
+	mat3_t R0;
+	vec3_t vc0, vc1, vc_rhs;
+	vec3_t fsum;
+	vector<vec3_t>  f;
+	vector<mat3_t>  R;
+	
 	void Prepare();
 
 	virtual void  CalcCoef();
 	virtual void  CalcDeviation();
 	virtual void  CalcLhs();
-	
-	WholebodyTotalForceCon(Solver* solver, string _name, WholebodyKey* _obj, real_t _scale);
+		
+	WholebodyComVelCon(Solver* solver, string _name, WholebodyKey* _obj, real_t _scale);
 };
 
-struct WholebodyTotalMomentCon : WholebodyCon{
-	vec3_t          msum;
-	vec3_t          L_rhs;
-
+struct WholebodyBasePosConR : WholebodyCon{
+	quat_t q0, q1, q_rhs;
+	vec3_t w0;
+	
 	void Prepare();
 
 	virtual void  CalcCoef();
 	virtual void  CalcDeviation();
 	virtual void  CalcLhs();
+		
+	WholebodyBasePosConR(Solver* solver, string _name, WholebodyKey* _obj, real_t _scale);
+};
+
+struct WholebodyBaseVelConR : WholebodyCon{
+	vec3_t pc;
+	vec3_t w0, w1, w_rhs;
+	quat_t q0;
+	mat3_t R0;
+	vec3_t msum;
+	vec3_t Ld;
+	mat3_t Iinv;
+	vector<vec3_t>  r, f, m;
+	vector<mat3_t>  R, rc;
+	vector<mat3_t>  J_Ld_pe, J_Ld_qe, J_Ld_ae, J_Ld_ue;
 	
-	WholebodyTotalMomentCon(Solver* solver, string _name, WholebodyKey* _obj, real_t _scale);
+	void Prepare();
+
+	virtual void  CalcCoef();
+	virtual void  CalcDeviation();
+	virtual void  CalcLhs();
+		
+	WholebodyBaseVelConR(Solver* solver, string _name, WholebodyKey* _obj, real_t _scale);
+};
+
+struct WholebodyDesPosConT : Constraint{
+	WholebodyKey*  obj;
+	int    iend;
+	vec3_t desired;
+	vec3_t pc, pi;
+	quat_t q0;
+	mat3_t R0;
+	
+	void Prepare();
+
+	virtual void  CalcCoef();
+	virtual void  CalcDeviation();
+		
+	WholebodyDesPosConT(Solver* solver, string _name, WholebodyKey* _obj, int _iend, real_t _scale);
+};
+
+struct WholebodyDesPosConR : Constraint{
+	WholebodyKey*  obj;
+	int    iend;
+	quat_t desired;
+	quat_t q0, qi;
+	mat3_t R0;
+
+	void Prepare();
+
+	virtual void  CalcCoef();
+	virtual void  CalcDeviation();
+		
+	WholebodyDesPosConR(Solver* solver, string _name, WholebodyKey* _obj, int _iend, real_t _scale);
+};
+
+struct WholebodyDesVelConT : Constraint{
+	WholebodyKey*  obj;
+	int    iend;
+	vec3_t desired;
+	vec3_t vc, w0, pi, vi;
+	quat_t q0;
+	mat3_t R0;
+
+	void Prepare();
+
+	virtual void  CalcCoef();
+	virtual void  CalcDeviation();
+		
+	WholebodyDesVelConT(Solver* solver, string _name, WholebodyKey* _obj, int _iend, real_t _scale);
+};
+
+struct WholebodyDesVelConR : Constraint{
+	WholebodyKey*  obj;
+	int    iend;
+	vec3_t desired;
+	vec3_t w0, wi;
+	quat_t q0;
+	mat3_t R0;
+	
+	void Prepare();
+
+	virtual void  CalcCoef();
+	virtual void  CalcDeviation();
+		
+	WholebodyDesVelConR(Solver* solver, string _name, WholebodyKey* _obj, int _iend, real_t _scale);
 };
 
 struct WholebodyLimitCon : Constraint{
 	WholebodyKey*  obj;
-	int  idx;
+	int  ierror;
 	
 	void Prepare();
 
 	virtual void  CalcCoef();
 	virtual void  CalcDeviation();
 	
-	WholebodyLimitCon(Solver* solver, string _name, WholebodyKey* _obj, int _idx, int _type, real_t _scale);
+	WholebodyLimitCon(Solver* solver, string _name, WholebodyKey* _obj, int _ierror, int _type, real_t _scale);
+};
+
+struct WholebodyContactPosConT : Constraint{
+	WholebodyKey*  obj;
+	int    iend;
+	vec3_t n, o;
+	vec3_t pc, pi;
+	quat_t q0, qi;
+
+	void Prepare();
+
+	virtual void  CalcCoef();
+	virtual void  CalcDeviation();
+	
+	WholebodyContactPosConT(Solver* solver, string _name, WholebodyKey* _obj, int _iend, real_t _scale);
+};
+
+struct WholebodyContactPosConR : Constraint{
+	WholebodyKey*  obj;
+	int    iend;
+	quat_t qc, q0, qi;
+	mat3_t R0;
+	
+	void Prepare();
+
+	virtual void  CalcCoef();
+	virtual void  CalcDeviation();
+	
+	WholebodyContactPosConR(Solver* solver, string _name, WholebodyKey* _obj, int _iend, real_t _scale);
+};
+
+struct WholebodyContactVelConT : Constraint{
+	WholebodyKey*  obj;
+	int    iend;
+	vec3_t n, vc, w0, pi, vi;
+	quat_t q0, qi;
+	mat3_t R0;
+	
+	void Prepare();
+
+	virtual void  CalcCoef();
+	virtual void  CalcDeviation();
+	
+	WholebodyContactVelConT(Solver* solver, string _name, WholebodyKey* _obj, int _iend, real_t _scale);
+};
+
+struct WholebodyContactVelConR : Constraint{
+	WholebodyKey*  obj;
+	int    iend;
+	quat_t q0, qi;
+	mat3_t R0;
+	vec3_t w0, wi;
+	
+	void Prepare();
+
+	virtual void  CalcCoef();
+	virtual void  CalcDeviation();
+	
+	WholebodyContactVelConR(Solver* solver, string _name, WholebodyKey* _obj, int _iend, real_t _scale);
 };
 
 struct WholebodyNormalForceCon : Constraint{
 	WholebodyKey*  obj;
 	int    iend;
-	bool   on;
 	vec3_t n, f;
 	real_t fn;
 
@@ -402,7 +590,6 @@ struct WholebodyNormalForceCon : Constraint{
 struct WholebodyFrictionForceCon : Constraint{
 	WholebodyKey*  obj;
 	int    iend;
-	bool   on;
 	int    dir;   //< x or y
 	int    side;  //< upper or lower bound
 	real_t fn, ft, mu;
@@ -418,7 +605,6 @@ struct WholebodyFrictionForceCon : Constraint{
 struct WholebodyMomentCon : Constraint{
 	WholebodyKey*  obj;
 	int    iend;
-	bool   on;
 	int    dir;   //< x or y
 	int    side;  //< upper or lower bound
 	real_t fn;
@@ -431,39 +617,6 @@ struct WholebodyMomentCon : Constraint{
 	virtual void  CalcDeviation();
 	
 	WholebodyMomentCon(Solver* solver, string _name, WholebodyKey* _obj, int _iend, int _dir, int _side, real_t _scale);
-};
-
-struct WholebodyComPosMatchCon : Constraint{
-	WholebodyKey*  obj;
-	
-	void Prepare();
-
-	virtual void  CalcCoef();
-	virtual void  CalcDeviation();
-	
-	WholebodyComPosMatchCon(Solver* solver, string _name, WholebodyKey* _obj, real_t _scale);
-};
-
-struct WholebodyComVelMatchCon : Constraint{
-	WholebodyKey*  obj;
-	
-	void Prepare();
-
-	virtual void  CalcCoef();
-	virtual void  CalcDeviation();
-	
-	WholebodyComVelMatchCon(Solver* solver, string _name, WholebodyKey* _obj, real_t _scale);
-};
-
-struct WholebodyMomentumMatchCon : Constraint{
-	WholebodyKey*  obj;
-	
-	void Prepare();
-
-	virtual void  CalcCoef();
-	virtual void  CalcDeviation();
-	
-	WholebodyMomentumMatchCon(Solver* solver, string _name, WholebodyKey* _obj, real_t _scale);
 };
 
 }

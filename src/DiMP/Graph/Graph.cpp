@@ -53,12 +53,12 @@ const char* VarNames[] = {
 	"wholebody_pos_r",
 	"wholebody_vel_t",
 	"wholebody_vel_r",
-	"wholebody_compl",
-	//"wholebody_force_t",
-	//"wholebody_force_r",
+	"wholebody_acc_t",
+	"wholebody_acc_r",
+	"wholebody_force_t",
+	"wholebody_force_r",
 	"wholebody_com_pos",
-	"wholebody_com_vel",
-	"wholebody_momentum"
+	"wholebody_com_vel"
 };
 
 const char* ConNames[] = {
@@ -123,21 +123,20 @@ const char* ConNames[] = {
 	"wholebody_pos_r",
 	"wholebody_vel_t",
 	"wholebody_vel_r",
-	"wholebody_compl",
-	//"wholebody_force_t",
-	//"wholebody_force_r",
-	"wholebody_com_pos",
-	"wholebody_com_vel",
-	"wholebody_momentum",
-	"wholebody_total_force",
-	"wholebody_total_moment"
+	"wholebody_acc_t",
+	"wholebody_acc_r",
+	"wholebody_force_t",
+	"wholebody_force_r",
 	"wholebody_limit",
+	"wholebody_contact_pos_t",
+	"wholebody_contact_pos_r",
+	"wholebody_contact_vel_t",
+	"wholebody_contact_vel_r",
 	"wholebody_normal_force",
 	"wholebody_friction_force",
 	"wholebody_moment",
-	"wholebody_com_pos_match",
-	"wholebody_com_vel_match",
-	"wholebody_momentum_match",
+	"wholebody_com_pos",
+	"wholebody_com_vel"
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

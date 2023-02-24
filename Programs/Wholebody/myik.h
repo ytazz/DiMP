@@ -44,7 +44,6 @@ public:
 	};
 	struct End{
 		enum{
-			Hips,
 			ChestP,
 			HandR,
 			HandL,
@@ -84,10 +83,6 @@ public:
 	void CalcTorsoIK(const vec3_t& pos, const quat_t& ori, vvec_t& joint, vvec_t& error);
 	void CalcArmIK  (const vec3_t& pos, const quat_t& ori, vvec_t& joint, vvec_t& error, int side);
 	void CalcLegIK  (const vec3_t& pos, const quat_t& ori, vvec_t& joint, vvec_t& error, int side);
-	
-	void CalcTorsoFK(const vvec_t& joint, vector<vec3_t>& pos, vector<quat_t>& ori);
-	void CalcArmFK  (const vvec_t& joint, vector<vec3_t>& pos, vector<quat_t>& ori, int side);
-	void CalcLegFK  (const vvec_t& joint, vector<vec3_t>& pos, vector<quat_t>& ori, int side);
 
 	MyIK();
 };
