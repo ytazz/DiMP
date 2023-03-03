@@ -7,13 +7,11 @@
 
 #include <sbrollpitchyaw.h>
 
-namespace DiMP {
-	;
+namespace DiMP {;
 
 	const real_t   pi = M_PI;
 	const real_t _2pi = 2.0 * pi;
-
-	const real_t eps = 0.1;
+	const real_t damping = 0.1;
 
 	//-------------------------------------------------------------------------------------------------
 	// BipedRunKey
@@ -30,73 +28,101 @@ namespace DiMP {
 
 		// torso position and velocity
 		var_torso_pos_t = new V3Var(solver, ID(VarTag::BipedTorsoTP, node, tick, name + "_torso_tp"), node->graph->scale.pos_t);
-		var_torso_pos_r = new SVar(solver, ID(VarTag::BipedTorsoRP, node, tick, name + "_torso_rp"), node->graph->scale.pos_r);
+		var_torso_pos_r = new SVar (solver, ID(VarTag::BipedTorsoRP, node, tick, name + "_torso_rp"), node->graph->scale.pos_r);
 		var_torso_vel_t = new V3Var(solver, ID(VarTag::BipedTorsoTV, node, tick, name + "_torso_tv"), node->graph->scale.vel_t);
-		solver->AddInputVar(var_torso_pos_t, tick->idx);
-		solver->AddInputVar(var_torso_pos_r, tick->idx);
-		solver->AddInputVar(var_torso_vel_t, tick->idx);
-		var_torso_pos_t->weight = eps * one;
-		var_torso_pos_r->weight[0] = eps;
-		var_torso_vel_t->weight = eps * one;
-
-		// foot position
-		var_foot_pos_t[0] = new V3Var(solver, ID(VarTag::BipedFootTP, node, tick, name + "_foot_r_t"), node->graph->scale.pos_t);
-		var_foot_pos_r[0] = new SVar(solver, ID(VarTag::BipedFootRP, node, tick, name + "_foot_r_r"), node->graph->scale.pos_r);
-		var_foot_pos_t[1] = new V3Var(solver, ID(VarTag::BipedFootTP, node, tick, name + "_foot_l_t"), node->graph->scale.pos_t);
-		var_foot_pos_r[1] = new SVar(solver, ID(VarTag::BipedFootRP, node, tick, name + "_foot_l_r"), node->graph->scale.pos_r);
-		solver->AddInputVar(var_foot_pos_t[0], tick->idx);
-		solver->AddInputVar(var_foot_pos_r[0], tick->idx);
-		solver->AddInputVar(var_foot_pos_t[1], tick->idx);
-		solver->AddInputVar(var_foot_pos_r[1], tick->idx);
-		var_foot_pos_t[0]->weight = eps * one;
-		var_foot_pos_r[0]->weight[0] = eps;
-		var_foot_pos_t[1]->weight = eps * one;
-		var_foot_pos_r[1]->weight[0] = eps;
 
 		// CoM position and velocity
 		var_com_pos = new V3Var(solver, ID(VarTag::BipedComP, node, tick, name + "_com_p"), node->graph->scale.pos_t);
 		var_com_vel = new V3Var(solver, ID(VarTag::BipedComV, node, tick, name + "_com_v"), node->graph->scale.vel_t);
-		var_com_pos->weight = eps * one;
-		var_com_vel->weight = eps * one;
-
-		// CoP position
-		var_cop_pos = new V3Var(solver, ID(VarTag::BipedFootCopP, node, tick, name + "_cop_p"), node->graph->scale.pos_t);
-		var_cop_pos->weight = eps * one;
-
-		// CMP offset
-		var_cmp_pos = new V3Var(solver, ID(VarTag::CentroidTP, node, tick, name + "_cmp_p"), node->graph->scale.pos_t);
-		var_cmp_pos->weight = eps * one;
 
 		// absolute time
 		var_time = new SVar(solver, ID(VarTag::BipedTime, node, tick, name + "_time"), node->graph->scale.time);
-		var_time->weight[0] = eps;
+
+		var_torso_pos_t->weight    = damping*one;
+		var_torso_pos_r->weight[0] = damping;
+		var_torso_vel_t->weight    = damping*one;
+
+		var_com_pos->weight = damping * one;
+		var_com_vel->weight = damping * one;
+
+		var_time->weight[0] = damping;
 
 		// register state variables of ddp
+		solver->AddInputVar(var_torso_pos_t, tick->idx);
+		solver->AddInputVar(var_torso_pos_r, tick->idx);
+		solver->AddInputVar(var_torso_vel_t, tick->idx);
+
 		solver->AddStateVar(var_com_pos, tick->idx);
 		solver->AddStateVar(var_com_vel, tick->idx);
-		solver->AddStateVar(var_mom, tick->idx);
-		solver->AddStateVar(var_cop_pos, tick->idx);
-		solver->AddStateVar(var_cmp_pos, tick->idx);
+
 		solver->AddStateVar(var_time, tick->idx);
 
 		if (next) {
-			// CoP velocity
-			var_cop_vel = new V3Var(solver, ID(VarTag::BipedFootCopV, node, tick, name + "_cop_v"), node->graph->scale.vel_t);
-			var_cop_vel->weight = eps * one;
-
-			// CMP velocity
-			var_cmp_vel = new V3Var(solver, ID(VarTag::CentroidTV, node, tick, name + "_cmp_v"), node->graph->scale.vel_t);
-			var_cmp_vel->weight = eps * one;
-
 			// step duration
 			var_duration = new SVar(solver, ID(VarTag::BipedDuration, node, tick, name + "_duration"), node->graph->scale.time);
-			var_duration->weight[0] = eps;
+			var_duration->weight[0] = damping;
+			var_duration->locked = true;
 
 			// register input variables of ddp
-			solver->AddInputVar(var_cop_vel, tick->idx);
-			solver->AddInputVar(var_cmp_vel, tick->idx);
 			solver->AddInputVar(var_duration, tick->idx);
 		}
+
+		// foot position
+		for (int i = 0; i < 2; i++) {
+			string prefix = (i == 0 ? "_foot_r" : "_foot_l");
+
+			foot[i].var_pos_t   = new V3Var(solver, ID(VarTag::BipedFootTP  , node, tick, name + prefix + "_foot_t"), node->graph->scale.pos_t);
+			foot[i].var_pos_r   = new SVar (solver, ID(VarTag::BipedFootRP  , node, tick, name + prefix + "_foot_r"), node->graph->scale.pos_r);
+			foot[i].var_cop_pos = new V3Var(solver, ID(VarTag::BipedFootCopP, node, tick, name + prefix + "_cop_p" ), node->graph->scale.pos_t);
+			foot[i].var_cop_vel = new V3Var(solver, ID(VarTag::BipedFootCopV, node, tick, name + prefix + "_cop_v" ), node->graph->scale.vel_t);
+
+			foot[i].var_pos_t  ->weight    = damping*one;
+			foot[i].var_pos_r  ->weight[0] = damping;
+			foot[i].var_cop_pos->weight    = 10*damping*one;
+			foot[i].var_cop_vel->weight    = damping*one;
+
+
+			foot[i].var_pos_r->locked = true;
+
+			solver->AddStateVar(foot[i].var_pos_t  , tick->idx);
+			solver->AddStateVar(foot[i].var_pos_r  , tick->idx);
+			solver->AddStateVar(foot[i].var_cop_pos, tick->idx);
+			solver->AddStateVar(foot[i].var_cop_vel, tick->idx);
+
+			if (next) {
+				foot[i].var_vel_t        = new V3Var(solver, ID(VarTag::BipedFootTV  , node, tick, name + prefix + "_foot_t"), node->graph->scale.vel_t);
+				foot[i].var_vel_r        = new SVar (solver, ID(VarTag::BipedFootRV  , node, tick, name + prefix + "_foot_r"), node->graph->scale.vel_r);
+				foot[i].var_cop_vel_diff = new V3Var(solver, ID(VarTag::BipedFootCopV, node, tick, name + prefix + "_cop_vd"), node->graph->scale.vel_t);
+
+				foot[i].var_vel_t       ->weight    = damping*one;
+				foot[i].var_vel_r       ->weight[0] = damping;
+				foot[i].var_cop_vel_diff->weight    = damping*one;
+
+				solver->AddInputVar(foot[i].var_vel_t       , tick->idx);
+				solver->AddInputVar(foot[i].var_vel_r       , tick->idx);
+				solver->AddInputVar(foot[i].var_cop_vel_diff, tick->idx);
+			}
+		}
+
+		// CMP position and velocity
+		var_cmp_pos = new V3Var(solver, ID(VarTag::CentroidTP, node, tick, name + "_cmp_p"), node->graph->scale.pos_t);
+		var_cmp_vel = new V3Var(solver, ID(VarTag::CentroidTV, node, tick, name + "_cmp_v"), node->graph->scale.vel_t);
+		var_cmp_pos->weight = damping * one;
+		var_cmp_vel->weight = damping * one;
+		
+		var_cmp_pos->locked = true;
+		var_cmp_vel->locked = true;
+
+		solver->AddStateVar(var_cmp_pos, tick->idx);
+		solver->AddStateVar(var_cmp_vel, tick->idx);
+
+
+		var_mom = new V3Var(solver, ID(VarTag::CentroidTP, node, tick, name + "_mom"), node->graph->scale.vel_t);
+		var_mom->weight = damping * one;
+
+		var_mom->locked = true;
+
+		solver->AddStateVar(var_mom, tick->idx);
 	}
 
 	// register constraints for planning
@@ -104,98 +130,119 @@ namespace DiMP {
 		BipedRunning* obj = (BipedRunning*)node;
 		BipedRunKey* nextObj = (BipedRunKey*)next;
 
+		vec3_t one(1.0, 1.0, 1.0);
+
 		if (next) {
 			con_lip_pos = new RunnerLipPosCon(solver, name + "_lip_pos", this, node->graph->scale.pos_t);
 			con_lip_vel = new RunnerLipVelCon(solver, name + "_lip_vel", this, node->graph->scale.vel_t);
-			con_lip_cop = new RunnerLipCopCon(solver, name + "_lip_cop", this, node->graph->scale.pos_t);
+
 			con_lip_cmp = new RunnerLipCmpCon(solver, name + "_lip_cmp", this, node->graph->scale.pos_t);
-			//con_lip_mom = new RunnerLipMomCon(solver, name + "_lip_mom", this, node->graph->scale.vel_r);
+			con_lip_mom = new RunnerLipMomCon(solver, name + "_lip_mom", this, node->graph->scale.pos_t);
+
+			con_time = new RunnerTimeCon(solver, name + "_time", this, node->graph->scale.time);
+
+			con_duration_range = new RangeConS(solver, ID(ConTag::BipedDurationRange, node, tick, name + "_duration"), var_duration, node->graph->scale.time);
+
+			//con_com_vel_zero = new FixConV3(solver, ID(ConTag::BipedFootVelZeroT, node, tick, name + "_com_vel_zero"), var_com_vel, node->graph->scale.vel_t);
+			//con_com_vel_zero->weight = 0.01*one;
 
 			solver->AddTransitionCon(con_lip_pos, tick->idx);
 			solver->AddTransitionCon(con_lip_vel, tick->idx);
-			solver->AddTransitionCon(con_lip_cop, tick->idx);
 			solver->AddTransitionCon(con_lip_cmp, tick->idx);
-		}
+			solver->AddTransitionCon(con_lip_mom, tick->idx);
 
-		con_foot_range_t[0][0] = new RunnerFootRangeConT(solver, name + "_foot_range_r_t", this, 0, vec3_t(1.0, 0.0, 0.0), node->graph->scale.pos_t);
-		con_foot_range_t[0][1] = new RunnerFootRangeConT(solver, name + "_foot_range_r_t", this, 0, vec3_t(0.0, 1.0, 0.0), node->graph->scale.pos_t);
-		con_foot_range_t[0][2] = new RunnerFootRangeConT(solver, name + "_foot_range_r_t", this, 0, vec3_t(0.0, 0.0, 1.0), node->graph->scale.pos_t);
-		con_foot_range_r[0] = new RunnerFootRangeConR(solver, name + "_foot_range_r_r", this, 0, node->graph->scale.pos_r);
-		con_foot_range_t[1][0] = new RunnerFootRangeConT(solver, name + "_foot_range_l_t", this, 1, vec3_t(1.0, 0.0, 0.0), node->graph->scale.pos_t);
-		con_foot_range_t[1][1] = new RunnerFootRangeConT(solver, name + "_foot_range_l_t", this, 1, vec3_t(0.0, 1.0, 0.0), node->graph->scale.pos_t);
-		con_foot_range_t[1][2] = new RunnerFootRangeConT(solver, name + "_foot_range_l_t", this, 1, vec3_t(0.0, 0.0, 1.0), node->graph->scale.pos_t);
-		con_foot_range_r[1] = new RunnerFootRangeConR(solver, name + "_foot_range_l_r", this, 1, node->graph->scale.pos_r);
-		solver->AddCostCon(con_foot_range_t[0][0], tick->idx);
-		solver->AddCostCon(con_foot_range_t[0][1], tick->idx);
-		solver->AddCostCon(con_foot_range_t[0][2], tick->idx);
-		solver->AddCostCon(con_foot_range_r[0]   , tick->idx);
-		solver->AddCostCon(con_foot_range_t[1][0], tick->idx);
-		solver->AddCostCon(con_foot_range_t[1][1], tick->idx);
-		solver->AddCostCon(con_foot_range_t[1][2], tick->idx);
-		solver->AddCostCon(con_foot_range_r[1]   , tick->idx);
+			solver->AddTransitionCon(con_time, tick->idx);
 
-		// cop range constraint
-		int phase = obj->phase[tick->idx];
-		int side;
-		if (phase == BipedRunning::Phase::R || phase == BipedRunning::Phase::RL || phase == BipedRunning::Phase::RLF)
-			side = 0;
-		else side = 1;
-		con_cop_range[0] = new RunnerCopRangeCon(solver, name + "_cop_range", this, side, vec3_t(1.0, 0.0, 0.0), node->graph->scale.pos_t);
-		con_cop_range[1] = new RunnerCopRangeCon(solver, name + "_cop_range", this, side, vec3_t(0.0, 1.0, 0.0), node->graph->scale.pos_t);
-		con_cop_range[2] = new RunnerCopRangeCon(solver, name + "_cop_range", this, side, vec3_t(0.0, 0.0, 1.0), node->graph->scale.pos_t);
-		solver->AddCostCon(con_cop_range[0], tick->idx);
-		solver->AddCostCon(con_cop_range[1], tick->idx);
-		solver->AddCostCon(con_cop_range[2], tick->idx);
-
-		// cmp range constraint
-		con_cmp_range[0] = new RunnerCmpRangeCon(solver, name + "_cmp_range", this, vec3_t(1.0, 0.0, 0.0), node->graph->scale.pos_t);
-		con_cmp_range[1] = new RunnerCmpRangeCon(solver, name + "_cmp_range", this, vec3_t(0.0, 1.0, 0.0), node->graph->scale.pos_t);
-		con_cmp_range[2] = new RunnerCmpRangeCon(solver, name + "_cmp_range", this, vec3_t(0.0, 0.0, 1.0), node->graph->scale.pos_t);
-		solver->AddCostCon(con_cmp_range[0], tick->idx);
-		solver->AddCostCon(con_cmp_range[1], tick->idx);
-		solver->AddCostCon(con_cmp_range[2], tick->idx);
-
-		// acc range constraint
-		/*con_acc_range[0] = new RunnerAccRangeCon(solver, name + "_acc_range", this, vec3_t(1.0, 0.0, 0.0), node->graph->scale.acc_t);
-		con_acc_range[1] = new RunnerAccRangeCon(solver, name + "_acc_range", this, vec3_t(0.0, 1.0, 0.0), node->graph->scale.acc_t);
-		con_acc_range[2] = new RunnerAccRangeCon(solver, name + "_acc_range", this, vec3_t(0.0, 0.0, 1.0), node->graph->scale.acc_t);
-		solver->AddCostCon(con_acc_range[0], tick->idx);
-		solver->AddCostCon(con_acc_range[1], tick->idx);
-		solver->AddCostCon(con_acc_range[2], tick->idx);*/
-
-		if (next) {
-			con_duration_range = new RangeConS(solver, ID(ConTag::BipedDurationRange, node, tick, name + "_duration"), var_duration, node->graph->scale.time);
 			solver->AddCostCon(con_duration_range, tick->idx);
 
-			con_time = new RunnerTimeCon(solver, name + "_time", this, node->graph->scale.time);
-			solver->AddTransitionCon(con_time, tick->idx);
-		}
-		
-		if (next) {
-			con_foot_match_t[0] = new MatchConV3(solver, ID(ConTag::BipedFootVelZeroT, node, tick, name + "_foot_match_r_t"), var_foot_pos_t[0], nextObj->var_foot_pos_t[0], node->graph->scale.pos_t);
-			con_foot_match_r[0] = new MatchConS(solver, ID(ConTag::BipedFootVelZeroR, node, tick, name + "_foot_match_r_r"), var_foot_pos_r[0], nextObj->var_foot_pos_r[0], node->graph->scale.pos_r);
-			con_foot_match_t[1] = new MatchConV3(solver, ID(ConTag::BipedFootVelZeroT, node, tick, name + "_foot_match_l_t"), var_foot_pos_t[1], nextObj->var_foot_pos_t[1], node->graph->scale.pos_t);
-			con_foot_match_r[1] = new MatchConS(solver, ID(ConTag::BipedFootVelZeroR, node, tick, name + "_foot_match_l_r"), var_foot_pos_r[1], nextObj->var_foot_pos_r[1], node->graph->scale.pos_r);
-			solver->AddCostCon(con_foot_match_t[0], tick->idx);
-			solver->AddCostCon(con_foot_match_r[0], tick->idx);
-			solver->AddCostCon(con_foot_match_t[1], tick->idx);
-			solver->AddCostCon(con_foot_match_r[1], tick->idx);
-
-			con_foot_height[0] = new RunnerFootHeightCon(solver, name + "_foot_height_r", this, 0, node->graph->scale.pos_t);
-			con_foot_height[1] = new RunnerFootHeightCon(solver, name + "_foot_height_l", this, 1, node->graph->scale.pos_t);
-			solver->AddCostCon(con_foot_height[0], tick->idx);
-			solver->AddCostCon(con_foot_height[1], tick->idx);
+			//solver->AddCostCon(con_com_vel_zero, tick->idx);
 		}
 
 		con_com_pos = new RunnerComConP(solver, name + "_com_p", this, node->graph->scale.pos_t);
-		con_com_vel = new RunnerComConV(solver, name + "_com_v", this, node->graph->scale.vel_t);
 		solver->AddCostCon(con_com_pos, tick->idx);
-		solver->AddCostCon(con_com_vel, tick->idx);
 
+		if (next) {
+			con_com_vel = new RunnerComConV(solver, name + "_com_v", this, node->graph->scale.vel_t);
+			solver->AddCostCon(con_com_vel, tick->idx);
+		}
+
+		for (int i = 0; i < 2; i++) {
+			string prefix = (i == 0 ? "_foot_r" : "_foot_l");
+
+			if (next) {
+				foot[i].con_pos_t   = new RunnerFootPosConT  (solver, name + prefix + "_pos_t"  , this, i, node->graph->scale.pos_t);
+				foot[i].con_pos_r   = new RunnerFootPosConR  (solver, name + prefix + "_pos_r"  , this, i, node->graph->scale.pos_r);
+				foot[i].con_cop_pos = new RunnerFootCopPosCon(solver, name + prefix + "_cop_pos", this, i, node->graph->scale.pos_t);
+				foot[i].con_cop_vel = new RunnerFootCopVelCon(solver, name + prefix + "_cop_vel", this, i, node->graph->scale.vel_t);
+				solver->AddTransitionCon(foot[i].con_pos_t  , tick->idx);
+				solver->AddTransitionCon(foot[i].con_pos_r  , tick->idx);
+				solver->AddTransitionCon(foot[i].con_cop_pos, tick->idx);
+				solver->AddTransitionCon(foot[i].con_cop_vel, tick->idx);
+
+				foot[i].con_vel_zero_t        = new FixConV3(solver, ID(ConTag::BipedFootVelZeroT, node, tick, name + prefix + "_vel_zero_t"       ), foot[i].var_vel_t       , node->graph->scale.vel_t);
+				foot[i].con_vel_zero_r        = new FixConS (solver, ID(ConTag::BipedFootVelZeroT, node, tick, name + prefix + "_vel_zero_r"       ), foot[i].var_vel_r       , node->graph->scale.vel_r);
+				foot[i].con_cop_vel_diff_zero = new FixConV3(solver, ID(ConTag::BipedFootVelZeroT, node, tick, name + prefix + "_cop_vel_diff_zero"), foot[i].var_cop_vel_diff, node->graph->scale.vel_t);
+
+				foot[i].con_vel_zero_t       ->desired = vec3_t();
+				foot[i].con_vel_zero_r       ->desired = 0.0;
+				foot[i].con_cop_vel_diff_zero->desired = vec3_t();
+				foot[i].con_cop_vel_diff_zero->weight = 0.1*one;
+
+				solver->AddCostCon(foot[i].con_vel_zero_t       , tick->idx);
+				solver->AddCostCon(foot[i].con_vel_zero_r       , tick->idx);
+				solver->AddCostCon(foot[i].con_cop_vel_diff_zero, tick->idx);
+			}
+
+			for (int d = 0; d < 2; d++) {
+				real_t sign = (d == 0 ? 1.0 : -1.0);
+				for (int j = 0; j < 3; j++) {
+					vec3_t dir;
+					dir[j] = sign;
+					foot[i].con_pos_range_t[j][d] = new RunnerFootPosRangeConT(solver, name + prefix + "_range_t", this, i, dir, node->graph->scale.pos_t);
+					solver->AddCostCon(foot[i].con_pos_range_t[j][d], tick->idx);
+
+					foot[i].con_cop_range[j][d] = new RunnerFootCopRangeCon(solver, name + prefix + "_cop_range", this, i, dir, node->graph->scale.pos_t);
+					solver->AddCostCon(foot[i].con_cop_range[j][d], tick->idx);
+				}
+				foot[i].con_pos_range_r[d] = new RunnerFootPosRangeConR(solver, name + prefix + "_range_r", this, 0, sign, node->graph->scale.pos_r);
+				solver->AddCostCon(foot[i].con_pos_range_r[d], tick->idx);
+			}
+		}
+
+		// cmp range constraint
+		for (int d = 0; d < 2; d++) {
+			real_t sign = (d == 0 ? 1.0 : -1.0);
+			for (int j = 0; j < 3; j++) {
+				vec3_t dir;
+				dir[j] = sign;
+				con_cmp_range[j][d] = new RunnerCmpRangeCon(solver, name + "_cmp_range", this, dir, node->graph->scale.pos_t);
+				con_mom_range[j][d] = new RunnerMomRangeCon(solver, name + "_mom_range", this, dir, node->graph->scale.pos_t);
+				solver->AddCostCon(con_cmp_range[j][d], tick->idx);
+				solver->AddCostCon(con_mom_range[j][d], tick->idx);
+			}
+		}
 	}
 
 	void BipedRunKey::Prepare() {
+		if (next) {
+			// calc cop
+			cop_pos.clear();
+			cop_vel.clear();
+			cop_acc.clear();
 
+			real_t tau = var_duration->val;
+
+			for (int i = 0; i < 2; i++) {
+				real_t w0 = foot[i].weight;
+				real_t w1 = ((BipedRunKey*)next)->foot[i].weight;
+				vec3_t c0 = foot[i].var_cop_pos->val;
+				vec3_t cv0 = foot[i].var_cop_vel->val;
+
+				cop_pos += w0 * c0;
+				cop_vel += w0 * cv0 + ((w1 - w0) / tau) * c0;
+				cop_acc += (2.0 * (w1 - w0) / tau) * cv0;
+			}
+		}
 	}
 
 	void BipedRunKey::Finish() {
@@ -206,7 +253,7 @@ namespace DiMP {
 	void BipedRunKey::Draw(Render::Canvas* canvas, Render::Config* conf) {
 		BipedRunning* obj = (BipedRunning*)node;
 
-		Vec3f pcom, pcop, pf[2], pt;
+		Vec3f pcom, pcop, pf[2], pc[2], pt;
 		float thetaf[2];
 
 		canvas->SetPointSize(5.0f);
@@ -218,18 +265,24 @@ namespace DiMP {
 		canvas->Point(pcom);
 
 		// feet
-		Vec3f cmin = obj->param.copMin; //CoPMinmum
-		Vec3f cmax = obj->param.copMax; //CoPMax
-
-		for (uint i = 0; i < 2; i++) {
-			pf[i].x = (float)var_foot_pos_t[i]->val.x;
-			pf[i].y = (float)var_foot_pos_t[i]->val.y;
-			pf[i].z = (float)var_foot_pos_t[i]->val.z;
+		for (int i = 0; i < 2; i++) {
+			// foot pos
+			pf[i].x = (float)foot[i].var_pos_t->val.x;
+			pf[i].y = (float)foot[i].var_pos_t->val.y;
+			pf[i].z = (float)foot[i].var_pos_t->val.z;
 			canvas->Point(pf[i]);
 
+			// foot cop
+			pc[i].x = (float)foot[i].var_cop_pos->val.x;
+			pc[i].y = (float)foot[i].var_cop_pos->val.y;
+			pc[i].z = (float)foot[i].var_cop_pos->val.z;
+			canvas->Point(pc[i]);
+
 			// foot print
+			Vec3f cmin = obj->param.footCopMin[i];
+			Vec3f cmax = obj->param.footCopMax[i];
 			canvas->Push();
-			thetaf[i] = (float)var_foot_pos_r[i]->val;
+			thetaf[i] = (float)foot[i].var_pos_r->val;
 			canvas->Translate(pf[i].x, pf[i].y, pf[i].z);
 			canvas->Rotate(thetaf[i], Vec3f(0.0f, 0.0f, 1.0f));
 			canvas->Line(Vec3f(cmax.x, cmax.y, 0.0f), Vec3f(cmin.x, cmax.y, 0.0f));
@@ -248,9 +301,7 @@ namespace DiMP {
 		canvas->Line(pt, pf[1]);
 
 		// cop
-		pcop.x = (float)var_cop_pos->val.x;
-		pcop.y = (float)var_cop_pos->val.y;
-		pcop.z = (float)var_cop_pos->val.z;
+		pcop = cop_pos;
 		canvas->Point(pcop);
 
 	}
@@ -267,7 +318,6 @@ namespace DiMP {
 		T[3] = sqrt(comHeight/gravity.z);
 		torsoMass = 10.0;
 		footMass = 5.0;
-		//gaitType = GaitType::Walk;
 		swingProfile = SwingProfile::Cycloid;
 		swingInterpolation = SwingInterpolation::Cubic;
 		swingHeight= 0.1; //0: maximum swing foot height
@@ -279,6 +329,10 @@ namespace DiMP {
 		durationMax[Phase::RL] = 0.2; // duration maximum at double support
 		durationMin[Phase::LR] = 0.1;
 		durationMax[Phase::LR] = 0.2;
+		durationMin[Phase::R2] = 0.1;
+		durationMax[Phase::R2] = 0.8;
+		durationMin[Phase::L2] = 0.1;
+		durationMax[Phase::L2] = 0.8;
 		durationMin[Phase::LRF] = 0.1;
 		durationMin[Phase::RLF] = 0.1;
 		durationMax[Phase::LRF] = 0.2;
@@ -288,70 +342,77 @@ namespace DiMP {
 
 		// range of foot position relative to com
 		footPosMin[0] = vec3_t(-0.5, -0.20, 0.0);
-		footPosMax[0] = vec3_t(0.5, -0.00, 0.0);
-		footPosMin[1] = vec3_t(-0.5, 0.00, 0.0);
-		footPosMax[1] = vec3_t(0.5, 0.20, 0.0);
+		footPosMax[0] = vec3_t( 0.5, -0.00, 0.0);
+		footPosMin[1] = vec3_t(-0.5,  0.00, 0.0);
+		footPosMax[1] = vec3_t( 0.5,  0.20, 0.0);
 		footOriMin[0] = Rad(-15.0);
-		footOriMax[0] = Rad(15.0);
+		footOriMax[0] = Rad( 15.0);
 		footOriMin[1] = Rad(-15.0);
-		footOriMax[1] = Rad(15.0);
+		footOriMax[1] = Rad( 15.0);
 
-		// range of cop relative to support foot
-		copMin = vec3_t(-0.1, -0.05, 0.0);
-		copMax = vec3_t(0.1, 0.05, 0.0);
+		// range of cop relative to foot
+		footCopMin[0] = vec3_t(-0.1, -0.05, 0.0);
+		footCopMax[0] = vec3_t( 0.1,  0.05, 0.0);
+		footCopMin[1] = vec3_t(-0.1, -0.05, 0.0);
+		footCopMax[1] = vec3_t( 0.1,  0.05, 0.0);
 
-		// range of cmp offset
-		cmpMin = vec3_t(-0.0, -0.0, 0.0);
+		// range of cmp relative to cop (zmp)
+		cmpMin = vec3_t(0.0, 0.0, 0.0);
 		cmpMax = vec3_t(0.0, 0.0, 0.0);
 
-		// range of com acceleration
-		/*accMin = vec3_t(-1.0, 1.0, 0.0);
-		accMax = vec3_t(-1.0, 1.0, 0.0);*/
+		// range of centroidal momentum
+		momMin = vec3_t(0.0, 0.0, 0.0);
+		momMax = vec3_t(0.0, 0.0, 0.0);
 
-		// range of angular momentum
-		/*momMin = vec3_t(-1.0, 1.0, 0.0);
-		momMax = vec3_t(-1.0, 1.0, 0.0);*/
+		ankleToToe        = 0.1;
+		ankleToHeel       = 0.1;
+		toeCurvature      = 10.0;
+		heelCurvature     = 10.0;
+		toeCurvatureRate  = 0.0;
+		heelCurvatureRate = 0.0;
 
+		minSpacing = 0.0;
+		swingMargin = 0.0;
 	}
 
 	//-------------------------------------------------------------------------------------------------
 	// Waypoints
 	BipedRunning::Waypoint::Waypoint() {
-		k = 0;
-		time = 0.0;
-		com_pos = vec3_t();
-		com_vel = vec3_t();
+		k           = 0;
+		time        = 0.0;
+		com_pos     = vec3_t();
+		com_vel     = vec3_t();
+		cmp_pos     = vec3_t();
+		mom         = vec3_t();
 		torso_pos_r = 0.0;
 
-		foot_pos_t[0] = vec3_t();
-		foot_pos_r[0] = 0.0;
-		foot_pos_t[1] = vec3_t();
-		foot_pos_r[1] = 0.0;
-		cop_pos = vec3_t();
-		cop_min = vec3_t();
-		cop_max = vec3_t();
-
-		fix_com_pos = false;
-		fix_com_vel = false;
+		fix_com_pos     = false;
+		fix_com_vel     = false;
+		fix_cmp_pos     = false;
+		fix_mom         = false;
 		fix_torso_pos_r = false;
 
-		fix_foot_pos_t[0] = false;
-		fix_foot_pos_r[0] = false;
-		fix_foot_pos_t[1] = false;
-		fix_foot_pos_r[1] = false;
-		fix_com_pos = false;
-		fix_com_vel = false;
-		fix_cop_pos = false;
-		fix_cmp_pos = false;
-		fix_mom = false;
-		set_cop_range = false;
-	}
+		for (int i = 0; i < 2; i++) {
+			foot_pos_t  [i] = vec3_t();
+			foot_pos_r  [i] = 0.0;
+			foot_cop    [i] = vec3_t();
+			foot_cop_min[i] = vec3_t();
+			foot_cop_max[i] = vec3_t();
 
+			fix_foot_pos_t[i] = false;
+			fix_foot_pos_r[i] = false;
+			fix_foot_cop  [i] = false;
+			set_cop_range [i] = false;
+		}
+	}
 	//-------------------------------------------------------------------------------------------------
 	BipedRunning::Snapshot::Snapshot() {
 		t = 0.0;
 		torso_pos_t = vec3_t();
 		torso_pos_r = 0.0;
+		com_pos = vec3_t();
+		com_vel = vec3_t();
+		com_acc = vec3_t();
 		foot_pos_t[0] = vec3_t();
 		foot_pos_r[0] = quat_t();
 		foot_pos_t[1] = vec3_t();
@@ -360,7 +421,7 @@ namespace DiMP {
 
 	//-------------------------------------------------------------------------------------------------
 
-	BipedRunning::BipedRunning(Graph* g, string n) :TrajectoryNode(g, n) {
+	BipedRunning::BipedRunning(Graph* g, string n) : TrajectoryNode(g, n) {
 		type = Type::Object;
 		graph->runners.Add(this);
 	}
@@ -377,29 +438,30 @@ namespace DiMP {
 			durationAve[i] = (param.durationMin[i] + param.durationMax[i]) / 2.0;
 
 		real_t t = 0.0;
-		for (uint k = 0; k < graph->ticks.size(); k++) {
+		for (int k = 0; k < graph->ticks.size(); k++) {
 			BipedRunKey* key = (BipedRunKey*)traj.GetKeypoint(graph->ticks[k]);
 
 			key->tick->time = t;
 			key->var_time->val = t;
 
 			int ph = phase[key->tick->idx];
-			int gt = gaittype[key->tick->idx];
 
 			if (!key->prev) {
 				// initial time is fixed
 				key->var_time->val = 0.0;
-				key->var_time->locked = true;
+				//key->var_time->locked = true;
 			}
 
 			if (key->next) {
-				key->con_foot_match_t[0]->enabled = (ph != BipedRunning::Phase::L);
-				key->con_foot_match_r[0]->enabled = (ph != BipedRunning::Phase::L);
-				key->con_foot_match_t[1]->enabled = (ph != BipedRunning::Phase::R);
-				key->con_foot_match_r[1]->enabled = (ph != BipedRunning::Phase::R);
+				// foot velocity must be zero while in contact
+				key->foot[0].con_vel_zero_t->enabled = (ph != BipedRunning::Phase::L && ph != BipedRunning::Phase::L2 && ph != BipedRunning::Phase::LRF && ph != BipedRunning::Phase::RLF);
+				key->foot[0].con_vel_zero_r->enabled = (ph != BipedRunning::Phase::L && ph != BipedRunning::Phase::L2 && ph != BipedRunning::Phase::LRF && ph != BipedRunning::Phase::RLF);
+				key->foot[1].con_vel_zero_t->enabled = (ph != BipedRunning::Phase::R && ph != BipedRunning::Phase::R2 && ph != BipedRunning::Phase::LRF && ph != BipedRunning::Phase::RLF);
+				key->foot[1].con_vel_zero_r->enabled = (ph != BipedRunning::Phase::R && ph != BipedRunning::Phase::R2 && ph != BipedRunning::Phase::LRF && ph != BipedRunning::Phase::RLF);
 
-				key->con_foot_height[0]->enabled = ((gt == BipedRunning::GaitType::Run && ph == BipedRunning::Phase::R || ph == BipedRunning::Phase::D) || (gt == BipedRunning::GaitType::Walk && ph != BipedRunning::Phase::L));
-				key->con_foot_height[1]->enabled = ((gt == BipedRunning::GaitType::Run && ph == BipedRunning::Phase::L || ph == BipedRunning::Phase::D) || (gt == BipedRunning::GaitType::Walk && ph != BipedRunning::Phase::R));
+				// cop velocity must be constant (i.e., acceleration must be zero) while in contact
+				key->foot[0].con_cop_vel_diff_zero->enabled = (ph == BipedRunning::Phase::LR || ph == BipedRunning::Phase::R || ph == BipedRunning::Phase::R2);
+				key->foot[1].con_cop_vel_diff_zero->enabled = (ph == BipedRunning::Phase::RL || ph == BipedRunning::Phase::L || ph == BipedRunning::Phase::L2);
 			}
 
 			// initial value of step duration is set as the average of minimum and maximum
@@ -411,39 +473,55 @@ namespace DiMP {
 				//key->var_duration->locked = true;
 			}
 
-			// range limit of foot position
+			// range limit of foot position, CoP and CMP offset w.r.t. ZMP (not CoP of each foot)
 			for (int i = 0; i < 2; i++) {
 				for (int j = 0; j < 3; j++) {
-					key->con_foot_range_t[i][j]->_min = param.footPosMin[i][j];
-					key->con_foot_range_t[i][j]->_max = param.footPosMax[i][j];
+					key->foot[i].con_pos_range_t[j][0]->bound =  param.footPosMin[i][j];
+					key->foot[i].con_pos_range_t[j][1]->bound = -param.footPosMax[i][j];
 				}
-				key->con_foot_range_r[i]->_min = param.footOriMin[i];
-				key->con_foot_range_r[i]->_max = param.footOriMax[i];
-			}
+				key->foot[i].con_pos_range_r[0]->bound =  param.footOriMin[i];
+				key->foot[i].con_pos_range_r[1]->bound = -param.footOriMax[i];
 
-			for (int j = 0; j < 3; j++) {
-				// cop range: the sign of y range is flipped for left support
-				if (j == 1) {
-					key->con_cop_range[j]->_min = (ph % 2 == 1 ? param.copMin[j] : -param.copMax[j]); // ph % 2 == 0 ? cop starts from right foot : left foot
-					key->con_cop_range[j]->_max = (ph % 2 == 1 ? param.copMax[j] : -param.copMin[j]);
+				for (int j = 0; j < 3; j++) {
+					key->foot[i].con_cop_range[j][0]->bound =  param.footCopMin[i][j];
+					key->foot[i].con_cop_range[j][1]->bound = -param.footCopMax[i][j];
 				}
-				else {
-					key->con_cop_range[j]->_min = param.copMin[j];
-					key->con_cop_range[j]->_max = param.copMax[j];
-				}
-
-				// cmp range
-				key->con_cmp_range[j]->_min = param.cmpMin[j];
-				key->con_cmp_range[j]->_max = param.cmpMax[j];
-			}
-
-			// cop is unconstrained for D phase to enable it to be inside the convex hull of both feet
-			if (ph == BipedRunning::Phase::D) {
 				for (int j = 0; j < 3; j++)
-					key->con_cop_range[j]->enabled = false;
-			}
+				{
+					key->con_cmp_range[j][0]->bound =  param.cmpMin[j];
+					key->con_cmp_range[j][1]->bound = -param.cmpMax[j];
 
+					key->con_mom_range[j][0]->bound =  param.momMin[j];
+					key->con_mom_range[j][1]->bound = -param.momMax[j];
+				}
+			}
+		
 			t += durationAve[phase[k]];
+
+			// set weight of feet
+			if (key->next) {
+				BipedRunKey* key0 = key;
+				BipedRunKey* key1 = (BipedRunKey*)key->next;
+
+				if (phase[k] == Phase::R || phase[k] == Phase::R2) {
+					key0->foot[0].weight = 1.0;
+					key1->foot[0].weight = 1.0;
+					key0->foot[1].weight = 0.0;
+					key1->foot[1].weight = 0.0;
+				}
+				if (phase[k] == Phase::L || phase[k] == Phase::L2) {
+					key0->foot[0].weight = 0.0;
+					key1->foot[0].weight = 0.0;
+					key0->foot[1].weight = 1.0;
+					key1->foot[1].weight = 1.0;
+				}
+				if (phase[k] == Phase::D) {
+					key0->foot[0].weight = 0.5;
+					key1->foot[0].weight = 0.5;
+					key0->foot[1].weight = 0.5;
+					key1->foot[1].weight = 0.5;
+				}
+			}
 		}
 
 		// initial value of com position, com velocity, and footsteps are calculated from a spline curve passing the waypoints
@@ -452,37 +530,39 @@ namespace DiMP {
 		Curve3d curve_foot_t[2];
 		Curved  curve_foot_r[2];
 
-		curve_com.SetType(Interpolate::Cubic);
-		curve_torso_r.SetType(Interpolate::LinearDiff);
+		curve_com      .SetType(Interpolate::Cubic);
+		curve_torso_r  .SetType(Interpolate::LinearDiff);
 		curve_foot_t[0].SetType(Interpolate::Cubic);
 		curve_foot_r[0].SetType(Interpolate::Cubic);
 		curve_foot_t[1].SetType(Interpolate::Cubic);
 		curve_foot_r[1].SetType(Interpolate::Cubic);
 
-		for (uint i = 0; i < waypoints.size(); i++) {
-			Waypoint& wp = waypoints[i];
+		int idx = 0;
+		for (Waypoint& wp : waypoints) {
 			BipedRunKey* key = (BipedRunKey*)traj.GetKeypoint(graph->ticks[wp.k]);
 			real_t t = key->var_time->val;
 
 			curve_com.AddPoint(t);
-			curve_com.SetPos(i, wp.com_pos);
-			curve_com.SetVel(i, wp.com_vel);
+			curve_com.SetPos(idx, wp.com_pos);
+			curve_com.SetVel(idx, wp.com_vel);
 
 			curve_torso_r.AddPoint(t);
-			curve_torso_r.SetPos(i, wp.torso_pos_r);
+			curve_torso_r.SetPos(idx, wp.torso_pos_r);
 
-			for (uint j = 0; j < 2; j++) {
-				curve_foot_t[j].AddPoint(t);
-				curve_foot_t[j].SetPos(i, wp.foot_pos_t[j]);
-				curve_foot_t[j].SetVel(i, wp.com_vel);
+			for (int i = 0; i < 2; i++) {
+				curve_foot_t[i].AddPoint(t);
+				curve_foot_t[i].SetPos(idx, wp.foot_pos_t[i]);
+				curve_foot_t[i].SetVel(idx, wp.com_vel);
 
-				curve_foot_r[j].AddPoint(t);
-				curve_foot_r[j].SetPos(i, wp.foot_pos_r[j]);
-				curve_foot_r[j].SetVel(i, 0.0);
+				curve_foot_r[i].AddPoint(t);
+				curve_foot_r[i].SetPos(idx, wp.foot_pos_r[i]);
+				curve_foot_r[i].SetVel(idx, 0.0);
 			}
+
+			idx++;
 		}
 
-		for (uint k = 0; k < graph->ticks.size(); k++) {
+		for (int k = 0; k < graph->ticks.size(); k++) {
 			BipedRunKey* key = (BipedRunKey*)traj.GetKeypoint(graph->ticks[k]);
 			real_t t = key->var_time->val;
 
@@ -491,61 +571,45 @@ namespace DiMP {
 
 			key->var_torso_pos_r->val = curve_torso_r.CalcPos(t);
 
-			for (uint j = 0; j < 2; j++) {
-				key->var_foot_pos_t[j]->val = curve_foot_t[j].CalcPos(t);
-				key->var_foot_pos_r[j]->val = curve_foot_r[j].CalcPos(t);
+			for (int i = 0; i < 2; i++) {
+				key->foot[i].var_pos_t->val   = curve_foot_t[i].CalcPos(t);
+				key->foot[i].var_pos_r->val   = curve_foot_r[i].CalcPos(t);
+				key->foot[i].var_cop_pos->val = key->foot[i].var_pos_t->val;
+
+				if (key->next) {
+					key->foot[i].var_vel_t->val   = curve_foot_t[i].CalcVel(t);
+					key->foot[i].var_vel_r->val   = curve_foot_r[i].CalcVel(t);
+					key->foot[i].var_cop_vel->val = curve_foot_t[i].CalcVel(t);
+				} 
 			}
 
-			// cop (actually vrp) is place at the same place as the com
-			key->var_cop_pos->val = vec3_t(key->var_com_pos->val.x, key->var_com_pos->val.y, 0);
+			key->var_cmp_vel->val.clear();
 
 			real_t mt = param.torsoMass;
 			real_t mf = param.footMass;
-			key->var_torso_pos_t->val = (1.0 + 2.0 * (mf / mt)) * key->var_com_pos->val - (mf / mt) * (key->var_foot_pos_t[0]->val + key->var_foot_pos_t[1]->val);
+			key->var_torso_pos_t->val = (1.0 + 2.0 * (mf / mt)) * key->var_com_pos->val - (mf / mt) * (key->foot[0].var_pos_t->val + key->foot[1].var_pos_t->val);
 			key->var_torso_vel_t->val = (1.0 + 2.0 * (mf / mt)) * key->var_com_vel->val;
-			//key->var_com_pos->val = (mt * key->var_torso_pos_t->val + mf * (key->var_foot_pos_t[0]->val + key->var_foot_pos_t[1]->val)) / (mt + 2.0*mf);
-			//key->var_com_vel->val = (mt * key->var_torso_vel_t->val) / (mt + 2.0*mf);
-
-			// cmp is initialized to zero
-			key->var_cmp_pos->val.clear();
-		}
-
-		// initial value of cop and cmp velocity
-		for (uint k = 0; k < graph->ticks.size(); k++) {
-			BipedRunKey* key = (BipedRunKey*)traj.GetKeypoint(graph->ticks[k]);
-			BipedRunKey* key1 = (BipedRunKey*)key->next;
-			if (key1) {
-				key->var_cop_vel->val = (key1->var_cop_pos->val - key->var_cop_pos->val) / key->var_duration->val;
-				key->var_cmp_vel->val.clear();
-			}
 		}
 
 		// variables at waypoints are fixed
-		for (uint i = 0; i < waypoints.size(); i++) {
-			Waypoint& wp = waypoints[i];
+		for (Waypoint& wp : waypoints) {
 			BipedRunKey* key = (BipedRunKey*)traj.GetKeypoint(graph->ticks[wp.k]);
 
-			key->var_com_pos->locked = wp.fix_com_pos;
-			key->var_com_vel->locked = wp.fix_com_vel;
+			key->var_com_pos    ->locked = wp.fix_com_pos;
+			key->var_com_vel    ->locked = wp.fix_com_vel;
 			key->var_torso_pos_r->locked = wp.fix_torso_pos_r;
-			key->var_cop_pos->locked = wp.fix_cop_pos;
-			key->var_cmp_pos->locked = wp.fix_cmp_pos;
 
-			if (wp.fix_cop_pos) {
-				key->var_cop_pos->val = wp.cop_pos;
-			}
+			for (int i = 0; i < 2; i++) {
+				key->foot[i].var_pos_t  ->locked = wp.fix_foot_pos_t[i];
+				key->foot[i].var_pos_r  ->locked = wp.fix_foot_pos_r[i];
+				key->foot[i].var_cop_pos->locked = wp.fix_foot_cop[i];
 
-			// set cop range if specified (param setting is overridden)
-			if (wp.set_cop_range) {
-				for (int j = 0; j < 3; j++) {
-					key->con_cop_range[j]->_min = wp.cop_min[j];
-					key->con_cop_range[j]->_max = wp.cop_max[j];
+				if (wp.set_cop_range[i]) {
+					for (int j = 0; j < 3; j++) {
+						key->foot[i].con_cop_range[j][0]->bound =  wp.foot_cop_min[i][j];
+						key->foot[i].con_cop_range[j][1]->bound = -wp.foot_cop_max[i][j];
+					}
 				}
-			}
-
-			for (uint j = 0; j < 2; j++) {
-				key->var_foot_pos_t[j]->locked = wp.fix_foot_pos_t[j];
-				key->var_foot_pos_r[j]->locked = wp.fix_foot_pos_r[j];
 			}
 		}
 
@@ -589,9 +653,9 @@ namespace DiMP {
 		real_t dt = t - key0->var_time->val;
 		real_t T;
 		if (OnTransition(t) && gtype == GaitType::Walk)
-			T = param.T[0]; //0.3316;
+			T = param.T[0];
 		else if (OnTransition(t) && gtype == GaitType::Run)
-			T = param.T[1]; //0.2659 0.2807;
+			T = param.T[1];
 		else if (gtype == GaitType::Run)
 			T = param.T[2];
 		else
@@ -602,10 +666,13 @@ namespace DiMP {
 		if (key1 == key0->next) {
 			vec3_t p0 = key0->var_com_pos->val;
 			vec3_t v0 = key0->var_com_vel->val;
-			vec3_t c0 = key0->var_cop_pos->val + vec3_t(0.0, 0.0, param.gravity.z * T * T);
+			vec3_t c0 = key0->cop_pos + param.gravity * T2; // actually vrp
+			vec3_t cv0 = key0->cop_vel;
+			vec3_t ca0 = key0->cop_acc;
 			vec3_t cm0 = key0->var_cmp_pos->val;
-			vec3_t cv0 = key0->var_cop_vel->val;
 			vec3_t cmv0 = key0->var_cmp_vel->val;
+			real_t C = cosh(dt / T);
+			real_t S = sinh(dt / T);
 
 			if (ph == Phase::LRF || ph == Phase::RLF) {
 				pos = p0 + v0 * dt - 0.5 * param.gravity * dt * dt;
@@ -613,9 +680,9 @@ namespace DiMP {
 				acc = -param.gravity;
 			}
 			else {
-				pos = (c0 + cm0) + (cv0 + cmv0) * dt + cosh(dt / T) * (p0 - (c0 + cm0)) + T * sinh(dt / T) * (v0 - (cv0 + cmv0));
-				vel = (cv0 + cmv0) + (1 / T) * sinh(dt / T) * (p0 - (c0 + cm0)) + cosh(dt / T) * (v0 - (cv0 + cmv0));
-				acc = (1 / T2) * cosh(dt / T) * (p0 - (c0 + cm0)) + (1 / T) * sinh(dt / T) * (v0 - (cv0 + cmv0));
+				pos = c0 + cm0 + ca0*T2 + (cv0 + cmv0)*dt + (1.0 / 2.0)*ca0*dt*dt +        C*(p0 - (c0 + ca0*T2 + cm0)) +     T*S*(v0 - cv0 - cmv0);
+				vel =               cv0 + cmv0            +             ca0*dt    + (1/T )*S*(p0 - (c0 + ca0*T2 + cm0)) +       C*(v0 - cv0 - cmv0);
+				acc =                                                   ca0       + (1/T2)*C*(p0 - (c0 + ca0*T2 + cm0)) + (1/T)*S*(v0 - cv0 - cmv0);
 
 			}
 		}
@@ -629,39 +696,76 @@ namespace DiMP {
 	vec3_t BipedRunning::Momentum(real_t t) {
 		BipedRunKey* key0 = (BipedRunKey*)traj.GetSegment(t).first;
 		BipedRunKey* key1 = (BipedRunKey*)traj.GetSegment(t).second;
-
 		vec3_t Lt;
 
 		real_t m = param.torsoMass + 2.0 * param.footMass;
 		real_t g = param.gravity.z;
 
 		if (key1 == key0->next) {
-			real_t dt = t - key0->var_time->val;
-			vec3_t L0 = key0->var_mom->val;
-			vec3_t cm0 = key0->var_cmp_pos->val;
+			real_t dt   = t - key0->var_time->val;
+			vec3_t L0   = key0->var_mom->val;
+			vec3_t p0   = key0->var_com_pos->val;
+	        vec3_t c0   = key0->cop_pos;
+			vec3_t cm0  = key0->var_cmp_pos->val;
 			vec3_t cmv0 = key0->var_cmp_vel->val;
 
-			Lt = L0 + vec3_t(0.0, 0.0, 1.0) % (cm0 * dt + 0.5 * dt * dt * cmv0);
+			vec3_t pt, vt, at;
+			ComState(t, pt, vt, at);
+
+			//Lt = L0 + vec3_t(0.0, 0.0, 1.0) % (cm0 * dt + 0.5 * dt * dt * cmv0); // it works only if vertical acceleration is zero
+			Lt = L0 + vec3_t(0.0, 0.0, 1.0) % ((g * cm0 + vt.z * cmv0) * dt + 0.5 * g * cmv0 * dt * dt);
+
+			int ph = phase[key0->tick->idx];
+			if (ph == Phase::RLF || ph == Phase::LRF) Lt = L0;
 		}
 		else {
 			Lt = vec3_t();
 		}
 
 		// momentum is internally normalized, so multiply by m*g to obtain actual momentum
-		return (m * g) * Lt;
+		return m * Lt;
 	}
 
-	real_t BipedRunning::TorsoOri(real_t t) {
+	vec3_t BipedRunning::CmpPos(real_t t) {
 		BipedRunKey* key0 = (BipedRunKey*)traj.GetSegment(t).first;
 		BipedRunKey* key1 = (BipedRunKey*)traj.GetSegment(t).second;
 
-		real_t o;
+		vec3_t cmt;
+
+		vec3_t c0 = key0->cop_pos;
+		vec3_t cm0 = key0->var_cmp_pos->val;
+
+		if (key1 == key0->next) {
+			real_t dt = t - key0->var_time->val;
+			vec3_t cv0 = key0->cop_vel;
+			vec3_t ca0 = key0->cop_acc;
+			vec3_t cmv0 = key0->var_cmp_vel->val;
+
+			cmt = (c0 + cm0) + (cv0 + cmv0) * dt + 0.5 * ca0 * dt * dt;
+		}
+		else {
+			cmt = (c0 + cm0);
+		}
+
+		return cmt;
+		//return vec3_t(cmt.x, cmt.y, 0.0);
+	}
+
+	void BipedRunning::TorsoState(real_t t, real_t& ori, real_t& angvel, real_t& angacc) {
+		BipedRunKey* key0 = (BipedRunKey*)traj.GetSegment(t).first;
+		BipedRunKey* key1 = (BipedRunKey*)traj.GetSegment(t).second;
 
 		if (key1 == key0->next) {
 			real_t t0 = key0->var_time->val;
 			real_t t1 = key1->var_time->val;
 
-			o = InterpolatePos(
+			ori = InterpolatePos(
+				t,
+				t0, key0->var_torso_pos_r->val, 0.0,
+				t1, key1->var_torso_pos_r->val, 0.0,
+				Interpolate::LinearDiff
+			);
+			angvel = InterpolateVel(
 				t,
 				t0, key0->var_torso_pos_r->val, 0.0,
 				t1, key1->var_torso_pos_r->val, 0.0,
@@ -669,39 +773,12 @@ namespace DiMP {
 			);
 		}
 		else {
-			o = key0->var_torso_pos_r->val;
+			ori = key0->var_torso_pos_r->val;
+			angvel = 0.0;
 		}
-
-		return o;
+		angacc = 0.0;
 	}
 
-	real_t BipedRunning::TorsoAngVel(real_t t) {
-		BipedRunKey* key0 = (BipedRunKey*)traj.GetSegment(t).first;
-		BipedRunKey* key1 = (BipedRunKey*)traj.GetSegment(t).second;
-
-		real_t r;
-
-		if (key1 == key0->next) {
-			real_t t0 = key0->var_time->val;
-			real_t t1 = key1->var_time->val;
-
-			r = InterpolateVel(
-				t,
-				t0, key0->var_torso_pos_r->val, 0.0,
-				t1, key1->var_torso_pos_r->val, 0.0,
-				Interpolate::LinearDiff
-			);
-		}
-		else {
-			r = 0.0;
-		}
-
-		return r;
-	}
-
-	real_t BipedRunning::TorsoAngAcc(real_t t) {
-		return 0.0;
-	}
 
 	real_t fresnelC(real_t d) {
 		return d - (1.0 / 10.0) * pow(d, 5.0);
@@ -721,12 +798,166 @@ namespace DiMP {
 		return (1.0 / tmp) * fresnelS(tmp * d);
 	}
 
+	void BipedRunning::FootRotation(
+		real_t cp, real_t cv, real_t ca,
+		vec3_t& pos, vec3_t& vel, vec3_t& acc,
+		vec3_t& ori, vec3_t& angvel, vec3_t& angacc,
+		int& contact)
+	{
+		real_t l0 = param.ankleToToe;
+		real_t l1 = param.ankleToHeel;
+		real_t rho0 = param.toeCurvature;
+		real_t rho1 = param.heelCurvature;
+		real_t r0 = 1.0 / rho0;
+		real_t r1 = 1.0 / rho1;
+		real_t kappa0 = param.toeCurvatureRate;
+		real_t kappa1 = param.heelCurvatureRate;
+
+		real_t d;                 //< rolling distance
+		vec2_t v, vd, vdd;        //< foot center to contact point on the foot, and its derivative w.r.t. d
+		real_t phi, phid, phidd;  //< foot rotation and its derivative w.r.t. d
+
+		phi = phid = phidd = 0.0;
+
+		// current cop is on heel
+		if (cp < -l1) {
+			d = cp + l1;
+
+			if (param.footCurveType == FootCurveType::Arc) {
+				phi = d / r1;
+				v = vec2_t(-l1 + r1 * sin(phi), r1 * (1.0 - cos(phi)));
+
+				phid = 1.0 / r1;
+				vd = vec2_t(cos(phi), sin(phi));
+
+				phidd = 0.0;
+				vdd = vec2_t(-sin(phi), cos(phi)) * phid;
+			}
+			if (param.footCurveType == FootCurveType::Clothoid) {
+				phi = -0.5 * kappa1 * d * d;
+				v = vec2_t(-l1 - clothoid_x(-d, kappa1), clothoid_y(-d, kappa1));
+
+				phid = -kappa1 * d;
+				vd = vec2_t(cos(phi), sin(phi));
+
+				phidd = -kappa1;
+				vdd = vec2_t(-sin(phi), cos(phi)) * phid;
+			}
+
+			contact = ContactState::Heel;
+		}
+		// current cop is on toe
+		else if (cp > l0) {
+			d = cp - l0;
+
+			if (param.footCurveType == FootCurveType::Arc) {
+				phi = d / r0;
+				v = vec2_t(l0 + r0 * sin(phi), r0 * (1.0 - cos(phi)));
+
+				phid = 1.0 / r0;
+				vd = vec2_t(cos(phi), sin(phi));
+
+				phidd = 0.0;
+				vdd = vec2_t(-sin(phi), cos(phi)) * phid;
+			}
+			if (param.footCurveType == FootCurveType::Clothoid) {
+				phi = 0.5 * kappa0 * d * d;
+				v = vec2_t(l0 + clothoid_x(d, kappa0), clothoid_y(d, kappa0));
+
+				phid = kappa0 * d;
+				vd = vec2_t(cos(phi), sin(phi));
+
+				phidd = kappa0;
+				vdd = vec2_t(-sin(phi), cos(phi)) * phid;
+			}
+
+			contact = ContactState::Toe;
+		}
+		// current cop is in the middle
+		else {
+			v = vec2_t(cp, 0.0);
+			vd = vec2_t(1.0, 0.0);
+			vdd = vec2_t(0.0, 0.0);
+			phi = phid = phidd = 0.0;
+
+			contact = ContactState::Surface;
+		}
+
+		vec2_t pos2 = -mat2_t::Rot(-phi) * v;
+		vec2_t vel2 = (-mat2_t::Rot(-phi) * vd + mat2_t::Rot(-phi + (pi / 2.0)) * v * phid) * cv;
+		vec2_t acc2 = (-mat2_t::Rot(-phi) * vd + mat2_t::Rot(-phi + (pi / 2.0)) * v * phid) * ca;
+		(-mat2_t::Rot(-phi) * (vdd - v * phid * phid) + mat2_t::Rot(-phi + (pi / 2.0)) * (2.0 * vd * phid + v * phidd))* (cv * cv);
+
+		pos = vec3_t(pos2[0] + cp, 0.0, pos2[1]);
+		vel = vec3_t(vel2[0] + cv, 0.0, vel2[1]);
+		acc = vec3_t(acc2[0] + ca, 0.0, acc2[1]);
+		ori = vec3_t(0.0, phi, 0.0);
+		angvel = vec3_t(0.0, phid * cv, 0.0);
+		angacc = vec3_t(0.0, phidd * cv * cv + phid * ca, 0.0);
+	}
+
+	void BipedRunning::FootRotationInv(
+		real_t ori, real_t angvel, real_t angacc,
+		real_t& cp, real_t& cv, real_t& ca) {
+
+		real_t phi, phid, phidd;
+		real_t d;
+		real_t l0 = param.ankleToToe;
+		real_t l1 = param.ankleToHeel;
+		real_t rho0 = param.toeCurvature;
+		real_t rho1 = param.heelCurvature;
+		real_t r0 = 1.0 / rho0;
+		real_t r1 = 1.0 / rho1;
+		real_t kappa0 = param.toeCurvatureRate;
+		real_t kappa1 = param.heelCurvatureRate;
+
+		phi = ori;
+		const real_t eps = 1.0e-2;
+		if (std::abs(phi) < eps) {
+			cp = 0.0;
+			cv = 0.0;
+			ca = 0.0;
+		}
+		else {
+			if (phi < 0.0) {
+				if (param.footCurveType == FootCurveType::Arc) {
+					d = r1 * phi;
+					phid = 1.0 / r1;
+					phidd = 0.0;
+				}
+				if (param.footCurveType == FootCurveType::Clothoid) {
+					d = -sqrt(-2.0 * phi / kappa1);
+					phid = -kappa1 * d;
+					phidd = -kappa1;
+				}
+				cp = -l1 + d;
+				cv = angvel / phid;
+				ca = (angacc - phidd * angvel * angvel) / phid;
+			}
+			else {
+				if (param.footCurveType == FootCurveType::Arc) {
+					d = r0 * phi;
+					phid = 1.0 / r0;
+					phidd = 0.0;
+				}
+				if (param.footCurveType == FootCurveType::Clothoid) {
+					d = sqrt(2.0 * phi / kappa0);
+					phid = kappa0 * d;
+					phidd = kappa0;
+				}
+				cp = l0 + d;
+				cv = angvel / phid;
+				ca = (angacc - phidd * angvel * angvel) / phid;
+			}
+		}
+	}
 
 	// cubic or quintic interpolation
+	template <typename T>
 	void Interpolate(
-		real_t t, real_t& p, real_t& v, real_t& a,
-		real_t t0, real_t  p0, real_t  v0, real_t  a0,
-		real_t t1, real_t  p1, real_t  v1, real_t  a1,
+		real_t t, T& p, T& v, T& a,
+		real_t t0, const T& p0, const T& v0, const T& a0,
+		real_t t1, const T& p1, const T& v1, const T& a1,
 		int type)
 	{
 		real_t Kcubic[6][6] = {
@@ -758,14 +989,14 @@ namespace DiMP {
 
 		vec6_t kp, kv, ka;
 		for (int i = 0; i < 6; i++) {
-			kp[i] = K[i][0] + K[i][1] * s + K[i][2] * s2 + K[i][3] * s3 + K[i][4] * s4 + K[i][5] * s5;
-			kv[i] = K[i][1] + 2.0 * K[i][2] * s + 3.0 * K[i][3] * s2 + 4.0 * K[i][4] * s3 + 5.0 * K[i][5] * s4;
-			ka[i] = 2.0 * K[i][2] + 6.0 * K[i][3] * s + 12.0 * K[i][4] * s2 + 20.0 * K[i][5] * s3;
+			kp[i] =       K[i][0] +       K[i][1] * s +      K[i][2]*s2 +      K[i][3]*s3 +     K[i][4]*s4 + K[i][5]*s5;
+			kv[i] =       K[i][1] + 2.0 * K[i][2] * s +  3.0*K[i][3]*s2 +  4.0*K[i][4]*s3 + 5.0*K[i][5]*s4;
+			ka[i] = 2.0 * K[i][2] + 6.0 * K[i][3] * s + 12.0*K[i][4]*s2 + 20.0*K[i][5]*s3;
 		}
 
-		p = kp[0] * p0 + kp[1] * p1 + kp[2] * h * v0 + kp[3] * h * v1 + kp[4] * h2 * a0 + kp[5] * h2 * a1;
-		v = kv[0] / h * p0 + kv[1] / h * p1 + kv[2] * v0 + kv[3] * v1 + kv[4] * h * a0 + kv[5] * h * a1;
-		a = ka[0] / h2 * p0 + ka[1] / h2 * p1 + ka[2] / h * v0 + ka[3] / h * v1 + ka[4] * a0 + ka[5] * a1;
+		p = kp[0]   *p0 + kp[1]   *p1 + kp[2]*h*v0 + kp[3]*h*v1 + kp[4]*h2*a0 + kp[5]*h2*a1;
+		v = kv[0]/h *p0 + kv[1]/h *p1 + kv[2]  *v0 + kv[3]  *v1 + kv[4]*h *a0 + kv[5]*h *a1;
+		a = ka[0]/h2*p0 + ka[1]/h2*p1 + ka[2]/h*v0 + ka[3]/h*v1 + ka[4]   *a0 + ka[5]   *a1;
 
 	}
 
@@ -799,6 +1030,7 @@ namespace DiMP {
 
 	// swing leg trajectory
 	void BipedRunning::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& angvel, vec3_t& acc, vec3_t& angacc, int& contact) {
+		BipedRunKey* keym3 = 0;
 		BipedRunKey* keym2 = 0;
 		BipedRunKey* keym1 = 0;
 		BipedRunKey* key0 = (BipedRunKey*)traj.GetSegment(t).first;
@@ -810,21 +1042,22 @@ namespace DiMP {
 		vec3_t angle;
 
 		if (key1 != key0->next) {
-			pose.Pos() = key0->var_foot_pos_t[side]->val;
-			pose.Ori() = FromRollPitchYaw(vec3_t(0.0, 0.0, key0->var_foot_pos_r[side]->val));
+			pose.Pos() = key0->foot[side].var_pos_t->val;
+			pose.Ori() = FromRollPitchYaw(vec3_t(0.0, 0.0, key0->foot[side].var_pos_r->val));
 
 			vel.clear();
 			angvel.clear();
 			acc.clear();
 			angacc.clear();
 
-			//contact = ContactState::Surface;
+			contact = ContactState::Surface;
 
 			return;
 		}
 
 		if (key0->prev) keym1 = (BipedRunKey*)key0->prev;
 		if (keym1 && keym1->prev) keym2 = (BipedRunKey*)keym1->prev;
+		if (keym2 && keym2->prev) keym3 = (BipedRunKey*)keym2->prev;
 		if (key1->next) key2 = (BipedRunKey*)key1->next;
 		if (key2 && key2->next) key3 = (BipedRunKey*)key2->next;
 
@@ -836,12 +1069,15 @@ namespace DiMP {
 		real_t t1 = t0 + tau0;
 		real_t dt = std::max(t - t0, 0.0);    //< elapsed time since phase change
 		real_t s = dt / tau0;                   //< normalized time
-		vec3_t p0 = key0->var_foot_pos_t[side]->val;
-		vec3_t v0 = key0->var_com_vel->val;
-		vec3_t p1 = key1->var_foot_pos_t[side]->val;
-		real_t yaw0 = key0->var_foot_pos_r[side]->val;
-		real_t yaw1 = key1->var_foot_pos_r[side]->val;
+		vec3_t p0 = key0->foot[side].var_pos_t->val;
+		vec3_t p1 = key1->foot[side].var_pos_t->val;
+		real_t yaw0 = key0->foot[side].var_pos_r->val;
+		real_t yaw1 = key1->foot[side].var_pos_r->val;
 		real_t h0 = param.swingHeight;
+
+		vec3_t c0 = key0->foot[side].var_cop_pos->val;; // cop pos
+		vec3_t c1 = key1->foot[side].var_cop_pos->val;; // cop pos
+		vec3_t cv0, cv1; // cop vel
 
 		if (param.swingProfile == SwingProfile::Cycloid) {
 			WALK:
@@ -908,12 +1144,12 @@ namespace DiMP {
 					real_t tau1;
 					if (ph == Phase::R || ph == Phase::L)
 					{
-						p1 = key2->var_foot_pos_t[side]->val;
+						p1 = key2->foot[side].var_pos_t->val;
 						tau1 = key1->var_duration->val;
 						s = dt / (tau0 + tau1);
 					}
 					if ((ph == Phase::RLF || ph == Phase::LRF) && keym1) {
-						p0 = keym1->var_foot_pos_t[side]->val;
+						p0 = keym1->foot[side].var_pos_t->val;
 						dt = std::max(t - keym1->var_time->val, 0.0);
 						tau1 = keym1->var_duration->val;
 						s = dt / (tau0 + tau1);
@@ -949,12 +1185,12 @@ namespace DiMP {
 
 					real_t tau1 = 0;
 					if (ph == Phase::RLF || ph == Phase::LRF) {
-						p1 = key2->var_foot_pos_t[side]->val;
+						p1 = key2->foot[side].var_pos_t->val;
 						tau1 = key1->var_duration->val;
 						s = dt / (tau0 + tau1);
 					}
 					if ((ph == Phase::R || ph == Phase::L) && keym1) {
-						p0 = keym1->var_foot_pos_t[side]->val;
+						p0 = keym1->foot[side].var_pos_t->val;
 						dt = std::max(t - keym1->var_time->val, 0.0);
 						tau1 = keym1->var_duration->val;
 						s = dt / (tau0 + tau1);
@@ -989,20 +1225,20 @@ namespace DiMP {
 
 					if ((ph == Phase::RLF && side == 0) ||
 						(ph == Phase::LRF && side == 1)) {
-						if (key3) p1 = key3->var_foot_pos_t[side]->val;
+						if (key3) p1 = key3->foot[side].var_pos_t->val;
 					}
 					if ((ph == Phase::L && side == 0) ||
 						(ph == Phase::R && side == 1)) {
 						if (keym1) {
-							p0 = keym1->var_foot_pos_t[side]->val;
+							p0 = keym1->foot[side].var_pos_t->val;
 							dt = std::max(t - keym1->var_time->val, 0.0);
 						}
-						if (key2) p1 = key2->var_foot_pos_t[side]->val;
+						if (key2) p1 = key2->foot[side].var_pos_t->val;
 					}
 					if ((ph == Phase::RLF && side == 1) ||
 						(ph == Phase::LRF && side == 0)) {
 						if (keym2) {
-							p0 = keym2->var_foot_pos_t[side]->val;
+							p0 = keym2->foot[side].var_pos_t->val;
 							dt = std::max(t - keym2->var_time->val, 0.0);
 						}
 
@@ -1059,11 +1295,11 @@ namespace DiMP {
 				real_t tau1;
 				if (ph == Phase::R || ph == Phase::L)
 				{
-					p1 = key2->var_foot_pos_t[side]->val;
+					p1 = key2->foot[side].var_pos_t->val;
 					tau1 = key1->var_duration->val;
 				}
 				if ((ph == Phase::RLF || ph == Phase::LRF) && keym1) {
-					p0 = keym1->var_foot_pos_t[side]->val;
+					p0 = keym1->foot[side].var_pos_t->val;
 					dt = std::max(t - keym1->var_time->val, 0.0);
 					tau1 = keym1->var_duration->val;
 					t0 = keym1->var_time->val;
@@ -1084,15 +1320,14 @@ namespace DiMP {
 
 				real_t tau1;
 				if (ph == Phase::RLF || ph == Phase::LRF) {
-					p1 = key2->var_foot_pos_t[side]->val;
+					p1 = key2->foot[side].var_pos_t->val;
 					tau1 = key1->var_duration->val;
 				}
 				if ((ph == Phase::R || ph == Phase::L) && keym1) {
-					p0 = keym1->var_foot_pos_t[side]->val;
+					p0 = keym1->foot[side].var_pos_t->val;
 					dt = std::max(t - keym1->var_time->val, 0.0);
 					tau1 = keym1->var_duration->val;
 					t0 = keym1->var_time->val;
-					v0 = keym1->var_com_vel->val;
 				}
 
 				Interpolate(t, pos.x, vel.x, acc.x, t0, p0.x, 0.0, 0.0, t0 + tau0 + tau1, p1.x, 0.0, 0.0, param.swingInterpolation);
@@ -1105,27 +1340,25 @@ namespace DiMP {
 				if ((ph == Phase::RLF && side == 0) ||
 					(ph == Phase::LRF && side == 1)) {
 					Interpolate(t, pos.z, vel.z, acc.z, t0, p0.z, 0.0, 0.0, t0 + tau0, h0, 0.0, -9.8, param.swingInterpolation);
-					if (key3) p1 = key3->var_foot_pos_t[side]->val;
+					if (key3) p1 = key3->foot[side].var_pos_t->val;
 				}
 				if ((ph == Phase::L && side == 0) ||
 					(ph == Phase::R && side == 1)) {
 					if (keym1) {
 						Interpolate(t, pos.z, vel.z, acc.z, t0, h0, 0.0, -9.8, t0 + tau0, 0.7*h0, 0.0, 0.0, param.swingInterpolation);
-						p0 = keym1->var_foot_pos_t[side]->val;
+						p0 = keym1->foot[side].var_pos_t->val;
 						dt = std::max(t - keym1->var_time->val, 0.0);
 						t0 = keym1->var_time->val;
-						v0 = keym1->var_com_vel->val;
 					}
-					if (key2) p1 = key2->var_foot_pos_t[side]->val;
+					if (key2) p1 = key2->foot[side].var_pos_t->val;
 				}
 				if ((ph == Phase::RLF && side == 1) ||
 					(ph == Phase::LRF && side == 0)) {
 					if (keym2) {
-						Interpolate(t, pos.z, vel.z, acc.z, t0, 0.7*h0, 0.0, 0.0, t0 + tau0, p1.z, 0.0, 0.0, param.swingInterpolation);
-						p0 = keym2->var_foot_pos_t[side]->val;
+						Interpolate(t, pos.z, vel.z, acc.z, t0, 0.7 * h0, 0.0, 0.0, t0 + tau0, p1.z, 0.0, 0.0, param.swingInterpolation);
+						p0 = keym2->foot[side].var_pos_t->val;
 						dt = std::max(t - keym2->var_time->val, 0.0);
 						t0 = keym2->var_time->val;
-						v0 = keym2->var_com_vel->val;
 					}
 				}
 				real_t tau1 = key1->var_duration->val;
@@ -1144,13 +1377,248 @@ namespace DiMP {
 			}
 		}
 
+	else if (param.swingProfile == SwingProfile::HeelToe)
+	{
+		real_t tau1; // not always next duration!
+
+		vec3_t f_tp, f_tv, f_ta; //< translational pos, vel and acc of foot
+		vec3_t f_rp, f_rv, f_ra; //< rotational pos, vel and acc of foot
+		vec3_t f_tp_roll, f_tv_roll, f_ta_roll, f_rp_roll, f_rv_roll, f_ra_roll;
+		vec3_t f_tp_roll0, f_tv_roll0, f_ta_roll0, f_rp_roll0, f_rv_roll0, f_ra_roll0;
+		vec3_t f_tp_roll1, f_tv_roll1, f_ta_roll1, f_rp_roll1, f_rv_roll1, f_ra_roll1;
+		vec3_t cp, cv_v, ca;                     //< zmp in absolute coordinate
+		vec3_t cp_local, cv_local, ca_local;   //< zmp in foot local
+
+		if (keym1) cv0 = keym1->foot[side].var_cop_vel->val;
+		cv1 = key1->foot[side].var_cop_vel->val;
+		if (gaittype[key0->tick->idx] == GaitType::Run)
+		{
+			// first swing foot
+			if ((ph == Phase::R2 && keym1 && gaittype[keym1->tick->idx] == GaitType::Walk && side == 1) ||
+				(ph == Phase::L2 && keym1 && gaittype[keym1->tick->idx] == GaitType::Walk && side == 0) ||
+				(ph == Phase::RLF && keym2 && gaittype[keym2->tick->idx] == GaitType::Walk && side == 1) ||
+				(ph == Phase::LRF && keym2 && gaittype[keym2->tick->idx] == GaitType::Walk && side == 0))
+			{
+				if (ph == Phase::R2 || ph == Phase::L2)
+				{
+					p1 = key2->foot[side].var_pos_t->val;
+					c1 = key2->foot[side].var_cop_pos->val;
+					cv1 = key2->foot[side].var_cop_vel->val;
+					tau1 = key1->var_duration->val;
+					t1 = key2->var_time->val;
+					s = dt / (tau0 + tau1);
+				}
+				if (ph == Phase::RLF || ph == Phase::LRF)
+				{
+					p0 = keym1->foot[side].var_pos_t->val;
+					c0 = keym1->foot[side].var_cop_pos->val;
+					if (keym2) cv0 = keym2->foot[side].var_cop_vel->val;
+					t0 = keym1->var_time->val;
+					tau1 = keym1->var_duration->val;
+					dt = std::max(t - keym1->var_time->val, 0.0);
+					s = dt / (tau0 + tau1);
+				}
+			}
+
+			// last swing foot
+			else if ((ph == Phase::RLF && key2 && gaittype[key2->tick->idx] == GaitType::Walk && side == 0) ||
+				     (ph == Phase::LRF && key2 && gaittype[key2->tick->idx] == GaitType::Walk && side == 1) ||
+				     (ph == Phase::L2 && gaittype[key1->tick->idx]           == GaitType::Walk && side == 0) ||
+				     (ph == Phase::R2 && gaittype[key1->tick->idx]           == GaitType::Walk && side == 1))
+			{
+				if (ph == Phase::RLF || ph == Phase::LRF)
+				{
+					p1 = key2->foot[side].var_pos_t->val;
+					c1 = key2->foot[side].var_cop_pos->val;
+					cv1 = key2->foot[side].var_cop_vel->val;
+					tau1 = key1->var_duration->val;
+					t1 = key2->var_time->val;
+					s = dt / (tau0 + tau1);
+				}
+				if ((ph == Phase::R2 || ph == Phase::L2) && keym1)
+				{
+					p0 = keym1->foot[side].var_pos_t->val;
+					c0 = keym1->foot[side].var_cop_pos->val;
+					if (keym2) cv0 = keym2->foot[side].var_cop_vel->val;
+					tau1 = keym1->var_duration->val;
+					t0 = keym1->var_time->val;
+					dt = std::max(t - keym1->var_time->val, 0.0);
+					s = dt / (tau0 + tau1);
+				}
+			}
+
+			// swing foot
+			else if ((ph == Phase::RLF) || (ph == Phase::LRF) || (ph == Phase::L2 && side == 0) || (ph == Phase::R2 && side == 1))
+			{
+				if ((ph == Phase::RLF && side == 0) || (ph == Phase::LRF && side == 1))
+				{
+					if (key3) p1 = key3->foot[side].var_pos_t->val;
+					if (key3) c1 = key3->foot[side].var_cop_pos->val;
+					if (key3) cv1 = key3->foot[side].var_cop_vel->val;
+					if (key3) t1 = key3->var_time->val;
+					if (key1) tau1 = key1->var_duration->val;
+					s = dt / (tau0*2 + tau1);
+				}
+				if ((ph == Phase::R2 && side == 1) || (ph == Phase::L2 && side == 0))
+				{
+					if (keym1) p0 = keym1->foot[side].var_pos_t->val;
+					if (keym1) c0 = keym1->foot[side].var_cop_pos->val;
+					if (keym2) cv0 = keym2->foot[side].var_cop_vel->val;
+					if (keym1) t0 = keym1->var_time->val;
+					if (key2)  p1 = key2->foot[side].var_pos_t->val;
+					if (key2)  c1 = key2->foot[side].var_cop_pos->val;
+					if (key2)  cv1 = key2->foot[side].var_cop_vel->val;
+					if (key2)  t1 = key2->var_time->val;
+					if (key1) tau1 = key1->var_duration->val;
+					if (keym1) dt = std::max(t - keym1->var_time->val, 0.0);
+					s = dt / (tau0 + tau1*2);
+				}
+				if ((ph == Phase::RLF && side == 1) || (ph == Phase::LRF && side == 0))
+				{
+					if (keym2) p0 = keym2->foot[side].var_pos_t->val;
+					if (keym2) c0 = keym2->foot[side].var_cop_pos->val;
+					if (keym3) cv0 = keym3->foot[side].var_cop_vel->val;
+					if (keym2) t0 = keym2->var_time->val;
+					if (keym1) tau1 = keym1->var_duration->val;
+					if (keym2) dt = std::max(t - keym2->var_time->val, 0.0);
+					s = dt / (tau0*2 + tau1);
+				}
+			}
+		}
+
+		real_t ds = s / dt;
+		real_t ch = (s - sin(_2pi * s) / _2pi);
+		real_t chd = ((1.0 - cos(_2pi * s))*ds);
+		real_t chdd = ((_2pi * sin(_2pi * s))*ds*ds);
+		real_t cv = (1 - cos(_2pi * s)) / 2.0;
+		real_t cvd = (_2pi * sin(_2pi * s)*ds/2);
+		real_t cvdd = ((_2pi * _2pi) * cos(_2pi * s)*ds*ds/2);
+
+		// preparation for foot print rotation while stance phase
+		if (ph == Phase::LR || ph == Phase::RL || ph == Phase::D || (ph == Phase::R && side == 0) || (ph == Phase::L && side == 1) || (ph == Phase::R2 && side == 0) || (ph == Phase::L2 && side == 1))
+		{
+			//c0 = key0->foot[side].var_cop_pos->val;
+			//c1 = key1->foot[side].var_cop_pos->val;
+			cv0 = key0->foot[side].var_cop_vel->val;
+			cv1 = key0->foot[side].var_cop_vel->val;
+
+			f_tp = p0;
+			f_tv = vec3_t(0.0, 0.0, 0.0);
+			f_ta = vec3_t(0.0, 0.0, 0.0);
+			f_rp = vec3_t(0.0, 0.0, yaw0);
+			f_rv = vec3_t(0.0, 0.0, 0.0);
+			f_ra = vec3_t(0.0, 0.0, 0.0);
+
+			// zmp
+			Interpolate(
+				t, cp, cv_v, ca,
+				t0, c0, cv0, vec3_t(0.0, 0.0, 0.0),
+				t1, c1, cv1, vec3_t(0.0, 0.0, 0.0),
+				param.swingInterpolation
+			);
+
+			// zmp in foot local (approximate assuming yaw rotation is slow enough)
+			quat_t q = FromRollPitchYaw(f_rp);
+			cp_local = q.Conjugated() * (cp - f_tp);
+			cv_local = q.Conjugated() * (cv_v - f_tv);
+			ca_local = q.Conjugated() * (ca - f_ta);
+		}
+		else
+		{
+			real_t yaw_diff = yaw1 - yaw0;
+			while (yaw_diff > pi) yaw_diff -= 2.0 * pi;
+			while (yaw_diff < -pi) yaw_diff += 2.0 * pi;
+
+			/*f_tp = p0 + ch  *(p1 - p0) + cv  *vec3_t(0.0, 0.0, param.swingHeight);
+			f_tv =      chd *(p1 - p0) + cvd *vec3_t(0.0, 0.0, param.swingHeight);
+			f_ta =      chdd*(p1 - p0) + cvdd*vec3_t(0.0, 0.0, param.swingHeight);*/
+			vec3_t pcom, vcom, acom;
+			real_t dpos_z, dvel_z, dacc_z;    // additional z position
+			ComState(t0, pcom, vcom, acom);
+			Interpolate(t, f_tp.x, f_tv.x, f_ta.x, t0, p0.x, vcom.x, acom.x, t1, p1.x, 0.0, 0.0, param.swingInterpolation);
+			Interpolate(t, f_tp.y, f_tv.y, f_ta.y, t0, p0.y, vcom.y, acom.y, t1, p1.y, 0.0, 0.0, param.swingInterpolation);
+			Interpolate(t, f_tp.z, f_tv.z, f_ta.z, t0, p0.z, max(vcom.z, 0.0), acom.z, t1, p1.z, 0.0, 0.0, param.swingInterpolation);
+			Interpolate2(t, dpos_z, dvel_z, dacc_z, t0, t1, param.swingHeight, param.swingInterpolation);
+			f_tp.z += dpos_z;
+			f_tv.z += dvel_z;
+			f_ta.z += dacc_z;
+
+			f_rp.z = yaw0 + ch * yaw_diff;
+			f_rv.z =        chd * yaw_diff;
+			f_ra.z =        chdd * yaw_diff;
+
+			FootRotation(
+				c0.x - p0.x, cv0.x, 0.0,
+				f_tp_roll0, f_tv_roll0, f_ta_roll0,
+				f_rp_roll0, f_rv_roll0, f_ra_roll0,
+				contact);
+			FootRotation(
+				c1.x - p1.x, cv1.x, 0.0,
+				f_tp_roll1, f_tv_roll1, f_ta_roll1,
+				f_rp_roll1, f_rv_roll1, f_ra_roll1,
+				contact);
+
+			Interpolate(
+				t, f_rp_roll.y, f_rv_roll.y, f_ra_roll.y,
+				t0, f_rp_roll0.y, f_rv_roll0.y, 0.0,
+				t1, f_rp_roll1.y, f_rv_roll1.y, 0.0,
+				param.swingInterpolation
+			);
+
+			FootRotationInv(
+				f_rp_roll.y, f_rv_roll.y, f_ra_roll.y,
+				cp_local.x, cv_local.x, ca_local.x);
+
+			contact = ContactState::Float; // TODO: –³ˆÓ–¡
+		}
+
+		// relative transform from footprint to foot
+		FootRotation(
+			cp_local.x, cv_local.x, ca_local.x,
+			f_tp_roll, f_tv_roll, f_ta_roll,
+			f_rp_roll, f_rv_roll, f_ra_roll,
+			contact);
+
+		// absolute pose of foot (approixmate)
+		quat_t q = FromRollPitchYaw(f_rp);
+		pose.Pos() = f_tp + q * f_tp_roll;
+		pose.Ori() = q * FromRollPitchYaw(f_rp_roll);
+		vel        = f_tv + q * f_tv_roll;
+		angvel     = f_rv + q * f_rv_roll;
+		acc        = f_ta + q * f_ta_roll;
+		angacc     = f_ra + q * f_ra_roll;
+	}
+
 		// yaw angle: linear interpolation
-		angle[2] = (1.0 - s) * yaw0 + s * yaw1;
+		/*angle[2] = (1.0 - s) * yaw0 + s * yaw1;
 		angvel[2] = (yaw1 - yaw0) / tau0;
 		angacc[2] = 0.0;
 
 		pose.Pos() = pos;
-		pose.Ori() = FromRollPitchYaw(angle);
+		pose.Ori() = FromRollPitchYaw(angle);*/
+	}
+
+	void BipedRunning::FootCopState(real_t t, int side, vec3_t& pos, vec3_t& vel, real_t& weight) {
+		BipedRunKey* key0 = (BipedRunKey*)traj.GetSegment(t).first;
+		BipedRunKey* key1 = (BipedRunKey*)traj.GetSegment(t).second;
+
+		if (key0->next == key1) {
+			real_t dt = t - key0->var_time->val;
+			real_t tau = key0->var_duration->val;
+			real_t s = dt / tau;
+
+			vec3_t c0 = key0->foot[side].var_cop_pos->val;
+			vec3_t c1 = key1->foot[side].var_cop_pos->val;
+
+			pos = (1.0 - s) * c0 + s * c1;
+			vel = (c1 - c0) / tau;
+			weight = (1.0 - s) * key0->foot[side].weight + s * key1->foot[side].weight;
+		}
+		else {
+			pos = key0->foot[side].var_cop_pos->val;
+			vel.clear();
+			weight = key0->foot[side].weight;
+		}
 	}
 
 	real_t BipedRunning::TimeToLiftoff(real_t t, int side) {
@@ -1183,49 +1651,15 @@ namespace DiMP {
 		return keyNextContact->tick->time - t;
 	}
 
-	vec3_t BipedRunning::CopPos(real_t t) {
+	void BipedRunning::CopState(real_t t, vec3_t& pos, vec3_t& vel, vec3_t& acc) {
 		BipedRunKey* key0 = (BipedRunKey*)traj.GetSegment(t).first;
 		BipedRunKey* key1 = (BipedRunKey*)traj.GetSegment(t).second;
 
-		vec3_t ct;
+		real_t dt = t - key0->var_time->val;
 
-		vec3_t c0 = key0->var_cop_pos->val;
-
-		if (key1 == key0->next) {
-			real_t dt = t - key0->var_time->val;
-			vec3_t cv0 = key0->var_cop_vel->val;
-
-			ct = c0 + cv0 * dt;
-		}
-		else {
-			ct = c0;
-		}
-
-		return ct;
-	}
-
-	vec3_t BipedRunning::CmpPos(real_t t) {
-		BipedRunKey* key0 = (BipedRunKey*)traj.GetSegment(t).first;
-		BipedRunKey* key1 = (BipedRunKey*)traj.GetSegment(t).second;
-
-		vec3_t cmt;
-
-		vec3_t c0 = key0->var_cop_pos->val;
-		vec3_t cm0 = key0->var_cmp_pos->val;
-
-		if (key1 == key0->next) {
-			real_t dt = t - key0->var_time->val;
-			vec3_t cv0 = key0->var_cop_vel->val;
-			vec3_t cmv0 = key0->var_cmp_vel->val;
-
-			cmt = (c0 + cm0) + (cv0 + cmv0) * dt;
-		}
-		else {
-			cmt = (c0 + cm0);
-		}
-
-		return cmt;
-		//return vec3_t(cmt.x, cmt.y, 0.0);
+		pos = key0->cop_pos + key0->cop_vel * dt + (1.0 / 2.0) * key0->cop_acc * (dt * dt);
+		vel = key0->cop_vel + key0->cop_acc * dt;
+		acc = key0->cop_acc;
 	}
 
 	vec3_t BipedRunning::TorsoPos(const vec3_t& pcom, const vec3_t& psup, const vec3_t& pswg) {
@@ -1283,6 +1717,19 @@ namespace DiMP {
 			canvas->EndPath();
 			canvas->EndLayer();
 		}
+		if (conf->Set(canvas, Render::Item::BipedFootCop, this)) {
+			for (int i = 0; i < 2; i++) {
+				canvas->BeginLayer("biped_foot_cop", true);
+				canvas->BeginPath();
+				canvas->MoveTo(trajectory[0].foot_cop[i]);
+				for (int k = 1; k < trajectory.size(); k++) {
+					canvas->LineTo(trajectory[k].foot_cop[i]);
+				}
+				canvas->EndPath();
+				canvas->EndLayer();
+			}
+		}
+
 		// cmp
 		if (conf->Set(canvas, Render::Item::BipedCmp, this)) {
 			canvas->BeginLayer("biped_cmp", true);
@@ -1307,7 +1754,6 @@ namespace DiMP {
 			canvas->EndLayer();
 		}
 
-
 		// swing foot
 		if (conf->Set(canvas, Render::Item::BipedFoot, this)) {
 			canvas->BeginLayer("biped_foot", true);
@@ -1328,6 +1774,7 @@ namespace DiMP {
 	void BipedRunning::CreateSnapshot(real_t t, BipedRunning::Snapshot& s) {
 		pose_t pose;
 		vec3_t vel, angvel, acc, angacc;
+		real_t weight;
 		int    contact;
 
 		s.t = t;
@@ -1340,9 +1787,11 @@ namespace DiMP {
 		s.foot_pos_t[1] = pose.Pos();
 		s.foot_pos_r[1] = pose.Ori();
 		s.torso_pos_t = TorsoPos(s.com_pos, s.foot_pos_t[0], s.foot_pos_t[1]);
-		s.torso_pos_r = TorsoOri(t);
-		s.cop_pos = CopPos(t);
+		TorsoState(t, s.torso_pos_r, angvel.z, angacc.z);
+		CopState(t, s.cop_pos, vel, acc);
 		s.cmp_pos = CmpPos(t);
+		FootCopState(t, 0, s.foot_cop[0], vel, weight);
+		FootCopState(t, 1, s.foot_cop[1], vel, weight);
 	}
 
 	void BipedRunning::CreateSnapshot(real_t t) {
@@ -1365,7 +1814,7 @@ namespace DiMP {
 
 	void BipedRunning::Save(const char* filename) {
 		ofstream log(filename);
-		log << "t com_pos.x com_pos.y com_pos.z com_vel.x com_vel.y com_vel.z cop_pos.x cop_pos.y cop_pos.z foot_pos0.x foot_pos0.y foot_pos0.z foot_pos1.x foot_pos1.y foot_pos1.z time_const\n";
+		log << "t com_pos.x com_pos.y com_pos.z com_vel.x com_vel.y com_vel.z cop_pos.x cop_pos.y cop_pos.z foot_pos0.x foot_pos0.y foot_pos0.z foot_pos1.x foot_pos1.y foot_pos1.z cmp_pos.x cmp_pos.y cmp_pos.z\n";
 		for (int i = 0; i < trajectory.size(); i++)
 		{
 			log << trajectory[i].t << " ";
@@ -1373,7 +1822,8 @@ namespace DiMP {
 			log << trajectory[i].com_vel.x << " " << trajectory[i].com_vel.y << " " << trajectory[i].com_vel.z << " ";
 			log << trajectory[i].cop_pos.x << " " << trajectory[i].cop_pos.y << " " << trajectory[i].cop_pos.z << " ";
 			log << trajectory[i].foot_pos_t[0].x << " " << trajectory[i].foot_pos_t[0].y << " " << trajectory[i].foot_pos_t[0].z << " ";
-			log << trajectory[i].foot_pos_t[1].x << " " << trajectory[i].foot_pos_t[1].y << " " << trajectory[i].foot_pos_t[1].z;
+			log << trajectory[i].foot_pos_t[1].x << " " << trajectory[i].foot_pos_t[1].y << " " << trajectory[i].foot_pos_t[1].z << " ";
+			log << trajectory[i].cmp_pos.x << " " << trajectory[i].cmp_pos.y << " " << trajectory[i].cmp_pos.z;
 			log << "\n";
 		}
 		log.close();
@@ -1392,11 +1842,11 @@ namespace DiMP {
 		// foot outline
 		vec3_t v[4];
 		vec3_t p[4];
-		v[0] = vec3_t(param.copMin.x, param.copMin.y, 0.0);
-		v[1] = vec3_t(param.copMin.x, param.copMax.y, 0.0);
-		v[2] = vec3_t(param.copMax.x, param.copMax.y, 0.0);
-		v[3] = vec3_t(param.copMax.x, param.copMin.y, 0.0);
 		for (int i = 0; i < 2; i++) {
+			v[0] = vec3_t(param.footCopMin[i].x, param.footCopMin[i].y, 0.0);
+			v[1] = vec3_t(param.footCopMin[i].x, param.footCopMax[i].y, 0.0);
+			v[2] = vec3_t(param.footCopMax[i].x, param.footCopMax[i].y, 0.0);
+			v[3] = vec3_t(param.footCopMax[i].x, param.footCopMin[i].y, 0.0);
 			for (int j = 0; j < 4; j++) {
 				p[j] = snapshot.foot_pos_t[i] + snapshot.foot_pos_r[i] * v[j];
 			}
@@ -1414,62 +1864,45 @@ namespace DiMP {
 	//-------------------------------------------------------------------------------------------------
 
 	// Constructors
-	RunnerLipCon::RunnerLipCon(Solver* solver, int _tag, string _name, BipedRunKey* _obj, real_t _scale) :
+	BipedRunCon::BipedRunCon(Solver* solver, int _tag, string _name, BipedRunKey* _obj, real_t _scale) :
 		Constraint(solver, 3, ID(_tag, _obj->node, _obj->tick, _name), Constraint::Type::Equality, _scale) {
 		obj[0] = _obj;
 		obj[1] = (_obj->next ? (BipedRunKey*)_obj->next : 0);
 	}
 
 	RunnerLipPosCon::RunnerLipPosCon(Solver* solver, string _name, BipedRunKey* _obj, real_t _scale) :
-		RunnerLipCon(solver, ConTag::BipedLipPos, _name, _obj, _scale) {
+		BipedRunCon(solver, ConTag::BipedLipPos, _name, _obj, _scale) {
 
-		AddSLink(obj[1]->var_com_pos);
-		AddSLink(obj[0]->var_com_pos);
-		AddSLink(obj[0]->var_com_vel);
-		AddSLink(obj[0]->var_cop_pos);
-		AddSLink(obj[0]->var_cmp_pos);
-		AddSLink(obj[0]->var_cop_vel);
-		AddSLink(obj[0]->var_cmp_vel);
+		AddSLink (obj[1]->var_com_pos);
+		AddSLink (obj[0]->var_com_pos);
+		AddSLink (obj[0]->var_com_vel);
 		AddC3Link(obj[0]->var_duration);
+		AddSLink (obj[0]->var_cmp_pos);
+		AddSLink (obj[0]->var_cmp_vel);
+		
+		for (int i = 0; i < 2; i++) {
+			AddSLink(obj[0]->foot[i].var_cop_pos);
+			AddSLink(obj[0]->foot[i].var_cop_vel);
+		}
 	}
 
 	RunnerLipVelCon::RunnerLipVelCon(Solver* solver, string _name, BipedRunKey* _obj, real_t _scale) :
-		RunnerLipCon(solver, ConTag::BipedLipVel, _name, _obj, _scale) {
+		BipedRunCon(solver, ConTag::BipedLipVel, _name, _obj, _scale) {
 
-		AddSLink(obj[1]->var_com_vel);
-		AddSLink(obj[0]->var_com_pos);
-		AddSLink(obj[0]->var_com_vel);
-		AddSLink(obj[0]->var_cop_pos);
-		AddSLink(obj[0]->var_cmp_pos);
-		AddSLink(obj[0]->var_cop_vel);
-		AddSLink(obj[0]->var_cmp_vel);
+		AddSLink (obj[1]->var_com_vel);
+		AddSLink (obj[0]->var_com_pos);
+		AddSLink (obj[0]->var_com_vel);
 		AddC3Link(obj[0]->var_duration);
+		AddSLink (obj[0]->var_cmp_pos);
+		AddSLink (obj[0]->var_cmp_vel);
+		for (int i = 0; i < 2; i++) {
+			AddSLink(obj[0]->foot[i].var_cop_pos);
+			AddSLink(obj[0]->foot[i].var_cop_vel);
+		}
 	}
-
-	RunnerLipCopCon::RunnerLipCopCon(Solver* solver, string _name, BipedRunKey* _obj, real_t _scale) :
-		RunnerLipCon(solver, ConTag::BipedFootCop, _name, _obj, _scale) {
-
-		AddSLink(obj[1]->var_cop_pos);
-		AddSLink(obj[0]->var_cop_pos);
-		AddSLink(obj[0]->var_cop_vel);
-		AddC3Link(obj[0]->var_duration);
-	}
-
-	//BipedFootCopPosCon::BipedFootCopPosCon(Solver* solver, string _name, BipedRunKey* _obj, int _side, real_t _scale) :
-	//	Constraint(solver, 3, ID(ConTag::BipedFootCop, _obj->node, _obj->tick, _name), Constraint::Type::Equality, _scale) {
-
-	//	obj[0] = _obj;
-	//	obj[1] = (_obj->next ? (BipedLIPKey*)_obj->next : 0);
-	//	side = _side;
-
-	//	AddSLink(obj[1]->foot[side].var_cop_pos);
-	//	AddSLink(obj[0]->foot[side].var_cop_pos);
-	//	AddSLink(obj[0]->foot[side].var_cop_vel);
-	//	AddC3Link(obj[0]->var_duration);
-	//}
 
 	RunnerLipCmpCon::RunnerLipCmpCon(Solver* solver, string _name, BipedRunKey* _obj, real_t _scale) :
-		RunnerLipCon(solver, ConTag::Any, _name, _obj, _scale) {
+		BipedRunCon(solver, ConTag::Any, _name, _obj, _scale) {
 
 		AddSLink(obj[1]->var_cmp_pos);
 		AddSLink(obj[0]->var_cmp_pos);
@@ -1478,12 +1911,13 @@ namespace DiMP {
 	}
 
 	RunnerLipMomCon::RunnerLipMomCon(Solver* solver, string _name, BipedRunKey* _obj, real_t _scale) :
-		RunnerLipCon(solver, ConTag::Any, _name, _obj, _scale) {
+		BipedRunCon(solver, ConTag::Any, _name, _obj, _scale) {
 
 		AddSLink(obj[1]->var_mom);
 		AddSLink(obj[0]->var_mom);
 		AddX3Link(obj[0]->var_cmp_pos);
 		AddX3Link(obj[0]->var_cmp_vel);
+		AddC3Link(obj[0]->var_com_vel);
 		AddC3Link(obj[0]->var_duration);
 	}
 
@@ -1494,8 +1928,8 @@ namespace DiMP {
 
 		AddSLink(obj->var_com_pos);
 		AddSLink(obj->var_torso_pos_t);
-		AddSLink(obj->var_foot_pos_t[0]);
-		AddSLink(obj->var_foot_pos_t[1]);
+		AddSLink(obj->foot[0].var_pos_t);
+		AddSLink(obj->foot[1].var_pos_t);
 	}
 
 	RunnerComConV::RunnerComConV(Solver* solver, string _name, BipedRunKey* _obj, real_t _scale) :
@@ -1505,73 +1939,115 @@ namespace DiMP {
 
 		AddSLink(obj->var_com_vel);
 		AddSLink(obj->var_torso_vel_t);
+		AddSLink(obj->foot[0].var_vel_t);
+		AddSLink(obj->foot[1].var_vel_t);
 	}
 
-	RunnerRangeCon::RunnerRangeCon(Solver* solver, int _tag, string _name, BipedRunKey* _obj, vec3_t _dir, real_t _scale) :
-		Constraint(solver, 1, ID(_tag, _obj->node, _obj->tick, _name), Constraint::Type::Equality, _scale) {
-		obj = _obj;
-		dir = _dir;
-	}
+	RunnerFootPosConT::RunnerFootPosConT(Solver* solver, string _name, BipedRunKey* _obj, int _side, real_t _scale) :
+		Constraint(solver, 3, ID(ConTag::BipedFootPosT, _obj->node, _obj->tick, _name), Constraint::Type::Equality, _scale) {
 
-	RunnerFootRangeConT::RunnerFootRangeConT(Solver* solver, string _name, BipedRunKey* _obj, uint _side, vec3_t _dir, real_t _scale) :
-		RunnerRangeCon(solver, ConTag::BipedFootPosRangeT, _name, _obj, _dir, _scale) {
-
+		obj[0] = _obj;
+		obj[1] = (_obj->next ? (BipedRunKey*)_obj->next : 0);
 		side = _side;
 
-		AddR3Link(obj->var_foot_pos_t[side]);
+		AddSLink (obj[1]->foot[side].var_pos_t);
+		AddSLink (obj[0]->foot[side].var_pos_t);
+		AddSLink (obj[0]->foot[side].var_vel_t);
+		AddC3Link(obj[0]->var_duration);
+	}
+
+	RunnerFootPosConR::RunnerFootPosConR(Solver* solver, string _name, BipedRunKey* _obj, int _side, real_t _scale) :
+		Constraint(solver, 1, ID(ConTag::BipedFootPosR, _obj->node, _obj->tick, _name), Constraint::Type::Equality, _scale) {
+
+		obj[0] = _obj;
+		obj[1] = (_obj->next ? (BipedRunKey*)_obj->next : 0);
+		side = _side;
+
+		AddSLink(obj[1]->foot[side].var_pos_r);
+		AddSLink(obj[0]->foot[side].var_pos_r);
+		AddSLink(obj[0]->foot[side].var_vel_r);
+		AddSLink(obj[0]->var_duration);
+	}
+
+	RunnerFootCopPosCon::RunnerFootCopPosCon(Solver* solver, string _name, BipedRunKey* _obj, int _side, real_t _scale) :
+		Constraint(solver, 3, ID(ConTag::BipedFootCop, _obj->node, _obj->tick, _name), Constraint::Type::Equality, _scale) {
+
+		obj[0] = _obj;
+		obj[1] = (_obj->next ? (BipedRunKey*)_obj->next : 0);
+		side = _side;
+
+		AddSLink(obj[1]->foot[side].var_cop_pos);
+		AddSLink(obj[0]->foot[side].var_cop_pos);
+		AddSLink(obj[0]->foot[side].var_cop_vel);
+		AddC3Link(obj[0]->var_duration);
+	}
+
+	RunnerFootCopVelCon::RunnerFootCopVelCon(Solver* solver, string _name, BipedRunKey* _obj, int _side, real_t _scale) :
+		Constraint(solver, 3, ID(ConTag::BipedFootCop, _obj->node, _obj->tick, _name), Constraint::Type::Equality, _scale) {
+
+		obj[0] = _obj;
+		obj[1] = (_obj->next ? (BipedRunKey*)_obj->next : 0);
+		side = _side;
+
+		AddSLink(obj[1]->foot[side].var_cop_vel);
+		AddSLink(obj[0]->foot[side].var_cop_vel);
+		AddSLink(obj[0]->foot[side].var_cop_vel_diff);
+	}
+
+	RunnerFootPosRangeConT::RunnerFootPosRangeConT(Solver* solver, string _name, BipedRunKey* _obj, int _side, vec3_t _dir, real_t _scale) :
+		Constraint(solver, 1, ID(ConTag::BipedFootPosRangeT, _obj->node, _obj->tick, _name), Constraint::Type::InequalityPenalty, _scale) {
+
+		obj = _obj;
+		side = _side;
+		dir = _dir;
+
+		AddR3Link(obj->foot[side].var_pos_t);
 		AddR3Link(obj->var_torso_pos_t);
 		AddSLink(obj->var_torso_pos_r);
 	}
 
-	RunnerFootRangeConR::RunnerFootRangeConR(Solver* solver, string _name, BipedRunKey* _obj, uint _side, real_t _scale) :
-		RunnerRangeCon(solver, ConTag::BipedFootPosRangeR, _name, _obj, vec3_t(), _scale) {
-
-		side = _side;
-
-		AddSLink(obj->var_foot_pos_r[side]);
-		AddSLink(obj->var_torso_pos_r);
-	}
-
-	RunnerCopRangeCon::RunnerCopRangeCon(Solver* solver, string _name, BipedRunKey* _obj, uint _side, vec3_t _dir, real_t _scale) :
-		RunnerRangeCon(solver, ConTag::BipedFootCopRange, _name, _obj, _dir, _scale) {
-
-		side = _side;
-
-		AddR3Link(obj->var_cop_pos);
-		AddR3Link(obj->var_foot_pos_t[side]);
-		AddSLink(obj->var_foot_pos_r[side]);
-	}
-
-	RunnerCmpRangeCon::RunnerCmpRangeCon(Solver* solver, string _name, BipedRunKey* _obj, vec3_t _dir, real_t _scale) :
-		RunnerRangeCon(solver, ConTag::Any, _name, _obj, _dir, _scale) {
-
-		AddR3Link(obj->var_cmp_pos);
-		AddSLink(obj->var_torso_pos_r);
-	}
-
-	/*RunnerAccRangeCon::RunnerAccRangeCon(Solver* solver, string _name, BipedRunKey* _obj, vec3_t _dir, real_t _scale) :
-		RunnerRangeCon(solver, ConTag::Any, _name, _obj, _dir, _scale) {
-
-		AddR3Link(obj->var_com_pos);
-		AddR3Link(obj->var_cop_pos);
-		AddR3Link(obj->var_cmp_pos);
-		AddSLink(obj->var_torso_pos_r);
-	}*/
-
-	/*RunnerMomRangeCon::RunnerMomRangeCon(Solver* solver, string _name, BipedRunKey* _obj, vec3_t _dir, real_t _scale) :
-		RunnerRangeCon(solver, ConTag::Any, _name, _obj, _dir, _scale) {
-
-		AddR3Link(obj->var_mom);
-		AddSLink(obj->var_torso_pos_r);
-	}*/
-
-	RunnerFootHeightCon::RunnerFootHeightCon(Solver* solver, string _name, BipedRunKey* _obj, uint _side, real_t _scale) :
-		Constraint(solver, 1, ID(ConTag::Any, _obj->node, _obj->tick, _name), Constraint::Type::Equality, _scale) {
+	RunnerFootPosRangeConR::RunnerFootPosRangeConR(Solver* solver, string _name, BipedRunKey* _obj, int _side, real_t _dir, real_t _scale) :
+		Constraint(solver, 1, ID(ConTag::BipedFootPosRangeR, _obj->node, _obj->tick, _name), Constraint::Type::InequalityPenalty, _scale) {
 
 		obj = _obj;
 		side = _side;
+		dir = _dir;
 
-		AddR3Link(obj->var_foot_pos_t[side]);
+		AddSLink(obj->foot[side].var_pos_r);
+		AddSLink(obj->var_torso_pos_r);
+	}
+
+	RunnerFootCopRangeCon::RunnerFootCopRangeCon(Solver* solver, string _name, BipedRunKey* _obj, int _side, vec3_t _dir, real_t _scale) :
+		Constraint(solver, 1, ID(ConTag::BipedFootCopRange, _obj->node, _obj->tick, _name), Constraint::Type::InequalityPenalty, _scale) {
+
+		obj = _obj;
+		side = _side;
+		dir = _dir;
+
+		AddR3Link(obj->foot[side].var_cop_pos);
+		AddR3Link(obj->foot[side].var_pos_t);
+		AddSLink(obj->foot[side].var_pos_r);
+	}
+
+	RunnerCmpRangeCon::RunnerCmpRangeCon(Solver* solver, string _name, BipedRunKey* _obj, vec3_t _dir, real_t _scale) :
+		Constraint(solver, 1, ID(ConTag::BipedFootCopRange, _obj->node, _obj->tick, _name), Constraint::Type::InequalityPenalty, _scale) {
+
+		obj = _obj;
+		dir = _dir;
+
+		AddR3Link(obj->var_cmp_pos);
+		//AddR3Link(obj->foot[side].var_pos_t);
+		AddSLink(obj->var_torso_pos_r);
+	}
+
+	RunnerMomRangeCon::RunnerMomRangeCon(Solver* solver, string _name, BipedRunKey* _obj, vec3_t _dir, real_t _scale) :
+		Constraint(solver, 1, ID(ConTag::BipedFootCopRange, _obj->node, _obj->tick, _name), Constraint::Type::InequalityPenalty, _scale) {
+
+		obj = _obj;
+		dir = _dir;
+
+		AddR3Link(obj->var_mom);
+		AddSLink(obj->var_torso_pos_r);
 	}
 
 	RunnerTimeCon::RunnerTimeCon(Solver* solver, string _name, BipedRunKey* _obj, real_t _scale) :
@@ -1589,11 +2065,10 @@ namespace DiMP {
 
 	void RunnerLipPosCon::CalcLhs() {
 		Prepare();
-		//int gtype = ((BipedRunning*)obj[0]->node)->gaittype;
 		if (ph == BipedRunning::Phase::LRF || ph == BipedRunning::Phase::RLF)
 			obj[1]->var_com_pos->val = p0 + v0 * tau - 0.5 * g * tau * tau;
 		else
-			obj[1]->var_com_pos->val = (c0 + cm0) + (cv0 + cmv0) * tau + C * (p0 - (c0 + cm0)) + (S * T) * (v0 - (cv0 + cmv0));
+			obj[1]->var_com_pos->val = p_rhs;
 	}
 
 	void RunnerLipVelCon::CalcLhs() {
@@ -1602,12 +2077,7 @@ namespace DiMP {
 		if (ph == BipedRunning::Phase::LRF || ph == BipedRunning::Phase::RLF)
 			obj[1]->var_com_vel->val = v0 - g * tau;
 		else
-			obj[1]->var_com_vel->val = (cv0 + cmv0) + (S / T) * (p0 - (c0 + cm0)) + C * (v0 - (cv0 + cmv0));
-	}
-
-	void RunnerLipCopCon::CalcLhs() {
-		Prepare();
-		obj[1]->var_cop_pos->val = c0 + cv0 * tau;
+			obj[1]->var_com_vel->val = v_rhs;
 	}
 
 	void RunnerLipCmpCon::CalcLhs() {
@@ -1615,9 +2085,32 @@ namespace DiMP {
 		obj[1]->var_cmp_pos->val = cm0 + cmv0 * tau;
 	}
 
+	void RunnerFootPosConT::CalcLhs() {
+		Prepare();
+		obj[1]->foot[side].var_pos_t->val = p0 + v0*tau;
+	}
+
+	void RunnerFootPosConR::CalcLhs() {
+		Prepare();
+		obj[1]->foot[side].var_pos_r->val = theta0 + omega0*tau;
+	}
+
+	void RunnerFootCopPosCon::CalcLhs() {
+		Prepare();
+		obj[1]->foot[side].var_cop_pos->val = c0 + cv0*tau;
+	}
+
+	void RunnerFootCopVelCon::CalcLhs() {
+		Prepare();
+		obj[1]->foot[side].var_cop_vel->val = cv0 + cvd0;
+	}
+
 	void RunnerLipMomCon::CalcLhs() {
 		Prepare();
-		obj[1]->var_mom->val = L0 + ez % (cm0 * tau + 0.5 * tau * tau * cmv0);
+		if (ph == BipedRunning::Phase::LRF || ph == BipedRunning::Phase::RLF)
+			obj[1]->var_mom->val = L0;
+		else
+			obj[1]->var_mom->val = L0 + (g.z * cm0 + v1.z * cmv0) * tau + 0.5 * g.z * cmv0* tau * tau;
 	}
 
 	void RunnerTimeCon::CalcLhs() {
@@ -1626,7 +2119,7 @@ namespace DiMP {
 
 	//-------------------------------------------------------------------------------------------------
 
-	void RunnerLipCon::Prepare() {
+	void BipedRunCon::Prepare() {
 		BipedRunning::Param& param = ((BipedRunning*)obj[0]->node)->param;
 		std::vector<int>& phase = ((BipedRunning*)obj[0]->node)->phase;
 		std::vector<int>& gaittype = ((BipedRunning*)obj[0]->node)->gaittype;
@@ -1650,98 +2143,227 @@ namespace DiMP {
 			T = param.T[2];
 		}
 		else T = param.T[3];
+
+		T2 = T * T;
 		g = param.gravity;
 		ez = vec3_t(0.0, 0.0, 1.0);
-		//L0 = obj[0]->var_mom->val;
+		L0 = obj[0]->var_mom->val;
 		p0 = obj[0]->var_com_pos->val;
 		v0 = obj[0]->var_com_vel->val;
-		c0 = obj[0]->var_cop_pos->val + vec3_t(0.0, 0.0, T * T * g.z);  //< c0 is vrp
+		c0 = obj[0]->cop_pos + g*T2;  //< c0 is vrp
 		cm0 = obj[0]->var_cmp_pos->val;
 
 		if (obj[1]) {
 			tau = obj[0]->var_duration->val;
+			tau2 = tau*tau;
 			C = cosh(tau / T);
 			S = sinh(tau / T);
 
-			cv0 = obj[0]->var_cop_vel->val;
-			cmv0 = obj[0]->var_cmp_vel->val; 
+			cv0 = obj[0]->cop_vel;
+			cmv0 = obj[0]->var_cmp_vel->val;
+			ca0 = obj[0]->cop_acc;
 
-			//L1 = obj[1]->var_mom->val;
 			p1 = obj[1]->var_com_pos->val;
 			v1 = obj[1]->var_com_vel->val;
-			c1 = obj[1]->var_cop_pos->val + vec3_t(0.0, 0.0, T * T * g.z);
-			cm1 = obj[1]->var_cmp_pos->val;
+			c1 = obj[1]->cop_pos + vec3_t(0.0, 0.0, T2 * g.z);
+
+			k_p_p = C;
+			k_p_v = T * S;
+			k_p_c = 1.0 - C;
+			k_p_cv = tau - T * S;
+			k_p_ca = T2 + (1.0 / 2.0) * tau2 - T2 * C;
+			k_p_tau = cv0 + cmv0 + ca0 * tau + (S / T) * (p0 - (c0 + cm0 + ca0 * T2)) + C * (v0 - cv0 - cmv0);
+
+			k_v_p = S / T;
+			k_v_v = C;
+			k_v_c = -S / T;
+			k_v_cv = 1.0 - C;
+			k_v_ca = tau - T * S;
+			k_v_tau = ca0 + (C / T2) * (p0 - (c0 + cm0 + ca0 * T2)) + (S / T) * (v0 - cv0 - cmv0);
+
+			for (int i = 0; i < 2; i++) {
+				real_t w0 = obj[0]->foot[i].weight;
+				real_t w1 = obj[1]->foot[i].weight;
+
+				k_c_c[i] = w0;
+				k_cv_c[i] = (w1 - w0) / tau;
+				k_cv_cv[i] = w0;
+				k_ca_cv[i] = 2.0 * (w1 - w0) / tau;
+			}
+
+			p_rhs = c0 + cm0 + ca0 * T2 + (cv0 + cmv0) * tau + (1.0 / 2.0) * ca0 * tau2 + C * (p0 - (c0 + cm0 + ca0 * T2)) + (S * T) * (v0 - cv0 - cmv0);
+			v_rhs = cv0 + cmv0 + ca0 * tau + (S / T) * (p0 - (c0 + cm0 + ca0 * T2)) + C * (v0 - cv0 - cmv0);
 		}
 	}
 
-	void RunnerRangeCon::Prepare() {
+	void RunnerFootPosConT::Prepare() {
+		p1 = obj[1]->foot[side].var_pos_t->val;
+		p0 = obj[0]->foot[side].var_pos_t->val;
+		v0 = obj[0]->foot[side].var_vel_t->val;
+		tau = obj[0]->var_duration->val;
+	}
+
+	void RunnerFootPosConR::Prepare() {
+		theta1 = obj[1]->foot[side].var_pos_r->val;
+		theta0 = obj[0]->foot[side].var_pos_r->val;
+		omega0 = obj[0]->foot[side].var_vel_r->val;
+		tau = obj[0]->var_duration->val;
+	}
+
+	void RunnerFootCopPosCon::Prepare() {
+		c1 = obj[1]->foot[side].var_cop_pos->val;
+		c0 = obj[0]->foot[side].var_cop_pos->val;
+		cv0 = obj[0]->foot[side].var_cop_vel->val;
+		tau = obj[0]->var_duration->val;
+	}
+
+	void RunnerFootCopVelCon::Prepare() {
+		cv1 = obj[1]->foot[side].var_cop_vel->val;
+		cv0 = obj[0]->foot[side].var_cop_vel->val;
+		cvd0 = obj[0]->foot[side].var_cop_vel_diff->val;
+	}
+
+	void RunnerFootPosRangeConT::Prepare() {
+		r = obj->foot[side].var_pos_t->val - obj->var_torso_pos_t->val;
+		theta = obj->var_torso_pos_r->val;
+
 		R = mat3_t::Rot(theta, 'z');
 		ez = vec3_t(0.0, 0.0, 1.0);
 		dir_abs = R * dir;
 	}
 
+	void RunnerFootPosRangeConR::Prepare() {
+		thetaf = obj->foot[side].var_pos_r->val;
+		thetat = obj->var_torso_pos_r->val;
+
+		r = thetaf - thetat;
+
+		while (r > pi) r -= _2pi;
+		while (r < -pi) r += _2pi;
+	}
+
+	void RunnerFootCopRangeCon::Prepare() {
+		r = obj->foot[side].var_cop_pos->val - obj->foot[side].var_pos_t->val;
+		theta = obj->foot[side].var_pos_r->val;
+
+		R = mat3_t::Rot(theta, 'z');
+		ez = vec3_t(0.0, 0.0, 1.0);
+		dir_abs = R * dir;
+	}
+
+	void RunnerCmpRangeCon::Prepare() {
+		//theta = obj->foot[side].var_pos_r->val;
+
+		R = mat3_t::Rot(theta, 'z');
+		ez = vec3_t(0.0, 0.0, 1.0);
+		dir_abs = R * dir;
+	}
+
+	void RunnerMomRangeCon::Prepare() {
+		R = mat3_t::Rot(theta, 'z');
+		ez = vec3_t(0.0, 0.0, 1.0);
+		dir_abs = R * dir;
+	}
 	//-------------------------------------------------------------------------------------------------
 
 	void RunnerLipPosCon::CalcCoef() {
 		Prepare();
-		if (gtype == BipedRunning::GaitType::Run && (ph == BipedRunning::Phase::LRF || ph == BipedRunning::Phase::RLF))
+		if (ph == BipedRunning::Phase::LRF || ph == BipedRunning::Phase::RLF)
 		{
 			((SLink*)links[0])->SetCoef(1.0);
 			((SLink*)links[1])->SetCoef(-1.0);
 			((SLink*)links[2])->SetCoef(-tau);
-			((SLink*)links[3])->SetCoef(0.0);
+			((C3Link*)links[3])->SetCoef(-(v0 - g * tau));
 			((SLink*)links[4])->SetCoef(0.0);
 			((SLink*)links[5])->SetCoef(0.0);
 			((SLink*)links[6])->SetCoef(0.0);
-			((C3Link*)links[7])->SetCoef(-(v0 - g * tau));
+			((SLink*)links[7])->SetCoef(0.0);
+			((SLink*)links[8])->SetCoef(0.0);
+			((SLink*)links[9])->SetCoef(0.0);
 
 		}
 		else
 		{
-			((SLink*)links[0])->SetCoef(1.0);
-			((SLink*)links[1])->SetCoef(-C);
-			((SLink*)links[2])->SetCoef(-T * S);
-			((SLink*)links[3])->SetCoef(-1.0 + C);
-			((SLink*)links[4])->SetCoef(-1.0 + C);
-			((SLink*)links[5])->SetCoef(-tau + T * S);
-			((SLink*)links[6])->SetCoef(-tau + T * S);
-			((C3Link*)links[7])->SetCoef(-(cv0 + cmv0) - (S / T) * (p0 - (c0 + cm0)) - C * (v0 - (cv0 + cmv0)));
+			int idx = 0;
+			((SLink*)links[idx++])->SetCoef(1.0);
+			((SLink*)links[idx++])->SetCoef(-k_p_p);
+			((SLink*)links[idx++])->SetCoef(-k_p_v);
+			((C3Link*)links[idx++])->SetCoef(-k_p_tau);
+			((SLink*)links[idx++])->SetCoef(-k_p_c);
+			((SLink*)links[idx++])->SetCoef(-k_p_cv);
+
+			for (int i = 0; i < 2; i++) {
+				((SLink*)links[idx++])->SetCoef(-(k_p_c * k_c_c[i] + k_p_cv * k_cv_c[i]));
+				((SLink*)links[idx++])->SetCoef(-(k_p_cv * k_cv_cv[i] + k_p_ca * k_ca_cv[i]));
+			}
 		}
 	}
 
 	void RunnerLipVelCon::CalcCoef() {
 		Prepare();
-		if (gtype == BipedRunning::GaitType::Run && (ph == BipedRunning::Phase::LRF || ph == BipedRunning::Phase::RLF))
+		if (ph == BipedRunning::Phase::LRF || ph == BipedRunning::Phase::RLF)
 		{
 			((SLink*)links[0])->SetCoef(1.0);
 			((SLink*)links[1])->SetCoef(0.0);
 			((SLink*)links[2])->SetCoef(-1.0);
-			((SLink*)links[3])->SetCoef(0.0);
+			((C3Link*)links[3])->SetCoef(g);
 			((SLink*)links[4])->SetCoef(0.0);
 			((SLink*)links[5])->SetCoef(0.0);
 			((SLink*)links[6])->SetCoef(0.0);
-			((C3Link*)links[7])->SetCoef(g);
+			((SLink*)links[7])->SetCoef(0.0);
+			((SLink*)links[8])->SetCoef(0.0);
+			((SLink*)links[9])->SetCoef(0.0);
 		}
 		else
 		{
-			((SLink*)links[0])->SetCoef(1.0);
-			((SLink*)links[1])->SetCoef(-S / T);
-			((SLink*)links[2])->SetCoef(-C);
-			((SLink*)links[3])->SetCoef(S / T);
-			((SLink*)links[4])->SetCoef(S / T);
-			((SLink*)links[5])->SetCoef(-1.0 + C);
-			((SLink*)links[6])->SetCoef(-1.0 + C);
-			((C3Link*)links[7])->SetCoef(-(C / (T * T)) * (p0 - (c0 + cm0)) - (S / T) * (v0 - (cv0 + cmv0)));
+			int idx = 0;
+			((SLink*)links[idx++])->SetCoef(1.0);
+			((SLink*)links[idx++])->SetCoef(-k_v_p);
+			((SLink*)links[idx++])->SetCoef(-k_v_v);
+			((C3Link*)links[idx++])->SetCoef(-k_v_tau);
+			((SLink*)links[idx++])->SetCoef(-k_v_c);
+			((SLink*)links[idx++])->SetCoef(-k_v_cv);
+
+			for (int i = 0; i < 2; i++) {
+				((SLink*)links[idx++])->SetCoef(-(k_v_c * k_c_c[i] + k_v_cv * k_cv_c[i]));
+				((SLink*)links[idx++])->SetCoef(-(k_v_cv * k_cv_cv[i] + k_v_ca * k_ca_cv[i]));
+			}
 		}
 	}
 
-	void RunnerLipCopCon::CalcCoef() {
+	void RunnerFootPosConT::CalcCoef() {
+		Prepare();
+
+		((SLink*)links[0])->SetCoef(1.0);
+		((SLink*)links[1])->SetCoef(-1.0);
+		((SLink*)links[2])->SetCoef(-tau);
+		((C3Link*)links[3])->SetCoef(-v0);
+	}
+
+	void RunnerFootPosConR::CalcCoef() {
+		Prepare();
+
+		((SLink*)links[0])->SetCoef(1.0);
+		((SLink*)links[1])->SetCoef(-1.0);
+		((SLink*)links[2])->SetCoef(-tau);
+		((SLink*)links[3])->SetCoef(-omega0);
+	}
+
+	void RunnerFootCopPosCon::CalcCoef() {
 		Prepare();
 
 		((SLink*)links[0])->SetCoef(1.0);
 		((SLink*)links[1])->SetCoef(-1.0);
 		((SLink*)links[2])->SetCoef(-tau);
 		((C3Link*)links[3])->SetCoef(-cv0);
+	}
+
+	void RunnerFootCopVelCon::CalcCoef() {
+		Prepare();
+
+		((SLink*)links[0])->SetCoef(1.0);
+		((SLink*)links[1])->SetCoef(-1.0);
+		((SLink*)links[2])->SetCoef(-1.0);
 	}
 
 	void RunnerLipCmpCon::CalcCoef() {
@@ -1758,9 +2380,10 @@ namespace DiMP {
 
 		((SLink*)links[0])->SetCoef(1.0);
 		((SLink*)links[1])->SetCoef(-1.0);
-		((X3Link*)links[2])->SetCoef(-tau * ez);
-		((X3Link*)links[3])->SetCoef(-(0.5 * tau * tau) * ez);
-		((C3Link*)links[4])->SetCoef(-(ez % (cm0 + cmv0 * tau)));
+		((X3Link*)links[2])->SetCoef(-g.z * tau * ez);
+		((X3Link*)links[3])->SetCoef(-g.z * (0.5 * tau * tau) * ez);
+		((C3Link*)links[4])->SetCoef(-(ez % (cmv0 * tau)));
+		((C3Link*)links[5])->SetCoef(-(ez % (g.z * cm0 + v1.z * cmv0 + cmv0 * tau)));
 	}
 
 	void RunnerComConP::CalcCoef() {
@@ -1786,12 +2409,11 @@ namespace DiMP {
 
 		((SLink*)links[0])->SetCoef(1.0);
 		((SLink*)links[1])->SetCoef(-mt / msum);
+		((SLink*)links[2])->SetCoef(-mf / msum);
+		((SLink*)links[3])->SetCoef(-mf / msum);
 	}
 
-	void RunnerFootRangeConT::CalcCoef() {
-		r = obj->var_foot_pos_t[side]->val - obj->var_torso_pos_t->val;
-		theta = obj->var_torso_pos_r->val;
-
+	void RunnerFootPosRangeConT::CalcCoef() {
 		Prepare();
 
 		((R3Link*)links[0])->SetCoef(dir_abs);
@@ -1799,18 +2421,14 @@ namespace DiMP {
 		((SLink*)links[2])->SetCoef((ez % dir_abs) * r);
 	}
 
-	void RunnerFootRangeConR::CalcCoef() {
-		thetaf = obj->var_foot_pos_r[side]->val;
-		thetat = obj->var_torso_pos_r->val;
+	void RunnerFootPosRangeConR::CalcCoef() {
+		Prepare();
 
-		((SLink*)links[0])->SetCoef(1.0);
-		((SLink*)links[1])->SetCoef(-1.0);
+		((SLink*)links[0])->SetCoef(dir);
+		((SLink*)links[1])->SetCoef(-dir);
 	}
 
-	void RunnerCopRangeCon::CalcCoef() {
-		r = obj->var_cop_pos->val - obj->var_foot_pos_t[side]->val;
-		theta = obj->var_foot_pos_r[side]->val;
-
+	void RunnerFootCopRangeCon::CalcCoef() {
 		Prepare();
 
 		((R3Link*)links[0])->SetCoef(dir_abs);
@@ -1828,48 +2446,7 @@ namespace DiMP {
 		((SLink*)links[1])->SetCoef((ez % dir_abs) * r);
 	}
 
-	// TODO : support of changing time constant
-	//void RunnerAccRangeCon::CalcCoef() {
-	//	BipedRunning::Param& param = ((BipedRunning*)obj->node)->param;
-	//	std::vector<int>& phase = ((BipedRunning*)obj->node)->phase;
-	//	std::vector<int>& gaittype = ((BipedRunning*)obj->node)->gaittype;
-	//	int ph = phase[obj->tick->idx];
-	//	int gtype = gaittype[obj->tick->idx];
-	//	int gtype1 = gtype;
-	//	if (obj->next) gaittype[obj->next->tick->idx];
-	//	int gtypem1 = gtype;
-	//	if (obj->prev) gtypem1 = gaittype[obj->prev->tick->idx];
-	//	bool transition = (gtype != gtype1 || gtype != gtypem1);
-
-	//	real_t T;
-	//	if (gtype == BipedRunning::GaitType::Walk && !transition)
-	//	{
-	//		T = param.T[3];
-	//	}
-	//	else if (!obj->prev || !obj->next->next || (transition && (ph == BipedRunning::Phase::RL || ph == BipedRunning::Phase::LR)))
-	//	{
-	//		T = param.T[0]; //0.3144 for h=0.9; // 0.3316 for h=1.0, tau0=0.30, tau1=0.10
-	//	}
-	//	else if (!obj->prev->prev || !obj->next->next->next || (transition && (ph == BipedRunning::Phase::R || BipedRunning::Phase::L)))
-	//	{
-	//		T = param.T[1];//0.2659 for h=0.9; // 0.2807 for h=1.0, tau0=0.30, tau1=0.10
-	//	}
-	//	else T = param.T[2];
-	//	vec3_t p = obj->var_com_pos->val;
-	//	vec3_t c = obj->var_cop_pos->val;
-	//	vec3_t cm = obj->var_cmp_pos->val;
-	//	r = (1.0 / (T * T)) * (p - (c + vec3_t(0.0, 0.0, param.comHeight) + cm));
-	//	theta = obj->var_torso_pos_r->val;
-
-	//	Prepare();
-
-	//	((R3Link*)links[0])->SetCoef(dir_abs);
-	//	((R3Link*)links[1])->SetCoef(-dir_abs);
-	//	((R3Link*)links[2])->SetCoef(-dir_abs);
-	//	((SLink*)links[3])->SetCoef((ez % dir_abs) * r);
-	//}
-
-	/*void RunnerMomRangeCon::CalcCoef() {
+	void RunnerMomRangeCon::CalcCoef() {
 		r = obj->var_mom->val;
 		theta = obj->var_torso_pos_r->val;
 
@@ -1877,10 +2454,6 @@ namespace DiMP {
 
 		((R3Link*)links[0])->SetCoef(dir_abs);
 		((SLink*)links[1])->SetCoef((ez % dir_abs) * r);
-	}*/
-
-	void RunnerFootHeightCon::CalcCoef() {
-		((R3Link*)links[0])->SetCoef(vec3_t(0.0, 0.0, 1.0));
 	}
 
 	void RunnerTimeCon::CalcCoef() {
@@ -1892,21 +2465,19 @@ namespace DiMP {
 	//-------------------------------------------------------------------------------------------------
 
 	void RunnerLipPosCon::CalcDeviation() {
-		if (gtype == BipedRunning::GaitType::Run && (ph == BipedRunning::Phase::LRF || ph == BipedRunning::Phase::RLF))
+		if (ph == BipedRunning::Phase::LRF || ph == BipedRunning::Phase::RLF)
 			y = p1 - (p0 + v0 * tau - 0.5 * g * tau * tau);
 		else
-			y = p1 - ((c0 + cm0) + (cv0 + cmv0) * tau + C * (p0 - (c0 + cm0)) + (T * S) * (v0 - (cv0 + cmv0)));
+			y = p1 - p_rhs;
+
+		//printf("y0 = (%lf, %lf, %lf)\n", y[0], y[1], y[2]);
 	}
 
 	void RunnerLipVelCon::CalcDeviation() {
-		if (gtype == BipedRunning::GaitType::Run && (ph == BipedRunning::Phase::LRF || ph == BipedRunning::Phase::RLF))
+		if (ph == BipedRunning::Phase::LRF || ph == BipedRunning::Phase::RLF)
 			y = v1 - (v0 - g * tau);
 		else
-			y = v1 - ((cv0 + cmv0) + (S / T) * (p0 - (c0 + cm0)) + C * (v0 - (cv0 + cmv0)));
-	}
-
-	void RunnerLipCopCon::CalcDeviation() {
-		y = c1 - (c0 + cv0 * tau);
+			y = v1 - v_rhs;
 	}
 
 	void RunnerLipCmpCon::CalcDeviation() {
@@ -1914,44 +2485,98 @@ namespace DiMP {
 	}
 
 	void RunnerLipMomCon::CalcDeviation() {
-		y = L1 - (L0 + ez % (cm0 * tau + 0.5 * tau * tau * cmv0));
+		if (ph == BipedRunning::Phase::LRF || ph == BipedRunning::Phase::RLF)
+			y = L1 - L0;
+		else 
+			y = L1 - (L0 + ((g.z*cm0 + v1.z*cmv0)*tau + 0.5 * tau * tau * cmv0 * g.z));
 	}
 
-	void RunnerRangeCon::CalcDeviation() {
+	void RunnerFootPosConT::CalcDeviation() {
+		y = p1 - (p0 + v0 * tau);
+
+	}
+
+	void RunnerFootPosConR::CalcDeviation() {
+		y[0] = theta1 - (theta0 + omega0 * tau);
+	}
+
+	void RunnerFootCopPosCon::CalcDeviation() {
+		y = c1 - (c0 + cv0 * tau);
+	}
+
+	void RunnerFootCopVelCon::CalcDeviation() {
+		y = cv1 - (cv0 + cvd0);
+	}
+
+	void RunnerFootPosRangeConT::CalcDeviation() {
 		real_t s = dir_abs * r;
 
-		active = false;
-		on_lower = (s < _min);
-		on_upper = (s > _max);
-		if (on_lower) {
-			y[0] = (s - _min);
+		if (s < bound) {
+			y[0] = s - bound;
 			active = true;
 		}
-		if (on_upper) {
-			y[0] = (s - _max);
-			active = true;
+		else {
+			y[0] = 0.0;
+			active = false;
 		}
 	}
 
-	void RunnerFootRangeConR::CalcDeviation() {
-		real_t s = thetaf - thetat;
-		on_lower = (s < _min);
-		on_upper = (s > _max);
-		active = on_lower | on_upper;
-		if (on_lower) y[0] = (s - _min);
-		if (on_upper) y[0] = (s - _max);
+	void RunnerFootPosRangeConR::CalcDeviation() {
+		real_t s = dir * r;
+
+		if (s < bound) {
+			y[0] = s - bound;
+			active = true;
+		}
+		else {
+			y[0] = 0.0;
+			active = false;
+		}
 	}
 
-	void RunnerFootHeightCon::CalcDeviation() {
-		y[0] = obj->var_foot_pos_t[side]->val.z;
+	void RunnerFootCopRangeCon::CalcDeviation() {
+		real_t s = dir_abs * r;
+
+		if (s < bound) {
+			y[0] = s - bound;
+			active = true;
+		}
+		else {
+			y[0] = 0.0;
+			active = false;
+		}
+	}
+
+	void RunnerCmpRangeCon::CalcDeviation() {
+		real_t s = dir_abs * r;
+
+		if (s < bound)
+		{
+			y[0] = s - bound;
+			active = true;
+		}
+		else
+		{
+			y[0] = 0.0;
+			active = false;
+		}
+	}
+
+	void RunnerMomRangeCon::CalcDeviation() {
+		real_t s = dir_abs * r;
+
+		if (s < bound)
+		{
+			y[0] = s - bound;
+			active = true;
+		}
+		else
+		{
+			y[0] = 0.0;
+			active = false;
+		}
 	}
 
 	//-------------------------------------------------------------------------------------------------
-
-	void RunnerRangeCon::Project(real_t& l, uint k) {
-		if (on_upper && l > 0.0) l = 0.0;
-		if (on_lower && l < 0.0) l = 0.0;
-		if (!on_upper && !on_lower) l = 0.0;
-	}
 
 }

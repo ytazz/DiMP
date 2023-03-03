@@ -914,8 +914,8 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 	vec3_t c0 = key0 ->foot[side].var_cop_pos->val;
 	vec3_t c1 = key1 ->foot[side].var_cop_pos->val;
 	vec3_t cv0, cv1;
-	vec3_t f_tp, f_tv, f_ta;
-	vec3_t f_rp, f_rv, f_ra;
+	vec3_t f_tp, f_tv, f_ta; //< translational pos, vel and acc of foot
+	vec3_t f_rp, f_rv, f_ra; //< rotational pos, vel and acc of foot
 	vec3_t f_tp_lift , f_tv_lift , f_ta_lift;
 	vec3_t f_tp_roll , f_tv_roll , f_ta_roll , f_rp_roll , f_rv_roll , f_ra_roll ;
 	vec3_t f_tp_roll0, f_tv_roll0, f_ta_roll0, f_rp_roll0, f_rv_roll0, f_ra_roll0;
