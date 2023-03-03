@@ -234,8 +234,8 @@ public:
 		graph->solver->param.minStepSize = 0.01;
 		graph->solver->param.maxStepSize = 1.0;
 		//graph->solver->param.methodMajor = Solver::Method::Major::Prioritized;
-		graph->solver->param.methodMajor = Solver::Method::Major::GaussNewton;
-		//graph->solver->param.methodMajor = Solver::Method::Major::DDP;
+		//graph->solver->param.methodMajor = Solver::Method::Major::GaussNewton;
+		graph->solver->param.methodMajor = Solver::Method::Major::DDP;
 		graph->solver->param.methodMinor = Solver::Method::Minor::Direct;
 		graph->solver->param.verbose = true;
 	}
