@@ -100,6 +100,10 @@ void Trajectory::Prepare(){
 	for(Keypoint* key : *this)
 		key->Prepare();
 }
+void Trajectory::PrepareStep(){
+	for(Keypoint* key : *this)
+		key->PrepareStep();
+}
 void Trajectory::Finish(){
 	for(Keypoint* key : *this)
 		key->Finish();
@@ -127,6 +131,9 @@ void TrajectoryNode::AddCon(){
 }
 void TrajectoryNode::Prepare(){
 	traj.Prepare();
+}
+void TrajectoryNode::PrepareStep(){
+	traj.PrepareStep();
 }
 void TrajectoryNode::Finish(){
 	traj.Finish();

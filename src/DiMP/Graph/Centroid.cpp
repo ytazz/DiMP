@@ -902,14 +902,9 @@ void Centroid::EndState(real_t t, int index, vec3_t& pos, vec3_t& vel) {
 			vec3_t p2  = k2 ->ends[index].var_pos->val*L;
 			vec3_t v0  = (k0 == ks) ? vec3_t() : (p1 - pm1)/(t1 - tm1);
 			vec3_t v1  = (k1 == kf) ? vec3_t() : (p2 - p0 )/(t2 - t0 );
-			//vec3_t v0 = k0->ends[index].var_vel->val*V;
-			//vec3_t v1 = k1->ends[index].var_vel->val*V;
 			
-			//vec3_t ps = ks->ends[index].var_pos->val*L;
-			//vec3_t pf = kf->ends[index].var_pos->val*L;
-
-			pos = InterpolatePos(t, t0, p0, v0, t1, p1, v1, Interpolate::Cubic);
-			vel = InterpolateVel(t, t0, p0, v0, t1, p1, v1, Interpolate::Cubic);
+			//pos = InterpolatePos(t, t0, p0, v0, t1, p1, v1, Interpolate::Cubic);
+			//vel = InterpolateVel(t, t0, p0, v0, t1, p1, v1, Interpolate::Cubic);
 
 			real_t ts = ks->var_time->val*T;
 			real_t tf = kf->var_time->val*T;
@@ -923,14 +918,19 @@ void Centroid::EndState(real_t t, int index, vec3_t& pos, vec3_t& vel) {
 			real_t cvd = (_2pi*sin(_2pi*s)/(2.0*tau));
 
 			real_t sw = param.swingHeight;
-			real_t d  = (p1 - p0).norm();
-			//if(d > 0.5){
-			//	sw += (d - 0.5)*0.2;
-			//}
-			//pos += p0 + ch *(p1 - p0) + cv *vec3_t(0.0, 0.0, sw);
-			//vel +=      chd*(p1 - p0) + cvd*vec3_t(0.0, 0.0, sw);
-			pos += cv *vec3_t(0.0, 0.0, sw);
-			vel += cvd*vec3_t(0.0, 0.0, sw);
+			vec3_t nx = p1 - p0;
+			vec3_t ny;
+			vec3_t nz(0.0, 0.0, 1.0);
+			real_t nxnorm = nx.norm();
+
+			if(nxnorm > eps){
+				nx = nx/nxnorm;
+				ny = nz % nx;
+				nz = nx % ny;
+			}
+			
+			pos = p0 + ch *(p1 - p0) + (cv *sw)*nz;
+			vel =      chd*(p1 - p0) + (cvd*sw)*nz;
 			
 			/*
 			vec3_t pc0, vc0, ac0;

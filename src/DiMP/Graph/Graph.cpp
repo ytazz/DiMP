@@ -48,7 +48,17 @@ const char* VarNames[] = {
 	"centroid_end_pos"  ,
 	"centroid_end_vel"  ,
 	"centroid_end_stiff",
-	"centroid_end_moment"
+	"centroid_end_moment",
+	"wholebody_pos_t",
+	"wholebody_pos_r",
+	"wholebody_vel_t",
+	"wholebody_vel_r",
+	"wholebody_acc_t",
+	"wholebody_acc_r",
+	"wholebody_force_t",
+	"wholebody_force_r",
+	"wholebody_com_pos",
+	"wholebody_com_vel"
 };
 
 const char* ConNames[] = {
@@ -108,7 +118,25 @@ const char* ConNames[] = {
 	"centroid_end_stiff"  ,
 	"centroid_end_moment" ,
 	"centroid_end_range"  ,
-	"centroid_end_contact"
+	"centroid_end_contact",
+	"wholebody_pos_t",
+	"wholebody_pos_r",
+	"wholebody_vel_t",
+	"wholebody_vel_r",
+	"wholebody_acc_t",
+	"wholebody_acc_r",
+	"wholebody_force_t",
+	"wholebody_force_r",
+	"wholebody_limit",
+	"wholebody_contact_pos_t",
+	"wholebody_contact_pos_r",
+	"wholebody_contact_vel_t",
+	"wholebody_contact_vel_r",
+	"wholebody_normal_force",
+	"wholebody_friction_force",
+	"wholebody_moment",
+	"wholebody_com_pos",
+	"wholebody_com_vel"
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -190,19 +218,20 @@ void Graph::Init(){
 }
 
 void Graph::Clear(){
-	nodes    .clear();
-	trajNodes.clear();
-	ticks    .clear();
-	objects  .clear();
-	cons     .clear();
-	bipeds   .clear();
-	runners  .clear();
-	centroids.clear();
-	trees    .clear();
-	joints   .clear();
-	geos     .clear();
-	timeslots.clear();
-	tasks    .clear();
+	nodes      .clear();
+	trajNodes  .clear();
+	ticks      .clear();
+	objects    .clear();
+	cons       .clear();
+	bipeds     .clear();
+	runners    .clear();
+	centroids  .clear();
+	wholebodies.clear();
+	trees      .clear();
+	joints     .clear();
+	geos       .clear();
+	timeslots  .clear();
+	tasks      .clear();
 	solver->Clear();
 	ready = false;
 }
@@ -215,21 +244,36 @@ void Graph::Prepare(){
 	// compute forward kinematics
 	trees.ForwardKinematics();
 
-	objects  .Prepare();
-	cons     .Prepare();
-	bipeds   .Prepare();
-	runners  .Prepare();
-	centroids.Prepare();
-	trees    .Prepare();
-	joints   .Prepare();
-	geos     .Prepare();
-	timeslots.Prepare();
+	objects    .Prepare();
+	cons       .Prepare();
+	bipeds     .Prepare();
+	runners    .Prepare();
+	centroids  .Prepare();
+	wholebodies.Prepare();
+	trees      .Prepare();
+	joints     .Prepare();
+	geos       .Prepare();
+	timeslots  .Prepare();
 
 	ExtractGeometryPairs();
 
 	tasks    .Prepare();
 
 	//nodes.Prepare();
+}
+
+void Graph::PrepareStep(){
+	objects    .PrepareStep();
+	cons       .PrepareStep();
+	bipeds     .PrepareStep();
+	runners    .PrepareStep();
+	centroids  .PrepareStep();
+	wholebodies.PrepareStep();
+	trees      .PrepareStep();
+	joints     .PrepareStep();
+	geos       .PrepareStep();
+	timeslots  .PrepareStep();
+	tasks      .PrepareStep();
 }
 
 void Graph::ExtractGeometryPairs(){
@@ -419,6 +463,7 @@ void Graph::Step(){
 	static Timer timer;
 	timer.CountUS();
 	Prepare();
+	PrepareStep();
 	uint TPrepare = timer.CountUS();
 	
 	timer.CountUS();

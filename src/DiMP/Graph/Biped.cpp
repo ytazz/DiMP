@@ -970,6 +970,8 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 		f_rp.z = yaw0 + ch  *yaw_diff;
 		f_rv.z =        chd *yaw_diff;
 		f_ra.z =        chdd*yaw_diff;
+
+		contact = ContactState::Float;
 	}
 	else{
 		cv0  = key0->foot[side].var_cop_vel->val;
@@ -981,6 +983,8 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 		f_rp = vec3_t(0.0, 0.0, yaw0);
 		f_rv = vec3_t(0.0, 0.0, 0.0);
 		f_ra = vec3_t(0.0, 0.0, 0.0);
+
+		contact = ContactState::Surface;
 	}
 	
 	if(param.swingProfile == SwingProfile::HeelToe){

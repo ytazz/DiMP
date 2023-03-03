@@ -20,19 +20,21 @@ class Object   ;
 class BipedLIP ;
 class BipedRunning;
 class Centroid ;
+class Wholebody;
 class Joint    ;
 class Task     ;
 class AvoidTask;
 
-typedef NodeArray<Geometry >  Geometries;
-typedef NodeArray<TimeSlot >  TimeSlots ;
-typedef NodeArray<Object   >  Objects   ;
-typedef NodeArray<BipedLIP >  Bipeds    ;
-typedef NodeArray<BipedRunning >  Runners    ;
-typedef NodeArray<Centroid >  Centroids ;
-typedef NodeArray<Joint    >  Joints    ;
-typedef NodeArray<Task     >  Tasks     ;
-typedef NodeArray<AvoidTask>  Avoids    ;
+typedef NodeArray<Geometry    >  Geometries ;
+typedef NodeArray<TimeSlot    >  TimeSlots  ;
+typedef NodeArray<Object      >  Objects    ;
+typedef NodeArray<BipedLIP    >  Bipeds     ;
+typedef NodeArray<BipedRunning>  Runners    ;
+typedef NodeArray<Centroid    >  Centroids  ;
+typedef NodeArray<Wholebody   >  Wholebodies;
+typedef NodeArray<Joint       >  Joints     ;
+typedef NodeArray<Task        >  Tasks      ;
+typedef NodeArray<AvoidTask   >  Avoids     ;
 
 /**
 	graph structure expressing a Multi-body System
@@ -85,6 +87,7 @@ public:
 	Bipeds			bipeds;         ///< bipeds
 	Runners         runners;        ///< runners
 	Centroids       centroids;      ///< centroids
+	Wholebodies     wholebodies;    ///< wholebodies
 	Trees			trees;			///< trees
 	Joints			joints;			///< joints
 	Geometries		geos;			///< geometries
@@ -136,8 +139,9 @@ public:
 	GPTable                            gpTable;
 	
 	void ExtractGeometryPairs();
-	void Prepare();
-	void Finish ();
+	void Prepare    ();
+	void PrepareStep();
+	void Finish     ();
 
 public:
 	/// set scaling factor;

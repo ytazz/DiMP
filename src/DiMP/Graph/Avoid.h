@@ -22,8 +22,10 @@ class AvoidKey : public TaskKey{
 public:
 	GeometryPairs geoPairs;
 
-	AvoidConP*	  con_p;
-	AvoidConV*	  con_v;
+	vector<AvoidConP*>  con_p;
+	vector<AvoidConV*>  con_v;
+
+	vector<GeometryPair*>  gpactive;
 
 public:
 	virtual void AddCon(Solver* solver);
@@ -38,8 +40,9 @@ public:
 	struct Param{
 		bool	avoid_p;
 		bool	avoid_v;
-		real_t	dmin;		///< 最小接近距離
-
+		real_t	dmin;		  ///< 最小接近距離
+		int     nactive_max;  ///< maximum number of simultaneously active collision avoidance constraints
+	
 		Param();
 	} param;
 	

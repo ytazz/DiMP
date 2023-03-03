@@ -6,6 +6,7 @@
 #include <DiMP/Graph/Biped.h>
 #include <DiMP/Graph/Running.h>
 #include <DiMP/Graph/Centroid.h>
+#include <DiMP/Graph/Wholebody.h>
 #include <DiMP/Graph/Geometry.h>
 #include <DiMP/Graph/Joint.h>
 #include <DiMP/Graph/Contact.h>

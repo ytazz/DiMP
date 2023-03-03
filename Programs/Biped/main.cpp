@@ -49,7 +49,7 @@ public:
 		const int    nstep_dec    = 1;  //< number of steps to decelerate
 		const int    nstep        = nstep_idle + nstep_acc + nstep_cruise + nstep_dec;
 		const int    nphase       = 2 * nstep + 3;  //< 2 phases per step + (one D at the beginning) + (two D at the end)
-		const real_t vmax         = 0.8*(1.0 + (2.0*mf)/mt);    //< walking distance
+		const real_t vmax         = 0.5*(1.0 + (2.0*mf)/mt);    //< walking distance
 		const real_t Tacc         = nstep_acc   *(Ts + Td);
 		const real_t Tcruise      = nstep_cruise*(Ts + Td);
 		const real_t Tdec         = nstep_dec   *(Ts + Td);
@@ -61,7 +61,7 @@ public:
 		
 		biped = new DiMP::BipedLIP(graph, "biped");
 		biped->param.gravity      = 9.8;
-		biped->param.comHeight    = 1.05;
+		biped->param.comHeight    = 0.7;//1.05;
 		biped->param.torsoMass    = mt;
 		biped->param.footMass     = mf;
 		biped->param.durationMin[DiMP::BipedLIP::Phase::R ] = 0.50;
@@ -87,8 +87,8 @@ public:
 		biped->param.footCopMin[1] = vec3_t(-0.100, -0.05, -1.0);
 		biped->param.footCopMax[1] = vec3_t( 0.150,  0.05,  1.0);
 		biped->param.swingHeight   = 0.050;
-		//biped->param.swingProfile = DiMP::BipedLIP::SwingProfile::Cycloid;
-		biped->param.swingProfile       = DiMP::BipedLIP::SwingProfile::HeelToe;
+		biped->param.swingProfile = DiMP::BipedLIP::SwingProfile::Cycloid;
+		//biped->param.swingProfile       = DiMP::BipedLIP::SwingProfile::HeelToe;
 		//biped->param.swingInterpolation = DiMP::BipedLIP::SwingInterpolation::Cubic;
 		biped->param.swingInterpolation = DiMP::BipedLIP::SwingInterpolation::Quintic;
 		//biped->param.footCurveType = DiMP::BipedLIP::FootCurveType::Arc;
@@ -244,7 +244,7 @@ public:
 			if (id == ID_DEC) {
 			}
 			if (id == ID_SAVE) {
-				//biped->Save(saveFilename.c_str());
+				Save();
 			}
 		}
 		App::OnAction(menu, id);
@@ -257,6 +257,66 @@ public:
 	virtual float Scale(int attr, DiMP::Node* node) {
 		return 0.1f;
 	}
+
+	void Save(){
+		FILE* file = fopen("log.csv", "w");
+
+		real_t tf = graph->ticks.back()->time;
+		real_t dt = 0.001;
+
+		vec3_t com_pos, com_vel, com_acc;
+		pose_t foot_pose[2];
+		vec3_t foot_vel[2], foot_angvel[2], foot_acc[2], foot_angacc[2];
+		vec3_t foot_force[2], foot_moment[2];
+		vec3_t foot_cop_pos[2], foot_cop_vel[2];
+		real_t foot_cop_weight[2];
+		int    foot_contact[2];
+
+		for(real_t t = 0.0; t <= tf; t += dt){
+			biped->ComState(t, com_pos, com_vel, com_acc);
+			biped->FootPose(t, 0, foot_pose[0], foot_vel[0], foot_angvel[0], foot_acc[0], foot_angacc[0], foot_contact[0]);
+			biped->FootPose(t, 1, foot_pose[1], foot_vel[1], foot_angvel[1], foot_acc[1], foot_angacc[1], foot_contact[1]);
+			biped->FootCopState(t, 0, foot_cop_pos[0], foot_cop_vel[0], foot_cop_weight[0]);
+			biped->FootCopState(t, 1, foot_cop_pos[1], foot_cop_vel[1], foot_cop_weight[1]);
+
+			// convert CoP to wrench
+			const real_t total_mass = 43.0;
+			real_t T = biped->param.T;
+
+			for(int i = 0; i < 2; i++){
+				foot_force [i] = ((total_mass*foot_cop_weight[i])/(T*T))*(com_pos - foot_cop_pos[i]);
+				foot_moment[i] = (foot_cop_pos[i] - foot_pose[i].Pos()) % foot_force[i];
+			}
+
+			fprintf(file, 
+				"%f, "
+				"%f, %f, %f, "
+				"%f, %f, %f, "
+				"%f, %f, %f, %f, %f, %f, %f, "
+				"%f, %f, %f, %f, %f, %f, "
+				"%f, %f, %f, %f, %f, %f, "
+				"%d, "
+				"%f, %f, %f, %f, %f, %f, %f, "
+				"%f, %f, %f, %f, %f, %f, "
+				"%f, %f, %f, %f, %f, %f, "
+				"%d\n",
+				t,
+				com_pos.x, com_pos.y, com_pos.z,
+				com_vel.x, com_vel.y, com_vel.z, 
+				foot_pose [0].Pos().x, foot_pose[0].Pos().y, foot_pose[0].Pos().z, foot_pose[0].Ori().w, foot_pose[0].x, foot_pose[0].y, foot_pose[0].z,
+				foot_vel  [0].x, foot_vel  [0].y, foot_vel  [0].z, foot_angvel[0].x, foot_angvel[0].y, foot_angvel[0].z,
+				foot_force[0].x, foot_force[0].y, foot_force[0].z, foot_moment[0].x, foot_moment[0].y, foot_moment[0].z,
+				foot_contact[0],
+				foot_pose [1].Pos().x, foot_pose[1].Pos().y, foot_pose[1].Pos().z, foot_pose[1].Ori().w, foot_pose[1].x, foot_pose[1].y, foot_pose[1].z,
+				foot_vel  [1].x, foot_vel  [1].y, foot_vel  [1].z, foot_angvel[1].x, foot_angvel[1].y, foot_angvel[1].z,
+				foot_force[1].x, foot_force[1].y, foot_force[1].z, foot_moment[1].x, foot_moment[1].y, foot_moment[1].z,
+				foot_contact[1]
+			);
+		}
+
+		fclose(file);
+	}
+
 } app;
 
 DiMP::Graph graph;

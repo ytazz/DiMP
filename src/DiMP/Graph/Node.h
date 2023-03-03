@@ -37,6 +37,9 @@ public:
 	/// pre-processing at each step
 	virtual void Prepare(){}
 
+	/// pre-processing at each step
+	virtual void PrepareStep(){}
+
 	/// post-processing at each step
 	virtual void Finish(){}
 
@@ -84,6 +87,9 @@ public:
 	}
 	void Prepare(){
 		for(T* n : *this) ((Node*)n)->Prepare();
+	}
+	void PrepareStep(){
+		for(T* n : *this) ((Node*)n)->PrepareStep();
 	}
 
 	void Finish(){
@@ -141,6 +147,8 @@ public:
 	virtual void Init(){}
 	/// pre-processing
 	virtual void Prepare(){}
+	/// pre-processing
+	virtual void PrepareStep(){}
 	/// post-processing
 	virtual void Finish(){}
 
@@ -187,9 +195,10 @@ public:
 
 	void AddVar(Solver* solver);
 	void AddCon(Solver* solver);
-	void Init   ();
-	void Prepare();
-	void Finish ();
+	void Init       ();
+	void Prepare    ();
+	void PrepareStep();
+	void Finish     ();
 	void Draw(Render::Canvas* canvas, Render::Config* conf);
 };
 
@@ -201,10 +210,11 @@ public:
 	Trajectory	traj;
 
 public:
-	virtual void AddVar ();
-	virtual void AddCon ();
-	virtual void Prepare();
-	virtual void Finish ();
+	virtual void AddVar     ();
+	virtual void AddCon     ();
+	virtual void Prepare    ();
+	virtual void PrepareStep();
+	virtual void Finish     ();
 	virtual void Draw(Render::Canvas* canvas, Render::Config* conf);
 
 	/// create keypoint
@@ -271,7 +281,7 @@ public:
 
 public:
 	virtual void Prepare();
-
+	
 	ScheduledNode(Graph* g, TimeSlot* _time, const string& n);
 };
 
