@@ -257,7 +257,7 @@ namespace DiMP {;
 		vec3_t p_rhs;
 		vec3_t v_rhs;
 		
-		void Prepare();
+		virtual void Prepare();
 
 		BipedLipCon(Solver* solver, int _tag, string _name, BipedLIPKey* _obj, real_t _scale);
 	};
