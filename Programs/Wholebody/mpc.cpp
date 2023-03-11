@@ -7,13 +7,20 @@ const real_t pi = 3.14159265358979;
 const vec3_t one(1.0, 1.0, 1.0);
 
 Mpc::Mpc(){
-    handOffset[0]  = vec3_t(0.0, -0.20, -0.1);
-    handOffset[1]  = vec3_t(0.0,  0.20, -0.1);
+    handOffset[0]  = vec3_t(0.0, -0.20, -0.0);
+    handOffset[1]  = vec3_t(0.0,  0.20, -0.0);
 }
 
 void Mpc::Init(){
+    int nend = wb->ends.size();
+
     data_cur.Init(wb);
+    data_cur.InitJacobian(wb);
     data_ref.Init(wb);
+    data_tmp.resize(3 + 6*nend);
+	for(auto& d : data_tmp){
+		d.Init(wb);
+	}	
 
     // load reference trajectory
     csv.Read("log.csv", ", ", true);
@@ -24,8 +31,6 @@ void Mpc::Init(){
 
     // initialize state using desired state
     Setup(0, time, data_cur);
-
-    int nend = wb->ends.size();
 
     data_cur.com_pos    = data_cur.com_pos_des;
     data_cur.com_vel    = data_cur.com_vel_des;
@@ -49,8 +54,13 @@ void Mpc::Init(){
         dend.force_r = dend.force_r_des;
     }
 
-    wb->CalcPVA(data_tmp, data_cur);
-    wb->CalcForce(data_cur);
+    wb->CalcPosition    (data_cur);
+    wb->CalcJacobian    (data_cur);
+    wb->CalcVelocity    (data_cur);
+    wb->CalcAcceleration(data_cur);
+    wb->CalcMomentum    (data_cur);
+    wb->CalcMomentumDerivative(data_cur);
+    wb->CalcForce       (data_cur);
 
     int nx = 6 + 6 +12*nend;
     int nu = 12*nend;  //< maximum size: actual size is changed depending on contact state
@@ -100,8 +110,13 @@ void Mpc::UpdateState(){
         //e = n*(vc + omega0 % q0*(pi + qi*c) + q0*(vi + omegai % qi*c))
     }
     
-    wb->CalcPVA  (data_tmp, data_cur);
-    wb->CalcForce(data_cur);
+    wb->CalcPosition    (data_cur);
+    wb->CalcJacobian    (data_cur);
+    wb->CalcVelocity    (data_cur);
+    wb->CalcAcceleration(data_cur);
+    wb->CalcMomentum    (data_cur);
+    wb->CalcMomentumDerivative(data_cur);
+    wb->CalcForce       (data_cur);
 
 }
 
@@ -285,58 +300,12 @@ void Mpc::Countup(){
     time += dt/updateCycle;
 }
 
-void Mpc::CalcIK(DiMP::WholebodyData& data){
-    vec3_t pe_local;
-    quat_t qe_local;
-    vvec_t joint;
-    vvec_t error;
-    
-    timer.CountUS();
-    for(int i = 0; i < wb->chains.size(); i++){
-        DiMP::Wholebody::Chain& ch = wb->chains[i];
-
-        int ifront = ch.ilink.front();
-        int ibase  = wb->links[ifront].iparent;
-        int iend   = ch.ilink.back();
-
-        vec3_t pb = data.links[ibase].pos_t;
-        quat_t qb = data.links[ibase].pos_r;
-        vec3_t pe = data.links[iend ].pos_t;
-        quat_t qe = data.links[iend ].pos_r;
-
-        pe_local = qb.Conjugated()*(pe - pb);
-        qe_local = qb.Conjugated()*qe;
-
-        if(i == MyIK::Chain::Torso){
-            myik->CalcTorsoIK(pe_local, qe_local, joint, error);
-        }
-        if(i == MyIK::Chain::ArmR){
-            myik->CalcArmIK(pe_local, qe_local, joint, error, 0);
-        }
-        if(i == MyIK::Chain::ArmL){
-            myik->CalcArmIK(pe_local, qe_local, joint, error, 1);
-        }
-        if(i == MyIK::Chain::LegR){
-            myik->CalcLegIK(pe_local, qe_local, joint, error, 0);
-        }
-        if(i == MyIK::Chain::LegL){
-            myik->CalcLegIK(pe_local, qe_local, joint, error, 1);
-        }
-
-        for(int j = 0; j < ch.ilink.size(); j++){
-            int i = ch.ilink[j];
-            if(wb->links[i].ijoint != -1){
-                data.q[wb->links[i].ijoint] = joint[j];
-            }
-        }
-
-        for(int j = 0; j < ch.ilimit.size(); j++){
-            data.e[ch.ilimit[j]] = error[j];
-        }
-    }
-
-    //int tik = timer.CountUS();
-    //DSTR << "tik: " << tik << endl;
+void Mpc::CalcIK(int ichain, const vec3_t& pe_local, const quat_t& qe_local, vvec_t& joint, vvec_t& error, vmat_t& Jq, vmat_t& Je, bool calc_jacobian){
+    if(ichain == MyIK::Chain::Torso) myik->CalcTorsoIK(pe_local, qe_local, joint, error, Jq, Je, calc_jacobian);
+    if(ichain == MyIK::Chain::ArmR ) myik->CalcArmIK  (pe_local, qe_local, joint, error, Jq, Je, calc_jacobian, 0);
+    if(ichain == MyIK::Chain::ArmL ) myik->CalcArmIK  (pe_local, qe_local, joint, error, Jq, Je, calc_jacobian, 1);
+    if(ichain == MyIK::Chain::LegR ) myik->CalcLegIK  (pe_local, qe_local, joint, error, Jq, Je, calc_jacobian, 0);
+    if(ichain == MyIK::Chain::LegL ) myik->CalcLegIK  (pe_local, qe_local, joint, error, Jq, Je, calc_jacobian, 1);
 }
 
 void Mpc::Setup(int k, real_t t, DiMP::WholebodyData& d){

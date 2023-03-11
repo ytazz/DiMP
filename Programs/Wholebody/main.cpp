@@ -26,7 +26,7 @@ public:
 
 		mpc  = new Mpc ();
 		mpc->updateCycle = 10;
-		mpc->N           = 20;
+		mpc->N           = 10;
 		mpc->dt          = 0.025;
 		
 		for(int k = 0; k <= mpc->N; k++){
@@ -85,11 +85,11 @@ public:
 
 		wb->SetScaling();
 
-		wb->ends[0].ilink = MyIK::Link::ChestP;
-		wb->ends[1].ilink = MyIK::Link::HandRR;
-		wb->ends[2].ilink = MyIK::Link::HandLR;
-		wb->ends[3].ilink = MyIK::Link::FootRR;
-		wb->ends[4].ilink = MyIK::Link::FootLR;
+		wb->ends[0] = Wholebody::End(MyIK::Link::ChestP, vec3_t());
+		wb->ends[1] = Wholebody::End(MyIK::Link::HandRR, myik->wristToHand[0]);
+		wb->ends[2] = Wholebody::End(MyIK::Link::HandLR, myik->wristToHand[1]);
+		wb->ends[3] = Wholebody::End(MyIK::Link::FootRR, myik->ankleToFoot[0]);
+		wb->ends[4] = Wholebody::End(MyIK::Link::FootLR, myik->ankleToFoot[1]);
 
 		wb->limits[ 0] = Wholebody::Limit(MyIK::Chain::Torso, Constraint::Type::Equality         , wb->spt);
 		wb->limits[ 1] = Wholebody::Limit(MyIK::Chain::Torso, Constraint::Type::Equality         , wb->spt);
@@ -138,11 +138,11 @@ public:
 		//graph->solver->Enable(ID(DiMP::ConTag::WholebodyMomentum     ), false);
 		
 		//graph->solver->SetCorrection(ID(), 1.0 - pow(0.9, mpc->dt/0.1));
-		graph->solver->SetCorrection(ID(), 0.1);
+		graph->solver->SetCorrection(ID(), 0.5);
 		graph->solver->param.numIter[0] = 20;
 		graph->solver->param.cutoffStepSize = 0.01;
 		graph->solver->param.regularization = 1.0e-1;
-		graph->solver->param.minStepSize = 0.01;
+		graph->solver->param.minStepSize = 1.0;
 		graph->solver->param.maxStepSize = 1.0;
 		graph->solver->param.hastyStepSize = true;
 		//graph->solver->param.methodMajor = Solver::Method::Major::GaussNewton;

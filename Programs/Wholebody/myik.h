@@ -72,6 +72,8 @@ public:
 
 	vec3_t armBase[2];
 	vec3_t legBase[2];
+	vec3_t wristToHand[2];
+	vec3_t ankleToFoot[2];
 	real_t elbowYaw[2];
 	real_t torsoLength;
 	real_t upperArmLength;
@@ -80,9 +82,9 @@ public:
 	real_t lowerLegLength;
 
 public:
-	void CalcTorsoIK(const vec3_t& pos, const quat_t& ori, vvec_t& joint, vvec_t& error);
-	void CalcArmIK  (const vec3_t& pos, const quat_t& ori, vvec_t& joint, vvec_t& error, int side);
-	void CalcLegIK  (const vec3_t& pos, const quat_t& ori, vvec_t& joint, vvec_t& error, int side);
+	void CalcTorsoIK(const vec3_t& pos, const quat_t& ori, vvec_t& joint, vvec_t& error, vmat_t& Jq, vmat_t& Je, bool calc_jacobian);
+	void CalcArmIK  (const vec3_t& pos, const quat_t& ori, vvec_t& joint, vvec_t& error, vmat_t& Jq, vmat_t& Je, bool calc_jacobian, int side);
+	void CalcLegIK  (const vec3_t& pos, const quat_t& ori, vvec_t& joint, vvec_t& error, vmat_t& Jq, vmat_t& Je, bool calc_jacobian, int side);
 
 	MyIK();
 };

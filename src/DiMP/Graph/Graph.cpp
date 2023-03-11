@@ -463,8 +463,11 @@ void Graph::Step(){
 	static Timer timer;
 	timer.CountUS();
 	Prepare();
-	PrepareStep();
 	uint TPrepare = timer.CountUS();
+	
+	timer.CountUS();
+	PrepareStep();
+	uint TPrepareStep = timer.CountUS();
 	
 	timer.CountUS();
 	solver->Step();
@@ -474,9 +477,10 @@ void Graph::Step(){
 	Finish();
 	uint TFinish = timer.CountUS();
 
-	//DSTR << " tpre: " << TPrepare;
-	//DSTR << " tstp: " << TStep;
-	//DSTR << " tfin: " << TFinish << endl;
+	DSTR << " tpre1: " << TPrepare;
+	DSTR << " tpre2: " << TPrepareStep;
+	DSTR << " tstp: " << TStep;
+	DSTR << " tfin: " << TFinish << endl;
 
 }
 

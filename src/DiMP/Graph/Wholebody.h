@@ -32,6 +32,10 @@ struct WholebodyMomentCon;
 
 class WholebodyCallback;
 
+typedef PTM::TMatrixCol<6,6,real_t>  mat6_t;
+typedef PTM::TMatrixCol<6,3,real_t>  mat63_t;
+typedef PTM::TMatrixCol<3,6,real_t>  mat36_t;
+
 struct WholebodyData{
 	struct Link{
 		vec3_t  pos_t;  // position (base link local)
@@ -90,8 +94,20 @@ struct WholebodyData{
 	mat3_t I, Iinv;                ///< inertia matrix around com and its inverse
 	vvec_t q, qd, tau;
 	vvec_t e;
+	vector<vmat_t>   Jq;
+	vector<vmat_t>   Je;
 
-	void Init(Wholebody* wb);
+	vmat_t           J_e_v0;
+	vector< vmat_t > J_e_ve;              //< jacobian from end pose to error
+	vmat_t           J_q_v0;
+	vector< vmat_t > J_q_ve;              //< jacobian from end pose to error
+	vector< mat6_t > J_vi_v0;           //< jacobian from base velocity to link velocity
+	vector< vector<mat6_t> > J_vi_ve;   //< jacobian from end pose to link pose
+	vector< vector<mat6_t> > J_fkik;
+	vector< mat36_t > J_vi_ve_sum;
+
+	void Init        (Wholebody* wb);
+	void InitJacobian(Wholebody* wb);
 };
 
 /*
@@ -151,12 +167,8 @@ public:
 	vector<WholebodyLimitCon*>  con_limit;
 	
 	WholebodyData          data;
-	WholebodyData          data_tmp[3];
-	vector< vector<WholebodyData> >  data_tmp2;
+	vector<WholebodyData>  data_tmp;
 	
-	vector<vmat_t>  J_e_pe, J_e_qe;              //< jacobian from end pose to error
-	vector< vector<mat3_t> > J_pi_pe, J_pi_qe;   //< jacobian from end pose to link position
-
 	vector<End>    ends;
 	
 public:	
@@ -206,9 +218,10 @@ public:
 	};
 
 	struct End{
-		int  ilink;    ///< link index
+		int    ilink;    ///< link index
+		vec3_t offset;
 
-		End();
+		End(int _ilink = 0.0, vec3_t _offset = vec3_t());
 	};
 
 	struct Limit{
@@ -274,6 +287,7 @@ public:
 	virtual Keypoint*	CreateKeypoint() { return new WholebodyKey(); }
 	virtual void		Init   ();
 	virtual void		Prepare();
+	virtual void		PrepareStep();
 	virtual void        Finish ();
 	virtual void        CreateSnapshot(real_t time);
 	virtual void        DrawSnapshot  (Render::Canvas* canvas, Render::Config* conf);
@@ -281,17 +295,17 @@ public:
 
 	void SetScaling();
 	void Setup();
-	void CalcPosition        (WholebodyData& d);
-	void CalcVelocity        (const WholebodyData& d0, const WholebodyData& d1, WholebodyData& d, real_t epsinv);
-	void CalcAcceleration    (const WholebodyData& d0, const WholebodyData& d1, WholebodyData& d, real_t epsinv);
-	void CalcLinkPosition    (WholebodyData& d);
-	//void CalcLinkVelocity    (WholebodyData& d, bool calc_end);
-	void CalcComAcceleration (WholebodyData& d);
-	void CalcBaseAcceleration(WholebodyData& d);
-	void CalcMomentum        (WholebodyData& d);
+	void CalcIK                (WholebodyData& d, bool calc_jacobian);
+	void CalcPosition          (WholebodyData& d);
+	void CalcJacobian          (WholebodyData& d);
+	//void CalcJacobian          (WholebodyData& d, vector<WholebodyData>& dtmp);
+	void CalcVelocity          (WholebodyData& d);
+	void CalcAcceleration      (WholebodyData& d);
+	void CalcComAcceleration   (WholebodyData& d);
+	void CalcBaseAcceleration  (WholebodyData& d);
+	void CalcMomentum          (WholebodyData& d);
 	void CalcMomentumDerivative(WholebodyData& d);
-	void CalcPVA             (WholebodyData* data_tmp, WholebodyData& data);
-	void CalcForce           (WholebodyData& d);
+	void CalcForce             (WholebodyData& d);
 	
 	void ComState    (real_t t, vec3_t& pos, vec3_t& vel   );
 	void BaseState   (real_t t, quat_t& ori, vec3_t& angvel);
@@ -309,7 +323,7 @@ public:
 
 class WholebodyCallback{
 public:
-	virtual void   CalcIK(WholebodyData& data) = 0;
+	virtual void   CalcIK(int ichain, const vec3_t& pe_local, const quat_t& qe_local, vvec_t& joint, vvec_t& error, vmat_t& Jq, vmat_t& Je, bool calc_jacobian) = 0;
 	virtual void   Setup (int k, real_t t, WholebodyData& data) = 0;
 };
 

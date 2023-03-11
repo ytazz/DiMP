@@ -8,7 +8,7 @@ class Mpc : public DiMP::WholebodyCallback{
 public:
 	DiMP::Wholebody*     wb;
 	DiMP::WholebodyData  data_cur;  //< current state
-	DiMP::WholebodyData  data_tmp[3];
+	vector<DiMP::WholebodyData>  data_tmp;
 	DiMP::WholebodyData  data_ref;  //< reference state and input computed by most recent MPC optimization
 	MyIK*                myik;
 
@@ -35,7 +35,7 @@ public:
 	void UpdateGain ();
 	void Countup    ();
 
-	virtual void CalcIK(DiMP::WholebodyData& data);
+	virtual void CalcIK(int ichain, const vec3_t& pe_local, const quat_t& qe_local, vvec_t& joint, vvec_t& error, vmat_t& Jq, vmat_t& Je, bool calc_jacobian);
 	virtual void Setup (int k, real_t t, DiMP::WholebodyData& data);
 
 	Mpc();

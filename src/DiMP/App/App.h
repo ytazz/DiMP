@@ -61,7 +61,7 @@ public:
 		enum{
 			MarginY = 15,
 			MarginX = 20,
-			LineY	= 20,
+			LineY	= 12,
 			KeyX	= 0,
 			DescX	= 100,
 			ValueX	= 300,

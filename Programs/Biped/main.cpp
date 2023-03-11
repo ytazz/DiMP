@@ -41,27 +41,27 @@ public:
 	virtual void BuildScene() {
 		const real_t mt = 3.578+28.054+2.0*14.023+13.877;
 		const real_t mf = 13.877/2;
-		const real_t Ts = 0.5;
-		const real_t Td = 0.2;
+		const real_t Ts = 0.05;
+		const real_t Td = 0.40;
 		const int    nstep_idle   = 2;  //< number of steps to step in place
-		const int    nstep_acc    = 2;  //< number of steps to accelerate
-		const int    nstep_cruise = 3;  //< number of steps to walk in constant speed
-		const int    nstep_dec    = 1;  //< number of steps to decelerate
+		const int    nstep_acc    = 5;  //< number of steps to accelerate
+		const int    nstep_cruise = 10;  //< number of steps to walk in constant speed
+		const int    nstep_dec    = 5;  //< number of steps to decelerate
 		const int    nstep        = nstep_idle + nstep_acc + nstep_cruise + nstep_dec;
 		const int    nphase       = 2 * nstep + 3;  //< 2 phases per step + (one D at the beginning) + (two D at the end)
-		const real_t vmax         = 0.5*(1.0 + (2.0*mf)/mt);    //< walking distance
+		const real_t vmax         = 0.9*(1.0 + (2.0*mf)/mt);    //< walking distance
 		const real_t Tacc         = nstep_acc   *(Ts + Td);
 		const real_t Tcruise      = nstep_cruise*(Ts + Td);
 		const real_t Tdec         = nstep_dec   *(Ts + Td);
 		const real_t acc          = vmax/Tacc;
 		const real_t dec          = vmax/Tdec;
-		const real_t dist_acc     = 0.5*acc*Tacc*Tacc;
+		const real_t dist_acc     = 0.6*acc*Tacc*Tacc;
 		const real_t dist_cruise  = vmax*Tcruise;
 		const real_t dist_dec     = vmax*Tdec - 0.5*dec*Tdec*Tdec;
 		
 		biped = new DiMP::BipedLIP(graph, "biped");
 		biped->param.gravity      = 9.8;
-		biped->param.comHeight    = 0.7;//1.05;
+		biped->param.comHeight    = 0.75;//1.05;
 		biped->param.torsoMass    = mt;
 		biped->param.footMass     = mf;
 		biped->param.durationMin[DiMP::BipedLIP::Phase::R ] = 0.50;
@@ -82,13 +82,13 @@ public:
 		biped->param.footOriMax[0] = Rad( 0.0);
 		biped->param.footOriMin[1] = Rad(-0.0);
 		biped->param.footOriMax[1] = Rad( 0.0);
-		biped->param.footCopMin[0] = vec3_t(-0.100, -0.05, -1.0);
-		biped->param.footCopMax[0] = vec3_t( 0.150,  0.05,  1.0);
-		biped->param.footCopMin[1] = vec3_t(-0.100, -0.05, -1.0);
-		biped->param.footCopMax[1] = vec3_t( 0.150,  0.05,  1.0);
-		biped->param.swingHeight   = 0.050;
-		biped->param.swingProfile = DiMP::BipedLIP::SwingProfile::Cycloid;
-		//biped->param.swingProfile       = DiMP::BipedLIP::SwingProfile::HeelToe;
+		biped->param.footCopMin[0] = vec3_t(-0.07, -0.02, -1.0);
+		biped->param.footCopMax[0] = vec3_t( 0.10,  0.02,  1.0);
+		biped->param.footCopMin[1] = vec3_t(-0.07, -0.02, -1.0);
+		biped->param.footCopMax[1] = vec3_t( 0.10,  0.02,  1.0);
+		biped->param.swingHeight   = 0.100;
+		//biped->param.swingProfile = DiMP::BipedLIP::SwingProfile::Cycloid;
+		biped->param.swingProfile       = DiMP::BipedLIP::SwingProfile::HeelToe;
 		//biped->param.swingInterpolation = DiMP::BipedLIP::SwingInterpolation::Cubic;
 		biped->param.swingInterpolation = DiMP::BipedLIP::SwingInterpolation::Quintic;
 		//biped->param.footCurveType = DiMP::BipedLIP::FootCurveType::Arc;
@@ -97,7 +97,7 @@ public:
 		//biped->param.toeCurvature  = 10.0;
 		//biped->param.heelCurvature = 10.0;
 		biped->param.footCurveType     = DiMP::BipedLIP::FootCurveType::Clothoid;
-		biped->param.ankleToToe        = 0.070;
+		biped->param.ankleToToe        = 0.040;
 		biped->param.ankleToHeel       = 0.040;
 		biped->param.toeCurvatureRate  = 156.0;
 		biped->param.heelCurvatureRate = 156.0;
@@ -122,7 +122,7 @@ public:
 		biped->phase[nphase-2] = DiMP::BipedLIP::Phase::D;
 		biped->phase[nphase-1] = DiMP::BipedLIP::Phase::D;
 		
-		real_t spacing = 0.18/2;
+		real_t spacing = 0.14/2;
 		//vec2_t goalPos(3.0, 0.0);
 		//real_t goalOri  = Rad(0.0);
 

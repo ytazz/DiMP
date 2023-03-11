@@ -172,7 +172,7 @@ void App::DrawState(GRRenderIf* render, Vec2f& offset){
 		
 	// 拘束種別の誤差
 	if(!graph->solver->conInfoType.empty()){
-		for(int i = 0; i < (int)graph->solver->conInfoType.size(); i++)
+		for(int i = 50; i < (int)graph->solver->conInfoType.size(); i++)
 			DrawValue(render, offset, DiMP::ConNames[i], graph->solver->conInfoType[i].error);
 	}
 
@@ -401,6 +401,7 @@ void App::Init(int argc, char* argv[]){
 	// 文字色
 	GRRenderIf* render = GetCurrentWin()->GetRender();
 	GRFont font;
+	font.height = 12;
 	font.color = (int)(0xff * textColor[0]) << 16 | (int)(0xff * textColor[1]) << 8 | (int)(0xff * textColor[2]);
 	render->SetFont(font);
 
