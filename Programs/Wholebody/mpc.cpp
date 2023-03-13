@@ -55,7 +55,7 @@ void Mpc::Init(){
     }
 
     wb->CalcPosition    (data_cur);
-    wb->CalcJacobian    (data_cur);
+    wb->CalcJacobian    (data_cur, data_tmp);
     wb->CalcVelocity    (data_cur);
     wb->CalcAcceleration(data_cur);
     wb->CalcMomentum    (data_cur);
@@ -111,7 +111,7 @@ void Mpc::UpdateState(){
     }
     
     wb->CalcPosition    (data_cur);
-    wb->CalcJacobian    (data_cur);
+    wb->CalcJacobian    (data_cur, data_tmp);
     wb->CalcVelocity    (data_cur);
     wb->CalcAcceleration(data_cur);
     wb->CalcMomentum    (data_cur);

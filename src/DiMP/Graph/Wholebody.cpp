@@ -83,7 +83,6 @@ void WholebodyData::InitJacobian(Wholebody* wb){
 	}
 	J_vi_v0.resize(nlink);
 	J_vi_ve.resize(nlink);
-	J_vi_ve_sum.resize(nend);
 	for(int i = 0; i < nlink; i++){
 		J_vi_v0[i].clear();
 		J_vi_ve[i].resize(nend);
@@ -308,7 +307,7 @@ void WholebodyKey::Prepare() {
 	}
 
 	wb->CalcPosition          (data);
-	wb->CalcJacobian          (data);
+	wb->CalcJacobian          (data, data_tmp);
 	wb->CalcVelocity          (data);
 	wb->CalcAcceleration      (data);
 	wb->CalcMomentum          (data);
@@ -342,6 +341,7 @@ void WholebodyKey::Draw(Render::Canvas* canvas, Render::Config* conf) {
 
 Wholebody::Param::Param() {
 	gravity = 9.8;
+	analyticalJacobian = false;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -584,60 +584,95 @@ void Wholebody::Finish(){
 	TrajectoryNode::Finish();
 }
 
-void Wholebody::CalcIK(WholebodyData& d, bool calc_jacobian){
+void Wholebody::CalcIK(WholebodyData& d, int ichain, bool calc_jacobian){
 	vec3_t pe_local;
 	quat_t qe_local;
 	vvec_t joint;
 	vvec_t error;
 
-	int nchain = chains.size();
-	for(int ic = 0; ic < nchain; ic++){
-		Chain& ch = chains[ic];
+	bool jacobian_by_diff = false;
 
-		timer.CountUS();
+	Chain& ch = chains[ichain];
+
+	timer.CountUS();
     
-		int ifront = ch.ilink.front();
-		int iroot  = links[ifront].iparent;
+	int ifront = ch.ilink.front();
+	int iroot  = links[ifront].iparent;
 		
-		vec3_t pr = d.links[iroot].pos_t;
-		quat_t qr = d.links[iroot].pos_r;
-		vec3_t pe = d.ends [ic].pos_t;
-		quat_t qe = d.ends [ic].pos_r;
-		vec3_t or = links[ifront].trn;
-		vec3_t oe = ends [ic].offset;
+	vec3_t pr = d.links[iroot].pos_t;
+	quat_t qr = d.links[iroot].pos_r;
+	vec3_t pe = d.ends [ichain].pos_t;
+	quat_t qe = d.ends [ichain].pos_r;
+	vec3_t or = links[ifront].trn;
+	vec3_t oe = ends [ichain].offset;
 
-		pe_local = qr.Conjugated()*(pe - pr - qe*oe - or);
-		qe_local = qr.Conjugated()*qe;
+	pe_local = qr.Conjugated()*(pe - pr - qe*oe - or);
+	qe_local = qr.Conjugated()*qe;
 
-		callback->CalcIK(ic, pe_local, qe_local, joint, error, d.Jq[ic], d.Je[ic], calc_jacobian);
+	callback->CalcIK(ichain, pe_local, qe_local, joint, error, d.Jq[ichain], d.Je[ichain], calc_jacobian/* && !jacobian_by_diff*/);
     	
-		for(int j = 0; j < ch.ilink.size(); j++){
-			int i = ch.ilink[j];
-			d.q[links[i].ijoint] = joint[j];
+	for(int j = 0; j < ch.ilink.size(); j++){
+		int i = ch.ilink[j];
+		d.q[links[i].ijoint] = joint[j];
+	}
+
+	for(int j = 0; j < ch.ilimit.size(); j++){
+		d.e[ch.ilimit[j]] = error[j];
+	}
+
+	if(jacobian_by_diff){
+		// calc IK jacobian by finite difference
+		const real_t eps    = 1.0e-2;
+		const real_t epsinv = 1.0/eps;
+		vec3_t pe_local_tmp;
+		quat_t qe_local_tmp;
+		vvec_t joint_tmp;
+		vvec_t error_tmp;
+		vmat_t Jq_tmp;
+		vmat_t Je_tmp;
+		Jq_tmp.resize(joint.size(), 6);
+		Je_tmp.resize(error.size(), 6);
+		for(int j = 0; j < 6; j++){
+			pe_local_tmp = pe_local;
+			qe_local_tmp = qe_local;
+			if(j < 3){
+				pe_local_tmp[j] += eps;
+			}
+			else{
+				qe_local_tmp = quat_t::Rot(eps, 'x' + (j%3))*qe_local_tmp;
+				qe_local_tmp.unitize();
+			}
+			callback->CalcIK(ichain, pe_local_tmp, qe_local_tmp, joint_tmp, error_tmp, d.Jq[ichain], d.Je[ichain], false);
+			Jq_tmp.col(j) = (joint_tmp - joint)*epsinv;
+			Je_tmp.col(j) = (error_tmp - error)*epsinv;
 		}
 
-		for(int j = 0; j < ch.ilimit.size(); j++){
-			d.e[ch.ilimit[j]] = error[j];
+		// calc error between analytical jacobian
+		real_t diff = 0.0;
+		for(int r = 0; r < joint.size(); r++)for(int c = 0; c < 6; c++){
+			diff += std::abs(Jq_tmp[r][c] - d.Jq[ichain][r][c]);
 		}
+		DSTR << "ichain: " << ichain << "  d: " << diff << endl;
+	}
 
-		// calc fk
-		for(int j = 0; j < ch.ilink.size(); j++){
-			int i  = ch.ilink[j];
-			int ip = links[i].iparent;
-			WholebodyData::Link& dlnk  = d.links[i ];
-			WholebodyData::Link& dlnkp = d.links[ip];
+	// calc fk
+	for(int j = 0; j < ch.ilink.size(); j++){
+		int i  = ch.ilink[j];
+		int ip = links[i].iparent;
+		WholebodyData::Link& dlnk  = d.links[i ];
+		WholebodyData::Link& dlnkp = d.links[ip];
 
-			dlnk.pos_t = dlnkp.pos_t + dlnkp.pos_r*links[i].trn;
-			dlnk.pos_r = dlnkp.pos_r*quat_t::Rot(d.q[links[i].ijoint], links[i].axis);
-			dlnk.pos_r.unitize();
-		}
+		dlnk.pos_t = dlnkp.pos_t + dlnkp.pos_r*links[i].trn;
+		dlnk.pos_r = dlnkp.pos_r*quat_t::Rot(d.q[links[i].ijoint], links[i].axis);
+		dlnk.pos_r.unitize();
 	}
 }
 
 void Wholebody::CalcPosition(WholebodyData& d){
 	timer2.CountUS();
-	int nlink = links.size();
-	int nend  = ends.size();
+	int nlink  = links.size();
+	int nend   = ends.size();
+	int nchain = chains.size();
 
 	// calc base link position by iteration
 	const int niter = 10;
@@ -647,7 +682,8 @@ void Wholebody::CalcPosition(WholebodyData& d){
 	d.links[0].pos_t = vec3_t();
 	
 	for(int n = 0; n <= niter; n++){
-		CalcIK(d, false);
+		for(int ic = 0; ic < nchain; ic++)
+			CalcIK(d, ic, false);
 		
 		if(n == niter)
 			break;
@@ -701,14 +737,96 @@ void Wholebody::CalcBaseAcceleration(WholebodyData& d){
     d.base_acc_r = d.Iinv*(msum - d.base_pos_r*d.Ld);
 }
 
-void Wholebody::CalcJacobian(WholebodyData& d){
+void Wholebody::CalcJacobian(WholebodyData& d, vector<WholebodyData>& dtmp){
+	int nlink  = links .size();
+	int nend   = ends  .size();
+	
+	// clear
+	d.J_e_v0.clear();
+	for(int i = 0; i < nend; i++){
+		d.J_e_ve[i].clear();
+	}
+	d.J_q_v0.clear();
+	for(int i = 0; i < nend; i++){
+		d.J_q_ve[i].clear();
+	}
+	for(int i = 0; i < nlink; i++){
+		d.J_vi_v0[i].clear();
+		for(int j = 0; j < nend; j++){
+			d.J_vi_ve[i][j].clear();
+			d.J_fkik [i][j].clear();
+		}
+	}
+
+	if(param.analyticalJacobian){
+		CalcJacobianAnalytical(d);
+		TransformJacobian(d);
+	}
+	else{
+		CalcJacobianNumerical(d, dtmp);
+		TransformJacobian(d);
+	}
+
+	//SaveJacobian(d);
+}
+
+void Wholebody::SaveJacobian(WholebodyData& d){
+	int nlink  = links .size();
+	int nend   = ends  .size();
+	int njoint = joints.size();
+	FILE* file = fopen("jacobian.csv", "w");
+	int nrow = nlink*6;
+	int ncol = (1+nend)*6;
+	real_t val;
+	for(int r = 0; r < nrow; r++){
+		int ilink = r/6;
+		int jrow  = r%6;
+
+		for(int c = 0; c < ncol; c++){
+			int iend = c/6;
+			int jcol = c%6;
+			if(iend == 0){
+				val = d.J_vi_v0[ilink][jrow][jcol];
+			}
+			else{
+				val = d.J_vi_ve[ilink][iend-1][jrow][jcol];
+			}
+			fprintf(file, "%f, ", val);
+		}
+		fprintf(file, "\n");
+	}
+	fclose(file);
+
+	file = fopen("jq.csv", "w");
+	nrow = njoint;
+	ncol = (1+nend)*6;
+	for(int r = 0; r < nrow; r++){
+		int jrow = r;
+		for(int c = 0; c < ncol; c++){
+			int iend = c/6;
+			int jcol = c%6;
+			if(iend == 0){
+				val = d.J_q_v0[jrow][jcol];
+			}
+			else{
+				val = d.J_q_ve[iend-1][jrow][jcol];
+			}
+			fprintf(file, "%f, ", val);
+		}
+		fprintf(file, "\n");
+	}
+	fclose(file);
+}
+
+void Wholebody::CalcJacobianAnalytical(WholebodyData& d){
 	int nchain = chains.size();
 	int nlink  = links .size();
 	int njoint = joints.size();
 	int nlimit = limits.size();
 
-	CalcIK(d, true);
-
+	for(int ic = 0; ic < nchain; ic++)
+		CalcIK(d, ic, true);
+	
 	vmat_t J_fk;
 	for(int ic = 0; ic < nchain; ic++){
 		Chain& ch = chains[ic];
@@ -742,22 +860,32 @@ void Wholebody::CalcJacobian(WholebodyData& d){
 			int i = ch.ilink[j];
 			J_fk.clear();
 
+			vec3_t pi = d.links[i].pos_t;
+			quat_t qi = d.links[i].pos_r;
+
 			for(int j0 = 0; j0 <= j; j0++){
 				int i0 = ch.ilink[j0];
-				vec3_t eta = d.links[i0].pos_r*links[i0].axis;
-				vec3_t r   = d.links[i ].pos_t - d.links[i0].pos_t;
+
+				vec3_t pi0 = d.links[i0].pos_t;
+				quat_t qi0 = d.links[i0].pos_r;
+
+				vec3_t eta = qi0*links[i0].axis;
+				vec3_t r   = pi - pi0;
 				J_fk.col(j0).v_range(0,3) = eta % r;
 				J_fk.col(j0).v_range(3,3) = eta;
 			}
 
 			// multiply rotation matrix from left
-			J_fk.vsub_matrix(0,0,3,nq) = Rr*J_fk.vsub_matrix(0,0,3,nq);
-			J_fk.vsub_matrix(3,0,3,nq) = Rr*J_fk.vsub_matrix(3,0,3,nq);
+			//J_fk.vsub_matrix(0,0,3,nq) = Rr*J_fk.vsub_matrix(0,0,3,nq);
+			//J_fk.vsub_matrix(3,0,3,nq) = Rr*J_fk.vsub_matrix(3,0,3,nq);
 
 			// jacobian from end to link
 			d.J_fkik[i][ic] = J_fk*d.Jq[ic];
 		}
 	}
+
+	// jacobian from base link to base link is identity
+	d.J_vi_v0[0].sub_matrix(TSubMatrixDim<0,0,3,3>()) = mat3_t();
 
 	//
 	mat6_t Xir, Xer;
@@ -790,7 +918,8 @@ void Wholebody::CalcJacobian(WholebodyData& d){
 
 			// root link is base link
 			if(ir == 0){
-				d.J_vi_v0[i]     = Jir;
+				d.J_vi_v0[i].sub_matrix(TSubMatrixDim<0,0,6,3>()) = Jir.sub_matrix(TSubMatrixDim<0,0,6,3>());
+				d.J_vi_v0[i].sub_matrix(TSubMatrixDim<0,3,6,3>()).clear();
 				d.J_vi_ve[i][ic] = Jie;
 			}
 			// otherwise:
@@ -808,7 +937,7 @@ void Wholebody::CalcJacobian(WholebodyData& d){
 
 			// root link is base link
 			if(ir == 0){
-				d.J_e_v0    .row(ie) = -Xer.trans()*d.Je[ic].row(j);
+				d.J_e_v0    .row(ie).v_range(0,3) = -d.Je[ic].row(j).v_range(0,3);
 				d.J_e_ve[ic].row(ie) = d.Je[ic].row(j);
 			}
 			// otherwise:
@@ -824,9 +953,9 @@ void Wholebody::CalcJacobian(WholebodyData& d){
 		for(int j = 0; j < ch.ilink.size(); j++){
 			int iq = links[ch.ilink[j]].ijoint;
 
-			// root link is base link
+			// root link is base linkcalc
 			if(ir == 0){
-				d.J_q_v0    .row(iq) = -Xer.trans()*d.Jq[ic].row(j);
+				d.J_q_v0    .row(iq).v_range(0,3) = -d.Jq[ic].row(j).v_range(0,3);
 				d.J_q_ve[ic].row(iq) = d.Jq[ic].row(j);
 			}
 			// otherwise:
@@ -838,47 +967,17 @@ void Wholebody::CalcJacobian(WholebodyData& d){
 			}
 		}
 	}
-
-	mat3_t X, Xinv;
-	X = links[0].mass*mat3_t();
-	for(int i = 1; i < nlink; i++){
-		X += links[i].mass*d.J_vi_v0[i].sub_matrix(TSubMatrixDim<0,0,3,3>());
-	}
-	Xinv = X.inv();
-
-	for(int ic = 0; ic < nchain; ic++){
-		d.J_vi_ve_sum[ic].clear();
-		
-		for(int i = 0; i < nlink; i++){
-			d.J_vi_ve_sum[ic] += links[i].mass*d.J_vi_ve[i][ic].sub_matrix(TSubMatrixDim<0,0,3,6>());
-		}
-	}
-
-	for(int i = 0; i < nlink; i++){
-		mat63_t J_vi_v0_Xinv = d.J_vi_v0[i].sub_matrix(TSubMatrixDim<0,0,6,3>())*Xinv;
-		for(int ic = 0; ic < nchain; ic++){
-			d.J_vi_ve[i][ic] -= J_vi_v0_Xinv*d.J_vi_ve_sum[ic];			
-		}
-	}
-
-	vmat_t J_e_v0_Xinv = d.J_e_v0.vsub_matrix(0,0,nlimit,3)*Xinv;
-	for(int ic = 0; ic < nchain; ic++){
-		d.J_e_ve[ic] -= J_e_v0_Xinv*d.J_vi_ve_sum[ic];
-	}	
-
-	vmat_t J_q_v0_Xinv = d.J_q_v0.vsub_matrix(0,0,njoint,3)*Xinv;
-	for(int ic = 0; ic < nchain; ic++){
-		d.J_q_ve[ic] -= J_q_v0_Xinv*d.J_vi_ve_sum[ic];
-	}
-
 }
-/*
-void Wholebody::CalcJacobian(WholebodyData& data, vector<WholebodyData>& data_tmp){
-	int nend  = ends .size();
-	int nlink = links.size();
+
+void Wholebody::CalcJacobianNumerical(WholebodyData& data, vector<WholebodyData>& data_tmp){
+	int nend   = ends .size ();
+	int nlink  = links.size ();
+	int nchain = chains.size();
 
 	const real_t eps    = 1.0e-2;
 	const real_t epsinv = 1.0/eps;
+
+	vec6_t dv;
 
 	// base link velocity
 	for(int j = 0; j < 3; j++){
@@ -886,20 +985,20 @@ void Wholebody::CalcJacobian(WholebodyData& data, vector<WholebodyData>& data_tm
 		d = data;
 
 		d.links[0].pos_t[j] += eps;
-		for(int i = 0; i < nend; i++){
-			d.links[ends[i].ilink].pos_t = d.ends[i].pos_t;
-			d.links[ends[i].ilink].pos_r = d.ends[i].pos_r;
-		}
-		callback->CalcIK(d);
+		
+		for(int ic = 0; ic < nchain; ic++)
+			CalcIK(d, ic, false);
 	
 		for(int i = 0; i < nlink; i++){
-			data.J_vi_v0[i].col(j) = (d.links[i].pos_t - data.links[i].pos_t)*epsinv;
+			dv.sub_vector(TSubVectorDim<0,3>()) = (d.links[i].pos_t - data.links[i].pos_t)*epsinv;
 
 			quat_t qdiff = d.links[i].pos_r*data.links[i].pos_r.Conjugated();
 			real_t theta = qdiff.Theta();
 			if(theta > pi)
 				theta -= 2*pi;
-			data.J_wi_v0[i].col(j) = qdiff.Axis()*(theta*epsinv);
+			
+			dv.sub_vector(TSubVectorDim<3,3>()) = qdiff.Axis()*(theta*epsinv);
+			data.J_vi_v0[i].col(j) = dv;
 		}
 		data.J_e_v0.col(j) = (d.e - data.e)*epsinv;
 		data.J_q_v0.col(j) = (d.q - data.q)*epsinv;
@@ -907,97 +1006,122 @@ void Wholebody::CalcJacobian(WholebodyData& data, vector<WholebodyData>& data_tm
 
 	// end velocity
 	for(int iend = 0; iend < nend; iend++){
-		for(int j = 0; j < 3; j++){
+		for(int j = 0; j < 6; j++){
 			WholebodyData& d = data_tmp[3 + 6*iend + j];
 			d = data;
 
-			d.ends[iend].pos_t[j] += eps;
-			for(int i = 0; i < nend; i++){
-				d.links[ends[i].ilink].pos_t = d.ends[i].pos_t;
-				d.links[ends[i].ilink].pos_r = d.ends[i].pos_r;
+			if(j < 3){
+				d.ends[iend].pos_t[j] += eps;
 			}
-			callback->CalcIK(d);
+			else{
+				d.ends[iend].pos_r = quat_t::Rot(eps, 'x' + (j%3))*d.ends[iend].pos_r;
+				d.ends[iend].pos_r.unitize();
+			}
+
+			for(int ic = 0; ic < nchain; ic++)
+				CalcIK(d, ic, false);
 
 			for(int i = 0; i < nlink; i++){
-				data.J_vi_ve[iend][i].col(j) = (d.links[i].pos_t - data.links[i].pos_t)*epsinv;
+				dv.sub_vector(TSubVectorDim<0,3>()) = (d.links[i].pos_t - data.links[i].pos_t)*epsinv;
 
 				quat_t qdiff = d.links[i].pos_r*data.links[i].pos_r.Conjugated();
 				real_t theta = qdiff.Theta();
 				if(theta > pi)
 					theta -= 2*pi;
-				data.J_wi_ve[iend][i].col(j) = qdiff.Axis()*(theta*epsinv);
+				dv.sub_vector(TSubVectorDim<3,3>()) = qdiff.Axis()*(theta*epsinv);
+				
+				data.J_vi_ve[i][iend].col(j) = dv;
 			}
 			data.J_e_ve[iend].col(j) = (d.e - data.e)*epsinv;
 			data.J_q_ve[iend].col(j) = (d.q - data.q)*epsinv;
 		}
-		for(int j = 0; j < 3; j++){
-			WholebodyData& d = data_tmp[3 + 6*iend + 3 + j];
+	}
+}
+
+void Wholebody::CalcJacobianNumerical2(WholebodyData& data, vector<WholebodyData>& data_tmp){
+	int nend  = ends .size();
+	int nlink = links.size();
+
+	const real_t eps    = 1.0e-2;
+	const real_t epsinv = 1.0/eps;
+
+	vec6_t dv;
+
+	for(int iend = 0; iend < nend; iend++){
+		for(int j = 0; j < 6; j++){
+			WholebodyData& d = data_tmp[6*iend + j];
 			d = data;
 
-			d.ends[iend].pos_r = quat_t::Rot(eps, 'x' + j)*d.ends[iend].pos_r;
-			d.ends[iend].pos_r.unitize();
-			for(int i = 0; i < nend; i++){
-				d.links[ends[i].ilink].pos_t = d.ends[i].pos_t;
-				d.links[ends[i].ilink].pos_r = d.ends[i].pos_r;
+			if(j < 3){
+				d.ends[iend].pos_t[j] += eps;
 			}
-			callback->CalcIK(d);
+			else{
+				d.ends[iend].pos_r = quat_t::Rot(eps, 'x' + (j % 3))*d.ends[iend].pos_r;
+				d.ends[iend].pos_r.unitize();
+			}
+
+			CalcPosition(d);
 
 			for(int i = 0; i < nlink; i++){
-				data.J_vi_we[iend][i].col(j) = (d.links[i].pos_t - data.links[i].pos_t)*epsinv;
+				dv.sub_vector(TSubVectorDim<0,3>()) = (d.links[i].pos_t - data.links[i].pos_t)*epsinv;
 
 				quat_t qdiff = d.links[i].pos_r*data.links[i].pos_r.Conjugated();
 				real_t theta = qdiff.Theta();
 				if(theta > pi)
 					theta -= 2*pi;
-				data.J_wi_we[iend][i].col(j) = qdiff.Axis()*(theta*epsinv);
+				dv.sub_vector(TSubVectorDim<3,3>()) = qdiff.Axis()*(theta*epsinv);
+				
+				data.J_vi_ve[i][iend].col(j) = dv;
 			}
-			data.J_e_we[iend].col(j) = (d.e - data.e)*epsinv;
-			data.J_q_we[iend].col(j) = (d.q - data.q)*epsinv;
+			data.J_e_ve[iend].col(j) = (d.e - data.e)*epsinv;
+			data.J_q_ve[iend].col(j) = (d.q - data.q)*epsinv;
 		}
 	}
+						
+	int T = timer.CountUS();
+	//DSTR << "prepare step: " << T << endl;
+}
+
+void Wholebody::TransformJacobian(WholebodyData& d){
+	int nlink  = links .size();
+	int nchain = chains.size();
+	int njoint = joints.size();
+	int nlimit = limits.size();
 
 	mat3_t X, Xinv;
 	X.clear();
 	for(int i = 0; i < nlink; i++){
-		X += links[i].mass*data.J_vi_v0[i];
+		X += links[i].mass*d.J_vi_v0[i].sub_matrix(TSubMatrixDim<0,0,3,3>());
 	}
 	Xinv = X.inv();
 
-	for(int iend = 0; iend < nend; iend++){
-		data.J_vi_ve_sum[iend].clear();
-		data.J_vi_we_sum[iend].clear();
+	for(int ic = 0; ic < nchain; ic++){
+		d.J_vi_ve[0][ic].clear();
+		
+		for(int i = 1; i < nlink; i++){
+			d.J_vi_ve[0][ic].sub_matrix(TSubMatrixDim<0,0,3,6>())
+				+= links[i].mass*d.J_vi_ve[i][ic].sub_matrix(TSubMatrixDim<0,0,3,6>());
+		}
 
-		for(int i = 0; i < nlink; i++){
-			data.J_vi_we_sum[iend] += links[i].mass*data.J_vi_we[iend][i];
-			data.J_vi_ve_sum[iend] += links[i].mass*data.J_vi_ve[iend][i];
+		d.J_vi_ve[0][ic].sub_matrix(TSubMatrixDim<0,0,3,6>())
+			= -Xinv*d.J_vi_ve[0][ic].sub_matrix(TSubMatrixDim<0,0,3,6>());
+	}
+
+	for(int i = 1; i < nlink; i++){
+		for(int ic = 0; ic < nchain; ic++){
+			d.J_vi_ve[i][ic] += d.J_vi_v0[i].sub_matrix(TSubMatrixDim<0,0,6,3>())*d.J_vi_ve[0][ic].sub_matrix(TSubMatrixDim<0,0,3,6>());
 		}
 	}
 
-	for(int i = 0; i < nlink; i++){
-		mat3_t J_vi_v0_Xinv = data.J_vi_v0[i]*Xinv;
-		mat3_t J_wi_v0_Xinv = data.J_wi_v0[i]*Xinv;
-		for(int iend = 0; iend < nend; iend++){
-			data.J_vi_ve[iend][i] -= J_vi_v0_Xinv*data.J_vi_ve_sum[iend];
-			data.J_vi_we[iend][i] -= J_vi_v0_Xinv*data.J_vi_we_sum[iend];
-			data.J_wi_ve[iend][i] -= J_wi_v0_Xinv*data.J_vi_ve_sum[iend];
-			data.J_wi_we[iend][i] -= J_wi_v0_Xinv*data.J_vi_we_sum[iend];
-		}
+	for(int ic = 0; ic < nchain; ic++){
+		d.J_e_ve[ic] += d.J_e_v0.vsub_matrix(0,0,nlimit,3)*d.J_vi_ve[0][ic].sub_matrix(TSubMatrixDim<0,0,3,6>());
+	}	
+
+	for(int ic = 0; ic < nchain; ic++){
+		d.J_q_ve[ic] += d.J_q_v0.vsub_matrix(0,0,njoint,3)*d.J_vi_ve[0][ic].sub_matrix(TSubMatrixDim<0,0,3,6>());
 	}
-
-	vmat_t J_e_v0_Xinv = data.J_e_v0*Xinv;
-	for(int iend = 0; iend < nend; iend++){
-		data.J_e_ve[iend] -= J_e_v0_Xinv*data.J_vi_ve_sum[iend];
-		data.J_e_we[iend] -= J_e_v0_Xinv*data.J_vi_we_sum[iend];
-	}	
-
-	vmat_t J_q_v0_Xinv = data.J_q_v0*Xinv;
-	for(int iend = 0; iend < nend; iend++){
-		data.J_q_ve[iend] -= J_q_v0_Xinv*data.J_vi_ve_sum[iend];
-		data.J_q_we[iend] -= J_q_v0_Xinv*data.J_vi_we_sum[iend];
-	}	
-
 }
-*/	
+
 void Wholebody::CalcVelocity(WholebodyData& d){
 	int nlink = links.size();
 	int nend  = ends .size();

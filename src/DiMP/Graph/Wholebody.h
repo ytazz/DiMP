@@ -104,8 +104,7 @@ struct WholebodyData{
 	vector< mat6_t > J_vi_v0;           //< jacobian from base velocity to link velocity
 	vector< vector<mat6_t> > J_vi_ve;   //< jacobian from end pose to link pose
 	vector< vector<mat6_t> > J_fkik;
-	vector< mat36_t > J_vi_ve_sum;
-
+	
 	void Init        (Wholebody* wb);
 	void InitJacobian(Wholebody* wb);
 };
@@ -196,6 +195,7 @@ public:
 	struct Param {
 		real_t  total_mass;  ///< total mass of wholebody
 		real_t  gravity;
+		bool    analyticalJacobian;
 		
 		Param();
 	};
@@ -295,10 +295,14 @@ public:
 
 	void SetScaling();
 	void Setup();
-	void CalcIK                (WholebodyData& d, bool calc_jacobian);
+	void CalcIK                (WholebodyData& d, int ichain, bool calc_jacobian);
 	void CalcPosition          (WholebodyData& d);
-	void CalcJacobian          (WholebodyData& d);
-	//void CalcJacobian          (WholebodyData& d, vector<WholebodyData>& dtmp);
+	void CalcJacobian          (WholebodyData& d, vector<WholebodyData>& dtmp);
+	void CalcJacobianAnalytical(WholebodyData& d);
+	void CalcJacobianNumerical (WholebodyData& d, vector<WholebodyData>& dtmp);
+	void CalcJacobianNumerical2(WholebodyData& d, vector<WholebodyData>& dtmp);
+	void SaveJacobian          (WholebodyData& d);
+	void TransformJacobian     (WholebodyData& d);
 	void CalcVelocity          (WholebodyData& d);
 	void CalcAcceleration      (WholebodyData& d);
 	void CalcComAcceleration   (WholebodyData& d);

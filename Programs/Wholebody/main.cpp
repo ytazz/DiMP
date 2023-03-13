@@ -35,6 +35,7 @@ public:
 
 		graph->scale.Set(1.0, 1.0, 1.0);
 		wb   = new DiMP::Wholebody(graph, "wb");
+		wb->param.analyticalJacobian = true;
 		myik = new MyIK();
 		
 		wb->links .resize(MyIK::Link ::Num);

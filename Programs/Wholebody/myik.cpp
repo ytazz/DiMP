@@ -3,6 +3,7 @@
 #include <sbrollpitchyaw.h>
 
 const real_t pi = 3.1415926535;
+const real_t eps = 0.01;
 
 using namespace PTM;
 
@@ -152,13 +153,11 @@ void MyIK::CalcArmIK(const vec3_t& pos, const quat_t& ori, vvec_t& joint, vvec_t
         const vec3_t ex(1.0, 0.0, 0.0);
         const vec3_t ey(0.0, 1.0, 0.0);
         const vec3_t ez(0.0, 0.0, 1.0);
-        const real_t margin = 0.01;
-        const real_t eps    = 0.01;
     
         vec3_t J_d_p        = pos/pos.norm();
         real_t J_c_d        = -d/(l1*l2);
         vec3_t J_c_p        = J_c_d*J_d_p;
-        real_t J_beta_c     = (-1.0 + margin < c && c < 1.0 - margin) ? -1.0/sqrt(1.0 - c*c) : 0.0;
+        real_t J_beta_c     = (-1.0 + eps < c && c < 1.0 - eps) ? -1.0/sqrt(1.0 - c*c) : 0.0;
         real_t J_beta_d     = J_beta_c*J_c_d;
         vec3_t J_beta_p     = J_beta_d*J_d_p;
     
@@ -166,27 +165,27 @@ void MyIK::CalcArmIK(const vec3_t& pos, const quat_t& ori, vvec_t& joint, vvec_t
         Jq.row(3).v_range(0,3) = J_beta_p;
         Jq.row(3).v_range(3,3).clear();
 
-        vec3_t tmp = quat_t::Rot(joint[2], 'z')*vec3_t(-l2*cos(joint[3]), 0.0, l2*sin(joint[3]));
+        vec3_t tmp          = quat_t::Rot(joint[2], 'z')*vec3_t(-l2*cos(joint[3]), 0.0, l2*sin(joint[3]));
         mat3_t J_pd_p       = vvmat(tmp, Jq.row(3).v_range(0,3));
         //mat3_t J_pd_q       = vvmat(tmp, Jq.row(3).v_range(3,3));
 
         real_t tmp2         = (pos_local.y*pos_local.y + pos_local.z*pos_local.z);
-        real_t tmp3         = pow(tmp2, 1.5);
-        vec3_t J_c2_pd      = (tmp3 > eps) ? vec3_t(0.0, (pos_local.z*pos_local.z)/tmp3, (-pos_local.y*pos_local.z)/tmp3) : vec3_t();
-        real_t J_gamma_c2   = (-1.0 + margin < c2 && c2 < 1.0 - margin) ? -1.0/sqrt(1.0 - c2*c2) : 0.0;
-        vec3_t J_gamma_pd   = J_gamma_c2*J_c2_pd;
-        vec3_t J_alpha_pd   = (tmp2 > eps) ? vec3_t(0.0, -pos_local.z/tmp2, pos_local.y/tmp2) : vec3_t();;
+        real_t tmp3         = pow(pos.y*pos.y + pos.z*pos.z, 1.5);
+        vec3_t J_c2_p       = (tmp3 > eps) ? vec3_t(0.0, (pos.z*pos.z)/tmp3, (-pos.y*pos.z)/tmp3) : vec3_t();
+        real_t J_gamma_c2   = (-1.0 + eps < c2 && c2 < 1.0 - eps) ? -1.0/sqrt(1.0 - c2*c2) : 0.0;
+        vec3_t J_gamma_p    = J_gamma_c2*J_c2_p;
+        vec3_t J_alpha_pd   = (tmp2 > eps) ? vec3_t(0.0, -pos_local.z/tmp2, pos_local.y/tmp2) : vec3_t();
 
-        Jq.row(1).v_range(0,3) = J_pd_p.trans()*(-J_alpha_pd - J_gamma_pd);
+        Jq.row(1).v_range(0,3) = -J_pd_p.trans()*J_alpha_pd - J_gamma_p;
         Jq.row(1).v_range(3,3).clear();// = J_pd_q.trans()*(-J_alpha_pd - J_gamma_pd);
 
-        mat3_t J_pdd_pd     = mat3_t::Rot(joint[1], 'x') + vvmat(ex%pos_local2, -J_alpha_pd - J_gamma_pd);
-        mat3_t J_pdd_p      = J_pdd_pd*J_pd_p;
+        mat3_t J_pdd_p     = (mat3_t::Rot(joint[1], 'x') + vvmat(ex%pos_local2, -J_alpha_pd))*J_pd_p + vvmat(ex%pos_local2, -J_gamma_p);
+        //mat3_t J_pdd_p      = J_pdd_pd*J_pd_p;
         //mat3_t J_pdd_q      = J_pdd_pd*J_pd_q;
 
         real_t tmp4 = (pos.x*pos.x + pos.z*pos.z);
         real_t tmp5 = (pos_local2.x*pos_local2.x + pos_local2.z*pos_local2.z);
-        vec3_t tmp6 = (tmp4 > eps) ? vec3_t(pos.z/tmp4, 0.0, -pos.x/tmp4) : vec3_t();
+        vec3_t tmp6 = (tmp4 > eps) ? vec3_t(pos       .z/tmp4, 0.0, -pos       .x/tmp4) : vec3_t();
         vec3_t tmp7 = (tmp5 > eps) ? vec3_t(pos_local2.z/tmp5, 0.0, -pos_local2.x/tmp5) : vec3_t();
     
         Jq.row(0).v_range(0,3) = tmp6 - J_pdd_p.trans()*tmp7;
@@ -322,9 +321,7 @@ void MyIK::CalcLegIK(const vec3_t& pos, const quat_t& ori, vvec_t& joint, vvec_t
         const vec3_t ex(1.0, 0.0, 0.0);
         const vec3_t ey(0.0, 1.0, 0.0);
         const vec3_t ez(0.0, 0.0, 1.0);
-        const real_t margin = 0.01;
-        const real_t eps    = 0.01;
-    
+        
         mat3_t J_pd_p       = mat3_t::Rot(joint[0], 'z').trans();
         vec3_t J_pd_theta0  = pos % ez;
         mat3_t J_pd_q       = vvmat(J_pd_theta0, ez);
@@ -342,15 +339,15 @@ void MyIK::CalcLegIK(const vec3_t& pos, const quat_t& ori, vvec_t& joint, vvec_t
         vec3_t J_d_pdd      = (tmp3 > eps) ? vec3_t(pos_local2.x/tmp3, 0.0, pos_local2.z/tmp3) : vec3_t();
         real_t J_c_d        = -d/(l1*l2);
         vec3_t J_c_pdd      = J_c_d*J_d_pdd;
-        real_t J_s_d        = (-1.0 + margin < c && c < 1.0 - margin) ? (cos(beta)/(l1*sin(beta)) - (l2*sin(beta))/(d*d)) : 0.0;
+        real_t J_s_d        = (-1.0 + eps < c && c < 1.0 - eps) ? (cos(beta)/(l1*sin(beta)) - (l2*sin(beta))/(d*d)) : 0.0;
         vec3_t J_alpha_pdd  = (tmp2 > eps) ? vec3_t(pos_local2.z/tmp2, 0.0, pos_local2.x/tmp2) : vec3_t();
-        real_t J_beta_c     = (-1.0 + margin < c && c < 1.0 - margin) ? -1.0/sqrt(1.0 - c*c) : 0.0;
-        //c = std::min(std::max(-1.0 + margin, c), 1.0 - margin);
+        real_t J_beta_c     = (-1.0 + eps < c && c < 1.0 - eps) ? -1.0/sqrt(1.0 - c*c) : 0.0;
+        //c = std::min(std::max(-1.0 + eps, c), 1.0 - eps);
         //real_t J_beta_c     = -1.0/sqrt(1.0 - c*c);
         real_t J_beta_d     = J_beta_c*J_c_d;
         vec3_t J_beta_pdd   = J_beta_d*J_d_pdd;
-        real_t J_gamma_s    = (-1.0 + margin < s && s < 1.0 - margin) ?  1.0/sqrt(1.0 - s*s) : 0.0;
-        //s = std::min(std::max(-1.0 + margin, s), 1.0 - margin);
+        real_t J_gamma_s    = (-1.0 + eps < s && s < 1.0 - eps) ?  1.0/sqrt(1.0 - s*s) : 0.0;
+        //s = std::min(std::max(-1.0 + eps, s), 1.0 - eps);
         //real_t J_gamma_s    = 1.0/sqrt(1.0 - s*s);
         vec3_t J_gamma_pdd  = J_gamma_s*J_s_d*J_d_pdd;
 
