@@ -28,6 +28,9 @@ bool Config::Set(Canvas* canvas, int attr, Node* node){
 	else if(attr == Item::BipedTorso      ){ c = "blue"   ; lw = 2.0f; }
 	else if(attr == Item::BipedFoot       ){ c = "black"  ; lw = 1.0f; }
 	else if(attr == Item::BipedFootCop    ){ c = "magenta"; lw = 1.0f; }
+    else if(attr == Item::BipedCaptIcp    ){ c = "blue"   ; lw = 1.0f; ps = 3.0f;}
+    else if(attr == Item::BipedCaptCop    ){ c = "magenta"; ps = 3.0f; }
+	else if(attr == Item::BipedCaptSup    ){ c = "black"  ; lw = 1.0f; }
 	else if(attr == Item::CentroidPos     ){ c = "black"  ; lw = 3.0f; }
 	else if(attr == Item::CentroidEnd     ){ c = "black"  ; lw = 0.5f; }
 	else if(attr == Item::CentroidEndTraj ){ c = "black"  ; lw = 1.5f; }
@@ -38,6 +41,7 @@ bool Config::Set(Canvas* canvas, int attr, Node* node){
 	canvas->SetLineColor(c, 0);
 	canvas->SetLineColor(c, 1);
 	canvas->SetFillColor(c);
+	canvas->SetPointColor(c);
 	canvas->SetPointSize(ps);
 	canvas->SetLineWidth(lw);
 	

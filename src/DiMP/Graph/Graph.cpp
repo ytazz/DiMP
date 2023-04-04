@@ -39,6 +39,13 @@ const char* VarNames[] = {
 	"biped_foot_vel_r"  ,
 	"biped_foot_cop_pos",
 	"biped_foot_cop_vel",
+	"biped_capt_sup_t"   ,
+	"biped_capt_sup_r"   ,
+	"biped_capt_icp"     ,
+	"biped_capt_land_t"  ,
+	"biped_capt_land_r"  ,
+	"biped_capt_cop"     ,
+	"biped_capt_duration",	
 	"centroid_pos_t"    ,
 	"centroid_pos_r"    ,
 	"centroid_vel_t"    ,
@@ -107,6 +114,14 @@ const char* ConNames[] = {
 	"biped_com_v"         ,
 	"biped_duration_range",
 	"biped_time"          ,
+	"biped_capt_icp"         ,
+	"biped_capt_sup_t"       ,
+	"biped_capt_sup_r"       ,
+	"biped_capt_duration"    ,
+	"biped_capt_land_range_t",
+	"biped_capt_land_range_r",
+	"biped_capt_cop_range"   ,
+	"biped_capt_icp_range"   ,	
 	"centroid_pos_t"      ,
 	"centroid_pos_r"      ,
 	"centroid_vel_t"      ,
@@ -224,6 +239,7 @@ void Graph::Clear(){
 	objects    .clear();
 	cons       .clear();
 	bipeds     .clear();
+	bipedCapts .clear();
 	runners    .clear();
 	centroids  .clear();
 	wholebodies.clear();
@@ -247,6 +263,7 @@ void Graph::Prepare(){
 	objects    .Prepare();
 	cons       .Prepare();
 	bipeds     .Prepare();
+	bipedCapts .Prepare();
 	runners    .Prepare();
 	centroids  .Prepare();
 	wholebodies.Prepare();
@@ -266,6 +283,7 @@ void Graph::PrepareStep(){
 	objects    .PrepareStep();
 	cons       .PrepareStep();
 	bipeds     .PrepareStep();
+	bipedCapts .PrepareStep();
 	runners    .PrepareStep();
 	centroids  .PrepareStep();
 	wholebodies.PrepareStep();

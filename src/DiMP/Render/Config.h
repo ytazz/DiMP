@@ -28,6 +28,9 @@ struct Item{
 		BipedFoot,          ///< biped swing foot trajectory
 		BipedFootCop,
 		BipedTorso,         ///< biped torso trajectory
+		BipedCaptIcp,
+		BipedCaptCop,
+		BipedCaptSup,
 		CentroidPos,
 		CentroidEnd,
 		CentroidEndTraj,
