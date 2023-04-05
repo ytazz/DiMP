@@ -31,6 +31,7 @@ struct Item{
 		BipedCaptIcp,
 		BipedCaptCop,
 		BipedCaptSup,
+		BipedCaptSwg,
 		CentroidPos,
 		CentroidEnd,
 		CentroidEndTraj,

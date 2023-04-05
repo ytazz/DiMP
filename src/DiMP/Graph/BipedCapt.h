@@ -12,6 +12,8 @@ namespace DiMP {;
 struct BipedCaptIcpCon;
 struct BipedCaptSupConT;
 struct BipedCaptSupConR;
+struct BipedCaptSwgConT;
+struct BipedCaptSwgConR;
 struct BipedCaptDurationCon;
 struct BipedCaptLandRangeConT;
 struct BipedCaptLandRangeConR;
@@ -23,6 +25,8 @@ public:
 	int         side;          ///< 0: right support  1: left support
 	V3Var*      var_sup_t;
 	SVar*       var_sup_r;
+	V3Var*      var_swg_t;
+	SVar*       var_swg_r;
 	V3Var*		var_icp;
 	
 	V3Var*      var_land_t;
@@ -33,6 +37,8 @@ public:
 	BipedCaptIcpCon*   con_icp;    ///< icp transition
 	BipedCaptSupConT*  con_sup_t;  ///< support foot transition
 	BipedCaptSupConR*  con_sup_r;  ///< support foot transition
+	BipedCaptSwgConT*  con_swg_t;  ///< swing foot transition
+	BipedCaptSwgConR*  con_swg_r;  ///< swing foot transition
 
 	BipedCaptDurationCon*    con_duration;
 	BipedCaptLandRangeConT*  con_land_range_t[4];
@@ -55,13 +61,15 @@ public:
 	struct Step{
 		vec3_t  sup_t;
 		real_t  sup_r;
+		vec3_t  swg_t;
+		real_t  swg_r;
 		vec3_t  icp;
 		vec3_t  cop;
 		real_t  duration;
 		int     side;
 
 		Step(){}
-		Step(vec3_t _sup_t, real_t _sup_r, vec3_t _icp, vec3_t _cop, real_t _duration, int _side);
+		Step(vec3_t _sup_t, real_t _sup_r, vec3_t _swg_t, real_t _swg_r, vec3_t _icp, vec3_t _cop, real_t _duration, int _side);
 	};
 
 	struct Param {
@@ -89,6 +97,8 @@ public:
 		vec3_t  cop;
 		vec3_t  sup_t;
 		real_t  sup_r;
+		vec3_t  swg_t;
+		real_t  swg_r;
 			
 		Snapshot();
 	};
@@ -151,6 +161,30 @@ struct BipedCaptSupConR : Constraint {
 	virtual void CalcLhs();
 
 	BipedCaptSupConR(Solver* solver, string _name, BipedCaptKey* _obj, real_t _scale);
+};
+
+struct BipedCaptSwgConT : Constraint {
+	BipedCaptKey* obj[2];
+
+	void Prepare();
+
+	virtual void CalcCoef();
+	virtual void CalcDeviation();
+	virtual void CalcLhs();
+
+	BipedCaptSwgConT(Solver* solver, string _name, BipedCaptKey* _obj, real_t _scale);
+};
+
+struct BipedCaptSwgConR : Constraint {
+	BipedCaptKey* obj[2];
+
+	void Prepare();
+
+	virtual void CalcCoef();
+	virtual void CalcDeviation();
+	virtual void CalcLhs();
+
+	BipedCaptSwgConR(Solver* solver, string _name, BipedCaptKey* _obj, real_t _scale);
 };
 
 struct BipedCaptDurationCon : Constraint {

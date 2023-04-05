@@ -38,12 +38,12 @@ public:
 			new DiMP::Tick(graph, 0.0, "");
 
 		biped->param.steps.resize(N+1);
-		biped->param.steps[0] = DiMP::BipedCapt::Step(vec3_t(0.0, -0.1, 0.0), 0.0, vec3_t(0.0, -0.1, 0.0), vec3_t(0.0, -0.1, 0.0), 0.5, 0);
-		biped->param.steps[1] = DiMP::BipedCapt::Step(vec3_t(0.1,  0.1, 0.0), 0.0, vec3_t(0.1,  0.1, 0.0), vec3_t(0.1,  0.1, 0.0), 0.5, 1);
-		biped->param.steps[2] = DiMP::BipedCapt::Step(vec3_t(0.2, -0.1, 0.0), 0.0, vec3_t(0.2, -0.1, 0.0), vec3_t(0.2, -0.1, 0.0), 0.5, 0);
-		biped->param.steps[3] = DiMP::BipedCapt::Step(vec3_t(0.3,  0.1, 0.0), 0.0, vec3_t(0.3,  0.1, 0.0), vec3_t(0.3,  0.1, 0.0), 0.5, 1);
-		biped->param.steps[4] = DiMP::BipedCapt::Step(vec3_t(0.4, -0.1, 0.0), 0.0, vec3_t(0.4, -0.1, 0.0), vec3_t(0.4, -0.1, 0.0), 0.5, 0);
-		biped->param.steps[5] = DiMP::BipedCapt::Step(vec3_t(0.5,  0.1, 0.0), 0.0, vec3_t(0.5,  0.1, 0.0), vec3_t(0.5,  0.1, 0.0), 0.5, 1);
+		biped->param.steps[0] = DiMP::BipedCapt::Step(vec3_t(0.0, -0.1, 0.0), 0.0, vec3_t(0.0,  0.1, 0.0), 0.0, vec3_t(0.0, -0.1, 0.0), vec3_t(0.0, -0.1, 0.0), 0.5, 0);
+		biped->param.steps[1] = DiMP::BipedCapt::Step(vec3_t(0.1,  0.1, 0.0), 0.0, vec3_t(0.0, -0.1, 0.0), 0.0, vec3_t(0.1,  0.1, 0.0), vec3_t(0.1,  0.1, 0.0), 0.5, 1);
+		biped->param.steps[2] = DiMP::BipedCapt::Step(vec3_t(0.2, -0.1, 0.0), 0.0, vec3_t(0.1,  0.1, 0.0), 0.0, vec3_t(0.2, -0.1, 0.0), vec3_t(0.2, -0.1, 0.0), 0.5, 0);
+		biped->param.steps[3] = DiMP::BipedCapt::Step(vec3_t(0.3,  0.1, 0.0), 0.0, vec3_t(0.2, -0.1, 0.0), 0.0, vec3_t(0.3,  0.1, 0.0), vec3_t(0.3,  0.1, 0.0), 0.5, 1);
+		biped->param.steps[4] = DiMP::BipedCapt::Step(vec3_t(0.4, -0.1, 0.0), 0.0, vec3_t(0.3,  0.1, 0.0), 0.0, vec3_t(0.4, -0.1, 0.0), vec3_t(0.4, -0.1, 0.0), 0.5, 0);
+		biped->param.steps[5] = DiMP::BipedCapt::Step(vec3_t(0.5,  0.1, 0.0), 0.0, vec3_t(0.4, -0.1, 0.0), 0.0, vec3_t(0.5,  0.1, 0.0), vec3_t(0.5,  0.1, 0.0), 0.5, 1);
 
 		biped->param.steps[0].icp = vec3_t(0.0, -0.15, 0.0);
 		

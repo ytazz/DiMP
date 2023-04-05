@@ -30,13 +30,19 @@ void BipedCaptKey::AddVar(Solver* solver) {
 	// support foot position
 	var_sup_t = new V3Var(solver, ID(VarTag::BipedCaptSupT, node, tick, name + "_sup_t"), node->graph->scale.pos_t);
 	var_sup_r = new SVar (solver, ID(VarTag::BipedCaptSupR, node, tick, name + "_sup_r"), node->graph->scale.pos_r);
+	var_swg_t = new V3Var(solver, ID(VarTag::BipedCaptSwgT, node, tick, name + "_swg_t"), node->graph->scale.pos_t);
+	var_swg_r = new SVar (solver, ID(VarTag::BipedCaptSwgR, node, tick, name + "_swg_r"), node->graph->scale.pos_r);
 	var_icp   = new V3Var(solver, ID(VarTag::BipedCaptIcp , node, tick, name + "_icp"  ), node->graph->scale.pos_t);
 	var_sup_t->weight    = damping*one;
 	var_sup_r->weight[0] = damping;
+	var_swg_t->weight    = damping*one;
+	var_swg_r->weight[0] = damping;
 	var_icp  ->weight    = damping*one;
 	
 	solver->AddStateVar(var_sup_t, tick->idx);
 	solver->AddStateVar(var_sup_r, tick->idx);
+	solver->AddStateVar(var_swg_t, tick->idx);
+	solver->AddStateVar(var_swg_r, tick->idx);
 	solver->AddStateVar(var_icp  , tick->idx);
 	
 	if(next){
@@ -62,13 +68,17 @@ void BipedCaptKey::AddCon(Solver* solver) {
 	BipedCaptKey* nextObj = (BipedCaptKey*)next;
 
 	if (next) {
-		con_icp   = new BipedCaptIcpCon (solver, name + "_icp", this, node->graph->scale.pos_t);
 		con_sup_t = new BipedCaptSupConT(solver, name + "_sup", this, node->graph->scale.pos_t);
 		con_sup_r = new BipedCaptSupConR(solver, name + "_sup", this, node->graph->scale.pos_r);
-		solver->AddTransitionCon(con_icp  , tick->idx);
+		con_swg_t = new BipedCaptSwgConT(solver, name + "_sup", this, node->graph->scale.pos_t);
+		con_swg_r = new BipedCaptSwgConR(solver, name + "_sup", this, node->graph->scale.pos_r);
+		con_icp   = new BipedCaptIcpCon (solver, name + "_icp", this, node->graph->scale.pos_t);
 		solver->AddTransitionCon(con_sup_t, tick->idx);
 		solver->AddTransitionCon(con_sup_r, tick->idx);
-
+		solver->AddTransitionCon(con_swg_t, tick->idx);
+		solver->AddTransitionCon(con_swg_r, tick->idx);
+		solver->AddTransitionCon(con_icp  , tick->idx);
+		
 		con_duration        = new BipedCaptDurationCon  (solver, name + "_duration"     , this, node->graph->scale.time);
 		con_land_range_t[0] = new BipedCaptLandRangeConT(solver, name + "_land_range_t0", this, vec3_t( 1.0,  0.0, 0.0),  obj->param.landPosMin[!side].x, node->graph->scale.pos_t);
 		con_land_range_t[1] = new BipedCaptLandRangeConT(solver, name + "_land_range_t1", this, vec3_t(-1.0,  0.0, 0.0), -obj->param.landPosMax[!side].x, node->graph->scale.pos_t);
@@ -141,6 +151,19 @@ void BipedCaptKey::Draw(Render::Canvas* canvas, Render::Config* conf) {
 		canvas->Line(Vec3f(cmax.x, cmin.y, 0.0f), Vec3f(cmax.x, cmax.y, 0.0f));
 		canvas->Pop();
 	}
+	if (conf->Set(canvas, Render::Item::BipedCaptSwg, node)) {		
+		// foot print
+		Vec3f cmin = obj->param.copMin;
+		Vec3f cmax = obj->param.copMax;
+		canvas->Push();
+		canvas->Translate((float)var_swg_t->val.x, (float)var_swg_t->val.y, 0.0f);
+		canvas->Rotate((float)var_swg_r->val, Vec3f(0.0f, 0.0f, 1.0f));
+		canvas->Line(Vec3f(cmax.x, cmax.y, 0.0f), Vec3f(cmin.x, cmax.y, 0.0f));
+		canvas->Line(Vec3f(cmin.x, cmax.y, 0.0f), Vec3f(cmin.x, cmin.y, 0.0f));
+		canvas->Line(Vec3f(cmin.x, cmin.y, 0.0f), Vec3f(cmax.x, cmin.y, 0.0f));
+		canvas->Line(Vec3f(cmax.x, cmin.y, 0.0f), Vec3f(cmax.x, cmax.y, 0.0f));
+		canvas->Pop();
+	}
 
 }
 
@@ -166,9 +189,11 @@ BipedCapt::Param::Param() {
 	copMax = vec3_t( 0.1,  0.05, 0.0);
 }
 
-BipedCapt::Step::Step(vec3_t _sup_t, real_t _sup_r, vec3_t _icp, vec3_t _cop, real_t _duration, int _side){
+BipedCapt::Step::Step(vec3_t _sup_t, real_t _sup_r, vec3_t _swg_t, real_t _swg_r, vec3_t _icp, vec3_t _cop, real_t _duration, int _side){
 	sup_t    = _sup_t;
 	sup_r    = _sup_r;
+	swg_t    = _swg_t;
+	swg_r    = _swg_r;
 	icp      = _icp;
 	cop      = _cop;
 	duration = _duration;
@@ -202,6 +227,8 @@ void BipedCapt::Init() {
 
 		key->var_sup_t->val = param.steps[k].sup_t;
 		key->var_sup_r->val = param.steps[k].sup_r;
+		key->var_swg_t->val = param.steps[k].swg_t;
+		key->var_swg_r->val = param.steps[k].swg_r;
 		key->var_icp  ->val = param.steps[k].icp;
 
 		if(key->next){
@@ -215,6 +242,8 @@ void BipedCapt::Init() {
 		if(!key->prev){
 			key->var_sup_t->locked = true;
 			key->var_sup_r->locked = true;
+			key->var_swg_t->locked = true;
+			key->var_swg_r->locked = true;
 			key->var_icp  ->locked = true;
 		}
 	}
@@ -342,12 +371,30 @@ BipedCaptSupConR::BipedCaptSupConR(Solver* solver, string _name, BipedCaptKey* _
 	AddSLink(obj[0]->var_land_r);
 }
 
+BipedCaptSwgConT::BipedCaptSwgConT(Solver* solver, string _name, BipedCaptKey* _obj, real_t _scale) :
+	Constraint(solver, 3, ID(ConTag::BipedCaptSwgT, _obj->node, _obj->tick, _name), Constraint::Type::Equality, _scale) {
+	obj[0] = _obj;
+	obj[1] = (_obj->next ? (BipedCaptKey*)_obj->next : 0);
+
+	AddSLink(obj[1]->var_swg_t );
+	AddSLink(obj[0]->var_sup_t);
+}
+
+BipedCaptSwgConR::BipedCaptSwgConR(Solver* solver, string _name, BipedCaptKey* _obj, real_t _scale) :
+	Constraint(solver, 1, ID(ConTag::BipedCaptSwgR, _obj->node, _obj->tick, _name), Constraint::Type::Equality, _scale) {
+	obj[0] = _obj;
+	obj[1] = (_obj->next ? (BipedCaptKey*)_obj->next : 0);
+
+	AddSLink(obj[1]->var_swg_r );
+	AddSLink(obj[0]->var_sup_r);
+}
+
 BipedCaptDurationCon::BipedCaptDurationCon(Solver* solver, string _name, BipedCaptKey* _obj, real_t _scale) :
 	Constraint(solver, 1, ID(ConTag::BipedCaptDuration, _obj->node, _obj->tick, _name), Constraint::Type::InequalityPenalty, _scale) {
 	obj = _obj;
 
-	AddR3Link(obj->var_sup_t   );
-	AddSLink (obj->var_sup_r   );
+	AddR3Link(obj->var_swg_t   );
+	AddSLink (obj->var_swg_r   );
 	AddR3Link(obj->var_land_t  );
 	AddSLink (obj->var_land_r  );
 	AddSLink (obj->var_duration);
@@ -417,6 +464,16 @@ void BipedCaptSupConR::CalcLhs() {
 	obj[1]->var_sup_r->val = obj[0]->var_land_r->val;
 }
 
+void BipedCaptSwgConT::CalcLhs() {
+	Prepare();
+	obj[1]->var_swg_t->val = obj[0]->var_sup_t->val;
+}
+
+void BipedCaptSwgConR::CalcLhs() {
+	Prepare();
+	obj[1]->var_swg_r->val = obj[0]->var_swg_r->val;
+}
+
 //-------------------------------------------------------------------------------------------------
 
 void BipedCaptIcpCon::Prepare(){
@@ -431,16 +488,20 @@ void BipedCaptIcpCon::Prepare(){
 }
 
 void BipedCaptSupConT::Prepare(){
-
 }
 
 void BipedCaptSupConR::Prepare(){
+}
 
+void BipedCaptSwgConT::Prepare(){
+}
+
+void BipedCaptSwgConR::Prepare(){
 }
 
 void BipedCaptDurationCon::Prepare(){
-	dp  = obj->var_land_t->val - obj->var_sup_t->val;
-	dr  = obj->var_land_r->val - obj->var_sup_r->val;
+	dp  = obj->var_land_t->val - obj->var_swg_t->val;
+	dr  = obj->var_land_r->val - obj->var_swg_r->val;
 
 	dpnorm = dp.norm();
 	drabs  = std::abs(dr);
@@ -526,6 +587,20 @@ void BipedCaptSupConR::CalcCoef() {
 	((SLink*)links[1])->SetCoef(-1.0);
 }
 
+void BipedCaptSwgConT::CalcCoef() {
+	Prepare();
+
+	((SLink*)links[0])->SetCoef( 1.0);
+	((SLink*)links[1])->SetCoef(-1.0);
+}
+
+void BipedCaptSwgConR::CalcCoef() {
+	Prepare();
+
+	((SLink*)links[0])->SetCoef( 1.0);
+	((SLink*)links[1])->SetCoef(-1.0);
+}
+
 void BipedCaptDurationCon::CalcCoef(){
 	Prepare();
 
@@ -582,6 +657,14 @@ void BipedCaptSupConT::CalcDeviation() {
 
 void BipedCaptSupConR::CalcDeviation() {
 	y[0] = obj[1]->var_sup_r->val - obj[0]->var_land_r->val;
+}
+
+void BipedCaptSwgConT::CalcDeviation() {
+	y = obj[1]->var_swg_t->val - obj[0]->var_sup_t->val;
+}
+
+void BipedCaptSwgConR::CalcDeviation() {
+	y[0] = obj[1]->var_swg_r->val - obj[0]->var_sup_r->val;
 }
 
 void BipedCaptDurationCon::CalcDeviation(){
