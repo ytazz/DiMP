@@ -15,6 +15,7 @@ struct BipedCaptSupConR;
 struct BipedCaptSwgConT;
 struct BipedCaptSwgConR;
 struct BipedCaptDurationCon;
+struct BipedCaptDesCopCon;
 struct BipedCaptLandRangeConT;
 struct BipedCaptLandRangeConR;
 struct BipedCaptCopRangeCon;
@@ -40,7 +41,14 @@ public:
 	BipedCaptSwgConT*  con_swg_t;  ///< swing foot transition
 	BipedCaptSwgConR*  con_swg_r;  ///< swing foot transition
 
+	FixConV3*          con_des_icp;
+	FixConV3*          con_des_sup_t;
+	FixConS *          con_des_sup_r;
+	FixConV3*          con_des_swg_t;
+	FixConS *          con_des_swg_r;
+
 	BipedCaptDurationCon*    con_duration;
+	BipedCaptDesCopCon*      con_des_cop;
 	BipedCaptLandRangeConT*  con_land_range_t[4];
 	BipedCaptLandRangeConR*  con_land_range_r[2];
 	BipedCaptCopRangeCon*    con_cop_range[4];
@@ -67,9 +75,10 @@ public:
 		vec3_t  cop;
 		real_t  duration;
 		int     side;
+		bool    stepping;
 
 		Step(){}
-		Step(vec3_t _sup_t, real_t _sup_r, vec3_t _swg_t, real_t _swg_r, vec3_t _icp, vec3_t _cop, real_t _duration, int _side);
+		Step(vec3_t _sup_t, real_t _sup_r, vec3_t _swg_t, real_t _swg_r, vec3_t _icp, vec3_t _cop, real_t _duration, int _side, bool _stepping);
 	};
 
 	struct Param {
@@ -78,10 +87,12 @@ public:
 		real_t  comHeight;
 		vec3_t	landPosMin[2];          ///< admissible range of foot relative to torso
 		vec3_t  landPosMax[2];
-		real_t  landOriMin;
-		real_t  landOriMax;
-		vec3_t  copMin;           ///< admissible range of CoP relative to foot
-		vec3_t  copMax;
+		real_t  landOriMin[2];
+		real_t  landOriMax[2];
+		vec3_t  copMin[2];           ///< admissible range of CoP relative to foot
+		vec3_t  copMax[2];
+		vec3_t  copMinDsp[2];
+		vec3_t  copMaxDsp[2];
 		real_t  vmax;
 		real_t  wmax;
 		real_t  tau_const;
@@ -116,6 +127,7 @@ public:
 	virtual void        DrawSnapshot  (Render::Canvas* canvas, Render::Config* conf);
 	virtual void        Draw          (Render::Canvas* canvas, Render::Config* conf);
 		
+	void Reset();
 	void CreateSnapshot(real_t t, Snapshot& s);
 	void CalcTrajectory();
 
@@ -141,6 +153,7 @@ struct BipedCaptIcpCon : Constraint {
 
 struct BipedCaptSupConT : Constraint {
 	BipedCaptKey* obj[2];
+	bool stepping;
 
 	void Prepare();
 
@@ -153,6 +166,7 @@ struct BipedCaptSupConT : Constraint {
 
 struct BipedCaptSupConR : Constraint {
 	BipedCaptKey* obj[2];
+	bool stepping;
 
 	void Prepare();
 
@@ -205,6 +219,17 @@ struct BipedCaptDurationCon : Constraint {
 	BipedCaptDurationCon(Solver* solver, string _name, BipedCaptKey* _obj, real_t _scale);
 };
 
+struct BipedCaptDesCopCon : Constraint {
+	BipedCaptKey* obj;
+
+	void Prepare();
+
+	virtual void CalcCoef();
+	virtual void CalcDeviation();
+	
+	BipedCaptDesCopCon(Solver* solver, string _name, BipedCaptKey* _obj, real_t _scale);
+};
+
 struct BipedCaptLandRangeConT : Constraint {
 	BipedCaptKey* obj;
 
@@ -217,7 +242,7 @@ struct BipedCaptLandRangeConT : Constraint {
 	virtual void CalcCoef();
 	virtual void CalcDeviation();
 	
-	BipedCaptLandRangeConT(Solver* solver, string _name, BipedCaptKey* _obj, vec3_t _dir, real_t _lim, real_t _scale);
+	BipedCaptLandRangeConT(Solver* solver, string _name, BipedCaptKey* _obj, vec3_t _dir, real_t _scale);
 };
 
 struct BipedCaptLandRangeConR : Constraint {
@@ -231,7 +256,7 @@ struct BipedCaptLandRangeConR : Constraint {
 	virtual void CalcCoef();
 	virtual void CalcDeviation();
 	
-	BipedCaptLandRangeConR(Solver* solver, string _name, BipedCaptKey* _obj, real_t _dir, real_t _lim, real_t _scale);
+	BipedCaptLandRangeConR(Solver* solver, string _name, BipedCaptKey* _obj, real_t _dir, real_t _scale);
 };
 
 struct BipedCaptCopRangeCon : Constraint {
@@ -246,7 +271,7 @@ struct BipedCaptCopRangeCon : Constraint {
 	virtual void CalcCoef();
 	virtual void CalcDeviation();
 	
-	BipedCaptCopRangeCon(Solver* solver, string _name, BipedCaptKey* _obj, vec3_t _dir, real_t _lim, real_t _scale);
+	BipedCaptCopRangeCon(Solver* solver, string _name, BipedCaptKey* _obj, vec3_t _dir, real_t _scale);
 };
 
 struct BipedCaptIcpRangeCon : Constraint {
@@ -261,7 +286,7 @@ struct BipedCaptIcpRangeCon : Constraint {
 	virtual void CalcCoef();
 	virtual void CalcDeviation();
 	
-	BipedCaptIcpRangeCon(Solver* solver, string _name, BipedCaptKey* _obj, vec3_t _dir, real_t _lim, real_t _scale);
+	BipedCaptIcpRangeCon(Solver* solver, string _name, BipedCaptKey* _obj, vec3_t _dir, real_t _scale);
 };
 
 }

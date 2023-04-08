@@ -121,6 +121,7 @@ const char* ConNames[] = {
 	"biped_capt_swg_t"       ,
 	"biped_capt_swg_r"       ,
 	"biped_capt_icp"         ,
+	"biped_capt_cop"         ,
 	"biped_capt_duration"    ,
 	"biped_capt_land_range_t",
 	"biped_capt_land_range_r",

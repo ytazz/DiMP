@@ -10,7 +10,7 @@ namespace DiMP {;
 const real_t  eps     = 1.0e-10;
 const real_t   pi     = M_PI;
 const real_t _2pi     = 2.0*pi;
-const real_t  damping = 0.001;
+const real_t  damping = 0.1;
 const vec3_t one(1.0, 1.0, 1.0);
 
 //-------------------------------------------------------------------------------------------------
@@ -68,11 +68,11 @@ void BipedCaptKey::AddCon(Solver* solver) {
 	BipedCaptKey* nextObj = (BipedCaptKey*)next;
 
 	if (next) {
-		con_sup_t = new BipedCaptSupConT(solver, name + "_sup", this, node->graph->scale.pos_t);
-		con_sup_r = new BipedCaptSupConR(solver, name + "_sup", this, node->graph->scale.pos_r);
-		con_swg_t = new BipedCaptSwgConT(solver, name + "_sup", this, node->graph->scale.pos_t);
-		con_swg_r = new BipedCaptSwgConR(solver, name + "_sup", this, node->graph->scale.pos_r);
-		con_icp   = new BipedCaptIcpCon (solver, name + "_icp", this, node->graph->scale.pos_t);
+		con_sup_t = new BipedCaptSupConT(solver, name + "_sup_t", this, node->graph->scale.pos_t);
+		con_sup_r = new BipedCaptSupConR(solver, name + "_sup_r", this, node->graph->scale.pos_r);
+		con_swg_t = new BipedCaptSwgConT(solver, name + "_swg_t", this, node->graph->scale.pos_t);
+		con_swg_r = new BipedCaptSwgConR(solver, name + "_swg_r", this, node->graph->scale.pos_r);
+		con_icp   = new BipedCaptIcpCon (solver, name + "_icp"  , this, node->graph->scale.pos_t);
 		solver->AddTransitionCon(con_sup_t, tick->idx);
 		solver->AddTransitionCon(con_sup_r, tick->idx);
 		solver->AddTransitionCon(con_swg_t, tick->idx);
@@ -80,18 +80,20 @@ void BipedCaptKey::AddCon(Solver* solver) {
 		solver->AddTransitionCon(con_icp  , tick->idx);
 		
 		con_duration        = new BipedCaptDurationCon  (solver, name + "_duration"     , this, node->graph->scale.time);
-		con_land_range_t[0] = new BipedCaptLandRangeConT(solver, name + "_land_range_t0", this, vec3_t( 1.0,  0.0, 0.0),  obj->param.landPosMin[!side].x, node->graph->scale.pos_t);
-		con_land_range_t[1] = new BipedCaptLandRangeConT(solver, name + "_land_range_t1", this, vec3_t(-1.0,  0.0, 0.0), -obj->param.landPosMax[!side].x, node->graph->scale.pos_t);
-		con_land_range_t[2] = new BipedCaptLandRangeConT(solver, name + "_land_range_t2", this, vec3_t( 0.0,  1.0, 0.0),  obj->param.landPosMin[!side].y, node->graph->scale.pos_t);
-		con_land_range_t[3] = new BipedCaptLandRangeConT(solver, name + "_land_range_t3", this, vec3_t( 0.0, -1.0, 0.0), -obj->param.landPosMax[!side].y, node->graph->scale.pos_t);
-		con_land_range_r[0] = new BipedCaptLandRangeConR(solver, name + "_land_range_r0", this,  1.0,  obj->param.landOriMin, node->graph->scale.pos_r);
-		con_land_range_r[1] = new BipedCaptLandRangeConR(solver, name + "_land_range_r1", this, -1.0, -obj->param.landOriMax, node->graph->scale.pos_r);
-		con_cop_range   [0] = new BipedCaptCopRangeCon  (solver, name + "_cop_range0", this, vec3_t( 1.0,  0.0, 0.0),  obj->param.copMin.x, node->graph->scale.pos_t);
-		con_cop_range   [1] = new BipedCaptCopRangeCon  (solver, name + "_cop_range1", this, vec3_t(-1.0,  0.0, 0.0), -obj->param.copMax.x, node->graph->scale.pos_t);
-		con_cop_range   [2] = new BipedCaptCopRangeCon  (solver, name + "_cop_range2", this, vec3_t( 0.0,  1.0, 0.0),  obj->param.copMin.y, node->graph->scale.pos_t);
-		con_cop_range   [3] = new BipedCaptCopRangeCon  (solver, name + "_cop_range3", this, vec3_t( 0.0, -1.0, 0.0), -obj->param.copMax.y, node->graph->scale.pos_t);
+		con_des_cop         = new BipedCaptDesCopCon    (solver, name + "_des_cop"      , this, node->graph->scale.pos_t);
+		con_land_range_t[0] = new BipedCaptLandRangeConT(solver, name + "_land_range_t0", this, vec3_t( 1.0,  0.0, 0.0), node->graph->scale.pos_t);
+		con_land_range_t[1] = new BipedCaptLandRangeConT(solver, name + "_land_range_t1", this, vec3_t(-1.0,  0.0, 0.0), node->graph->scale.pos_t);
+		con_land_range_t[2] = new BipedCaptLandRangeConT(solver, name + "_land_range_t2", this, vec3_t( 0.0,  1.0, 0.0), node->graph->scale.pos_t);
+		con_land_range_t[3] = new BipedCaptLandRangeConT(solver, name + "_land_range_t3", this, vec3_t( 0.0, -1.0, 0.0), node->graph->scale.pos_t);
+		con_land_range_r[0] = new BipedCaptLandRangeConR(solver, name + "_land_range_r0", this,  1.0, node->graph->scale.pos_r);
+		con_land_range_r[1] = new BipedCaptLandRangeConR(solver, name + "_land_range_r1", this, -1.0, node->graph->scale.pos_r);
+		con_cop_range   [0] = new BipedCaptCopRangeCon  (solver, name + "_cop_range0", this, vec3_t( 1.0,  0.0, 0.0), node->graph->scale.pos_t);
+		con_cop_range   [1] = new BipedCaptCopRangeCon  (solver, name + "_cop_range1", this, vec3_t(-1.0,  0.0, 0.0), node->graph->scale.pos_t);
+		con_cop_range   [2] = new BipedCaptCopRangeCon  (solver, name + "_cop_range2", this, vec3_t( 0.0,  1.0, 0.0), node->graph->scale.pos_t);
+		con_cop_range   [3] = new BipedCaptCopRangeCon  (solver, name + "_cop_range3", this, vec3_t( 0.0, -1.0, 0.0), node->graph->scale.pos_t);
 
 		solver->AddCostCon(con_duration, tick->idx);
+		solver->AddCostCon(con_des_cop , tick->idx);
 		for(int i = 0; i < 4; i++)
 			solver->AddCostCon(con_land_range_t[i], tick->idx);
 		for(int i = 0; i < 2; i++)
@@ -100,13 +102,24 @@ void BipedCaptKey::AddCon(Solver* solver) {
 			solver->AddCostCon(con_cop_range[i], tick->idx);
 	}
 	else{
-		con_icp_range[0] = new BipedCaptIcpRangeCon(solver, name + "_icp_range0", this, vec3_t( 1.0,  0.0, 0.0), obj->param.copMin.x, node->graph->scale.pos_t);
-		con_icp_range[1] = new BipedCaptIcpRangeCon(solver, name + "_icp_range1", this, vec3_t(-1.0,  0.0, 0.0), obj->param.copMax.x, node->graph->scale.pos_t);
-		con_icp_range[2] = new BipedCaptIcpRangeCon(solver, name + "_icp_range2", this, vec3_t( 0.0,  1.0, 0.0), obj->param.copMin.y, node->graph->scale.pos_t);
-		con_icp_range[3] = new BipedCaptIcpRangeCon(solver, name + "_icp_range3", this, vec3_t( 0.0, -1.0, 0.0), obj->param.copMax.y, node->graph->scale.pos_t);
+		con_icp_range[0] = new BipedCaptIcpRangeCon(solver, name + "_icp_range0", this, vec3_t( 1.0,  0.0, 0.0), node->graph->scale.pos_t);
+		con_icp_range[1] = new BipedCaptIcpRangeCon(solver, name + "_icp_range1", this, vec3_t(-1.0,  0.0, 0.0), node->graph->scale.pos_t);
+		con_icp_range[2] = new BipedCaptIcpRangeCon(solver, name + "_icp_range2", this, vec3_t( 0.0,  1.0, 0.0), node->graph->scale.pos_t);
+		con_icp_range[3] = new BipedCaptIcpRangeCon(solver, name + "_icp_range3", this, vec3_t( 0.0, -1.0, 0.0), node->graph->scale.pos_t);
 		for(int i = 0; i < 4; i++)
 			solver->AddCostCon(con_icp_range[i], tick->idx);
 	}
+
+	con_des_icp   = new FixConV3(solver, ID(ConTag::BipedCaptIcp , node, tick, name + "_des_icp"  ), var_icp  , node->graph->scale.pos_t);
+	con_des_sup_t = new FixConV3(solver, ID(ConTag::BipedCaptSupT, node, tick, name + "_des_sup_t"), var_sup_t, node->graph->scale.pos_r);
+	con_des_sup_r = new FixConS (solver, ID(ConTag::BipedCaptSupR, node, tick, name + "_des_sup_r"), var_sup_r, node->graph->scale.pos_t);
+	con_des_swg_t = new FixConV3(solver, ID(ConTag::BipedCaptSwgT, node, tick, name + "_des_swg_t"), var_swg_t, node->graph->scale.pos_r);
+	con_des_swg_r = new FixConS (solver, ID(ConTag::BipedCaptSwgR, node, tick, name + "_des_swg_r"), var_swg_r, node->graph->scale.pos_t);
+	solver->AddCostCon(con_des_icp  , tick->idx);
+	solver->AddCostCon(con_des_sup_t, tick->idx);
+	solver->AddCostCon(con_des_sup_r, tick->idx);
+	solver->AddCostCon(con_des_swg_t, tick->idx);
+	solver->AddCostCon(con_des_swg_r, tick->idx);
 }
 
 void BipedCaptKey::Prepare() {
@@ -140,8 +153,8 @@ void BipedCaptKey::Draw(Render::Canvas* canvas, Render::Config* conf) {
 
 	if (conf->Set(canvas, Render::Item::BipedCaptSup, node)) {		
 		// foot print
-		Vec3f cmin = obj->param.copMin;
-		Vec3f cmax = obj->param.copMax;
+		Vec3f cmin = obj->param.copMin[side];
+		Vec3f cmax = obj->param.copMax[side];
 		canvas->Push();
 		canvas->Translate((float)var_sup_t->val.x, (float)var_sup_t->val.y, 0.0f);
 		canvas->Rotate((float)var_sup_r->val, Vec3f(0.0f, 0.0f, 1.0f));
@@ -153,8 +166,8 @@ void BipedCaptKey::Draw(Render::Canvas* canvas, Render::Config* conf) {
 	}
 	if (conf->Set(canvas, Render::Item::BipedCaptSwg, node)) {		
 		// foot print
-		Vec3f cmin = obj->param.copMin;
-		Vec3f cmax = obj->param.copMax;
+		Vec3f cmin = obj->param.copMin[!side];
+		Vec3f cmax = obj->param.copMax[!side];
 		canvas->Push();
 		canvas->Translate((float)var_swg_t->val.x, (float)var_swg_t->val.y, 0.0f);
 		canvas->Rotate((float)var_swg_r->val, Vec3f(0.0f, 0.0f, 1.0f));
@@ -179,17 +192,24 @@ BipedCapt::Param::Param() {
 	landPosMax[0] = vec3_t( 0.5, -0.0, 0.0);
 	landPosMin[1] = vec3_t(-0.5,  0.0, 0.0);
 	landPosMax[1] = vec3_t( 0.5,  0.2, 0.0);
-	landOriMin    = Rad(-15.0);
-	landOriMax    = Rad( 15.0);
+	landOriMin[0] = Rad(-15.0);
+	landOriMax[0] = Rad( 15.0);
+	landOriMin[1] = Rad(-15.0);
+	landOriMax[1] = Rad( 15.0);
 	
 	// range of cop relative to foot
-	copMin = vec3_t(-0.1, -0.05, 0.0);
-	copMax = vec3_t( 0.1,  0.05, 0.0);
-	copMin = vec3_t(-0.1, -0.05, 0.0);
-	copMax = vec3_t( 0.1,  0.05, 0.0);
+	copMin[0] = vec3_t(-0.1, -0.05, 0.0);
+	copMax[0] = vec3_t( 0.1,  0.05, 0.0);
+	copMin[1] = vec3_t(-0.1, -0.05, 0.0);
+	copMax[1] = vec3_t( 0.1,  0.05, 0.0);
+
+	copMinDsp[0] = vec3_t(-0.1, -0.05, 0.0);
+	copMaxDsp[0] = vec3_t( 0.1,  0.25, 0.0);
+	copMinDsp[1] = vec3_t(-0.1, -0.25, 0.0);
+	copMaxDsp[1] = vec3_t( 0.1,  0.05, 0.0);
 }
 
-BipedCapt::Step::Step(vec3_t _sup_t, real_t _sup_r, vec3_t _swg_t, real_t _swg_r, vec3_t _icp, vec3_t _cop, real_t _duration, int _side){
+BipedCapt::Step::Step(vec3_t _sup_t, real_t _sup_r, vec3_t _swg_t, real_t _swg_r, vec3_t _icp, vec3_t _cop, real_t _duration, int _side, bool _stepping){
 	sup_t    = _sup_t;
 	sup_r    = _sup_r;
 	swg_t    = _swg_t;
@@ -198,6 +218,7 @@ BipedCapt::Step::Step(vec3_t _sup_t, real_t _sup_r, vec3_t _swg_t, real_t _swg_r
 	cop      = _cop;
 	duration = _duration;
 	side     = _side;
+	stepping = _stepping;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -222,20 +243,74 @@ void BipedCapt::Init() {
 	// time constant of inverted pendulum
 	param.T = sqrt(param.comHeight / param.gravity);
 
-	for (int k = 0; k < graph->ticks.size(); k++) {
+	Reset();
+
+	Prepare();
+}
+
+void BipedCapt::Reset(){
+	int N = graph->ticks.size()-1;
+	for (int k = 0; k <= N; k++) {
 		BipedCaptKey* key = (BipedCaptKey*)traj.GetKeypoint(graph->ticks[k]);
 
-		key->var_sup_t->val = param.steps[k].sup_t;
-		key->var_sup_r->val = param.steps[k].sup_r;
-		key->var_swg_t->val = param.steps[k].swg_t;
-		key->var_swg_r->val = param.steps[k].swg_r;
-		key->var_icp  ->val = param.steps[k].icp;
+		key->side = param.steps[k].side;
+
+		key->var_sup_t->val = key->con_des_sup_t->desired = param.steps[k].sup_t;
+		key->var_sup_r->val = key->con_des_sup_r->desired = param.steps[k].sup_r;
+		key->var_swg_t->val = key->con_des_swg_t->desired = param.steps[k].swg_t;
+		key->var_swg_r->val = key->con_des_swg_r->desired = param.steps[k].swg_r;
+		key->var_icp  ->val = key->con_des_icp  ->desired = param.steps[k].icp;
+
+		key->con_des_sup_t->weight    = 0.01*one;
+		key->con_des_sup_r->weight[0] = 0.01;
+		key->con_des_swg_t->weight    = 0.01*one;
+		key->con_des_swg_r->weight[0] = 0.01;
+		key->con_des_icp  ->weight    = 0.01*one;
 
 		if(key->next){
 			key->var_land_t  ->val = param.steps[k+1].sup_t;
 			key->var_land_r  ->val = param.steps[k+1].sup_r;
 			key->var_cop     ->val = param.steps[k].cop;
 			key->var_duration->val = param.steps[k].duration;
+		}
+
+		// desired cop weight
+		if(key->next){
+			key->con_des_cop->weight[0] = 0.01;
+		}
+
+		// set cop range
+		if(key->next){
+			if(param.steps[k].stepping){
+				key->con_cop_range[0]->lim =  param.copMin[key->side].x;
+				key->con_cop_range[1]->lim = -param.copMax[key->side].x;
+				key->con_cop_range[2]->lim =  param.copMin[key->side].y;
+				key->con_cop_range[3]->lim = -param.copMax[key->side].y;
+			}
+			else{
+				key->con_cop_range[0]->lim =  param.copMinDsp[key->side].x;
+				key->con_cop_range[1]->lim = -param.copMaxDsp[key->side].x;
+				key->con_cop_range[2]->lim =  param.copMinDsp[key->side].y;
+				key->con_cop_range[3]->lim = -param.copMaxDsp[key->side].y;
+			}
+		}
+
+		// set landing range
+		if(key->next){
+			key->con_land_range_t[0]->lim =  param.landPosMin[!key->side].x;
+			key->con_land_range_t[1]->lim = -param.landPosMax[!key->side].x;
+			key->con_land_range_t[2]->lim =  param.landPosMin[!key->side].y;
+			key->con_land_range_t[3]->lim = -param.landPosMax[!key->side].y;
+			key->con_land_range_r[0]->lim =  param.landOriMin[!key->side];
+			key->con_land_range_r[1]->lim = -param.landOriMax[!key->side];
+		}
+
+		// icp terminal constraint
+		if(!key->next){
+			key->con_icp_range[0]->lim =  param.copMin[key->side].x;
+			key->con_icp_range[1]->lim = -param.copMax[key->side].x;
+			key->con_icp_range[2]->lim =  param.copMin[key->side].y;
+			key->con_icp_range[3]->lim = -param.copMax[key->side].y;
 		}
 
 		// fix initial state
@@ -248,7 +323,24 @@ void BipedCapt::Init() {
 		}
 	}
 
-	Prepare();
+	// initial guess of icp
+	for(int k = N-1; k >= 0; k--){
+		BipedCaptKey* key0 = (BipedCaptKey*)traj.GetKeypoint(graph->ticks[k+0]);
+		BipedCaptKey* key1 = (BipedCaptKey*)traj.GetKeypoint(graph->ticks[k+1]);
+
+		vec3_t cop0 = key0->var_cop->val;
+		vec3_t icp0 = key0->var_icp->val;
+		vec3_t icp1 = key1->var_icp->val;
+		real_t ainv = exp(-key0->var_duration->val/param.T);
+			
+		if(k == 0){
+			key0->var_cop->val = (icp0 - ainv*icp1)/(1.0-ainv);
+		}
+		else{
+			key0->var_icp->val = key0->con_des_icp->desired = ainv*(icp1 - cop0) + cop0;
+		}
+	}
+
 }
 
 void BipedCapt::Prepare() {
@@ -258,7 +350,7 @@ void BipedCapt::Prepare() {
 
 void BipedCapt::Finish() {
 	TrajectoryNode::Finish();
-
+	
 	// update time
 	real_t t = 0.0;
 	for (int k = 0; k < graph->ticks.size(); k++) {
@@ -275,10 +367,10 @@ void BipedCapt::Finish() {
 
 void BipedCapt::Draw(Render::Canvas* canvas, Render::Config* conf) {
 	TrajectoryNode::Draw(canvas, conf);
-
+	
 	if (!trajReady)
 		CalcTrajectory();
-
+	
 	if (trajectory.empty())
 		return;
 
@@ -359,6 +451,7 @@ BipedCaptSupConT::BipedCaptSupConT(Solver* solver, string _name, BipedCaptKey* _
 	obj[1] = (_obj->next ? (BipedCaptKey*)_obj->next : 0);
 
 	AddSLink(obj[1]->var_sup_t );
+	AddSLink(obj[0]->var_swg_t);
 	AddSLink(obj[0]->var_land_t);
 }
 
@@ -368,6 +461,7 @@ BipedCaptSupConR::BipedCaptSupConR(Solver* solver, string _name, BipedCaptKey* _
 	obj[1] = (_obj->next ? (BipedCaptKey*)_obj->next : 0);
 
 	AddSLink(obj[1]->var_sup_r );
+	AddSLink(obj[0]->var_swg_r);
 	AddSLink(obj[0]->var_land_r);
 }
 
@@ -400,47 +494,51 @@ BipedCaptDurationCon::BipedCaptDurationCon(Solver* solver, string _name, BipedCa
 	AddSLink (obj->var_duration);
 }
 
-BipedCaptLandRangeConT::BipedCaptLandRangeConT(Solver* solver, string _name, BipedCaptKey* _obj, vec3_t _dir, real_t _lim, real_t _scale) :
+BipedCaptDesCopCon::BipedCaptDesCopCon(Solver* solver, string _name, BipedCaptKey* _obj, real_t _scale) :
+	Constraint(solver, 3, ID(ConTag::BipedCaptCop, _obj->node, _obj->tick, _name), Constraint::Type::Equality, _scale) {
+	obj = _obj;
+
+	AddSLink(obj->var_cop);
+	AddSLink(obj->var_sup_t);
+}
+
+BipedCaptLandRangeConT::BipedCaptLandRangeConT(Solver* solver, string _name, BipedCaptKey* _obj, vec3_t _dir, real_t _scale) :
 	Constraint(solver, 1, ID(ConTag::BipedCaptLandRangeT, _obj->node, _obj->tick, _name), Constraint::Type::InequalityPenalty, _scale) {
 
 	obj = _obj;
 	dir = _dir;
-	lim = _lim;
-
+	
 	AddR3Link(obj->var_land_t);
 	AddR3Link(obj->var_sup_t );
 	AddSLink (obj->var_sup_r );
 }
 
-BipedCaptLandRangeConR::BipedCaptLandRangeConR(Solver* solver, string _name, BipedCaptKey* _obj, real_t _dir, real_t _lim, real_t _scale) :
+BipedCaptLandRangeConR::BipedCaptLandRangeConR(Solver* solver, string _name, BipedCaptKey* _obj, real_t _dir, real_t _scale) :
 	Constraint(solver, 1, ID(ConTag::BipedCaptLandRangeR, _obj->node, _obj->tick, _name), Constraint::Type::InequalityPenalty, _scale) {
 
 	obj = _obj;
 	dir = _dir;
-	lim = _lim;
 
 	AddSLink(obj->var_land_r);
 	AddSLink(obj->var_sup_r );
 }
 
-BipedCaptCopRangeCon::BipedCaptCopRangeCon(Solver* solver, string _name, BipedCaptKey* _obj, vec3_t _dir, real_t _lim, real_t _scale) :
+BipedCaptCopRangeCon::BipedCaptCopRangeCon(Solver* solver, string _name, BipedCaptKey* _obj, vec3_t _dir, real_t _scale) :
 	Constraint(solver, 1, ID(ConTag::BipedCaptCopRange, _obj->node, _obj->tick, _name), Constraint::Type::InequalityPenalty, _scale) {
 
 	obj = _obj;
 	dir = _dir;
-	lim = _lim;
 	
 	AddR3Link(obj->var_cop  );
 	AddR3Link(obj->var_sup_t);
 	AddSLink (obj->var_sup_r);
 }
 
-BipedCaptIcpRangeCon::BipedCaptIcpRangeCon(Solver* solver, string _name, BipedCaptKey* _obj, vec3_t _dir, real_t _lim, real_t _scale) :
+BipedCaptIcpRangeCon::BipedCaptIcpRangeCon(Solver* solver, string _name, BipedCaptKey* _obj, vec3_t _dir, real_t _scale) :
 	Constraint(solver, 1, ID(ConTag::BipedCaptIcpRange, _obj->node, _obj->tick, _name), Constraint::Type::InequalityPenalty, _scale) {
 
 	obj = _obj;
 	dir = _dir;
-	lim = _lim;
 	
 	AddR3Link(obj->var_icp  );
 	AddR3Link(obj->var_sup_t);
@@ -456,12 +554,12 @@ void BipedCaptIcpCon::CalcLhs() {
 
 void BipedCaptSupConT::CalcLhs() {
 	Prepare();
-	obj[1]->var_sup_t->val = obj[0]->var_land_t->val;
+	obj[1]->var_sup_t->val = (stepping ? obj[0]->var_land_t->val : obj[0]->var_swg_t->val);
 }
 
 void BipedCaptSupConR::CalcLhs() {
 	Prepare();
-	obj[1]->var_sup_r->val = obj[0]->var_land_r->val;
+	obj[1]->var_sup_r->val = (stepping ? obj[0]->var_land_r->val : obj[0]->var_swg_r->val);
 }
 
 void BipedCaptSwgConT::CalcLhs() {
@@ -488,9 +586,11 @@ void BipedCaptIcpCon::Prepare(){
 }
 
 void BipedCaptSupConT::Prepare(){
+	stepping = ((BipedCapt*)obj[0]->node)->param.steps[obj[0]->tick->idx].stepping;
 }
 
 void BipedCaptSupConR::Prepare(){
+	stepping = ((BipedCapt*)obj[0]->node)->param.steps[obj[0]->tick->idx].stepping;
 }
 
 void BipedCaptSwgConT::Prepare(){
@@ -577,14 +677,16 @@ void BipedCaptSupConT::CalcCoef() {
 	Prepare();
 
 	((SLink*)links[0])->SetCoef( 1.0);
-	((SLink*)links[1])->SetCoef(-1.0);
+	((SLink*)links[1])->SetCoef(stepping ?  0.0 : -1.0);
+	((SLink*)links[2])->SetCoef(stepping ? -1.0 :  0.0);
 }
 
 void BipedCaptSupConR::CalcCoef() {
 	Prepare();
 
 	((SLink*)links[0])->SetCoef( 1.0);
-	((SLink*)links[1])->SetCoef(-1.0);
+	((SLink*)links[1])->SetCoef(stepping ?  0.0 : -1.0);
+	((SLink*)links[2])->SetCoef(stepping ? -1.0 :  0.0);
 }
 
 void BipedCaptSwgConT::CalcCoef() {
@@ -597,6 +699,11 @@ void BipedCaptSwgConT::CalcCoef() {
 void BipedCaptSwgConR::CalcCoef() {
 	Prepare();
 
+	((SLink*)links[0])->SetCoef( 1.0);
+	((SLink*)links[1])->SetCoef(-1.0);
+}
+
+void BipedCaptDesCopCon::CalcCoef(){
 	((SLink*)links[0])->SetCoef( 1.0);
 	((SLink*)links[1])->SetCoef(-1.0);
 }
@@ -649,28 +756,38 @@ void BipedCaptCopRangeCon::CalcCoef(){
 
 void BipedCaptIcpCon::CalcDeviation() {
 	y = obj[1]->var_icp->val - icp_rhs;
+
+	//DSTR << "icp: " << y << endl;
 }
 
 void BipedCaptSupConT::CalcDeviation() {
-	y = obj[1]->var_sup_t->val - obj[0]->var_land_t->val;
+	y = obj[1]->var_sup_t->val - (stepping ? obj[0]->var_land_t->val : obj[0]->var_swg_t->val);
+	//DSTR << "sup_t: " << y << endl;
 }
 
 void BipedCaptSupConR::CalcDeviation() {
-	y[0] = obj[1]->var_sup_r->val - obj[0]->var_land_r->val;
+	y[0] = obj[1]->var_sup_r->val - (stepping ? obj[0]->var_land_r->val : obj[0]->var_swg_r->val);
+	//DSTR << "sup_r: " << y << endl;
 }
 
 void BipedCaptSwgConT::CalcDeviation() {
 	y = obj[1]->var_swg_t->val - obj[0]->var_sup_t->val;
+	//DSTR << "swg_t: " << y << endl;
 }
 
 void BipedCaptSwgConR::CalcDeviation() {
 	y[0] = obj[1]->var_swg_r->val - obj[0]->var_sup_r->val;
+	//DSTR << "swg_r: " << y << endl;
+}
+
+void BipedCaptDesCopCon::CalcDeviation(){
+	y = obj->var_cop->val - obj->var_sup_t->val;
 }
 
 void BipedCaptDurationCon::CalcDeviation(){
 	real_t s = tau - (tau_const + dpnorm*vmax_inv + drabs*wmax_inv);
 
-	DSTR << tau << " " << dpnorm << " " << drabs << endl;
+	//DSTR << tau << " " << dpnorm << " " << drabs << endl;
 
 	if(s < 0.0){
 		y[0] = s;
@@ -712,6 +829,7 @@ void BipedCaptCopRangeCon::CalcDeviation(){
 	real_t s = dir_abs*r;
 	
 	if(s < lim) {
+		//DSTR << "cop range " << obj->tick->idx << " " << s - lim << endl;
 		y[0] = s - lim;
 		active = true;
 	}
