@@ -123,6 +123,7 @@ struct ConTag{
 		BipedCaptSwgT,
 		BipedCaptSwgR,
 		BipedCaptIcp,
+		BipedCaptCop,
 		BipedCaptDuration,
 		BipedCaptLandRangeT,
 		BipedCaptLandRangeR,

@@ -25,34 +25,47 @@ public:
 		biped->param.landPosMax[0] = vec3_t( 0.45, -0.10, 0.0);
 		biped->param.landPosMin[1] = vec3_t(-0.45,  0.10, 0.0);
 		biped->param.landPosMax[1] = vec3_t( 0.45,  0.40, 0.0);
-		biped->param.landOriMin = Rad(-15.0);
-		biped->param.landOriMax = Rad( 15.0);
-		biped->param.copMin = vec3_t(-0.10, -0.05, -0.0);
-		biped->param.copMax = vec3_t( 0.10,  0.05,  0.0);
-		biped->param.vmax   = 2.0;
-		biped->param.wmax   = 2.0;
+		biped->param.landOriMin[0] = Rad(-15.0);
+		biped->param.landOriMax[0] = Rad( 15.0);
+		biped->param.landOriMin[1] = Rad(-15.0);
+		biped->param.landOriMax[1] = Rad( 15.0);
+		biped->param.copMin[0] = vec3_t(-0.10, -0.05, -0.0);
+		biped->param.copMax[0] = vec3_t( 0.10,  0.05,  0.0);
+		biped->param.copMin[1] = vec3_t(-0.10, -0.05, -0.0);
+		biped->param.copMax[1] = vec3_t( 0.10,  0.05,  0.0);
+		biped->param.copMinDsp[0] = vec3_t(-0.10, -0.05, -0.0);
+		biped->param.copMaxDsp[0] = vec3_t( 0.10,  0.25,  0.0);
+		biped->param.copMinDsp[1] = vec3_t(-0.10, -0.25, -0.0);
+		biped->param.copMaxDsp[1] = vec3_t( 0.10,  0.05,  0.0);
+		biped->param.vmax   = 20.0;
+		biped->param.wmax   = 20.0;
 		biped->param.tau_const = 0.05;
         
-		int N = 5;
+		int N = 7;
 		for(int k = 0; k <= N; k++)
 			new DiMP::Tick(graph, 0.0, "");
 
 		biped->param.steps.resize(N+1);
-		biped->param.steps[0] = DiMP::BipedCapt::Step(vec3_t(0.0, -0.1, 0.0), 0.0, vec3_t(0.0,  0.1, 0.0), 0.0, vec3_t(0.0, -0.1, 0.0), vec3_t(0.0, -0.1, 0.0), 0.5, 0);
-		biped->param.steps[1] = DiMP::BipedCapt::Step(vec3_t(0.1,  0.1, 0.0), 0.0, vec3_t(0.0, -0.1, 0.0), 0.0, vec3_t(0.1,  0.1, 0.0), vec3_t(0.1,  0.1, 0.0), 0.5, 1);
-		biped->param.steps[2] = DiMP::BipedCapt::Step(vec3_t(0.2, -0.1, 0.0), 0.0, vec3_t(0.1,  0.1, 0.0), 0.0, vec3_t(0.2, -0.1, 0.0), vec3_t(0.2, -0.1, 0.0), 0.5, 0);
-		biped->param.steps[3] = DiMP::BipedCapt::Step(vec3_t(0.3,  0.1, 0.0), 0.0, vec3_t(0.2, -0.1, 0.0), 0.0, vec3_t(0.3,  0.1, 0.0), vec3_t(0.3,  0.1, 0.0), 0.5, 1);
-		biped->param.steps[4] = DiMP::BipedCapt::Step(vec3_t(0.4, -0.1, 0.0), 0.0, vec3_t(0.3,  0.1, 0.0), 0.0, vec3_t(0.4, -0.1, 0.0), vec3_t(0.4, -0.1, 0.0), 0.5, 0);
-		biped->param.steps[5] = DiMP::BipedCapt::Step(vec3_t(0.5,  0.1, 0.0), 0.0, vec3_t(0.4, -0.1, 0.0), 0.0, vec3_t(0.5,  0.1, 0.0), vec3_t(0.5,  0.1, 0.0), 0.5, 1);
+		biped->param.steps[0] = DiMP::BipedCapt::Step(vec3_t(0.0, -0.1, 0.0), 0.0, vec3_t(0.0,  0.1, 0.0), 0.0, vec3_t(0.0, -0.1, 0.0), vec3_t(0.0, -0.1, 0.0), 0.5, 0, true);
+		biped->param.steps[1] = DiMP::BipedCapt::Step(vec3_t(0.0,  0.1, 0.0), 0.0, vec3_t(0.0, -0.1, 0.0), 0.0, vec3_t(0.0,  0.1, 0.0), vec3_t(0.0,  0.1, 0.0), 0.5, 1, true);
+		biped->param.steps[2] = DiMP::BipedCapt::Step(vec3_t(0.0, -0.1, 0.0), 0.0, vec3_t(0.0,  0.1, 0.0), 0.0, vec3_t(0.0, -0.1, 0.0), vec3_t(0.0, -0.1, 0.0), 0.5, 0, true);
+		biped->param.steps[3] = DiMP::BipedCapt::Step(vec3_t(0.1,  0.1, 0.0), 0.0, vec3_t(0.0, -0.1, 0.0), 0.0, vec3_t(0.1,  0.1, 0.0), vec3_t(0.1,  0.1, 0.0), 0.5, 1, true);
+		biped->param.steps[4] = DiMP::BipedCapt::Step(vec3_t(0.2, -0.1, 0.0), 0.0, vec3_t(0.1,  0.1, 0.0), 0.0, vec3_t(0.2, -0.1, 0.0), vec3_t(0.2, -0.1, 0.0), 0.5, 0, true);
+		biped->param.steps[5] = DiMP::BipedCapt::Step(vec3_t(0.3,  0.1, 0.0), 0.0, vec3_t(0.2, -0.1, 0.0), 0.0, vec3_t(0.3,  0.1, 0.0), vec3_t(0.3,  0.1, 0.0), 0.5, 1, true);
+		biped->param.steps[6] = DiMP::BipedCapt::Step(vec3_t(0.4, -0.1, 0.0), 0.0, vec3_t(0.3,  0.1, 0.0), 0.0, vec3_t(0.4, -0.1, 0.0), vec3_t(0.4, -0.1, 0.0), 0.5, 0, true);
+		biped->param.steps[7] = DiMP::BipedCapt::Step(vec3_t(0.5,  0.1, 0.0), 0.0, vec3_t(0.4, -0.1, 0.0), 0.0, vec3_t(0.5,  0.1, 0.0), vec3_t(0.5,  0.1, 0.0), 0.5, 1, true);
 
-		biped->param.steps[0].icp = vec3_t(0.0, -0.15, 0.0);
+		biped->param.steps[0].icp = vec3_t(0.15, 0.15, 0.0);
 		
 		graph->scale.Set(1.0, 1.0, 1.0);
 		graph->Init();
 
+		// gauss-newton: set positive correction rate
+		// ddp: set correction rate as zero
 		graph->solver->SetCorrection(ID(), 0.5);
 		graph->solver->param.numIter[0] = 20;
-		graph->solver->param.cutoffStepSize = 1.0;
+		graph->solver->param.regularization = 1.0e-1;
+		graph->solver->param.cutoffStepSize = 0.1;
 		graph->solver->param.minStepSize = 1.0;
 		graph->solver->param.maxStepSize = 1.0;
 		//graph->solver->param.methodMajor = Solver::Method::Major::GaussNewton;
@@ -60,20 +73,17 @@ public:
 		graph->solver->param.methodMinor = Solver::Method::Minor::Direct;
 		graph->solver->param.verbose = true;
 		
-		//graph->solver->Enable(ID(DiMP::ConTag::BipedCaptDuration), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::BipedLipVel        ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::BipedFootPosT      ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::BipedFootPosR      ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::BipedFootCop       ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::BipedFootPosRangeT ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::BipedFootPosRangeR ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::BipedFootCopRange  ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::BipedFootVelZeroT  ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::BipedFootVelZeroR  ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::BipedComPos        ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::BipedComVel        ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::BipedDurationRange ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::BipedTime          ), false);
+		//graph->solver->Enable(ID(DiMP::ConTag::BipedCaptSupT      ), false);
+		//graph->solver->Enable(ID(DiMP::ConTag::BipedCaptSupR      ), false);
+		//graph->solver->Enable(ID(DiMP::ConTag::BipedCaptSwgT      ), false);
+		//graph->solver->Enable(ID(DiMP::ConTag::BipedCaptSwgR      ), false);
+		//graph->solver->Enable(ID(DiMP::ConTag::BipedCaptIcp       ), false);
+		//graph->solver->Enable(ID(DiMP::ConTag::BipedCaptCop       ), false);
+		//graph->solver->Enable(ID(DiMP::ConTag::BipedCaptDuration  ), false);
+		//graph->solver->Enable(ID(DiMP::ConTag::BipedCaptLandRangeT), false);
+		//graph->solver->Enable(ID(DiMP::ConTag::BipedCaptLandRangeR), false);
+		//graph->solver->Enable(ID(DiMP::ConTag::BipedCaptCopRange  ), false);
+		//graph->solver->Enable(ID(DiMP::ConTag::BipedCaptIcpRange  ), false);
 
 	}
 
