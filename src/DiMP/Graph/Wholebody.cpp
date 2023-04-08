@@ -3,6 +3,8 @@
 #include <DiMP/Render/Config.h>
 #include <DiMP/Render/Canvas.h>
 
+#include <omp.h>
+
 #include <sbtimer.h>
 static Timer timer;
 static Timer timer2;
@@ -566,16 +568,16 @@ void Wholebody::Prepare() {
 	traj.Update();
 	
 	#pragma omp parallel for
-	for(auto& key : traj){
-		key->Prepare();
+	for(int k = 0; k < traj.size(); k++){
+		traj[k]->Prepare();
 	}
 	//TrajectoryNode::Prepare();
 }
 
 void Wholebody::PrepareStep(){
 	#pragma omp parallel for
-	for(auto& key : traj){
-		key->PrepareStep();
+	for(int k = 0; k < traj.size(); k++){
+		traj[k]->PrepareStep();
 	}
 	//TrajectoryNode::PrepareStep();
 }
