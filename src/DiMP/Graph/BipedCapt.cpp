@@ -724,15 +724,15 @@ void BipedCaptLandRangeConT::CalcCoef(){
 	// (R eta)^T (pland - psup) >= lim
 	((R3Link*)links[0])->SetCoef( dir_abs);
 	((R3Link*)links[1])->SetCoef(-dir_abs);
-	((SLink* )links[2])->SetCoef( (ez % dir_abs)*r);
+	((SLink* )links[2])->SetCoef( (dir_abs % r)*ez);
 
 }
 
 void BipedCaptLandRangeConR::CalcCoef(){
 	Prepare();
 
-	((SLink*)links[0])->SetCoef( 1.0);
-	((SLink*)links[1])->SetCoef(-1.0);
+	((SLink*)links[0])->SetCoef( dir);
+	((SLink*)links[1])->SetCoef(-dir);
 	
 }
 
@@ -741,7 +741,7 @@ void BipedCaptIcpRangeCon::CalcCoef(){
 
 	((R3Link*)links[0])->SetCoef( dir_abs);
 	((R3Link*)links[1])->SetCoef(-dir_abs);
-	((SLink* )links[2])->SetCoef( (ez % dir_abs)*r);
+	((SLink* )links[2])->SetCoef( (dir_abs % r)*ez);
 }
 
 void BipedCaptCopRangeCon::CalcCoef(){
@@ -749,7 +749,7 @@ void BipedCaptCopRangeCon::CalcCoef(){
 
 	((R3Link*)links[0])->SetCoef( dir_abs);
 	((R3Link*)links[1])->SetCoef(-dir_abs);
-	((SLink* )links[2])->SetCoef( (ez % dir_abs)*r);
+	((SLink* )links[2])->SetCoef( (dir_abs % r)*ez);
 }
 
 //-------------------------------------------------------------------------------------------------
