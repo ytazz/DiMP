@@ -74,6 +74,8 @@ public:
 		biped->param.durationMax[DiMP::BipedLIP::Phase::LR] = 0.10;
 		biped->param.durationMin[DiMP::BipedLIP::Phase::D ] = 1.0;
 		biped->param.durationMax[DiMP::BipedLIP::Phase::D ] = 1.0;
+		biped->param.durationMin[DiMP::BipedLIP::Phase::F ] = 0.1;
+		biped->param.durationMax[DiMP::BipedLIP::Phase::F ] = 0.1;
 		biped->param.footPosMin[0] = vec3_t(-0.45, -0.20, -1.5);
 		biped->param.footPosMax[0] = vec3_t( 0.45, -0.09, -0.5);
 		biped->param.footPosMin[1] = vec3_t(-0.45,  0.09, -1.5);
@@ -82,10 +84,10 @@ public:
 		biped->param.footOriMax[0] = Rad( 0.0);
 		biped->param.footOriMin[1] = Rad(-0.0);
 		biped->param.footOriMax[1] = Rad( 0.0);
-		biped->param.footCopMin[0] = vec3_t(-0.07, -0.02, -1.0);
-		biped->param.footCopMax[0] = vec3_t( 0.10,  0.02,  1.0);
-		biped->param.footCopMin[1] = vec3_t(-0.07, -0.02, -1.0);
-		biped->param.footCopMax[1] = vec3_t( 0.10,  0.02,  1.0);
+		biped->param.footCopMin[0] = vec3_t(-0.07, -0.02, -0.0);
+		biped->param.footCopMax[0] = vec3_t( 0.10,  0.02,  0.0);
+		biped->param.footCopMin[1] = vec3_t(-0.07, -0.02, -0.0);
+		biped->param.footCopMax[1] = vec3_t( 0.10,  0.02,  0.0);
 		biped->param.swingHeight   = 0.100;
 		//biped->param.swingProfile = DiMP::BipedLIP::SwingProfile::Cycloid;
 		biped->param.swingProfile       = DiMP::BipedLIP::SwingProfile::HeelToe;
@@ -110,17 +112,27 @@ public:
 
 		biped->phase.resize(nphase);
 
-		biped->phase[0] = DiMP::BipedLIP::Phase::D;
-		for (uint i = 1; i < nphase-2; i++) {
-			switch((i-1)%4){
-			case 0:	{ biped->phase[i] = DiMP::BipedLIP::Phase::RL; break; }
-			case 1:	{ biped->phase[i] = DiMP::BipedLIP::Phase::L ; break; }
-			case 2:	{ biped->phase[i] = DiMP::BipedLIP::Phase::LR; break; }
-			case 3:	{ biped->phase[i] = DiMP::BipedLIP::Phase::R ; break; }
+		int idx = 0;
+		biped->phase[idx++] = DiMP::BipedLIP::Phase::D;
+		int side = 0;
+		for(int i = 0; i < nstep; i++){
+			if(i < nstep_acc){
+				biped->phase[idx++] = (side == 0 ? DiMP::BipedLIP::Phase::LR : DiMP::BipedLIP::Phase::RL);
+				biped->phase[idx++] = (side == 0 ? DiMP::BipedLIP::Phase::R  : DiMP::BipedLIP::Phase::L );
 			}
+			else if(i < nstep_acc + nstep_cruise){
+				//biped->phase[idx++] = (side == 0 ? DiMP::BipedLIP::Phase::LR  : DiMP::BipedLIP::Phase::RL );
+				biped->phase[idx++] = (side == 0 ? DiMP::BipedLIP::Phase::F  : DiMP::BipedLIP::Phase::F );
+				biped->phase[idx++] = (side == 0 ? DiMP::BipedLIP::Phase::R  : DiMP::BipedLIP::Phase::L );
+			}
+			else{
+				biped->phase[idx++] = (side == 0 ? DiMP::BipedLIP::Phase::LR : DiMP::BipedLIP::Phase::RL);
+				biped->phase[idx++] = (side == 0 ? DiMP::BipedLIP::Phase::R  : DiMP::BipedLIP::Phase::L );
+			}
+			side = !side;
 		}
-		biped->phase[nphase-2] = DiMP::BipedLIP::Phase::D;
-		biped->phase[nphase-1] = DiMP::BipedLIP::Phase::D;
+		biped->phase[idx++] = DiMP::BipedLIP::Phase::D;
+		biped->phase[idx++] = DiMP::BipedLIP::Phase::D;
 		
 		real_t spacing = 0.14/2;
 		//vec2_t goalPos(3.0, 0.0);
@@ -140,15 +152,15 @@ public:
 		biped->waypoints[0].foot_pos_r[0]     = 0.0;
 		biped->waypoints[0].foot_pos_t[1]     = vec3_t(0.0,  spacing, 0.0);
 		biped->waypoints[0].foot_pos_r[1]     = 0.0;
-		biped->waypoints[0].fix_com_pos       = true;
-		biped->waypoints[0].fix_com_vel       = true;
-		biped->waypoints[0].fix_torso_pos_r   = true;
-		biped->waypoints[0].fix_foot_pos_t[0] = true;
-		biped->waypoints[0].fix_foot_pos_r[0] = true;
-		biped->waypoints[0].fix_foot_cop  [0] = false;
-		biped->waypoints[0].fix_foot_pos_t[1] = true;
-		biped->waypoints[0].fix_foot_pos_r[1] = true;
-		biped->waypoints[0].fix_foot_cop  [1] = false;
+		biped->waypoints[0].weight_com_pos       = 1.0;
+		biped->waypoints[0].weight_com_vel       = 1.0;
+		biped->waypoints[0].weight_torso_pos_r   = 1.0;
+		biped->waypoints[0].weight_foot_pos_t[0] = 1.0;
+		biped->waypoints[0].weight_foot_pos_r[0] = 1.0;
+		biped->waypoints[0].weight_foot_cop  [0] = 0.0;
+		biped->waypoints[0].weight_foot_pos_t[1] = 1.0;
+		biped->waypoints[0].weight_foot_pos_r[1] = 1.0;
+		biped->waypoints[0].weight_foot_cop  [1] = 0.0;
 		
 		biped->waypoints[1].k                 = 1 + 2*nstep_idle;
 		biped->waypoints[1].com_pos           = vec3_t(0.0, 0.0, biped->param.comHeight);
@@ -185,27 +197,27 @@ public:
 		biped->waypoints[4].foot_pos_r[0]     = 0.0;
 		biped->waypoints[4].foot_pos_t[1]     = vec3_t(dist_acc + dist_cruise + dist_dec,  spacing, 0.0);
 		biped->waypoints[4].foot_pos_r[1]     = 0.0;
-		biped->waypoints[4].fix_com_pos       = true;
-		biped->waypoints[4].fix_com_vel       = true;
-		biped->waypoints[4].fix_torso_pos_r   = true;
-		biped->waypoints[4].fix_foot_pos_t[0] = true;
-		biped->waypoints[4].fix_foot_pos_r[0] = true;
-		biped->waypoints[4].fix_foot_cop  [0] = false;
-		biped->waypoints[4].fix_foot_pos_t[1] = true;
-		biped->waypoints[4].fix_foot_pos_r[1] = true;
-		biped->waypoints[4].fix_foot_cop  [1] = false;
+		biped->waypoints[4].weight_com_pos       = 1.0;
+		biped->waypoints[4].weight_com_vel       = 1.0;
+		biped->waypoints[4].weight_torso_pos_r   = 1.0;
+		biped->waypoints[4].weight_foot_pos_t[0] = 1.0;
+		biped->waypoints[4].weight_foot_pos_r[0] = 1.0;
+		biped->waypoints[4].weight_foot_cop  [0] = 0.0;
+		biped->waypoints[4].weight_foot_pos_t[1] = 1.0;
+		biped->waypoints[4].weight_foot_pos_r[1] = 1.0;
+		biped->waypoints[4].weight_foot_cop  [1] = 0.0;
 		
 		graph->scale.Set(1.0, 1.0, 1.0);
 		graph->Init();
 
-		graph->solver->SetCorrection(ID(), 0.5);
+		graph->solver->SetCorrection(ID(), 0.1);
 		graph->solver->param.numIter[0] = 20;
 		graph->solver->param.cutoffStepSize = 0.01;
 		graph->solver->param.minStepSize = 0.01;
 		graph->solver->param.maxStepSize = 1.0;
 		//graph->solver->param.methodMajor = Solver::Method::Major::Prioritized;
-		graph->solver->param.methodMajor = Solver::Method::Major::GaussNewton;
-		//graph->solver->param.methodMajor = Solver::Method::Major::DDP;
+		//graph->solver->param.methodMajor = Solver::Method::Major::GaussNewton;
+		graph->solver->param.methodMajor = Solver::Method::Major::DDP;
 		graph->solver->param.methodMinor = Solver::Method::Minor::Direct;
 		graph->solver->param.verbose = true;
 
@@ -213,6 +225,7 @@ public:
 		
 		//graph->solver->Enable(ID(DiMP::ConTag::BipedLipPos        ), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::BipedLipVel        ), false);
+		//graph->solver->Enable(ID(DiMP::ConTag::BipedTime          ), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::BipedFootPosT      ), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::BipedFootPosR      ), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::BipedFootCop       ), false);
@@ -224,7 +237,6 @@ public:
 		//graph->solver->Enable(ID(DiMP::ConTag::BipedComPos        ), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::BipedComVel        ), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::BipedDurationRange ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::BipedTime          ), false);
 
 	}
 
@@ -271,6 +283,7 @@ public:
 		vec3_t foot_cop_pos[2], foot_cop_vel[2];
 		real_t foot_cop_weight[2];
 		int    foot_contact[2];
+		real_t T;
 
 		for(real_t t = 0.0; t <= tf; t += dt){
 			biped->ComState(t, com_pos, com_vel, com_acc);
@@ -278,10 +291,11 @@ public:
 			biped->FootPose(t, 1, foot_pose[1], foot_vel[1], foot_angvel[1], foot_acc[1], foot_angacc[1], foot_contact[1]);
 			biped->FootCopState(t, 0, foot_cop_pos[0], foot_cop_vel[0], foot_cop_weight[0]);
 			biped->FootCopState(t, 1, foot_cop_pos[1], foot_cop_vel[1], foot_cop_weight[1]);
+			T = biped->TValue(t);
 
 			// convert CoP to wrench
 			const real_t total_mass = 43.0;
-			real_t T = biped->param.T;
+			//real_t T = biped->param.T;
 
 			for(int i = 0; i < 2; i++){
 				foot_force [i] = ((total_mass*foot_cop_weight[i])/(T*T))*(com_pos - foot_cop_pos[i]);

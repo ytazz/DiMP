@@ -32,7 +32,7 @@ namespace DiMP {;
 			V3Var*  var_cop_pos;
 			V3Var*  var_cop_vel;
 			V3Var*  var_cop_vel_diff;
-
+			
 			BipedFootPosConT*     con_pos_t;
 			BipedFootPosConR*     con_pos_r;
 			BipedFootCopPosCon*   con_cop_pos;
@@ -43,9 +43,12 @@ namespace DiMP {;
 
 			BipedFootCopRangeCon*  con_cop_range[3][2];   ///< range constraint on CoP relative to support foot, [x|y|z]
 
-			FixConV3*   con_vel_zero_t;
-			FixConS*    con_vel_zero_r;
-			FixConV3*   con_cop_vel_diff_zero;
+			FixConV3*  con_des_pos_t;
+			FixConS *  con_des_pos_r;
+			FixConV3*  con_des_cop_pos;
+			FixConV3*  con_vel_zero_t;
+			FixConS*   con_vel_zero_r;
+			FixConV3*  con_cop_vel_diff_zero;
 
 			real_t  weight;
 		};
@@ -57,6 +60,7 @@ namespace DiMP {;
 		V3Var*		var_com_pos;        ///< position of CoM
 		V3Var*		var_com_vel;        ///< velocity of CoM
 		
+		SVar*       var_T;
 		SVar*       var_time;           ///< time
 		SVar*		var_duration;       ///< duration
 
@@ -70,8 +74,14 @@ namespace DiMP {;
 
 		BipedTimeCon*    con_time;			   ///< relates step duration and cumulative time
 		RangeConS*       con_duration_range;   ///< range constraint on step period
+		RangeConS*       con_T_range;
 
+		FixConV3*   con_des_com_pos;
+		FixConV3*   con_des_com_vel;
+		FixConS *   con_des_torso_pos_r;
 		FixConV3*   con_com_vel_zero;
+		FixConS *   con_des_duration;
+		FixConS *   con_des_T;
 
 		vec3_t  cop_pos;
 		vec3_t  cop_vel;
@@ -97,6 +107,7 @@ namespace DiMP {;
 				RL,  //< double support: transition from R to L
 				LR,  //< double support: trabsition from L to R
 				D ,  //< double support for starting and stopping
+				F ,  //< flight
 				Num
 			};
 		};
@@ -131,9 +142,9 @@ namespace DiMP {;
 		};
 
 		struct Param {
-			real_t	gravity;				///< gravity (positive)
-			real_t  T;                      ///< time constant of LIP
+			real_t	gravity;				    ///< gravity (positive)
 			real_t  comHeight;
+			real_t  Tnominal;                   ///< time constant of LIP
 			real_t  torsoMass;
 			real_t  footMass;
 			int     swingProfile;
@@ -141,6 +152,8 @@ namespace DiMP {;
 			real_t  swingHeight;                ///< maximum swing height
 			real_t	durationMin[Phase::Num];	///< minimum duration of each phase
 			real_t	durationMax[Phase::Num];	///< maximum duration of each phase
+			real_t	TScaleMin[Phase::Num];	    ///< minimum scale of T of each phase
+			real_t	TScaleMax[Phase::Num];	    ///< maximum scale of T of each phase
 			vec3_t	footPosMin[2];              ///< admissible range of foot relative to torso
 			vec3_t  footPosMax[2];
 			real_t  footOriMin[2];
@@ -175,12 +188,18 @@ namespace DiMP {;
 			vec3_t  foot_cop_min[2];
 			vec3_t  foot_cop_max[2];
 			
-			bool    fix_com_pos;
-			bool    fix_com_vel;
-			bool    fix_torso_pos_r;
-			bool    fix_foot_pos_t[2];
-			bool    fix_foot_pos_r[2];
-			bool    fix_foot_cop  [2];
+			//bool    fix_com_pos;
+			//bool    fix_com_vel;
+			//bool    fix_torso_pos_r;
+			//bool    fix_foot_pos_t[2];
+			//bool    fix_foot_pos_r[2];
+			//bool    fix_foot_cop  [2];
+			real_t  weight_com_pos;
+			real_t  weight_com_vel;
+			real_t  weight_torso_pos_r;
+			real_t  weight_foot_pos_t[2];
+			real_t  weight_foot_pos_r[2];
+			real_t  weight_foot_cop  [2];
 			bool    set_cop_range [2];
 			
 			Waypoint();
@@ -217,6 +236,7 @@ namespace DiMP {;
 		virtual void        Draw          (Render::Canvas* canvas, Render::Config* conf);
 		
 		int    Phase          (real_t t);
+		bool   InContact      (int phase, int side);
 		void   ComState       (real_t t, vec3_t& pos, vec3_t& vel, vec3_t& acc);
 		void   CopState       (real_t t, vec3_t& pos, vec3_t& vel, vec3_t& acc);
 		void   TorsoState     (real_t t, real_t& ori, real_t& angvel, real_t& angacc);
@@ -224,6 +244,7 @@ namespace DiMP {;
 		void   FootRotationInv(real_t ori, real_t angvel, real_t angacc, real_t& cp, real_t& cv, real_t& ca);
 		void   FootPose       (real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& angvel, vec3_t& acc, vec3_t& angacc, int& contact);
 		void   FootCopState   (real_t t, int side, vec3_t& pos, vec3_t& vel, real_t& weight);
+		real_t TValue         (real_t t);
 		real_t TimeToLiftoff  (real_t t, int side);
 		real_t TimeToLanding  (real_t t, int side);
 		
@@ -244,15 +265,17 @@ namespace DiMP {;
 	struct BipedLipCon : Constraint {
 		BipedLIPKey* obj[2];
 
-		real_t T, T2;
+		real_t T, T2, T3;
 		vec3_t ez;
 		real_t tau, tau2;
 		real_t C, S;
 		vec3_t p0, v0, p1, v1;
-		vec3_t c0, cv0, ca0, c1;
+		vec3_t c0, cv0, ca0, c1, g;
+		vec3_t dp, dv;
 		real_t k_p_p, k_p_v, k_p_c, k_p_cv, k_p_ca;
 		real_t k_v_p, k_v_v, k_v_c, k_v_cv, k_v_ca;
 		vec3_t k_p_tau, k_v_tau;
+		vec3_t k_p_T, k_v_T;
 		real_t k_c_c[2], k_cv_c[2], k_cv_cv[2], k_ca_cv[2];
 		vec3_t p_rhs;
 		vec3_t v_rhs;

@@ -66,7 +66,7 @@ public:
 		graph->solver->param.numIter[0] = 20;
 		graph->solver->param.regularization = 1.0e-1;
 		graph->solver->param.cutoffStepSize = 0.1;
-		graph->solver->param.minStepSize = 1.0;
+		graph->solver->param.minStepSize = 0.1;
 		graph->solver->param.maxStepSize = 1.0;
 		//graph->solver->param.methodMajor = Solver::Method::Major::GaussNewton;
 		graph->solver->param.methodMajor = Solver::Method::Major::DDP;
