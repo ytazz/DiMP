@@ -16,6 +16,7 @@ namespace DiMP {;
 	struct BipedFootCopVelCon;
 	struct BipedFootPosRangeConT;
 	struct BipedFootPosRangeConR;
+	struct BipedFootContactCon;
 	struct BipedFootCopRangeCon;
 	struct BipedTimeCon;
 
@@ -40,6 +41,7 @@ namespace DiMP {;
 
 			BipedFootPosRangeConT*   con_pos_range_t[3][2];   ///< range constraint on foot position relative to torso, [x|y|z]
 			BipedFootPosRangeConR*   con_pos_range_r[2];      ///< range constraint on foot orientation relative to torso
+			BipedFootContactCon*     con_contact;
 
 			BipedFootCopRangeCon*  con_cop_range[3][2];   ///< range constraint on CoP relative to support foot, [x|y|z]
 
@@ -179,6 +181,9 @@ namespace DiMP {;
 		struct Waypoint {
 			int     k;
 			real_t  time;
+			real_t  duration;
+			real_t  duration_min;
+			real_t  duration_max;
 			vec3_t  com_pos;
 			vec3_t  com_vel;
 			real_t  torso_pos_r;
@@ -188,19 +193,15 @@ namespace DiMP {;
 			vec3_t  foot_cop_min[2];
 			vec3_t  foot_cop_max[2];
 			
-			//bool    fix_com_pos;
-			//bool    fix_com_vel;
-			//bool    fix_torso_pos_r;
-			//bool    fix_foot_pos_t[2];
-			//bool    fix_foot_pos_r[2];
-			//bool    fix_foot_cop  [2];
-			real_t  weight_com_pos;
-			real_t  weight_com_vel;
+			vec3_t  weight_com_pos;
+			vec3_t  weight_com_vel;
 			real_t  weight_torso_pos_r;
-			real_t  weight_foot_pos_t[2];
+			vec3_t  weight_foot_pos_t[2];
 			real_t  weight_foot_pos_r[2];
-			real_t  weight_foot_cop  [2];
+			vec3_t  weight_foot_cop  [2];
+			real_t  weight_duration;
 			bool    set_cop_range [2];
+			bool    set_duration_range;
 			
 			Waypoint();
 		};
@@ -418,6 +419,18 @@ namespace DiMP {;
 		virtual void CalcDeviation();
 		
 		BipedFootPosRangeConR(Solver* solver, string _name, BipedLIPKey* _obj, int _side, real_t _dir, real_t _scale);
+	};
+
+	struct BipedFootContactCon : Constraint{
+		BipedLIPKey* obj;
+		int          side;
+
+		void Prepare();
+		
+		virtual void CalcCoef();
+		virtual void CalcDeviation();
+		
+		BipedFootContactCon(Solver* solver, string _name, BipedLIPKey* _obj, int _side, real_t _scale);
 	};
 
 	/// CoP range constraint

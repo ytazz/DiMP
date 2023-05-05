@@ -143,6 +143,7 @@ public:
 		 1-2: constant speed
 		 2-3: deceleration, stop
 		 */
+		vec3_t one(1.0, 1.0, 1.0);
 		biped->waypoints.resize(5);
 		biped->waypoints[0].k                 = 0;
 		biped->waypoints[0].com_pos           = vec3_t(0.0, 0.0, biped->param.comHeight);
@@ -152,15 +153,15 @@ public:
 		biped->waypoints[0].foot_pos_r[0]     = 0.0;
 		biped->waypoints[0].foot_pos_t[1]     = vec3_t(0.0,  spacing, 0.0);
 		biped->waypoints[0].foot_pos_r[1]     = 0.0;
-		biped->waypoints[0].weight_com_pos       = 1.0;
-		biped->waypoints[0].weight_com_vel       = 1.0;
+		biped->waypoints[0].weight_com_pos       = 1.0*one;
+		biped->waypoints[0].weight_com_vel       = 1.0*one;
 		biped->waypoints[0].weight_torso_pos_r   = 1.0;
-		biped->waypoints[0].weight_foot_pos_t[0] = 1.0;
+		biped->waypoints[0].weight_foot_pos_t[0] = 1.0*one;
 		biped->waypoints[0].weight_foot_pos_r[0] = 1.0;
-		biped->waypoints[0].weight_foot_cop  [0] = 0.0;
-		biped->waypoints[0].weight_foot_pos_t[1] = 1.0;
+		biped->waypoints[0].weight_foot_cop  [0] = 0.0*one;
+		biped->waypoints[0].weight_foot_pos_t[1] = 1.0*one;
 		biped->waypoints[0].weight_foot_pos_r[1] = 1.0;
-		biped->waypoints[0].weight_foot_cop  [1] = 0.0;
+		biped->waypoints[0].weight_foot_cop  [1] = 0.0*one;
 		
 		biped->waypoints[1].k                 = 1 + 2*nstep_idle;
 		biped->waypoints[1].com_pos           = vec3_t(0.0, 0.0, biped->param.comHeight);
@@ -197,15 +198,15 @@ public:
 		biped->waypoints[4].foot_pos_r[0]     = 0.0;
 		biped->waypoints[4].foot_pos_t[1]     = vec3_t(dist_acc + dist_cruise + dist_dec,  spacing, 0.0);
 		biped->waypoints[4].foot_pos_r[1]     = 0.0;
-		biped->waypoints[4].weight_com_pos       = 1.0;
-		biped->waypoints[4].weight_com_vel       = 1.0;
+		biped->waypoints[4].weight_com_pos       = 1.0*one;
+		biped->waypoints[4].weight_com_vel       = 1.0*one;
 		biped->waypoints[4].weight_torso_pos_r   = 1.0;
-		biped->waypoints[4].weight_foot_pos_t[0] = 1.0;
+		biped->waypoints[4].weight_foot_pos_t[0] = 1.0*one;
 		biped->waypoints[4].weight_foot_pos_r[0] = 1.0;
-		biped->waypoints[4].weight_foot_cop  [0] = 0.0;
-		biped->waypoints[4].weight_foot_pos_t[1] = 1.0;
+		biped->waypoints[4].weight_foot_cop  [0] = 0.0*one;
+		biped->waypoints[4].weight_foot_pos_t[1] = 1.0*one;
 		biped->waypoints[4].weight_foot_pos_r[1] = 1.0;
-		biped->waypoints[4].weight_foot_cop  [1] = 0.0;
+		biped->waypoints[4].weight_foot_cop  [1] = 0.0*one;
 		
 		graph->scale.Set(1.0, 1.0, 1.0);
 		graph->Init();

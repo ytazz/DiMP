@@ -10,6 +10,7 @@ public:
 	DiMP::WholebodyData  data_cur;  //< current state
 	vector<DiMP::WholebodyData>  data_tmp;
 	DiMP::WholebodyData  data_ref;  //< reference state and input computed by most recent MPC optimization
+	DiMP::WholebodyData  data_ref_des;
 	MyIK*                myik;
 
 	Vector  dx, du;
@@ -36,7 +37,8 @@ public:
 	void Countup    ();
 
 	virtual void CalcIK(int ichain, const vec3_t& pe_local, const quat_t& qe_local, vvec_t& joint, vvec_t& error, vmat_t& Jq, vmat_t& Je, bool calc_jacobian);
-	virtual void Setup (int k, real_t t, DiMP::WholebodyData& data);
+	virtual void GetInitialState(DiMP::WholebodyData& d);
+	virtual void GetDesiredState(int k, real_t t, DiMP::WholebodyData& d);
 
 	Mpc();
 };

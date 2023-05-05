@@ -115,7 +115,7 @@ public:
 		mpc->myik = myik;
 		wb->callback = mpc;
 		mpc->Init();		
-
+		
 		graph->Init();
 
 		//graph->solver->Enable(ID(DiMP::ConTag::WholebodyPosT         ), false);
@@ -164,6 +164,7 @@ public:
 			// reset time and state and start next optimization
 			mpc->timeMpc = mpc->time;
 			wb->Setup();
+			wb->Reset();
 			graph->solver->InitDDP();
 
 			mpc->updateCycle = 10;

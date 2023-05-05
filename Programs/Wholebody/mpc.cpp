@@ -17,6 +17,7 @@ void Mpc::Init(){
     data_cur.Init(wb);
     data_cur.InitJacobian(wb);
     data_ref.Init(wb);
+    data_ref_des.Init(wb);
     data_tmp.resize(3 + 6*nend);
 	for(auto& d : data_tmp){
 		d.Init(wb);
@@ -30,33 +31,11 @@ void Mpc::Init(){
 	timeMpc = 0.0;
 
     // initialize state using desired state
-    Setup(0, time, data_cur);
+    GetDesiredState(0, time, data_cur);
 
-    data_cur.com_pos    = data_cur.com_pos_des;
-    data_cur.com_vel    = data_cur.com_vel_des;
-    data_cur.base_pos_r = data_cur.base_pos_r_des;
-    data_cur.base_vel_r = data_cur.base_vel_r_des;
-
-    vec3_t pc = data_cur.com_pos;
-    vec3_t vc = data_cur.com_vel;
-    quat_t q0 = data_cur.base_pos_r;
-    vec3_t w0 = data_cur.base_vel_r;
-    
-    for(int i = 0; i < nend; i++){
-        DiMP::WholebodyData::End&  dend  = data_cur.ends[i];
-        
-        dend.pos_t = q0.Conjugated()*(dend.pos_t_des - pc);
-        dend.pos_r = q0.Conjugated()* dend.pos_r_des;
-        dend.vel_t = q0.Conjugated()*(dend.vel_t_des - (vc + w0 % (dend.pos_t_des - pc)));
-        dend.vel_r = q0.Conjugated()*(dend.vel_r_des - w0);
-        
-        dend.force_t = dend.force_t_des;
-        dend.force_r = dend.force_r_des;
-    }
-
-    wb->CalcPosition    (data_cur);
+    wb->CalcPosition    (data_cur, false);
     wb->CalcJacobian    (data_cur, data_tmp);
-    wb->CalcVelocity    (data_cur);
+    wb->CalcVelocity    (data_cur, false);
     wb->CalcAcceleration(data_cur);
     wb->CalcMomentum    (data_cur);
     wb->CalcMomentumDerivative(data_cur);
@@ -110,9 +89,9 @@ void Mpc::UpdateState(){
         //e = n*(vc + omega0 % q0*(pi + qi*c) + q0*(vi + omegai % qi*c))
     }
     
-    wb->CalcPosition    (data_cur);
+    wb->CalcPosition    (data_cur, false);
     wb->CalcJacobian    (data_cur, data_tmp);
-    wb->CalcVelocity    (data_cur);
+    wb->CalcVelocity    (data_cur, false);
     wb->CalcAcceleration(data_cur);
     wb->CalcMomentum    (data_cur);
     wb->CalcMomentumDerivative(data_cur);
@@ -189,15 +168,13 @@ void Mpc::UpdateInput(){
 
     idx = 0;
     for(int i = 0; i < nend; i++){
-        DiMP::WholebodyData::End&  dend_ref = data_ref.ends[i];
-
         du(idx++) *= wb->sat;
         du(idx++) *= wb->sat;
         du(idx++) *= wb->sat;
         du(idx++) *= wb->sar;
         du(idx++) *= wb->sar;
         du(idx++) *= wb->sar;
-        if(dend_ref.state != DiMP::Wholebody::ContactState::Free){
+        if(data_ref_des.ends[i].state != DiMP::Wholebody::ContactState::Free){
             du(idx++) *= wb->sft;
             du(idx++) *= wb->sft;
             du(idx++) *= wb->sft;
@@ -213,7 +190,8 @@ void Mpc::UpdateInput(){
     // decode u
     idx = 0;
     for(int i = 0; i < nend; i++){
-        DiMP::WholebodyData::End&  dend_ref = data_ref.ends[i];
+        //DiMP::WholebodyData::End&  dend_ref = data_ref.ends[i];
+        DiMP::WholebodyData::End&  dend_ref_des = data_ref_des.ends[i];
         DiMP::WholebodyData::End&  dend_cur = data_cur.ends[i];
         
         dend_cur.acc_t.x = u(idx++);
@@ -222,7 +200,7 @@ void Mpc::UpdateInput(){
         dend_cur.acc_r.x = u(idx++);
         dend_cur.acc_r.y = u(idx++);
         dend_cur.acc_r.z = u(idx++);
-        if(dend_ref.state == DiMP::Wholebody::ContactState::Free){
+        if(data_ref_des.ends[i].state == DiMP::Wholebody::ContactState::Free){
             dend_cur.force_t.clear();
             dend_cur.force_r.clear();
         }
@@ -236,10 +214,10 @@ void Mpc::UpdateInput(){
 
             // enforce contact force constraint
             dend_cur.force_t.z = std::max(0.0, dend_cur.force_t.z);
-            dend_cur.force_t.x = std::min(std::max(-dend_ref.mu*dend_cur.force_t.z, dend_cur.force_t.x), dend_ref.mu*dend_cur.force_t.z);
-            dend_cur.force_t.y = std::min(std::max(-dend_ref.mu*dend_cur.force_t.z, dend_cur.force_t.y), dend_ref.mu*dend_cur.force_t.z);
-            dend_cur.force_r.x = std::min(std::max( dend_ref.cop_min.y*dend_cur.force_t.z, dend_cur.force_r.x),  dend_ref.cop_max.y*dend_cur.force_t.z);
-            dend_cur.force_r.y = std::min(std::max(-dend_ref.cop_max.x*dend_cur.force_t.z, dend_cur.force_r.y), -dend_ref.cop_min.x*dend_cur.force_t.z);
+            dend_cur.force_t.x = std::min(std::max(-dend_ref_des.mu*dend_cur.force_t.z, dend_cur.force_t.x), dend_ref_des.mu*dend_cur.force_t.z);
+            dend_cur.force_t.y = std::min(std::max(-dend_ref_des.mu*dend_cur.force_t.z, dend_cur.force_t.y), dend_ref_des.mu*dend_cur.force_t.z);
+            dend_cur.force_r.x = std::min(std::max( dend_ref_des.cop_min.y*dend_cur.force_t.z, dend_cur.force_r.x),  dend_ref_des.cop_max.y*dend_cur.force_t.z);
+            dend_cur.force_r.y = std::min(std::max(-dend_ref_des.cop_max.x*dend_cur.force_t.z, dend_cur.force_r.y), -dend_ref_des.cop_min.x*dend_cur.force_t.z);
         }
     }
 
@@ -252,14 +230,14 @@ void Mpc::UpdateInput(){
 void Mpc::UpdateGain(){
     // copy data
     DiMP::WholebodyKey* key1 = (DiMP::WholebodyKey*)wb->traj.GetKeypoint(wb->graph->ticks[1]);
-    data_ref = key1->data;
+    data_ref     = key1->data;
+    data_ref_des = key1->data_des;
 
     // calc input dimension
     int nu = 0;
     int nend = wb->ends.size();
     for(int i = 0; i < nend; i++){
-        DiMP::WholebodyData::End&  dend_ref = data_ref.ends[i];
-        nu += (dend_ref.state == DiMP::Wholebody::ContactState::Free ? 6 : 12);
+        nu += (data_ref_des.ends[i].state == DiMP::Wholebody::ContactState::Free ? 6 : 12);
     }
 
     // calc uref
@@ -274,7 +252,7 @@ void Mpc::UpdateGain(){
         uref(idx++) = dend_ref.acc_r.x;
         uref(idx++) = dend_ref.acc_r.y;
         uref(idx++) = dend_ref.acc_r.z;
-        if(dend_ref.state != DiMP::Wholebody::ContactState::Free){
+        if(data_ref_des.ends[i].state != DiMP::Wholebody::ContactState::Free){
             uref(idx++) = dend_ref.force_t.x;
             uref(idx++) = dend_ref.force_t.y;
             uref(idx++) = dend_ref.force_t.z;
@@ -308,110 +286,138 @@ void Mpc::CalcIK(int ichain, const vec3_t& pe_local, const quat_t& qe_local, vve
     if(ichain == MyIK::Chain::LegL ) myik->CalcLegIK  (pe_local, qe_local, joint, error, Jq, Je, calc_jacobian, 1);
 }
 
-void Mpc::Setup(int k, real_t t, DiMP::WholebodyData& d){
+void Mpc::GetInitialState(DiMP::WholebodyData& d){
+    d.com_pos    = data_cur.com_pos;
+    d.com_vel    = data_cur.com_vel;
+    d.base_pos_r = data_cur.base_pos_r;
+    d.base_vel_r = data_cur.base_vel_r;
+
+    d.com_pos_weight    = (100.0)*one;
+    d.com_vel_weight    = (100.0)*one;
+    d.base_pos_r_weight = (100.0)*one;
+    d.base_vel_r_weight = (100.0)*one;
+
+    for(int i = 0; i < MyIK::End::Num; i++){
+        DiMP::WholebodyData::End&  dend     = d.ends[i];
+        DiMP::WholebodyData::End&  dend_cur = data_cur.ends[i];
+
+        dend.pos_t   = dend_cur.pos_t;
+        dend.pos_r   = dend_cur.pos_r;
+        dend.vel_t   = dend_cur.vel_t;
+        dend.vel_r   = dend_cur.vel_r;
+        dend.acc_t   = dend_cur.acc_t;
+        dend.acc_r   = dend_cur.acc_r;
+        dend.force_t = dend_cur.force_t;
+        dend.force_r = dend_cur.force_r;
+    
+        dend.pos_t_weight   = 100.0*one;
+        dend.pos_r_weight   = 100.0*one;
+        dend.vel_t_weight   = 100.0*one;
+        dend.vel_r_weight   = 100.0*one;
+        dend.acc_t_weight   = 100.0*one;
+        dend.acc_r_weight   = 100.0*one;
+        dend.force_t_weight = 100.0*one;
+        dend.force_r_weight = 100.0*one;
+    }
+}
+
+void Mpc::GetDesiredState(int k, real_t t, DiMP::WholebodyData& d){
     const real_t dt = 0.001;
     int r = (t + timeMpc)/dt;
     int c = 1;
 
-    d.com_pos_ini    = data_cur.com_pos;
-    d.com_vel_ini    = data_cur.com_vel;
-    d.base_pos_r_ini = data_cur.base_pos_r;
-    d.base_vel_r_ini = data_cur.base_vel_r;
-
-    d.com_pos_des    = vec3_t(csv.Get<real_t>(r, c+0), csv.Get<real_t>(r, c+1), csv.Get<real_t>(r, c+2)); c += 3;
-    d.com_vel_des    = vec3_t(csv.Get<real_t>(r, c+0), csv.Get<real_t>(r, c+1), csv.Get<real_t>(r, c+2)); c += 3;
-    d.base_pos_r_des = quat_t();
-    d.base_vel_r_des = vec3_t();
-
-    d.com_pos_weight    = (k == N ? 1.0 : 1.0)*one;
-    d.com_vel_weight    = (k == N ? 1.0 : 1.0)*one;
-    d.base_pos_r_weight = (k == N ? 1.0 : 1.0)*one;
-    d.base_vel_r_weight = (k == N ? 1.0 : 1.0)*one;
+    d.com_pos    = vec3_t(csv.Get<real_t>(r, c+0), csv.Get<real_t>(r, c+1), csv.Get<real_t>(r, c+2)); c += 3;
+    d.com_vel    = vec3_t(csv.Get<real_t>(r, c+0), csv.Get<real_t>(r, c+1), csv.Get<real_t>(r, c+2)); c += 3;
+    d.base_pos_r = quat_t();
+    d.base_vel_r = vec3_t();
+    
+    d.com_pos_weight    = (k == N ? 100.0 : 1.0)*one;
+    d.com_vel_weight    = (k == N ? 100.0 : 1.0)*one;
+    d.base_pos_r_weight = (k == N ? 100.0 : 1.0)*one;
+    d.base_vel_r_weight = (k == N ? 100.0 : 1.0)*one;
     
     for(int i = 0; i < MyIK::End::Num; i++){
         DiMP::WholebodyData::End&  dend     = d.ends[i];
-        DiMP::WholebodyData::End&  dend_cur = data_cur.ends [i];
         
-        // set current state as initial state of MPC
-        dend.pos_t_ini = dend_cur.pos_t;
-        dend.pos_r_ini = dend_cur.pos_r;
-        dend.vel_t_ini = dend_cur.vel_t;
-        dend.vel_r_ini = dend_cur.vel_r;
-
-        // set current input as initial input
-        dend.acc_t_ini   = dend_cur.acc_t;
-        dend.acc_r_ini   = dend_cur.acc_r;
-        dend.force_t_ini = dend_cur.force_t;
-        dend.force_r_ini = dend_cur.force_r;
+        vec3_t pe;
+        quat_t qe;
+        vec3_t ve;
+        vec3_t we;
 
         if(i == MyIK::End::ChestP){
-            dend.pos_t_des = d.com_pos_des + vec3_t(0.0, 0.0, myik->torsoLength);
-            dend.pos_r_des = quat_t();
-            dend.vel_t_des = d.com_vel_des;
-            dend.vel_r_des = vec3_t();
-            dend.state     = DiMP::Wholebody::ContactState::Free;
-            dend.pos_tc    = dend.pos_t_des;
+            pe         = d.com_pos + vec3_t(0.0, 0.0, myik->torsoLength);
+            qe         = quat_t();
+            ve         = d.com_vel;
+            we         = vec3_t();
+            dend.state  = DiMP::Wholebody::ContactState::Free;
         }
         if(i == MyIK::End::HandR){
-            dend.pos_t_des = d.com_pos_des + handOffset[0];
-            dend.pos_r_des = quat_t();
-            dend.vel_t_des = d.com_vel_des;
-            dend.vel_r_des = vec3_t();
-            dend.state     = DiMP::Wholebody::ContactState::Free;
-            dend.pos_tc    = dend.pos_t_des;
+            pe         = d.com_pos + handOffset[0];
+            qe         = quat_t();
+            ve         = d.com_vel;
+            we         = vec3_t();
+            dend.state  = DiMP::Wholebody::ContactState::Free;
         }
         if(i == MyIK::End::HandL){
-            dend.pos_t_des = d.com_pos_des + handOffset[1];
-            dend.pos_r_des = quat_t();
-            dend.vel_t_des = d.com_vel_des;
-            dend.vel_r_des = vec3_t();
-            dend.state     = DiMP::Wholebody::ContactState::Free;
-            dend.pos_tc    = dend.pos_t_des;
+            pe         = d.com_pos + handOffset[1];
+            qe         = quat_t();
+            ve         = d.com_vel;
+            we         = vec3_t();
+            dend.state  = DiMP::Wholebody::ContactState::Free;
         }
         if(i == MyIK::End::FootR || i == MyIK::End::FootL){
             c = (i == MyIK::End::FootR ? 1+3+3 : 1+3+3+7+6+6+1);
-            dend.pos_t_des   = vec3_t(csv.Get<real_t>(r, c+0), csv.Get<real_t>(r, c+1), csv.Get<real_t>(r, c+2)); c += 3;
-            dend.pos_r_des   = quat_t(csv.Get<real_t>(r, c+0), csv.Get<real_t>(r, c+1), csv.Get<real_t>(r, c+2), csv.Get<real_t>(r, c+3)); c += 4;
-            dend.vel_t_des   = vec3_t(csv.Get<real_t>(r, c+0), csv.Get<real_t>(r, c+1), csv.Get<real_t>(r, c+2)); c += 3;
-            dend.vel_r_des   = vec3_t(csv.Get<real_t>(r, c+0), csv.Get<real_t>(r, c+1), csv.Get<real_t>(r, c+2)); c += 3;
-            dend.force_t_des = vec3_t(csv.Get<real_t>(r, c+0), csv.Get<real_t>(r, c+1), csv.Get<real_t>(r, c+2)); c += 3;
-            dend.force_r_des = vec3_t(csv.Get<real_t>(r, c+0), csv.Get<real_t>(r, c+1), csv.Get<real_t>(r, c+2)); c += 3;
+            pe           = vec3_t(csv.Get<real_t>(r, c+0), csv.Get<real_t>(r, c+1), csv.Get<real_t>(r, c+2)); c += 3;
+            qe           = quat_t(csv.Get<real_t>(r, c+0), csv.Get<real_t>(r, c+1), csv.Get<real_t>(r, c+2), csv.Get<real_t>(r, c+3)); c += 4;
+            ve           = vec3_t(csv.Get<real_t>(r, c+0), csv.Get<real_t>(r, c+1), csv.Get<real_t>(r, c+2)); c += 3;
+            we           = vec3_t(csv.Get<real_t>(r, c+0), csv.Get<real_t>(r, c+1), csv.Get<real_t>(r, c+2)); c += 3;
+            dend.force_t = vec3_t(csv.Get<real_t>(r, c+0), csv.Get<real_t>(r, c+1), csv.Get<real_t>(r, c+2)); c += 3;
+            dend.force_r = vec3_t(csv.Get<real_t>(r, c+0), csv.Get<real_t>(r, c+1), csv.Get<real_t>(r, c+2)); c += 3;
 
             int stat = csv.Get<int>(r, c++);
 
             if(stat == DiMP::BipedLIP::ContactState::Float){
                 dend.state  = DiMP::Wholebody::ContactState::Free;
-                dend.pos_tc   = dend.pos_t_des;
             }
             if(stat == DiMP::BipedLIP::ContactState::Surface){
-                dend.state    = DiMP::Wholebody::ContactState::Surface;
-                dend.pos_tc   = dend.pos_t_des;
-		        dend.pos_tc.z = 0.0;
-                dend.pos_rc   = quat_t();
-                //dend.center   = vec3_t(0.0, 0.0, 0.0);
-                //dend.offset   = 0.0;
-                dend.cop_min  = vec2_t(-0.1, -0.1);
-                dend.cop_max  = vec2_t( 0.1,  0.1);
+                dend.state   = DiMP::Wholebody::ContactState::Surface;
+                dend.mu      = 0.2;
+                dend.cop_min = vec2_t(-0.1, -0.05);
+                dend.cop_max = vec2_t( 0.1,  0.05);
+                dend.pos_te  = vec3_t(0.0, 0.0, 0.0);
+                dend.pos_tc  = pe;
+                dend.pos_rc  = quat_t();
             }
-            if( stat == DiMP::BipedLIP::ContactState::Heel ||
-                stat == DiMP::BipedLIP::ContactState::Toe ){
+            if(stat == DiMP::BipedLIP::ContactState::Heel){
                 dend.state   = DiMP::Wholebody::ContactState::Line;
                 dend.mu      = 0.2;
-                dend.cop_min = vec2_t(-0.1, -0.1);
-                dend.cop_max = vec2_t( 0.1,  0.1);
-
-                //dend.center   = (stat == DiMP::BipedLIP::ContactState::Heel ? vec3_t(-0.07, 0.0, 0.1) : vec3_t( 0.1, 0.0, 0.1));
-                //dend.pos_tc   = dend.pos_t_des + dend.pos_r_des*dend.center;
-                //dend.offset   = dend.pos_tc.z;
-		        dend.pos_tc.z = 0.0;
-                dend.pos_rc   = quat_t();
+                dend.cop_min = vec2_t(-0.1, -0.05);
+                dend.cop_max = vec2_t( 0.1,  0.05);
+                dend.pos_te  = vec3_t(0.1, 0.0, 0.0);
+                dend.pos_tc  = pe + qe*dend.pos_te;
+                dend.pos_rc  = quat_t();
+            }
+            if(stat == DiMP::BipedLIP::ContactState::Toe ){
+                dend.state   = DiMP::Wholebody::ContactState::Line;
+                dend.mu      = 0.2;
+                dend.cop_min = vec2_t(-0.1, -0.05);
+                dend.cop_max = vec2_t( 0.1,  0.05);
+                dend.pos_te  = vec3_t(-0.1, 0.0, 0.0);
+                dend.pos_tc  = pe + qe*dend.pos_te;
+                dend.pos_rc  = quat_t();
             }
         }
 
-        dend.pos_t_weight   = one*(k == N ? 1.0 : 1.0)*(dend.state == DiMP::Wholebody::ContactState::Free ? 0.1 : 1.0);
-        dend.pos_r_weight   = one*(k == N ? 1.0 : 1.0)*(dend.state == DiMP::Wholebody::ContactState::Free ? 0.1 : 1.0);
-        dend.vel_t_weight   = one*(k == N ? 1.0 : 1.0)*(dend.state == DiMP::Wholebody::ContactState::Free ? 0.1 : 1.0);
-        dend.vel_r_weight   = one*(k == N ? 1.0 : 1.0)*(dend.state == DiMP::Wholebody::ContactState::Free ? 0.1 : 1.0);
+        // transform to local coordinate
+        dend.pos_t = d.base_pos_r.Conjugated()*(pe - d.com_pos);
+        dend.pos_r = d.base_pos_r.Conjugated()*qe;
+        dend.vel_t = d.base_pos_r.Conjugated()*(ve - (d.com_vel + d.base_vel_r%(pe - d.com_pos)));
+        dend.vel_r = d.base_pos_r.Conjugated()*(we - d.base_vel_r);	
+
+        dend.pos_t_weight   = one*(k == N ? 100.0 : 1.0)*(dend.state == DiMP::Wholebody::ContactState::Free ? 0.1 : 1.0);
+        dend.pos_r_weight   = one*(k == N ? 100.0 : 1.0)*(dend.state == DiMP::Wholebody::ContactState::Free ? 0.1 : 1.0);
+        dend.vel_t_weight   = one*(k == N ? 100.0 : 1.0)*(dend.state == DiMP::Wholebody::ContactState::Free ? 0.1 : 1.0);
+        dend.vel_r_weight   = one*(k == N ? 100.0 : 1.0)*(dend.state == DiMP::Wholebody::ContactState::Free ? 0.1 : 1.0);
         dend.acc_t_weight   = one;
         dend.acc_r_weight   = one;
         dend.force_t_weight = one;
