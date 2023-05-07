@@ -59,10 +59,10 @@ struct WholebodyData{
 		vec3_t  force_t;
 		vec3_t  force_r;
 
-		vec3_t pos_t_weight, pos_r_weight;
-		vec3_t vel_t_weight, vel_r_weight;
-		vec3_t acc_t_weight, acc_r_weight;
-		vec3_t force_t_weight, force_r_weight;
+		vec3_t  pos_t_weight, pos_r_weight;
+		vec3_t  vel_t_weight, vel_r_weight;
+		vec3_t  acc_t_weight, acc_r_weight;
+		vec3_t  force_t_weight, force_r_weight;
 
 		//vec3_t  center;  //< contact center in link's local coordinate
 		//real_t  offset;  //< offset from contact plane to contact center
@@ -78,22 +78,29 @@ struct WholebodyData{
 		End();
 	};
 
-	vector<Link>  links;
-	vector<End>   ends;
+	struct Centroid{
+		vec3_t pos_t;   ///< com position (local), desired com position (global)
+		vec3_t vel_t;   ///< com velocity (local), desired com velocity (global)
+		vec3_t acc_t;
+		quat_t pos_r;
+		vec3_t vel_r;
+		vec3_t acc_r;
+		vec3_t pos_t_weight;
+		vec3_t vel_t_weight;
+		vec3_t pos_r_weight;
+		vec3_t vel_r_weight;
+		vec3_t L, Ld;                  ///< momentum (local) and its derivative
+		vec3_t Ld_weight;
+		mat3_t I, Iinv;                ///< inertia matrix around com and its inverse
 
-	vec3_t com_pos;   ///< com position (local), desired com position (global)
-	vec3_t com_vel;   ///< com velocity (local), desired com velocity (global)
-	vec3_t com_pos_weight;
-	vec3_t com_vel_weight;
-	vec3_t com_acc;
-	quat_t base_pos_r;
-	vec3_t base_vel_r;
-	vec3_t base_pos_r_weight;
-	vec3_t base_vel_r_weight;
-	vec3_t base_acc_r;
-	vec3_t L, Ld;                  ///< momentum (local) and its derivative
-	vec3_t Ld_weight;
-	mat3_t I, Iinv;                ///< inertia matrix around com and its inverse
+		Centroid();
+	};
+
+	Base          base;
+	Centroid      centroid;
+	vector<End>   ends;
+	vector<Link>  links;
+	
 	vvec_t q, qd, tau;
 	vvec_t e;
 	vector<vmat_t>   Jq;
@@ -150,28 +157,33 @@ public:
 		WholebodyFrictionForceCon*  con_force_friction[2][2];
 		WholebodyMomentCon*         con_moment[2][2];
 	};
-		
-	V3Var*  var_com_pos;
-	V3Var*  var_com_vel;
-	QVar*   var_base_pos_r;
-	V3Var*  var_base_vel_r;
 
-	WholebodyComPosCon*    con_com_pos;
-	WholebodyComVelCon*    con_com_vel;
-	WholebodyBasePosConR*  con_base_pos_r;
-	WholebodyBaseVelConR*  con_base_vel_r;
-	FixConV3*  con_des_com_pos;
-	FixConV3*  con_des_com_vel;
-	FixConQ*   con_des_base_pos_r;
-	FixConV3*  con_des_base_vel_r;
-	
+	struct Centroid{		
+		V3Var*  var_pos_t;
+		V3Var*  var_vel_t;
+		QVar*   var_pos_r;
+		V3Var*  var_vel_r;
+
+		WholebodyCentroidPosConT*  con_pos_t;
+		WholebodyCentroidVelConT*  con_vel_t;
+		WholebodyCentroidPosConR*  con_pos_r;
+		WholebodyCentroidVelConR*  con_vel_r;
+
+		FixConV3*  con_des_pos_t;
+		FixConV3*  con_des_vel_t;
+		FixConQ*   con_des_pos_r;
+		FixConV3*  con_des_vel_r;
+
+		WholebodyLdCon*        con_Ld;
+	};
+
 	vector<WholebodyLimitCon*>  con_limit;
-	WholebodyLdCon*        con_Ld;
 	
 	WholebodyData          data;
 	WholebodyData          data_des;
 	vector<WholebodyData>  data_tmp;
-	
+
+	Centroid       centroid;
 	vector<End>    ends;
 	
 public:	
