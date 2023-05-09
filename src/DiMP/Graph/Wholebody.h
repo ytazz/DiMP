@@ -13,10 +13,10 @@ struct WholebodyPosConT;
 struct WholebodyPosConR;
 struct WholebodyVelConT;
 struct WholebodyVelConR;
-struct WholebodyComPosCon;
-struct WholebodyComVelCon;
-struct WholebodyBasePosConR;
-struct WholebodyBaseVelConR;
+struct WholebodyCentroidPosConT;
+struct WholebodyCentroidVelConT;
+struct WholebodyCentroidPosConR;
+struct WholebodyCentroidVelConR;
 struct WholebodyDesPosConT;
 struct WholebodyDesPosConR;
 struct WholebodyDesVelConT;
@@ -76,6 +76,17 @@ struct WholebodyData{
 		vec2_t  cop_max;
 
 		End();
+	};
+
+	struct Base{
+		quat_t pos_r;
+		vec3_t vel_r;
+		vec3_t acc_r;
+		vec3_t pos_r_weight;
+		vec3_t vel_r_weight;
+		vec3_t acc_r_weight;
+
+		Base();
 	};
 
 	struct Centroid{
@@ -158,6 +169,19 @@ public:
 		WholebodyMomentCon*         con_moment[2][2];
 	};
 
+	struct Base{
+		QVar*   var_pos_r;
+		V3Var*  var_vel_r;
+		V3Var*  var_acc_r;
+		
+		WholebodyPosConR*     con_pos_r;
+		WholebodyVelConR*     con_vel_r;
+
+		FixConQ*  con_des_pos_r;
+		FixConV3* con_des_vel_r;
+		FixConV3* con_des_acc_r;
+	};
+
 	struct Centroid{		
 		V3Var*  var_pos_t;
 		V3Var*  var_vel_t;
@@ -183,6 +207,7 @@ public:
 	WholebodyData          data_des;
 	vector<WholebodyData>  data_tmp;
 
+	Base           base;
 	Centroid       centroid;
 	vector<End>    ends;
 	
@@ -412,7 +437,7 @@ struct WholebodyVelConR : WholebodyCon{
 	WholebodyVelConR(Solver* solver, string _name, WholebodyKey* _obj, int _iend, real_t _scale);
 };
 
-struct WholebodyComPosCon : WholebodyCon{
+struct WholebodyCentroidPosConT : WholebodyCon{
 	vec3_t pc0, pc1, pc_rhs;
 	vec3_t vc0;
 
@@ -422,10 +447,10 @@ struct WholebodyComPosCon : WholebodyCon{
 	virtual void  CalcDeviation();
 	virtual void  CalcLhs();
 		
-	WholebodyComPosCon(Solver* solver, string _name, WholebodyKey* _obj, real_t _scale);
+	WholebodyCentroidPosConT(Solver* solver, string _name, WholebodyKey* _obj, real_t _scale);
 };
 
-struct WholebodyComVelCon : WholebodyCon{
+struct WholebodyCentroidVelConT : WholebodyCon{
 	quat_t q0;
 	mat3_t R0;
 	vec3_t vc0, vc1, vc_rhs;
@@ -439,10 +464,10 @@ struct WholebodyComVelCon : WholebodyCon{
 	virtual void  CalcDeviation();
 	virtual void  CalcLhs();
 		
-	WholebodyComVelCon(Solver* solver, string _name, WholebodyKey* _obj, real_t _scale);
+	WholebodyCentroidVelConT(Solver* solver, string _name, WholebodyKey* _obj, real_t _scale);
 };
 
-struct WholebodyBasePosConR : WholebodyCon{
+struct WholebodyCentroidPosConR : WholebodyCon{
 	quat_t q0, q1, q_rhs;
 	vec3_t w0;
 	
@@ -452,10 +477,10 @@ struct WholebodyBasePosConR : WholebodyCon{
 	virtual void  CalcDeviation();
 	virtual void  CalcLhs();
 		
-	WholebodyBasePosConR(Solver* solver, string _name, WholebodyKey* _obj, real_t _scale);
+	WholebodyCentroidPosConR(Solver* solver, string _name, WholebodyKey* _obj, real_t _scale);
 };
 
-struct WholebodyBaseVelConR : WholebodyCon{
+struct WholebodyCentroidVelConR : WholebodyCon{
 	vec3_t pc;
 	vec3_t w0, w1, w_rhs;
 	quat_t q0;
@@ -465,6 +490,7 @@ struct WholebodyBaseVelConR : WholebodyCon{
 	mat3_t Iinv;
 	vector<vec3_t>  r, f, m;
 	vector<mat3_t>  R, rc;
+	mat3_t          J_Ld_qb, J_Ld_ub;
 	vector<mat3_t>  J_Ld_pe, J_Ld_qe, J_Ld_ae, J_Ld_ue;
 	
 	void Prepare();
@@ -473,7 +499,7 @@ struct WholebodyBaseVelConR : WholebodyCon{
 	virtual void  CalcDeviation();
 	virtual void  CalcLhs();
 		
-	WholebodyBaseVelConR(Solver* solver, string _name, WholebodyKey* _obj, real_t _scale);
+	WholebodyCentroidVelConR(Solver* solver, string _name, WholebodyKey* _obj, real_t _scale);
 };
 
 struct WholebodyDesPosConT : Constraint{
@@ -553,6 +579,7 @@ struct WholebodyLimitCon : Constraint{
 
 struct WholebodyLdCon : Constraint{
 	WholebodyKey*  obj;
+	mat3_t          J_Ld_qb, J_Ld_ub;
 	vector<mat3_t>  J_Ld_pe, J_Ld_qe, J_Ld_ae, J_Ld_ue;
 	
 	void Prepare();

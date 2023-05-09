@@ -66,9 +66,7 @@ const char* VarNames[] = {
 	"wholebody_acc_t",
 	"wholebody_acc_r",
 	"wholebody_force_t",
-	"wholebody_force_r",
-	"wholebody_com_pos",
-	"wholebody_com_vel"
+	"wholebody_force_r"
 };
 
 const char* ConNames[] = {
@@ -156,9 +154,7 @@ const char* ConNames[] = {
 	"wholebody_contact_vel_r",
 	"wholebody_normal_force",
 	"wholebody_friction_force",
-	"wholebody_moment",
-	"wholebody_com_pos",
-	"wholebody_com_vel"
+	"wholebody_moment"
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

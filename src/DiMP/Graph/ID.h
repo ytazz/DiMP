@@ -65,8 +65,6 @@ struct VarTag{
 		WholebodyAccR,
 		WholebodyForceT,
 		WholebodyForceR,
-		WholebodyComPos,
-		WholebodyComVel,
 		NumTypes,
 	};
 };
@@ -159,8 +157,6 @@ struct ConTag{
 		WholebodyNormalForce,
 		WholebodyFrictionForce,
 		WholebodyMoment,
-		WholebodyComPos,
-		WholebodyComVel,
 		NumTypes,
 	};
 };

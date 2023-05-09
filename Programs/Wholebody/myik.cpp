@@ -52,7 +52,8 @@ void MyIK::CalcTorsoIK(const vec3_t& pos, const quat_t& ori, vvec_t& joint, vvec
     joint[2] = 0.0;
     joint[3] = 0.0;
 
-    vec3_t offset(0.0, 0.0, torsoLength);
+    //vec3_t offset(0.0, 0.0, torsoLength);
+    vec3_t offset(0.0, 0.0, 0.0);
     error[0] = pos.x - offset.x;
     error[1] = pos.y - offset.y;
     error[2] = pos.z - offset.z;
