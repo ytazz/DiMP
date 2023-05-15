@@ -126,11 +126,11 @@ public:
 		//graph->solver->Enable(ID(DiMP::ConTag::WholebodyAccR         ), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::WholebodyForceT       ), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::WholebodyForceR       ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::WholebodyLimit        ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::WholebodyContactPosT  ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::WholebodyContactPosR  ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::WholebodyContactVelT  ), false);
-		//graph->solver->Enable(ID(DiMP::ConTag::WholebodyContactVelR  ), false);
+		graph->solver->Enable(ID(DiMP::ConTag::WholebodyLimit        ), false);
+		graph->solver->Enable(ID(DiMP::ConTag::WholebodyContactPosT  ), false);
+		graph->solver->Enable(ID(DiMP::ConTag::WholebodyContactPosR  ), false);
+		graph->solver->Enable(ID(DiMP::ConTag::WholebodyContactVelT  ), false);
+		graph->solver->Enable(ID(DiMP::ConTag::WholebodyContactVelR  ), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::WholebodyNormalForce  ), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::WholebodyFrictionForce), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::WholebodyMoment       ), false);
@@ -142,7 +142,7 @@ public:
 		graph->solver->SetCorrection(ID(), 0.1);
 		graph->solver->param.numIter[0] = 20;
 		graph->solver->param.cutoffStepSize = 0.01;
-		graph->solver->param.regularization = 1.0e-1;
+		graph->solver->param.regularization = 1.0e-5;
 		graph->solver->param.minStepSize = 1.0;
 		graph->solver->param.maxStepSize = 1.0;
 		graph->solver->param.hastyStepSize = true;

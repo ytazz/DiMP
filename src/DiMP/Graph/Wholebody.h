@@ -210,6 +210,15 @@ public:
 	Base           base;
 	Centroid       centroid;
 	vector<End>    ends;
+
+	// working variables
+	quat_t          q0;
+	mat3_t          R0;
+	vector<vec3_t>  re, fe, me;
+	vector<mat3_t>  Re, rec;
+	vec3_t          fsum, msum;
+	mat3_t          J_Ld_qb, J_Ld_ub;
+	vector<mat3_t>  J_Ld_pe, J_Ld_qe, J_Ld_ae, J_Ld_ue;
 	
 public:	
     virtual void AddVar(Solver* solver);
@@ -383,8 +392,8 @@ struct WholebodyCon : Constraint {
 
 struct WholebodyPosConT : WholebodyCon{
 	int iend;
-	vec3_t p0, p1, p_rhs;
-	vec3_t v0;
+	vec3_t p0, v0, a0, p1, p_rhs;
+	real_t h, h2;
 	
 	void Prepare();
 
@@ -398,7 +407,8 @@ struct WholebodyPosConT : WholebodyCon{
 struct WholebodyPosConR : WholebodyCon{
 	int iend;
 	quat_t q0, q1, q_rhs;
-	vec3_t w0;
+	vec3_t w0, u0;
+	real_t h, h2;
 	
 	void Prepare();
 
@@ -411,8 +421,8 @@ struct WholebodyPosConR : WholebodyCon{
 
 struct WholebodyVelConT : WholebodyCon{
 	int iend;
-	vec3_t v0, v1, v_rhs;
-	vec3_t a0;
+	vec3_t v0, a0, v1, v_rhs;
+	real_t h;
 	
 	void Prepare();
 
@@ -425,8 +435,8 @@ struct WholebodyVelConT : WholebodyCon{
 
 struct WholebodyVelConR : WholebodyCon{
 	int iend;
-	vec3_t w0, w1, w_rhs;
-	vec3_t u0;
+	vec3_t w0, u0, w1, w_rhs;
+	real_t h;
 	
 	void Prepare();
 
@@ -438,9 +448,10 @@ struct WholebodyVelConR : WholebodyCon{
 };
 
 struct WholebodyCentroidPosConT : WholebodyCon{
-	vec3_t pc0, pc1, pc_rhs;
-	vec3_t vc0;
-
+	real_t h, h2, m;
+	vec3_t g;
+	vec3_t pc0, vc0, ac0, pc1, pc_rhs;
+	
 	void Prepare();
 
 	virtual void  CalcCoef();
@@ -451,12 +462,9 @@ struct WholebodyCentroidPosConT : WholebodyCon{
 };
 
 struct WholebodyCentroidVelConT : WholebodyCon{
-	quat_t q0;
-	mat3_t R0;
-	vec3_t vc0, vc1, vc_rhs;
-	vec3_t fsum;
-	vector<vec3_t>  f;
-	vector<mat3_t>  R;
+	real_t h, m;
+	vec3_t g;
+	vec3_t vc0, ac0, vc1, vc_rhs;
 	
 	void Prepare();
 
@@ -468,8 +476,10 @@ struct WholebodyCentroidVelConT : WholebodyCon{
 };
 
 struct WholebodyCentroidPosConR : WholebodyCon{
-	quat_t q0, q1, q_rhs;
-	vec3_t w0;
+	quat_t q1, q_rhs;
+	vec3_t w0, u0, Ld;
+	mat3_t Iinv;
+	real_t h, h2;
 	
 	void Prepare();
 
@@ -481,17 +491,9 @@ struct WholebodyCentroidPosConR : WholebodyCon{
 };
 
 struct WholebodyCentroidVelConR : WholebodyCon{
-	vec3_t pc;
-	vec3_t w0, w1, w_rhs;
-	quat_t q0;
-	mat3_t R0;
-	vec3_t msum;
-	vec3_t Ld;
+	vec3_t pc, w0, u0, w1, w_rhs, Ld;
 	mat3_t Iinv;
-	vector<vec3_t>  r, f, m;
-	vector<mat3_t>  R, rc;
-	mat3_t          J_Ld_qb, J_Ld_ub;
-	vector<mat3_t>  J_Ld_pe, J_Ld_qe, J_Ld_ae, J_Ld_ue;
+	real_t h;
 	
 	void Prepare();
 
@@ -579,8 +581,6 @@ struct WholebodyLimitCon : Constraint{
 
 struct WholebodyLdCon : Constraint{
 	WholebodyKey*  obj;
-	mat3_t          J_Ld_qb, J_Ld_ub;
-	vector<mat3_t>  J_Ld_pe, J_Ld_qe, J_Ld_ae, J_Ld_ue;
 	
 	void Prepare();
 
