@@ -22,14 +22,16 @@ const vec3_t one(1.0, 1.0, 1.0);
 // IKData
 
 WholebodyData::End::End(){
-	pos_t_weight   = one;
-	pos_r_weight   = one;
-	vel_t_weight   = one;
-	vel_r_weight   = one;
-	acc_t_weight   = one;
-	acc_r_weight   = one;
-	force_t_weight = one;
-	force_r_weight = one;
+	pos_t_weight       = one;
+	pos_r_weight       = one;
+	vel_t_weight       = one;
+	vel_r_weight       = one;
+	acc_t_weight       = one;
+	acc_r_weight       = one;
+	force_t_weight     = one;
+	force_r_weight     = one;
+	forcerate_t_weight = one;
+	forcerate_r_weight = one;
 
 	state  = Wholebody::ContactState::Free;
 	mu     = 0.5;
@@ -127,16 +129,16 @@ void WholebodyKey::AddVar(Solver* solver) {
 	stringstream ss, ss2;
 
 	centroid.var_pos_t = new V3Var(solver, ID(VarTag::WholebodyPosT, node, tick, name + "_centroid_pos_t"), wb->spt);
-	centroid.var_vel_t = new V3Var(solver, ID(VarTag::WholebodyVelT, node, tick, name + "_centroid_vel_t"), wb->svt);
 	centroid.var_pos_r = new QVar (solver, ID(VarTag::WholebodyPosR, node, tick, name + "_centroid_pos_r"), wb->spr);
+	centroid.var_vel_t = new V3Var(solver, ID(VarTag::WholebodyVelT, node, tick, name + "_centroid_vel_t"), wb->svt);
 	centroid.var_vel_r = new V3Var(solver, ID(VarTag::WholebodyVelR, node, tick, name + "_centroid_vel_r"), wb->svr);
 	centroid.var_pos_t->weight = damping*one;
-	centroid.var_vel_t->weight = damping*one;
 	centroid.var_pos_r->weight = damping*one;
+	centroid.var_vel_t->weight = damping*one;
 	centroid.var_vel_r->weight = damping*one;
 	solver->AddStateVar(centroid.var_pos_t, tick->idx);
-	solver->AddStateVar(centroid.var_vel_t, tick->idx);
 	solver->AddStateVar(centroid.var_pos_r, tick->idx);
+	solver->AddStateVar(centroid.var_vel_t, tick->idx);
 	solver->AddStateVar(centroid.var_vel_r, tick->idx);
 
 	base.var_pos_r = new QVar (solver, ID(VarTag::WholebodyPosR, node, tick, name + "_base_pos_r"), wb->spr);
@@ -156,32 +158,38 @@ void WholebodyKey::AddVar(Solver* solver) {
 		ss.str("");
 		ss << name << "_end" << i;
 
-		ends[i].var_pos_t = new V3Var(solver, ID(VarTag::WholebodyPosT, node, tick, ss.str() + "_pos_t"), wb->spt);
-		ends[i].var_vel_t = new V3Var(solver, ID(VarTag::WholebodyVelT, node, tick, ss.str() + "_vel_t"), wb->svt);
-		ends[i].var_pos_r = new QVar (solver, ID(VarTag::WholebodyPosR, node, tick, ss.str() + "_pos_r"), wb->spr);
-		ends[i].var_vel_r = new V3Var(solver, ID(VarTag::WholebodyVelR, node, tick, ss.str() + "_vel_r"), wb->svr);
-		ends[i].var_pos_t->weight = damping*one;
-		ends[i].var_vel_t->weight = damping*one;
-		ends[i].var_pos_r->weight = damping*one;
-		ends[i].var_vel_r->weight = damping*one;
-		solver->AddStateVar(ends[i].var_pos_t, tick->idx);
-		solver->AddStateVar(ends[i].var_vel_t, tick->idx);	
-		solver->AddStateVar(ends[i].var_pos_r, tick->idx);
-		solver->AddStateVar(ends[i].var_vel_r, tick->idx);
+		ends[i].var_pos_t   = new V3Var(solver, ID(VarTag::WholebodyPosT, node, tick, ss.str() + "_pos_t"), wb->spt);
+		ends[i].var_pos_r   = new QVar (solver, ID(VarTag::WholebodyPosR, node, tick, ss.str() + "_pos_r"), wb->spr);
+		ends[i].var_vel_t   = new V3Var(solver, ID(VarTag::WholebodyVelT, node, tick, ss.str() + "_vel_t"), wb->svt);
+		ends[i].var_vel_r   = new V3Var(solver, ID(VarTag::WholebodyVelR, node, tick, ss.str() + "_vel_r"), wb->svr);
+		ends[i].var_force_t = new V3Var(solver, ID(VarTag::WholebodyForceT, node, tick, ss.str() + "_force_t"), wb->sft);
+		ends[i].var_force_r = new V3Var(solver, ID(VarTag::WholebodyForceR, node, tick, ss.str() + "_force_r"), wb->sfr);
+		ends[i].var_pos_t  ->weight = damping*one;
+		ends[i].var_pos_r  ->weight = damping*one;
+		ends[i].var_vel_t  ->weight = damping*one;
+		ends[i].var_vel_r  ->weight = damping*one;
+		ends[i].var_force_t->weight = damping*one;
+		ends[i].var_force_r->weight = damping*one;
+		solver->AddStateVar(ends[i].var_pos_t  , tick->idx);
+		solver->AddStateVar(ends[i].var_pos_r  , tick->idx);
+		solver->AddStateVar(ends[i].var_vel_t  , tick->idx);	
+		solver->AddStateVar(ends[i].var_vel_r  , tick->idx);
+		solver->AddStateVar(ends[i].var_force_t, tick->idx);
+		solver->AddStateVar(ends[i].var_force_r, tick->idx);
 		
 		if(next){
-			ends[i].var_acc_t   = new V3Var(solver, ID(VarTag::WholebodyAccT  , node, tick, ss.str() + "_acc_t"  ), wb->sat);
-			ends[i].var_acc_r   = new V3Var(solver, ID(VarTag::WholebodyAccR  , node, tick, ss.str() + "_acc_r"  ), wb->sar);
-			ends[i].var_force_t = new V3Var(solver, ID(VarTag::WholebodyForceT, node, tick, ss.str() + "_force_t"), wb->sft);
-			ends[i].var_force_r = new V3Var(solver, ID(VarTag::WholebodyForceR, node, tick, ss.str() + "_force_r"), wb->sfr);
-			ends[i].var_acc_t  ->weight = damping*one;
-			ends[i].var_acc_r  ->weight = damping*one;
-			ends[i].var_force_t->weight = damping*one;
-			ends[i].var_force_r->weight = damping*one;
-			solver->AddInputVar(ends[i].var_acc_t  , tick->idx);
-			solver->AddInputVar(ends[i].var_acc_r  , tick->idx);
-			solver->AddInputVar(ends[i].var_force_t, tick->idx);
-			solver->AddInputVar(ends[i].var_force_r, tick->idx);
+			ends[i].var_acc_t       = new V3Var(solver, ID(VarTag::WholebodyAccT      , node, tick, ss.str() + "_acc_t"      ), wb->sat);
+			ends[i].var_acc_r       = new V3Var(solver, ID(VarTag::WholebodyAccR      , node, tick, ss.str() + "_acc_r"      ), wb->sar);
+			ends[i].var_forcerate_t = new V3Var(solver, ID(VarTag::WholebodyForcerateT, node, tick, ss.str() + "_forcerate_t"), wb->sfdt);
+			ends[i].var_forcerate_r = new V3Var(solver, ID(VarTag::WholebodyForcerateR, node, tick, ss.str() + "_forcerate_r"), wb->sfdr);
+			ends[i].var_acc_t      ->weight = damping*one;
+			ends[i].var_acc_r      ->weight = damping*one;
+			ends[i].var_forcerate_t->weight = damping*one;
+			ends[i].var_forcerate_r->weight = damping*one;
+			solver->AddInputVar(ends[i].var_acc_t      , tick->idx);
+			solver->AddInputVar(ends[i].var_acc_r      , tick->idx);
+			solver->AddInputVar(ends[i].var_forcerate_t, tick->idx);
+			solver->AddInputVar(ends[i].var_forcerate_r, tick->idx);
 		}
 	}
 
@@ -227,7 +235,7 @@ void WholebodyKey::AddCon(Solver* solver) {
 	solver->AddCostCon(centroid.con_des_vel_t, tick->idx);
 	solver->AddCostCon(centroid.con_des_pos_r, tick->idx);
 	solver->AddCostCon(centroid.con_des_vel_r, tick->idx);
-
+	
 	base.con_des_pos_r = new FixConQ (solver, ID(ConTag::WholebodyPosR, node, tick, name + "_des_base_pos_r"), base.var_pos_r, wb->spr);
 	base.con_des_vel_r = new FixConV3(solver, ID(ConTag::WholebodyVelR, node, tick, name + "_des_base_vel_r"), base.var_vel_r, wb->svr);
 	solver->AddCostCon(base.con_des_pos_r, tick->idx);
@@ -248,6 +256,7 @@ void WholebodyKey::AddCon(Solver* solver) {
 			solver->AddCostCon(con_limit[j], tick->idx);
 		}
 	}
+
 	if(next){
 		centroid.con_Ld = new WholebodyLdCon(solver, name + "_Ld", this, wb->sfr);
 		solver->AddCostCon(centroid.con_Ld, tick->idx);
@@ -258,46 +267,35 @@ void WholebodyKey::AddCon(Solver* solver) {
 		ss << name << "_end" << i;
 
 		if(next){
-			ends[i].con_pos_t = new WholebodyPosConT(solver, ss.str() + "_pos_t", this, i, wb->spt);
-			ends[i].con_pos_r = new WholebodyPosConR(solver, ss.str() + "_pos_r", this, i, wb->spr);
-			ends[i].con_vel_t = new WholebodyVelConT(solver, ss.str() + "_vel_t", this, i, wb->svt);
-			ends[i].con_vel_r = new WholebodyVelConR(solver, ss.str() + "_vel_r", this, i, wb->svr);        
-			solver->AddTransitionCon(ends[i].con_pos_t, tick->idx);
-			solver->AddTransitionCon(ends[i].con_pos_r, tick->idx);
-			solver->AddTransitionCon(ends[i].con_vel_t, tick->idx);
-			solver->AddTransitionCon(ends[i].con_vel_r, tick->idx);
+			ends[i].con_pos_t   = new WholebodyPosConT  (solver, ss.str() + "_pos_t"  , this, i, wb->spt);
+			ends[i].con_pos_r   = new WholebodyPosConR  (solver, ss.str() + "_pos_r"  , this, i, wb->spr);
+			ends[i].con_vel_t   = new WholebodyVelConT  (solver, ss.str() + "_vel_t"  , this, i, wb->svt);
+			ends[i].con_vel_r   = new WholebodyVelConR  (solver, ss.str() + "_vel_r"  , this, i, wb->svr);        
+			ends[i].con_force_t = new WholebodyForceConT(solver, ss.str() + "_force_t", this, i, wb->sft);
+			ends[i].con_force_r = new WholebodyForceConR(solver, ss.str() + "_force_r", this, i, wb->sfr);        
+			solver->AddTransitionCon(ends[i].con_pos_t  , tick->idx);
+			solver->AddTransitionCon(ends[i].con_pos_r  , tick->idx);
+			solver->AddTransitionCon(ends[i].con_vel_t  , tick->idx);
+			solver->AddTransitionCon(ends[i].con_vel_r  , tick->idx);
+			solver->AddTransitionCon(ends[i].con_force_t, tick->idx);
+			solver->AddTransitionCon(ends[i].con_force_r, tick->idx);
 		}
 		
-		ends[i].con_des_pos_t = new WholebodyDesPosConT(solver, ss.str() + "_des_pos_t", this, i, wb->spt);
-		ends[i].con_des_vel_t = new WholebodyDesVelConT(solver, ss.str() + "_des_vel_t", this, i, wb->svt);
-		ends[i].con_des_pos_r = new WholebodyDesPosConR(solver, ss.str() + "_des_pos_r", this, i, wb->spr);
-		ends[i].con_des_vel_r = new WholebodyDesVelConR(solver, ss.str() + "_des_vel_r", this, i, wb->svr);
-		solver->AddCostCon(ends[i].con_des_pos_t, tick->idx);
-		solver->AddCostCon(ends[i].con_des_vel_t, tick->idx);
-		solver->AddCostCon(ends[i].con_des_pos_r, tick->idx);
-		solver->AddCostCon(ends[i].con_des_vel_r, tick->idx);
-
 		if(prev){
-			ends[i].con_contact_pos_t = new WholebodyContactPosConT(solver, ss.str() + "_contact_pos_t", this, i, wb->spt);
-			ends[i].con_contact_pos_r = new WholebodyContactPosConR(solver, ss.str() + "_contact_pos_r", this, i, wb->spr);
-			ends[i].con_contact_vel_t = new WholebodyContactVelConT(solver, ss.str() + "_contact_vel_t", this, i, wb->svt);
-			ends[i].con_contact_vel_r = new WholebodyContactVelConR(solver, ss.str() + "_contact_vel_r", this, i, wb->svr);
-			solver->AddCostCon(ends[i].con_contact_pos_t, tick->idx);
-			solver->AddCostCon(ends[i].con_contact_pos_r, tick->idx);
-			solver->AddCostCon(ends[i].con_contact_vel_t, tick->idx);
-			solver->AddCostCon(ends[i].con_contact_vel_r, tick->idx);
-		}
-
-		if(next){
-			ends[i].con_des_acc_t   = new FixConV3(solver, ID(ConTag::WholebodyAccT  , node, tick, ss.str() + "_des_acc_t"  ), ends[i].var_acc_t  , wb->sat);
-			ends[i].con_des_acc_r   = new FixConV3(solver, ID(ConTag::WholebodyAccR  , node, tick, ss.str() + "_des_acc_r"  ), ends[i].var_acc_r  , wb->sar);
+			ends[i].con_des_pos_t   = new WholebodyDesPosConT(solver, ss.str() + "_des_pos_t", this, i, wb->spt);
+			ends[i].con_des_vel_t   = new WholebodyDesVelConT(solver, ss.str() + "_des_vel_t", this, i, wb->svt);
+			ends[i].con_des_pos_r   = new WholebodyDesPosConR(solver, ss.str() + "_des_pos_r", this, i, wb->spr);
+			ends[i].con_des_vel_r   = new WholebodyDesVelConR(solver, ss.str() + "_des_vel_r", this, i, wb->svr);
 			ends[i].con_des_force_t = new FixConV3(solver, ID(ConTag::WholebodyForceT, node, tick, ss.str() + "_des_force_t"), ends[i].var_force_t, wb->sft);
 			ends[i].con_des_force_r = new FixConV3(solver, ID(ConTag::WholebodyForceR, node, tick, ss.str() + "_des_force_r"), ends[i].var_force_r, wb->sfr);
-			solver->AddCostCon(ends[i].con_des_acc_t  , tick->idx);
-			solver->AddCostCon(ends[i].con_des_acc_r  , tick->idx);
+			solver->AddCostCon(ends[i].con_des_pos_t  , tick->idx);
+			solver->AddCostCon(ends[i].con_des_vel_t  , tick->idx);
+			solver->AddCostCon(ends[i].con_des_pos_r  , tick->idx);
+			solver->AddCostCon(ends[i].con_des_vel_r  , tick->idx);
 			solver->AddCostCon(ends[i].con_des_force_t, tick->idx);
 			solver->AddCostCon(ends[i].con_des_force_r, tick->idx);
-
+		}	
+		if(prev){
 			ends[i].con_force_normal         = new WholebodyNormalForceCon  (solver, ss.str() + "_force_normal"  , this, i, wb->sft);
 			ends[i].con_force_friction[0][0] = new WholebodyFrictionForceCon(solver, ss.str() + "_force_friction", this, i, 0, 0, wb->sft);
 			ends[i].con_force_friction[0][1] = new WholebodyFrictionForceCon(solver, ss.str() + "_force_friction", this, i, 0, 1, wb->sft);
@@ -317,6 +315,28 @@ void WholebodyKey::AddCon(Solver* solver) {
 			solver->AddCostCon(ends[i].con_moment[0][1]        , tick->idx);
 			solver->AddCostCon(ends[i].con_moment[1][0]        , tick->idx);
 			solver->AddCostCon(ends[i].con_moment[1][1]        , tick->idx);
+		}
+
+		if(prev){
+			ends[i].con_contact_pos_t = new WholebodyContactPosConT(solver, ss.str() + "_contact_pos_t", this, i, wb->spt);
+			ends[i].con_contact_pos_r = new WholebodyContactPosConR(solver, ss.str() + "_contact_pos_r", this, i, wb->spr);
+			ends[i].con_contact_vel_t = new WholebodyContactVelConT(solver, ss.str() + "_contact_vel_t", this, i, wb->svt);
+			ends[i].con_contact_vel_r = new WholebodyContactVelConR(solver, ss.str() + "_contact_vel_r", this, i, wb->svr);
+			solver->AddCostCon(ends[i].con_contact_pos_t, tick->idx);
+			solver->AddCostCon(ends[i].con_contact_pos_r, tick->idx);
+			solver->AddCostCon(ends[i].con_contact_vel_t, tick->idx);
+			solver->AddCostCon(ends[i].con_contact_vel_r, tick->idx);
+		}
+
+		if(next){
+			ends[i].con_des_acc_t       = new FixConV3(solver, ID(ConTag::WholebodyAccT      , node, tick, ss.str() + "_des_acc_t"      ), ends[i].var_acc_t      , wb->sat );
+			ends[i].con_des_acc_r       = new FixConV3(solver, ID(ConTag::WholebodyAccR      , node, tick, ss.str() + "_des_acc_r"      ), ends[i].var_acc_r      , wb->sar );
+			ends[i].con_des_forcerate_t = new FixConV3(solver, ID(ConTag::WholebodyForcerateT, node, tick, ss.str() + "_des_forcerate_t"), ends[i].var_forcerate_t, wb->sfdt);
+			ends[i].con_des_forcerate_r = new FixConV3(solver, ID(ConTag::WholebodyForcerateR, node, tick, ss.str() + "_des_forcerate_r"), ends[i].var_forcerate_r, wb->sfdr);
+			solver->AddCostCon(ends[i].con_des_acc_t      , tick->idx);
+			solver->AddCostCon(ends[i].con_des_acc_r      , tick->idx);
+			solver->AddCostCon(ends[i].con_des_forcerate_t, tick->idx);
+			solver->AddCostCon(ends[i].con_des_forcerate_r, tick->idx);
         }
 	}
 }
@@ -343,16 +363,18 @@ void WholebodyKey::Prepare() {
 
 		WholebodyData::End & dend = data.ends [i];
 		
-		dend.pos_t = end.var_pos_t->val;
-		dend.pos_r = end.var_pos_r->val;
-		dend.vel_t = end.var_vel_t->val;
-		dend.vel_r = end.var_vel_r->val;
+		dend.pos_t   = end.var_pos_t  ->val;
+		dend.pos_r   = end.var_pos_r  ->val;
+		dend.vel_t   = end.var_vel_t  ->val;
+		dend.vel_r   = end.var_vel_r  ->val;
+		dend.force_t = end.var_force_t->val;
+		dend.force_r = end.var_force_r->val;
 
 		if(next){
-			dend.acc_t   = end.var_acc_t  ->val;
-			dend.acc_r   = end.var_acc_r  ->val;
-			dend.force_t = end.var_force_t->val;
-			dend.force_r = end.var_force_r->val;
+			dend.acc_t       = end.var_acc_t      ->val;
+			dend.acc_r       = end.var_acc_r      ->val;
+			dend.forcerate_t = end.var_forcerate_t->val;
+			dend.forcerate_r = end.var_forcerate_r->val;
 		}
 	}
 
@@ -469,6 +491,8 @@ void WholebodyKey::Draw(Render::Canvas* canvas, Render::Config* conf) {
 Wholebody::Param::Param() {
 	gravity = 9.8;
 	analyticalJacobian = false;
+	comIkNumIter = 10;
+	comIkRatio   = 1.0;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -523,25 +547,27 @@ Wholebody::~Wholebody() {
 
 void Wholebody::SetScaling(){
 	// calc scaling constants
-	param.total_mass = 0.0;
+	param.totalMass = 0.0;
 	for(int i = 0; i < links.size(); i++){
-		param.total_mass += links[i].mass;
+		param.totalMass += links[i].mass;
 	}
 	for(int i = 0; i < links.size(); i++){
-		links[i].mass_ratio = links[i].mass/param.total_mass;
+		links[i].mass_ratio = links[i].mass/param.totalMass;
 	}
 
-	sl  = 1.0;  //< unit length
-	st  = graph->ticks[1]->time - graph->ticks[0]->time;
-	sat = param.gravity;
-	svt = sat*st;
-	sft = param.total_mass*param.gravity;
-	spt = svt*st;
-	spr = spt/sl;
-	svr = svt/sl;
-	sar = sat/sl;
-	sfr = sft*sl;
-	sL  = sfr*st;
+	sl   = 1.0;  //< unit length
+	st   = graph->ticks[1]->time - graph->ticks[0]->time;
+	sat  = param.gravity;
+	svt  = sat*st;
+	sft  = param.totalMass*param.gravity;
+	spt  = svt*st;
+	spr  = spt/sl;
+	svr  = svt/sl;
+	sar  = sat/sl;
+	sfr  = sft*sl;
+	sL   = sfr*st;
+	sfdt = sft/st;
+	sfdr = sfr/st;
 }
 
 void Wholebody::Reset(){
@@ -567,22 +593,18 @@ void Wholebody::Reset(){
 			WholebodyKey ::End&  end  = key->ends[i];
 			WholebodyData::End&  dend = d.ends [i];
 			
-			end.var_pos_t->val = dend.pos_t;
-			end.var_pos_r->val = dend.pos_r;
-			end.var_vel_t->val = dend.vel_t;
-			end.var_vel_r->val = dend.vel_r;
+			end.var_pos_t  ->val = dend.pos_t;
+			end.var_pos_r  ->val = dend.pos_r;
+			end.var_vel_t  ->val = dend.vel_t;
+			end.var_vel_r  ->val = dend.vel_r;
+			end.var_force_t->val = dend.force_t;
+			end.var_force_r->val = dend.force_r;
 
 			if(key->next){
-				end.var_acc_t  ->val = dend.acc_t;
-				end.var_acc_r  ->val = dend.acc_r;
-				if(dend.state == ContactState::Free){
-					end.var_force_t->val.clear();
-					end.var_force_r->val.clear();
-				}
-				else{
-					end.var_force_t->val = dend.force_t;
-					end.var_force_r->val = dend.force_r;
-				}
+				end.var_acc_t      ->val = dend.acc_t;
+				end.var_acc_r      ->val = dend.acc_r;
+				end.var_forcerate_t->val = dend.forcerate_t;
+				end.var_forcerate_r->val = dend.forcerate_r;
 			}
 		}
 	}
@@ -599,52 +621,86 @@ void Wholebody::Setup(){
 
 		real_t t = graph->ticks[k]->time;
 
+		// need to get contact state as desired state
 		callback->GetDesiredState(k, t, d);
-		
+
 		if(k == 0)
-			 callback->GetInitialState(d);
+			callback->GetInitialState(d);
 
-		for(int i = 0; i < nend; i++)
-			key->data.ends[i].state = d.ends[i].state;
+		if(k == 0){	
+			// state variables are locked
+			// input variables are not locked and assigned desired values
+		
+			key->centroid.var_pos_t->val = d.centroid.pos_t;
+			key->centroid.var_vel_t->val = d.centroid.vel_t;
+			key->centroid.var_pos_r->val = d.centroid.pos_r;
+			key->centroid.var_vel_r->val = d.centroid.vel_r;
+			key->centroid.var_pos_t->locked = true;
+			key->centroid.var_vel_t->locked = true;
+			key->centroid.var_pos_r->locked = true;
+			key->centroid.var_vel_r->locked = true;
+		
+			key->base.var_pos_r->val = d.base.pos_r;
+			key->base.var_vel_r->val = d.base.vel_r;
+			key->base.var_pos_r->locked = true;
+			key->base.var_vel_r->locked = true;
+		}
+		else{
+			key->centroid.con_des_pos_t->desired = d.centroid.pos_t;
+			key->centroid.con_des_vel_t->desired = d.centroid.vel_t;
+			key->centroid.con_des_pos_r->desired = d.centroid.pos_r;
+			key->centroid.con_des_vel_r->desired = d.centroid.vel_r;
+			key->centroid.con_des_pos_t->weight  = d.centroid.pos_t_weight;
+			key->centroid.con_des_vel_t->weight  = d.centroid.vel_t_weight;
+			key->centroid.con_des_pos_r->weight  = d.centroid.pos_r_weight;
+			key->centroid.con_des_vel_r->weight  = d.centroid.vel_r_weight;
 
-		key->centroid.con_des_pos_t->desired = d.centroid.pos_t;
-		key->centroid.con_des_vel_t->desired = d.centroid.vel_t;
-		key->centroid.con_des_pos_r->desired = d.centroid.pos_r;
-		key->centroid.con_des_vel_r->desired = d.centroid.vel_r;
-		key->centroid.con_des_pos_t->weight  = d.centroid.pos_t_weight;
-		key->centroid.con_des_vel_t->weight  = d.centroid.vel_t_weight;
-		key->centroid.con_des_pos_r->weight  = d.centroid.pos_r_weight;
-		key->centroid.con_des_vel_r->weight  = d.centroid.vel_r_weight;
+			key->base.con_des_pos_r->desired = d.base.pos_r;
+			key->base.con_des_vel_r->desired = d.base.vel_r;
+			key->base.con_des_pos_r->weight  = d.base.pos_r_weight;
+			key->base.con_des_vel_r->weight  = d.base.vel_r_weight;
+		}
 
 		if(key->next){
 			key->centroid.con_Ld->weight = d.centroid.Ld_weight;
-		}
 
-		key->base.con_des_pos_r->desired = d.base.pos_r;
-		key->base.con_des_vel_r->desired = d.base.vel_r;
-		key->base.con_des_pos_r->weight  = d.base.pos_r_weight;
-		key->base.con_des_vel_r->weight  = d.base.vel_r_weight;
-
-		if(key->next){
 			key->base.con_des_acc_r->desired = d.base.acc_r;
 			key->base.con_des_acc_r->weight  = d.base.acc_r_weight;
+			//key->base.var_acc_r->val = d.base.acc_r;
+			//key->base.var_acc_r->locked = true;
 		}
-		
+			
 		for(int i = 0; i < nend; i++){
 			WholebodyKey ::End&  end  = key->ends[i];
 			WholebodyData::End&  dend = d.ends [i];
-			
-			// transform to absolute coordinate
-			end.con_des_pos_t->desired = d.centroid.pos_t + d.centroid.pos_r*dend.pos_t;
-			end.con_des_vel_t->desired = d.centroid.vel_t + d.centroid.vel_r%(d.centroid.pos_r*dend.pos_t) + d.centroid.pos_r*dend.vel_t;
-			end.con_des_pos_r->desired = d.centroid.pos_r*dend.pos_r;
-			end.con_des_vel_r->desired = d.centroid.vel_r + d.centroid.pos_r*dend.vel_r;
-			end.con_des_pos_t->weight  = dend.pos_t_weight;
-			end.con_des_vel_t->weight  = dend.vel_t_weight;
-			end.con_des_pos_r->weight  = dend.pos_r_weight;
-			end.con_des_vel_r->weight  = dend.vel_r_weight;
+
+			key->data.ends[i].state = d.ends[i].state;
+
+			if(k == 0){
+				end.var_pos_t      ->val = dend.pos_t;
+				end.var_pos_r      ->val = dend.pos_r;
+				end.var_vel_t      ->val = dend.vel_t;
+				end.var_vel_r      ->val = dend.vel_r;
+				end.var_force_t    ->val = dend.force_t;
+				end.var_force_r    ->val = dend.force_r;
+				end.var_pos_t      ->locked = true;
+				end.var_pos_r      ->locked = true;
+				end.var_vel_t      ->locked = true;
+				end.var_vel_r      ->locked = true;
+				end.var_force_t    ->locked = true;
+				end.var_force_r    ->locked = true;
+			}
+			else{
+				// transform to absolute coordinate
+				end.con_des_pos_t->desired = d.centroid.pos_t + d.centroid.pos_r*dend.pos_t;
+				end.con_des_pos_r->desired = d.centroid.pos_r*dend.pos_r;
+				end.con_des_vel_t->desired = d.centroid.vel_t + d.centroid.vel_r%(d.centroid.pos_r*dend.pos_t) + d.centroid.pos_r*dend.vel_t;
+				end.con_des_vel_r->desired = d.centroid.vel_r + d.centroid.pos_r*dend.vel_r;
+				end.con_des_pos_t->weight  = dend.pos_t_weight;
+				end.con_des_pos_r->weight  = dend.pos_r_weight;
+				end.con_des_vel_t->weight  = dend.vel_t_weight;
+				end.con_des_vel_r->weight  = dend.vel_r_weight;
 				
-			if(key->prev){
 				if(dend.state == ContactState::Free){
 					end.con_contact_pos_t->weight = vec3_t(0.0, 0.0, 0.0);
 					end.con_contact_pos_r->weight = vec3_t(0.0, 0.0, 0.0);
@@ -652,51 +708,30 @@ void Wholebody::Setup(){
 					end.con_contact_vel_r->weight = vec3_t(0.0, 0.0, 0.0);
 				}
 				if(dend.state == ContactState::Surface){
-					end.con_contact_pos_t->weight = 10.0*vec3_t(0.0, 0.0, 1.0);
-					end.con_contact_pos_r->weight = 10.0*vec3_t(1.0, 1.0, 0.0);
-					end.con_contact_vel_t->weight = 10.0*vec3_t(0.0, 0.0, 1.0);
-					end.con_contact_vel_r->weight = 10.0*vec3_t(1.0, 1.0, 1.0);
+					end.con_contact_pos_t->weight = vec3_t(0.0, 0.0, 1.0);
+					end.con_contact_pos_r->weight = vec3_t(1.0, 1.0, 0.0);
+					end.con_contact_vel_t->weight = vec3_t(0.0, 0.0, 1.0);
+					end.con_contact_vel_r->weight = vec3_t(1.0, 1.0, 1.0);
 				}
 				if(dend.state == ContactState::Line){
-					end.con_contact_pos_t->weight = 10.0*vec3_t(0.0, 0.0, 1.0);
-					end.con_contact_pos_r->weight = 10.0*vec3_t(0.0, 0.0, 0.0);
-					end.con_contact_vel_t->weight = 10.0*vec3_t(0.0, 0.0, 1.0);
-					end.con_contact_vel_r->weight = 10.0*vec3_t(0.0, 0.0, 1.0);
+					end.con_contact_pos_t->weight = vec3_t(0.0, 0.0, 1.0);
+					end.con_contact_pos_r->weight = vec3_t(0.0, 0.0, 0.0);
+					end.con_contact_vel_t->weight = vec3_t(0.0, 0.0, 1.0);
+					end.con_contact_vel_r->weight = vec3_t(0.0, 0.0, 1.0);
 				}
 				if(dend.state == ContactState::Point){
-					end.con_contact_pos_t->weight = 10.0*vec3_t(0.0, 0.0, 1.0);
-					end.con_contact_pos_r->weight = 10.0*vec3_t(0.0, 0.0, 0.0);
-					end.con_contact_vel_t->weight = 10.0*vec3_t(1.0, 1.0, 1.0);
-					end.con_contact_vel_r->weight = 10.0*vec3_t(0.0, 0.0, 0.0);
+					end.con_contact_pos_t->weight = vec3_t(0.0, 0.0, 1.0);
+					end.con_contact_pos_r->weight = vec3_t(0.0, 0.0, 0.0);
+					end.con_contact_vel_t->weight = vec3_t(1.0, 1.0, 1.0);
+					end.con_contact_vel_r->weight = vec3_t(0.0, 0.0, 0.0);
 				}
-			}
 
-			if(key->next){
-				end.con_des_acc_t  ->desired = dend.acc_t;
-				end.con_des_acc_r  ->desired = dend.acc_r;
-				end.con_des_acc_t  ->weight = dend.acc_t_weight;
-				end.con_des_acc_r  ->weight = dend.acc_r_weight;
-					
-				if(dend.state == ContactState::Free){
-					end.var_force_t->val.clear();
-					end.var_force_r->val.clear();
-					end.var_force_t->locked = true;
-					end.var_force_r->locked = true;
-					end.con_des_force_t->active = false;
-					end.con_des_force_r->active = false;
-				}
-				else{
-					end.var_force_t->val = dend.force_t;
-					end.var_force_r->val = dend.force_r;
-					end.var_force_t->locked = false;
-					end.var_force_r->locked = false;
-					end.con_des_force_t->active = true;
-					end.con_des_force_r->active = true;
-					end.con_des_force_t->desired = dend.force_t;
-					end.con_des_force_r->desired = dend.force_r;
-					end.con_des_force_t->weight = dend.force_t_weight;
-					end.con_des_force_r->weight = dend.force_r_weight;
-				}
+				end.var_force_t->val = dend.force_t;
+				end.var_force_r->val = dend.force_r;
+				end.con_des_force_t->desired = dend.force_t;
+				end.con_des_force_r->desired = dend.force_r;
+				end.con_des_force_t->weight = dend.force_t_weight;
+				end.con_des_force_r->weight = dend.force_r_weight;
 
 				end.con_force_normal        ->active = (dend.state != ContactState::Free);
 				end.con_force_friction[0][0]->active = (dend.state != ContactState::Free);
@@ -717,6 +752,42 @@ void Wholebody::Setup(){
 				end.con_moment[0][1]        ->weight[0] = 10.0;//0.01;
 				end.con_moment[1][0]        ->weight[0] = 10.0;//0.01;
 				end.con_moment[1][1]        ->weight[0] = 10.0;//0.01;
+			}
+
+			if(key->next){
+				//end.var_acc_t      ->val = dend.acc_t;
+				//end.var_acc_r      ->val = dend.acc_r;
+				//end.var_forcerate_t->val = dend.forcerate_t;
+				//end.var_forcerate_r->val = dend.forcerate_r;
+				//end.var_acc_t      ->locked = true;
+				//end.var_acc_r      ->locked = true;
+				//end.var_forcerate_t->locked = true;
+				//end.var_forcerate_r->locked = true;
+				end.con_des_acc_t  ->desired = dend.acc_t;
+				end.con_des_acc_r  ->desired = dend.acc_r;
+				end.con_des_acc_t  ->weight = dend.acc_t_weight;
+				end.con_des_acc_r  ->weight = dend.acc_r_weight;
+					
+				if(dend.state == ContactState::Free){
+					end.var_forcerate_t->val.clear();
+					end.var_forcerate_r->val.clear();
+					end.var_forcerate_t->locked = true;
+					end.var_forcerate_r->locked = true;
+					end.con_des_forcerate_t->active = false;
+					end.con_des_forcerate_r->active = false;
+				}
+				else{
+					end.var_forcerate_t->val = dend.forcerate_t;
+					end.var_forcerate_r->val = dend.forcerate_r;
+					end.var_forcerate_t->locked = false;
+					end.var_forcerate_r->locked = false;
+					end.con_des_forcerate_t->active = true;
+					end.con_des_forcerate_r->active = true;
+					end.con_des_forcerate_t->desired = dend.forcerate_t;
+					end.con_des_forcerate_r->desired = dend.forcerate_r;
+					end.con_des_forcerate_t->weight = dend.forcerate_t_weight;
+					end.con_des_forcerate_r->weight = dend.forcerate_r_weight;
+				}
 			}
 		}
 	}
@@ -871,17 +942,13 @@ void Wholebody::CalcPosition(WholebodyData& d, bool fk_or_ik){
 	int nend   = (int)ends.size();
 	int nchain = (int)chains.size();
 
-	// calc base link position by iteration
-	const int niter = 10;
-	const real_t gain = 1.0;
-
 	// initialize base link pose (com local)
 	d.links[0].pos_t = vec3_t();
 	d.links[0].pos_r = d.base.pos_r;
 
 	vec3_t pc;
 
-	for(int n = 0; n <= niter; n++){
+	for(int n = 0; n <= param.comIkNumIter; n++){
 		if(fk_or_ik){
 			for(int ic = 0; ic < nchain; ic++)
 				CalcFK(d, ic, true);
@@ -893,7 +960,7 @@ void Wholebody::CalcPosition(WholebodyData& d, bool fk_or_ik){
 			}
 		}
 		
-		if(n == niter)
+		if(n == param.comIkNumIter)
 			break;
 
 		pc.clear();
@@ -901,7 +968,7 @@ void Wholebody::CalcPosition(WholebodyData& d, bool fk_or_ik){
 			pc += links[i].mass_ratio*d.links[i].pos_t;
 		}
 		
-		d.links[0].pos_t -= gain*pc;
+		d.links[0].pos_t -= param.comIkRatio*pc;
 		//DSTR << pc << endl;
 	}
 	int T = timer2.CountUS();
@@ -917,7 +984,7 @@ void Wholebody::CalcComAcceleration (WholebodyData& d){
         WholebodyData::End& dend = d.ends[i];
         fsum += dend.pos_r*dend.force_t;
     }
-    d.centroid.acc_t = (1.0/param.total_mass)*(d.centroid.pos_r*fsum) - vec3_t(0.0, 0.0, param.gravity);
+    d.centroid.acc_t = (1.0/param.totalMass)*(d.centroid.pos_r*fsum) - vec3_t(0.0, 0.0, param.gravity);
 }
 
 void Wholebody::CalcBaseAcceleration(WholebodyData& d){
@@ -1072,10 +1139,6 @@ void Wholebody::CalcJacobianAnalytical(WholebodyData& d){
 				J_fk.col(j0).v_range(3,3) = eta;
 			}
 
-			// multiply rotation matrix from left
-			//J_fk.vsub_matrix(0,0,3,nq) = Rr*J_fk.vsub_matrix(0,0,3,nq);
-			//J_fk.vsub_matrix(3,0,3,nq) = Rr*J_fk.vsub_matrix(3,0,3,nq);
-
 			// jacobian from end to link
 			d.J_fkik[i][ic] = J_fk*d.Jq[ic];
 		}
@@ -1116,8 +1179,6 @@ void Wholebody::CalcJacobianAnalytical(WholebodyData& d){
 
 			// root link is base link
 			if(ir == 0){
-				//d.J_vi_v0[i].sub_matrix(TSubMatrixDim<0,0,6,3>()) = Jir.sub_matrix(TSubMatrixDim<0,0,6,3>());
-				//d.J_vi_v0[i].sub_matrix(TSubMatrixDim<0,3,6,3>()).clear();
 				d.J_vi_v0[i]     = Jir;
 				d.J_vi_ve[i][ic] = Jie;
 			}
@@ -1136,7 +1197,6 @@ void Wholebody::CalcJacobianAnalytical(WholebodyData& d){
 
 			// root link is base link
 			if(ir == 0){
-				//d.J_e_v0    .row(ie).v_range(0,3) = -d.Je[ic].row(j).v_range(0,3);
 				d.J_e_v0    .row(ie) = -Xer.trans()*d.Je[ic].row(j);
 				d.J_e_ve[ic].row(ie) =  d.Je[ic].row(j);
 			}
@@ -1153,9 +1213,8 @@ void Wholebody::CalcJacobianAnalytical(WholebodyData& d){
 		for(int j = 0; j < ch.ilink.size(); j++){
 			int iq = links[ch.ilink[j]].ijoint;
 
-			// root link is base linkcalc
+			// root link is base link
 			if(ir == 0){
-				//d.J_q_v0    .row(iq).v_range(0,3) = -d.Jq[ic].row(j).v_range(0,3);
 				d.J_q_v0    .row(iq) = -Xer.trans()*d.Jq[ic].row(j);
 				d.J_q_ve[ic].row(iq) =  d.Jq[ic].row(j);
 			}
@@ -1293,6 +1352,12 @@ void Wholebody::CalcJacobianNumerical2(WholebodyData& data, vector<WholebodyData
 	//DSTR << "prepare step: " << T << endl;
 }
 
+#define vv() sub_matrix(TSubMatrixDim<0,0,3,3>())
+#define vw() sub_matrix(TSubMatrixDim<0,3,3,3>())
+#define vrow() sub_matrix(TSubMatrixDim<0,0,3,6>())
+#define vcol() sub_matrix(TSubMatrixDim<0,0,6,3>())
+#define wcol() sub_matrix(TSubMatrixDim<0,3,6,3>())
+
 void Wholebody::TransformJacobian(WholebodyData& d){
 	int nlink  = (int)links .size();
 	int nchain = (int)chains.size();
@@ -1302,49 +1367,50 @@ void Wholebody::TransformJacobian(WholebodyData& d){
 	mat3_t X, Xinv;
 	X.clear();
 	for(int i = 0; i < nlink; i++){
-		X += links[i].mass*d.J_vi_v0[i].sub_matrix(TSubMatrixDim<0,0,3,3>());
+		X += links[i].mass*d.J_vi_v0[i].vv();
 	}
 	Xinv = X.inv();
 
-	d.J_vi_v0[0].sub_matrix(TSubMatrixDim<0,3,3,3>()).clear();
+	d.J_vi_v0[0].vw().clear();
 	for(int i = 1; i < nlink; i++){
-		d.J_vi_v0[0].sub_matrix(TSubMatrixDim<0,3,3,3>())
-			+= links[i].mass*d.J_vi_v0[i].sub_matrix(TSubMatrixDim<0,3,3,3>());
+		d.J_vi_v0[0].vw() += links[i].mass*d.J_vi_v0[i].vw();
 	}
-	d.J_vi_v0[0].sub_matrix(TSubMatrixDim<0,3,3,3>())
-		= -Xinv*d.J_vi_v0[0].sub_matrix(TSubMatrixDim<0,3,3,3>());
+	d.J_vi_v0[0].vw() = -Xinv*d.J_vi_v0[0].vw();
 
 	for(int ic = 0; ic < nchain; ic++){
-		d.J_vi_ve[0][ic].clear();
+		d.J_vi_ve[0][ic].vrow().clear();
 		
 		for(int i = 1; i < nlink; i++){
-			d.J_vi_ve[0][ic].sub_matrix(TSubMatrixDim<0,0,3,6>())
-				+= links[i].mass*d.J_vi_ve[i][ic].sub_matrix(TSubMatrixDim<0,0,3,6>());
+			d.J_vi_ve[0][ic].vrow() += links[i].mass*d.J_vi_ve[i][ic].vrow();
 		}
 
-		d.J_vi_ve[0][ic].sub_matrix(TSubMatrixDim<0,0,3,6>())
-			= -Xinv*d.J_vi_ve[0][ic].sub_matrix(TSubMatrixDim<0,0,3,6>());
+		d.J_vi_ve[0][ic].vrow() = -Xinv*d.J_vi_ve[0][ic].vrow();
 	}
 
 	for(int i = 1; i < nlink; i++){
-		d.J_vi_v0[i].sub_matrix(TSubMatrixDim<0,3,6,3>())
-			+= d.J_vi_v0[i].sub_matrix(TSubMatrixDim<0,0,6,3>())*d.J_vi_v0[0].sub_matrix(TSubMatrixDim<0,3,3,3>());
+		d.J_vi_v0[i].wcol() += d.J_vi_v0[i].vcol()*d.J_vi_v0[0].vw();
 
 		for(int ic = 0; ic < nchain; ic++){
-			d.J_vi_ve[i][ic] += d.J_vi_v0[i].sub_matrix(TSubMatrixDim<0,0,6,3>())*d.J_vi_ve[0][ic].sub_matrix(TSubMatrixDim<0,0,3,6>());
+			d.J_vi_ve[i][ic] += d.J_vi_v0[i].vcol()*d.J_vi_ve[0][ic].vrow();
 		}
 	}
 
 	for(int ic = 0; ic < nchain; ic++){
-		d.J_e_v0.vsub_matrix(0,3,nlimit,3) += d.J_e_v0.vsub_matrix(0,0,nlimit,3)*d.J_vi_v0[0].sub_matrix(TSubMatrixDim<0,3,3,3>());
-		d.J_e_ve[ic] += d.J_e_v0.vsub_matrix(0,0,nlimit,3)*d.J_vi_ve[0][ic].sub_matrix(TSubMatrixDim<0,0,3,6>());
+		d.J_e_v0.vsub_matrix(0,3,nlimit,3) += d.J_e_v0.vsub_matrix(0,0,nlimit,3)*d.J_vi_v0[0].vw();
+		d.J_e_ve[ic]                       += d.J_e_v0.vsub_matrix(0,0,nlimit,3)*d.J_vi_ve[0][ic].vrow();
 	}	
 
 	for(int ic = 0; ic < nchain; ic++){
-		d.J_q_v0.vsub_matrix(0,3,njoint,3) += d.J_q_v0.vsub_matrix(0,0,njoint,3)*d.J_vi_v0[0].sub_matrix(TSubMatrixDim<0,3,3,3>());
-		d.J_q_ve[ic] += d.J_q_v0.vsub_matrix(0,0,njoint,3)*d.J_vi_ve[0][ic].sub_matrix(TSubMatrixDim<0,0,3,6>());
+		d.J_q_v0.vsub_matrix(0,3,njoint,3) += d.J_q_v0.vsub_matrix(0,0,njoint,3)*d.J_vi_v0[0].vw();
+		d.J_q_ve[ic]                       += d.J_q_v0.vsub_matrix(0,0,njoint,3)*d.J_vi_ve[0][ic].vrow();
 	}
 }
+
+#undef vv
+#undef vw
+#undef vrow
+#undef vcol
+#undef wcol
 
 void Wholebody::CalcVelocity(WholebodyData& d, bool fk_or_ik){
 	int nlink  = (int)links .size();
@@ -1380,7 +1446,7 @@ void Wholebody::CalcVelocity(WholebodyData& d, bool fk_or_ik){
 		// calc end vel
 		for(int iend = 0; iend < nend; iend++){
 			int i = ends[iend].ilink;
-			d.ends[iend].vel_t = d.links[i].vel_t + d.links[i].vel_r%ends[iend].offset;
+			d.ends[iend].vel_t = d.links[i].vel_t + d.links[i].vel_r%(d.links[i].pos_r*ends[iend].offset);
 			d.ends[iend].vel_r = d.links[i].vel_r;
 		}
 	}
@@ -1406,7 +1472,6 @@ void Wholebody::CalcVelocity(WholebodyData& d, bool fk_or_ik){
 			ve.sub_vector(TSubVectorDim<3,3>()) = d.ends[iend].vel_r;
 			d.qd += d.J_q_ve[iend]*ve;
 		}
-		//d.qd = (d1.q - d0.q)*epsinv;
 	}
 }
 
@@ -1776,6 +1841,26 @@ WholebodyVelConR::WholebodyVelConR(Solver* solver, string _name, WholebodyKey* _
 	}
 }
 
+WholebodyForceConT::WholebodyForceConT(Solver* solver, string _name, WholebodyKey* _obj, int _iend, real_t _scale):
+	WholebodyCon(solver, 3, ConTag::WholebodyForceT, _name, _obj, _scale) {
+
+	iend = _iend;
+
+	AddSLink(obj[1]->ends[iend].var_force_t);
+	AddSLink(obj[0]->ends[iend].var_force_t);
+	AddSLink(obj[0]->ends[iend].var_forcerate_t);
+}
+
+WholebodyForceConR::WholebodyForceConR(Solver* solver, string _name, WholebodyKey* _obj, int _iend, real_t _scale):
+	WholebodyCon(solver, 3, ConTag::WholebodyForceR, _name, _obj, _scale) {
+
+	iend = _iend;
+
+	AddSLink(obj[1]->ends[iend].var_force_r);
+	AddSLink(obj[0]->ends[iend].var_force_r);
+	AddSLink(obj[0]->ends[iend].var_forcerate_r);
+}
+
 WholebodyCentroidPosConT::WholebodyCentroidPosConT(Solver* solver, string _name, WholebodyKey* _obj, real_t _scale):
 	WholebodyCon(solver, 3, ConTag::WholebodyPosT, _name, _obj, _scale) {
 
@@ -2033,13 +2118,37 @@ void WholebodyVelConR::Prepare(){
 	w_rhs = w0 + h*u0;
 }
 
+void WholebodyForceConT::Prepare(){
+	f0     = obj[0]->ends[iend].var_force_t    ->val;
+	fd0    = obj[0]->ends[iend].var_forcerate_t->val;
+	f1     = obj[1]->ends[iend].var_force_t    ->val;
+	h      = obj[0]->hnext;
+	stnext = obj[0]->data_des.ends[iend].state;
+
+	if(stnext == Wholebody::ContactState::Free)
+		 f_rhs.clear();
+	else f_rhs = f0 + h*fd0;
+}
+
+void WholebodyForceConR::Prepare(){
+	m0     = obj[0]->ends[iend].var_force_r    ->val;
+	md0    = obj[0]->ends[iend].var_forcerate_r->val;
+	m1     = obj[1]->ends[iend].var_force_r    ->val;
+	h      = obj[0]->hnext;
+	stnext = obj[0]->data_des.ends[iend].state;
+
+	if(stnext == Wholebody::ContactState::Free)
+		 m_rhs.clear();
+	else m_rhs = m0 + h*md0;
+}
+
 void WholebodyCentroidPosConT::Prepare(){
 	pc0 = obj[0]->centroid.var_pos_t->val;
 	vc0 = obj[0]->centroid.var_vel_t->val;
 	pc1 = obj[1]->centroid.var_pos_t->val;
 	h   = obj[0]->hnext;
 	h2  = h*h;
-	m   = obj[0]->wb->param.total_mass;
+	m   = obj[0]->wb->param.totalMass;
 	g   = vec3_t(0.0, 0.0, -obj[0]->wb->param.gravity);
 	ac0 = (1.0/m)*(obj[0]->q0*obj[0]->fsum) + g;
 
@@ -2050,7 +2159,7 @@ void WholebodyCentroidVelConT::Prepare(){
 	vc0 = obj[0]->centroid.var_vel_t->val;
 	vc1 = obj[1]->centroid.var_vel_t->val;
 	h   = obj[0]->hnext;
-	m   = obj[0]->wb->param.total_mass;
+	m   = obj[0]->wb->param.totalMass;
 	g   = vec3_t(0.0, 0.0, -obj[0]->wb->param.gravity);
 	ac0 = (1.0/m)*(obj[0]->q0*obj[0]->fsum) + g;
 
@@ -2252,6 +2361,38 @@ void WholebodyVelConR::CalcCoef(){
 	((SLink*)links[idx++])->SetCoef( 1.0);
 	((SLink*)links[idx++])->SetCoef(-1.0);
 	((SLink*)links[idx++])->SetCoef(-h);
+}
+
+void WholebodyForceConT::CalcCoef(){
+	Prepare();
+
+	int idx = 0;
+	if(stnext == Wholebody::ContactState::Free){
+		((SLink*)links[idx++])->SetCoef( 1.0);
+		((SLink*)links[idx++])->SetCoef( 0.0);
+		((SLink*)links[idx++])->SetCoef( 0.0);
+	}
+	else{
+		((SLink*)links[idx++])->SetCoef( 1.0);
+		((SLink*)links[idx++])->SetCoef(-1.0);
+		((SLink*)links[idx++])->SetCoef(-h);
+	}
+}
+
+void WholebodyForceConR::CalcCoef(){
+	Prepare();
+
+	int idx = 0;
+	if(stnext == Wholebody::ContactState::Free){
+		((SLink*)links[idx++])->SetCoef( 1.0);
+		((SLink*)links[idx++])->SetCoef( 0.0);
+		((SLink*)links[idx++])->SetCoef( 0.0);
+	}
+	else{
+		((SLink*)links[idx++])->SetCoef( 1.0);
+		((SLink*)links[idx++])->SetCoef(-1.0);
+		((SLink*)links[idx++])->SetCoef(-h);
+	}
 }
 
 void WholebodyCentroidPosConT::CalcCoef(){
@@ -2506,6 +2647,14 @@ void WholebodyVelConR::CalcDeviation(){
 	y = w1 - w_rhs;
 }
 
+void WholebodyForceConT::CalcDeviation(){
+	y = f1 - f_rhs;
+}
+
+void WholebodyForceConR::CalcDeviation(){
+	y = m1 - m_rhs;
+}
+
 void WholebodyCentroidPosConT::CalcDeviation(){
 	y = pc1 - pc_rhs;
 }
@@ -2666,6 +2815,14 @@ void WholebodyVelConR::CalcLhs(){
 	else{
 		obj[1]->ends[iend].var_vel_r->val = w_rhs;
 	}
+}
+
+void WholebodyForceConT::CalcLhs(){
+	obj[1]->ends[iend].var_force_t->val = f_rhs;
+}
+
+void WholebodyForceConR::CalcLhs(){
+	obj[1]->ends[iend].var_force_r->val = m_rhs;
 }
 
 void WholebodyCentroidPosConT::CalcLhs(){

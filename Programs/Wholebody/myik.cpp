@@ -171,13 +171,15 @@ void MyIK::CalcArmIK(const vec3_t& pos, const quat_t& ori, vvec_t& joint, vvec_t
         //mat3_t J_pd_q       = vvmat(tmp, Jq.row(3).v_range(3,3));
 
         real_t tmp2         = (pos_local.y*pos_local.y + pos_local.z*pos_local.z);
-        real_t tmp3         = pow(pos.y*pos.y + pos.z*pos.z, 1.5);
-        vec3_t J_c2_p       = (tmp3 > eps) ? vec3_t(0.0, (pos.z*pos.z)/tmp3, (-pos.y*pos.z)/tmp3) : vec3_t();
+        real_t tmp3         = pow(tmp2, 1.5);
+        vec3_t J_c2_p       = (tmp2 > eps) ? vec3_t(0.0,  1.0/sqrt(tmp2), 0.0) : vec3_t();
+        vec3_t J_c2_pd      = (tmp3 > eps) ? vec3_t(0.0, -(pos.y*pos_local.y)/tmp3, -(pos.y*pos_local.z)/tmp3) : vec3_t();
         real_t J_gamma_c2   = (-1.0 + eps < c2 && c2 < 1.0 - eps) ? -1.0/sqrt(1.0 - c2*c2) : 0.0;
         vec3_t J_gamma_p    = J_gamma_c2*J_c2_p;
+        vec3_t J_gamma_pd   = J_gamma_c2*J_c2_pd;
         vec3_t J_alpha_pd   = (tmp2 > eps) ? vec3_t(0.0, -pos_local.z/tmp2, pos_local.y/tmp2) : vec3_t();
 
-        Jq.row(1).v_range(0,3) = -J_pd_p.trans()*J_alpha_pd - J_gamma_p;
+        Jq.row(1).v_range(0,3) = -J_pd_p.trans()*(J_alpha_pd + J_gamma_pd) - J_gamma_p;
         Jq.row(1).v_range(3,3).clear();// = J_pd_q.trans()*(-J_alpha_pd - J_gamma_pd);
 
         mat3_t J_pdd_p     = (mat3_t::Rot(joint[1], 'x') + vvmat(ex%pos_local2, -J_alpha_pd))*J_pd_p + vvmat(ex%pos_local2, -J_gamma_p);
@@ -226,6 +228,177 @@ void MyIK::CalcArmIK(const vec3_t& pos, const quat_t& ori, vvec_t& joint, vvec_t
         //X.sub_matrix(TSubMatrixDim<3,0,3,3>()).clear();
         //X.sub_matrix(TSubMatrixDim<3,3,3,3>()) = mat3_t();
         //Jq = Jq*X;
+
+        if(c > 1.0){
+            Je.row(0).v_range(0,3) = -J_c_p;
+            Je.row(0).v_range(3,3).clear();
+            Je.row(1).clear();
+        }
+        else if(c < -1.0){
+            Je.row(0).clear();
+            Je.row(1).v_range(0,3) =  J_c_p;
+            Je.row(1).v_range(3,3).clear();
+        }
+        else{
+            Je.row(0).clear();
+            Je.row(1).clear();
+        }
+    }
+}
+
+void MyIK::CalcLegIK2(const vec3_t& pos, const quat_t& ori, vvec_t& joint, vvec_t& error, vmat_t& Jq, vmat_t& Je, bool calc_jacobian, int side){
+    real_t l1 = upperLegLength;
+    real_t l2 = lowerLegLength;
+
+    // hip, knee, ankle
+    joint.resize(6);
+    error.resize(2);
+    Jq.resize(6, 6, 0.0);
+    Je.resize(2, 6, 0.0);
+
+    // hip pitch and knee pitch from trigonometrics
+    real_t d = pos.norm();
+    real_t c = (l1*l1 + l2*l2 - d*d)/(2*l1*l2);
+    real_t beta;
+    
+    //  singularity: too close
+    if(c > 1.0){
+        beta     = 0.0;
+        error[0] = 1.0 - c;
+        error[1] = 0.0;
+    }
+    //  singularity: too far
+    else if(c < -1.0){
+        beta     = pi;
+        error[0] = 0.0;
+        error[1] = c + 1.0;
+    }
+    //  nonsingular
+    else{
+        beta  = acos(c);
+        error[0] = 0.0;
+        error[1] = 0.0;
+    }
+
+    joint[3] = pi - beta;
+
+    quat_t qinv =   ori.Conjugated();
+    vec3_t phat = -(qinv*pos);
+    quat_t qhat =   qinv;
+
+    // ankle pitch
+    vec3_t phatd = vec3_t(-l1*sin(joint[3]), 0.0, l1*cos(joint[3]) + l2);
+    real_t c2 = phat.x/sqrt(phatd.x*phatd.x + phatd.z*phatd.z);
+    real_t gamma;
+    if(c2 > 1.0){
+        gamma = 0.0;
+    }
+    else if(c2 < -1.0){
+        gamma = pi;
+    }
+    else{
+        gamma = acos(c2);
+    }
+
+    real_t alpha = atan2(phatd.z, phatd.x);
+    joint[4] = -alpha + gamma;
+    
+    // hip pos expressed in ankle pitch local
+    vec3_t phatdd = quat_t::Rot(-joint[4], 'y')*phatd;
+
+    // ankle roll
+    joint[5] = -atan2(phat.z, phat.y)
+              + atan2(phatdd.z, phatdd.y);
+    if(joint[5] >  pi) joint[5] -= 2.0*pi;
+    if(joint[5] < -pi) joint[5] += 2.0*pi;
+
+    // desired hip rotation
+    quat_t qyy    =     quat_t::Rot(joint[3] + joint[4], 'y');
+    quat_t qyyx   = qyy*quat_t::Rot(joint[5], 'x');
+    quat_t qhip   = ori*qyyx.Conjugated();
+    quat_t qzquad = quat_t::Rot(pi/2.0, 'z');
+
+    // convert it to roll-pitch-yaw
+    vec3_t angle_hip = ToRollPitchYaw(qzquad*qhip*qzquad.Conjugated());
+
+    // then wrist angles are determined
+    joint[0] =  angle_hip.z;
+    joint[1] =  angle_hip.y;
+    joint[2] = -angle_hip.x;
+
+    if(calc_jacobian){
+        const vec3_t ex(1.0, 0.0, 0.0);
+        const vec3_t ey(0.0, 1.0, 0.0);
+        const vec3_t ez(0.0, 0.0, 1.0);
+
+        mat3_t Rinv;
+        qinv.ToMatrix(Rinv);
+        mat3_t Rzquad;
+        qzquad.ToMatrix(Rzquad);
+
+        mat3_t J_phat_p = -Rinv;
+        mat3_t J_phat_q = -Rinv*mat3_t::Cross(pos);
+        mat3_t J_qhat_q = -Rinv;
+    
+        vec3_t J_d_p        = pos/pos.norm();
+        real_t J_c_d        = -d/(l1*l2);
+        vec3_t J_c_p        = J_c_d*J_d_p;
+        real_t J_beta_c     = (-1.0 + eps < c && c < 1.0 - eps) ? -1.0/sqrt(1.0 - c*c) : 0.0;
+        real_t J_beta_d     = J_beta_c*J_c_d;
+        vec3_t J_beta_p     = J_beta_d*J_d_p;
+    
+        Jq.row(3).v_range(0,3) = -J_beta_p;
+        Jq.row(3).v_range(3,3).clear();
+
+        vec3_t tmp       = vec3_t(-l1*cos(joint[3]), 0.0, -l1*sin(joint[3]));
+        mat3_t J_phatd_p = vvmat(tmp, Jq.row(3).v_range(0,3));
+
+        real_t tmp2          = (phatd.x*phatd.x + phatd.z*phatd.z);
+        real_t tmp3          = pow(tmp2, 1.5);
+        vec3_t J_c2_phat     = (tmp2 > eps) ? vec3_t( 1.0/sqrt(tmp2)       , 0.0,  0.0)                   : vec3_t();
+        vec3_t J_c2_phatd    = (tmp3 > eps) ? vec3_t(-(phat.x*phatd.x)/tmp3, 0.0, -(phat.x*phatd.z)/tmp3) : vec3_t();
+        real_t J_gamma_c2    = (-1.0 + eps < c2 && c2 < 1.0 - eps) ? -1.0/sqrt(1.0 - c2*c2) : 0.0;
+        vec3_t J_gamma_phat  = J_gamma_c2*J_c2_phat;
+        vec3_t J_gamma_phatd = J_gamma_c2*J_c2_phatd;
+        vec3_t J_alpha_phatd = (tmp2 > eps) ? vec3_t(-phatd.z/tmp2, 0.0, phatd.x/tmp2) : vec3_t();
+
+        Jq.row(4).v_range(0,3) = J_phat_p.trans()*J_gamma_phat + J_phatd_p.trans()*(-J_alpha_phatd + J_gamma_phatd);
+        Jq.row(4).v_range(3,3) = J_phat_q.trans()*J_gamma_phat;
+
+        mat3_t J_phatdd_p = vvmat(phatdd%ey, Jq.row(4).v_range(0,3)) + mat3_t::Rot(-joint[4], 'y')*J_phatd_p;
+        mat3_t J_phatdd_q = vvmat(phatdd%ey, Jq.row(4).v_range(3,3));
+
+        real_t tmp4 = (phat.y*phat.y + phat.z*phat.z);
+        real_t tmp5 = (phatdd.y*phatdd.y + phatdd.z*phatdd.z);
+        vec3_t tmp6 = (tmp4 > eps) ? vec3_t(0.0, -phat  .z/tmp4, phat  .y/tmp4) : vec3_t();
+        vec3_t tmp7 = (tmp5 > eps) ? vec3_t(0.0, -phatdd.z/tmp5, phatdd.y/tmp5) : vec3_t();
+    
+        Jq.row(5).v_range(0,3) = -J_phat_p.trans()*tmp6 + J_phatdd_p.trans()*tmp7;
+        Jq.row(5).v_range(3,3) = -J_phat_q.trans()*tmp6 + J_phatdd_q.trans()*tmp7;
+
+        mat3_t Jrpy = JacobianRPY(angle_hip);
+        mat3_t Jrpy_inv = Jrpy.inv();
+        mat3_t J_qd_p;
+        mat3_t J_qd_q;
+
+        J_qd_p = - vvmat(qhip*ey    , Jq.row(3).v_range(0,3) + Jq.row(4).v_range(0,3))
+                 - vvmat(qhip*qyy*ex, Jq.row(5).v_range(0,3));
+
+        J_qd_q = mat3_t()
+                 - vvmat(qhip*ey    , Jq.row(3).v_range(3,3) + Jq.row(4).v_range(3,3))
+                 - vvmat(qhip*qyy*ex, Jq.row(5).v_range(3,3));
+
+        J_qd_p = Rzquad*J_qd_p;
+        J_qd_q = Rzquad*J_qd_q;
+
+        Jq.row(0).v_range(0,3) =  J_qd_p.trans()*Jrpy_inv.row(2);
+        Jq.row(0).v_range(3,3) =  J_qd_q.trans()*Jrpy_inv.row(2);
+
+        Jq.row(1).v_range(0,3) =  J_qd_p.trans()*Jrpy_inv.row(1);
+        Jq.row(1).v_range(3,3) =  J_qd_q.trans()*Jrpy_inv.row(1);
+
+        Jq.row(2).v_range(0,3) = -J_qd_p.trans()*Jrpy_inv.row(0);
+        Jq.row(2).v_range(3,3) = -J_qd_q.trans()*Jrpy_inv.row(0);
 
         if(c > 1.0){
             Je.row(0).v_range(0,3) = -J_c_p;

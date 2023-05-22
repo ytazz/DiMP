@@ -13,6 +13,8 @@ struct WholebodyPosConT;
 struct WholebodyPosConR;
 struct WholebodyVelConT;
 struct WholebodyVelConR;
+struct WholebodyForceConT;
+struct WholebodyForceConR;
 struct WholebodyCentroidPosConT;
 struct WholebodyCentroidVelConT;
 struct WholebodyCentroidPosConR;
@@ -56,20 +58,17 @@ struct WholebodyData{
 		vec3_t  vel_r;
 		vec3_t  acc_t;
 		vec3_t  acc_r;
-		vec3_t  force_t;
-		vec3_t  force_r;
+		vec3_t  force_t, force_target_t;
+		vec3_t  force_r, force_target_r;
+		vec3_t  forcerate_t;
+		vec3_t  forcerate_r;
 
 		vec3_t  pos_t_weight, pos_r_weight;
 		vec3_t  vel_t_weight, vel_r_weight;
 		vec3_t  acc_t_weight, acc_r_weight;
 		vec3_t  force_t_weight, force_r_weight;
+		vec3_t  forcerate_t_weight, forcerate_r_weight;
 
-		//vec3_t  center;  //< contact center in link's local coordinate
-		//real_t  offset;  //< offset from contact plane to contact center
-
-		//vec3_t  rlc, rcc;
-		//mat3_t  Rc, rcc_cross_Rc;
-	
 		int     state;       ///< contact state
 		real_t  mu;          ///< friction
 		vec2_t  cop_min;
@@ -145,11 +144,15 @@ public:
 		V3Var*  var_acc_r;    ///< angular acceleration
 		V3Var*  var_force_t;  ///< force (contact frame)
 		V3Var*  var_force_r;  ///< moment
+		V3Var*  var_forcerate_t;
+		V3Var*  var_forcerate_r;
 		
 		WholebodyPosConT*     con_pos_t;
 		WholebodyPosConR*     con_pos_r;
 		WholebodyVelConT*     con_vel_t;
 		WholebodyVelConR*     con_vel_r;
+		WholebodyForceConT*   con_force_t;
+		WholebodyForceConR*   con_force_r;
 
 		WholebodyDesPosConT*  con_des_pos_t  ;   ///< desired position (global)
 		WholebodyDesPosConR*  con_des_pos_r  ;   ///< desired orientation
@@ -159,6 +162,8 @@ public:
 		FixConV3*             con_des_acc_r  ;   ///< desired angular acceleration
 		FixConV3*             con_des_force_t;   ///< desired force (contact frame)
 		FixConV3*             con_des_force_r;   ///< desired moment
+		FixConV3*             con_des_forcerate_t;   ///< desired force (contact frame)
+		FixConV3*             con_des_forcerate_r;   ///< desired moment
 		
 		WholebodyContactPosConT*    con_contact_pos_t;
 		WholebodyContactPosConR*    con_contact_pos_r;
@@ -243,9 +248,11 @@ public:
 	};
 
 	struct Param {
-		real_t  total_mass;  ///< total mass of wholebody
+		real_t  totalMass;  ///< total mass of wholebody
 		real_t  gravity;
 		bool    analyticalJacobian;
+		int     comIkNumIter;
+		real_t  comIkRatio;
 		
 		Param();
 	};
@@ -328,6 +335,8 @@ public:
 	real_t              sar;
 	real_t              sft;  //< force scaling
 	real_t              sfr;  //< moment scaling
+	real_t              sfdt;  //< force rate scaling
+	real_t              sfdr;  //< moment rate scaling
 	real_t              sL;   //< momentum scaling
 	
 	Snapshot            snapshot;
@@ -445,6 +454,36 @@ struct WholebodyVelConR : WholebodyCon{
 	virtual void  CalcLhs();
 		
 	WholebodyVelConR(Solver* solver, string _name, WholebodyKey* _obj, int _iend, real_t _scale);
+};
+
+struct WholebodyForceConT : WholebodyCon{
+	int iend;
+	vec3_t f0, fd0, f1, f_rhs;
+	real_t h;
+	int stnext;
+	
+	void Prepare();
+
+	virtual void  CalcCoef();
+	virtual void  CalcDeviation();
+	virtual void  CalcLhs();
+		
+	WholebodyForceConT(Solver* solver, string _name, WholebodyKey* _obj, int _iend, real_t _scale);
+};
+
+struct WholebodyForceConR : WholebodyCon{
+	int iend;
+	vec3_t m0, md0, m1, m_rhs;
+	real_t h;
+	int stnext;
+	
+	void Prepare();
+
+	virtual void  CalcCoef();
+	virtual void  CalcDeviation();
+	virtual void  CalcLhs();
+		
+	WholebodyForceConR(Solver* solver, string _name, WholebodyKey* _obj, int _iend, real_t _scale);
 };
 
 struct WholebodyCentroidPosConT : WholebodyCon{

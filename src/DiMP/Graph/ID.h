@@ -65,6 +65,8 @@ struct VarTag{
 		WholebodyAccR,
 		WholebodyForceT,
 		WholebodyForceR,
+		WholebodyForcerateT,
+		WholebodyForcerateR,
 		NumTypes,
 	};
 };
@@ -149,6 +151,8 @@ struct ConTag{
 		WholebodyAccR,
 		WholebodyForceT,
 		WholebodyForceR,
+		WholebodyForcerateT,
+		WholebodyForcerateR,
 		WholebodyLimit,
 		WholebodyContactPosT,
 		WholebodyContactPosR,

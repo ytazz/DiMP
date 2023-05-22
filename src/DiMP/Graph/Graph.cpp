@@ -66,7 +66,9 @@ const char* VarNames[] = {
 	"wholebody_acc_t",
 	"wholebody_acc_r",
 	"wholebody_force_t",
-	"wholebody_force_r"
+	"wholebody_force_r",
+	"wholebody_forcerate_t",
+	"wholebody_forcerate_r"
 };
 
 const char* ConNames[] = {
@@ -147,6 +149,8 @@ const char* ConNames[] = {
 	"wholebody_acc_r",
 	"wholebody_force_t",
 	"wholebody_force_r",
+	"wholebody_forcerate_t",
+	"wholebody_forcerate_r",
 	"wholebody_limit",
 	"wholebody_contact_pos_t",
 	"wholebody_contact_pos_r",

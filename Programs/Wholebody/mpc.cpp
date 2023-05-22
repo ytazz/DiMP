@@ -41,8 +41,8 @@ void Mpc::Init(){
     wb->CalcMomentumDerivative(data_cur);
     wb->CalcForce       (data_cur);
 
-    int nx = 12 + 6 + 12*nend; //< centroid (pos_t vel_t pos_r vel_r) base (pos_r vel_r)  nend*(pos_t vel_t pos_r vel_r)
-    int nu = 3 + 12*nend;      //< base (acc_r)  nend*(acc_t acc_r force_t force_r)  maximum size: actual size is changed depending on contact state
+    int nx = 12 + 6 + 18*nend; //< centroid (pos_t pos_r vel_t vel_r) base (pos_r vel_r)  nend*(pos_t pos_r vel_t vel_r force_t force_r)
+    int nu = 3 + 12*nend;      //< base (acc_r)  nend*(acc_t acc_r forcerate_t forcerate_r)  maximum size: actual size is changed depending on contact state
     dx  .Allocate(nx);
     du  .Allocate(nu);
     u   .Allocate(nu);
@@ -83,6 +83,9 @@ void Mpc::UpdateState(){
 
         dend_cur.vel_t += dend_cur.acc_t*dt_ctrl;
         dend_cur.vel_r += dend_cur.acc_r*dt_ctrl;
+
+        dend_cur.force_t += dend_cur.forcerate_t*dt_ctrl;
+        dend_cur.force_r += dend_cur.forcerate_r*dt_ctrl;
     }
     
     wb->CalcPosition    (data_cur, false);
@@ -110,10 +113,6 @@ void Mpc::UpdateInput(){
     dx(idx++) = (data_cur.centroid.pos_t.y - data_ref.centroid.pos_t.y)/wb->spt;
     dx(idx++) = (data_cur.centroid.pos_t.z - data_ref.centroid.pos_t.z)/wb->spt;
 
-    dx(idx++) = (data_cur.centroid.vel_t.x - data_ref.centroid.vel_t.x)/wb->svt;
-    dx(idx++) = (data_cur.centroid.vel_t.y - data_ref.centroid.vel_t.y)/wb->svt;
-    dx(idx++) = (data_cur.centroid.vel_t.z - data_ref.centroid.vel_t.z)/wb->svt;
-
     quat_t qdiff = data_cur.centroid.pos_r*data_ref.centroid.pos_r.Conjugated();
     real_t theta = qdiff.Theta();
     if(theta > pi)
@@ -122,6 +121,10 @@ void Mpc::UpdateInput(){
     dx(idx++) = w.x/wb->spr;
     dx(idx++) = w.y/wb->spr;
     dx(idx++) = w.z/wb->spr;
+
+    dx(idx++) = (data_cur.centroid.vel_t.x - data_ref.centroid.vel_t.x)/wb->svt;
+    dx(idx++) = (data_cur.centroid.vel_t.y - data_ref.centroid.vel_t.y)/wb->svt;
+    dx(idx++) = (data_cur.centroid.vel_t.z - data_ref.centroid.vel_t.z)/wb->svt;
 
     dx(idx++) = (data_cur.centroid.vel_r.x - data_ref.centroid.vel_r.x)/wb->svr;
     dx(idx++) = (data_cur.centroid.vel_r.y - data_ref.centroid.vel_r.y)/wb->svr;
@@ -148,10 +151,6 @@ void Mpc::UpdateInput(){
         dx(idx++) = (dend_cur.pos_t.y - dend_ref.pos_t.y)/wb->spt;
         dx(idx++) = (dend_cur.pos_t.z - dend_ref.pos_t.z)/wb->spt;
 
-        dx(idx++) = (dend_cur.vel_t.x - dend_ref.vel_t.x)/wb->svt;
-        dx(idx++) = (dend_cur.vel_t.y - dend_ref.vel_t.y)/wb->svt;
-        dx(idx++) = (dend_cur.vel_t.z - dend_ref.vel_t.z)/wb->svt;
-
         quat_t qdiff = dend_cur.pos_r*dend_ref.pos_r.Conjugated();
         real_t theta = qdiff.Theta();
         if(theta > pi)
@@ -161,9 +160,21 @@ void Mpc::UpdateInput(){
         dx(idx++) = w.y/wb->spr;
         dx(idx++) = w.z/wb->spr;
 
+        dx(idx++) = (dend_cur.vel_t.x - dend_ref.vel_t.x)/wb->svt;
+        dx(idx++) = (dend_cur.vel_t.y - dend_ref.vel_t.y)/wb->svt;
+        dx(idx++) = (dend_cur.vel_t.z - dend_ref.vel_t.z)/wb->svt;
+
         dx(idx++) = (dend_cur.vel_r.x - dend_ref.vel_r.x)/wb->svr;
         dx(idx++) = (dend_cur.vel_r.y - dend_ref.vel_r.y)/wb->svr;
         dx(idx++) = (dend_cur.vel_r.z - dend_ref.vel_r.z)/wb->svr;
+
+        dx(idx++) = (dend_cur.force_t.x - dend_ref.force_t.x)/wb->sft;
+        dx(idx++) = (dend_cur.force_t.y - dend_ref.force_t.y)/wb->sft;
+        dx(idx++) = (dend_cur.force_t.z - dend_ref.force_t.z)/wb->sft;
+
+        dx(idx++) = (dend_cur.force_r.x - dend_ref.force_r.x)/wb->sfr;
+        dx(idx++) = (dend_cur.force_r.y - dend_ref.force_r.y)/wb->sfr;
+        dx(idx++) = (dend_cur.force_r.z - dend_ref.force_r.z)/wb->sfr;
     }
 
     // calc u
@@ -190,14 +201,14 @@ void Mpc::UpdateInput(){
         du(idx++) *= wb->sar;
         du(idx++) *= wb->sar;
         if(data_ref_des.ends[i].state != DiMP::Wholebody::ContactState::Free){
-            // end force_t
-            du(idx++) *= wb->sft;
-            du(idx++) *= wb->sft;
-            du(idx++) *= wb->sft;
-            // end force_r
-            du(idx++) *= wb->sfr;
-            du(idx++) *= wb->sfr;
-            du(idx++) *= wb->sfr;
+            // end forcerate_t
+            du(idx++) *= wb->sfdt;
+            du(idx++) *= wb->sfdt;
+            du(idx++) *= wb->sfdt;
+            // end forcerate_r
+            du(idx++) *= wb->sfdr;
+            du(idx++) *= wb->sfdr;
+            du(idx++) *= wb->sfdr;
         }
     }
 
@@ -226,19 +237,19 @@ void Mpc::UpdateInput(){
             dend_cur.force_r.clear();
         }
         else{
-            dend_cur.force_t.x = u(idx++);
-            dend_cur.force_t.y = u(idx++);
-            dend_cur.force_t.z = u(idx++);
-            dend_cur.force_r.x = u(idx++);
-            dend_cur.force_r.y = u(idx++);
-            dend_cur.force_r.z = u(idx++);
+            dend_cur.forcerate_t.x = u(idx++);
+            dend_cur.forcerate_t.y = u(idx++);
+            dend_cur.forcerate_t.z = u(idx++);
+            dend_cur.forcerate_r.x = u(idx++);
+            dend_cur.forcerate_r.y = u(idx++);
+            dend_cur.forcerate_r.z = u(idx++);
 
             // enforce contact force constraint
-            dend_cur.force_t.z = std::max(0.0, dend_cur.force_t.z);
-            dend_cur.force_t.x = std::min(std::max(-dend_ref_des.mu*dend_cur.force_t.z, dend_cur.force_t.x), dend_ref_des.mu*dend_cur.force_t.z);
-            dend_cur.force_t.y = std::min(std::max(-dend_ref_des.mu*dend_cur.force_t.z, dend_cur.force_t.y), dend_ref_des.mu*dend_cur.force_t.z);
-            dend_cur.force_r.x = std::min(std::max( dend_ref_des.cop_min.y*dend_cur.force_t.z, dend_cur.force_r.x),  dend_ref_des.cop_max.y*dend_cur.force_t.z);
-            dend_cur.force_r.y = std::min(std::max(-dend_ref_des.cop_max.x*dend_cur.force_t.z, dend_cur.force_r.y), -dend_ref_des.cop_min.x*dend_cur.force_t.z);
+            //dend_cur.force_t.z = std::max(0.0, dend_cur.force_t.z);
+            //dend_cur.force_t.x = std::min(std::max(-dend_ref_des.mu*dend_cur.force_t.z, dend_cur.force_t.x), dend_ref_des.mu*dend_cur.force_t.z);
+            //dend_cur.force_t.y = std::min(std::max(-dend_ref_des.mu*dend_cur.force_t.z, dend_cur.force_t.y), dend_ref_des.mu*dend_cur.force_t.z);
+            //dend_cur.force_r.x = std::min(std::max( dend_ref_des.cop_min.y*dend_cur.force_t.z, dend_cur.force_r.x),  dend_ref_des.cop_max.y*dend_cur.force_t.z);
+            //dend_cur.force_r.y = std::min(std::max(-dend_ref_des.cop_max.x*dend_cur.force_t.z, dend_cur.force_r.y), -dend_ref_des.cop_min.x*dend_cur.force_t.z);
         }
     }
 
@@ -259,7 +270,7 @@ void Mpc::UpdateGain(){
     int nend = wb->ends.size();
     for(int i = 0; i < nend; i++){
         // end acc_t acc_r (+ force_t force_r if in contact)
-        nu += (data_ref_des.ends[i].state == DiMP::Wholebody::ContactState::Free ? 6 : 12);
+        nu += (data_ref_des.ends[i].state == DiMP::Wholebody::ContactState::Free ?  6 : 12);
     }
 
     // calc uref
@@ -279,12 +290,12 @@ void Mpc::UpdateGain(){
         uref(idx++) = dend_ref.acc_r.y;
         uref(idx++) = dend_ref.acc_r.z;
         if(data_ref_des.ends[i].state != DiMP::Wholebody::ContactState::Free){
-            uref(idx++) = dend_ref.force_t.x;
-            uref(idx++) = dend_ref.force_t.y;
-            uref(idx++) = dend_ref.force_t.z;
-            uref(idx++) = dend_ref.force_r.x;
-            uref(idx++) = dend_ref.force_r.y;
-            uref(idx++) = dend_ref.force_r.z;
+            uref(idx++) = dend_ref.forcerate_t.x;
+            uref(idx++) = dend_ref.forcerate_t.y;
+            uref(idx++) = dend_ref.forcerate_t.z;
+            uref(idx++) = dend_ref.forcerate_r.x;
+            uref(idx++) = dend_ref.forcerate_r.y;
+            uref(idx++) = dend_ref.forcerate_r.z;
         }
     }
 
@@ -308,8 +319,28 @@ void Mpc::CalcIK(int ichain, const vec3_t& pe_local, const quat_t& qe_local, vve
     if(ichain == MyIK::Chain::Torso) myik->CalcTorsoIK(pe_local, qe_local, joint, error, Jq, Je, calc_jacobian);
     if(ichain == MyIK::Chain::ArmR ) myik->CalcArmIK  (pe_local, qe_local, joint, error, Jq, Je, calc_jacobian, 0);
     if(ichain == MyIK::Chain::ArmL ) myik->CalcArmIK  (pe_local, qe_local, joint, error, Jq, Je, calc_jacobian, 1);
-    if(ichain == MyIK::Chain::LegR ) myik->CalcLegIK  (pe_local, qe_local, joint, error, Jq, Je, calc_jacobian, 0);
-    if(ichain == MyIK::Chain::LegL ) myik->CalcLegIK  (pe_local, qe_local, joint, error, Jq, Je, calc_jacobian, 1);
+    if(ichain == MyIK::Chain::LegR ){
+        myik->CalcLegIK2 (pe_local, qe_local, joint, error, Jq, Je, calc_jacobian, 0);
+        /*
+        vvec_t _joint[2];
+        vvec_t _error[2];
+        vmat_t _Jq[2];
+        vmat_t _Je[2];
+        //myik->CalcLegIK  (pe_local, qe_local, joint, error, Jq, Je, calc_jacobian, 0);
+        myik->CalcLegIK  (pe_local, qe_local, _joint[0], _error[0], _Jq[0], _Je[0], true, 0);
+        myik->CalcLegIK2 (pe_local, qe_local, _joint[1], _error[1], _Jq[1], _Je[1], true, 0);
+        DSTR << _joint[0] << endl;
+        DSTR << _joint[1] << endl;
+        DSTR << _error[0] << endl;
+        DSTR << _error[1] << endl;
+        DSTR << _Jq[0] << endl;
+        DSTR << _Jq[1] << endl;
+        DSTR << _Je[0] << endl;
+        DSTR << _Je[1] << endl;
+        int hoge = 0;
+        */
+    }
+    if(ichain == MyIK::Chain::LegL ) myik->CalcLegIK2  (pe_local, qe_local, joint, error, Jq, Je, calc_jacobian, 1);
 }
 
 void Mpc::GetInitialState(DiMP::WholebodyData& d){
@@ -418,6 +449,8 @@ void Mpc::GetDesiredState(int k, real_t t, DiMP::WholebodyData& d){
 
             if(stat == DiMP::BipedLIP::ContactState::Float){
                 dend.state  = DiMP::Wholebody::ContactState::Free;
+                dend.force_t.clear();
+                dend.force_r.clear();
             }
             if(stat == DiMP::BipedLIP::ContactState::Surface){
                 dend.state   = DiMP::Wholebody::ContactState::Surface;
