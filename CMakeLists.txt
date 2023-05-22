@@ -34,6 +34,11 @@ find_package(SDL2     REQUIRED COMPONENTS SDL2::SDL2)
 find_package(SDL2_ttf REQUIRED COMPONENTS SDL2_ttf::SDL2_ttf)
 find_package(SuiteSparse)
 
+set(USE_OPENMP false CACHE BOOL "use openmp or not")
+if(USE_OPENMP)
+	find_package(OpenMP)
+endif()
+
 if(WIN32)
     set(Boost_USE_STATIC_LIBS        ON)
     set(Boost_USE_MULTITHREADED      ON)
