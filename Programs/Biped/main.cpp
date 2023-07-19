@@ -48,7 +48,7 @@ public:
 		const int    nstep_cruise = 10;  //< number of steps to walk in constant speed
 		const int    nstep_dec    = 5;  //< number of steps to decelerate
 		const int    nstep        = nstep_idle + nstep_acc + nstep_cruise + nstep_dec;
-		const int    nphase       = 2 * nstep + 3;  //< 2 phases per step + (one D at the beginning) + (two D at the end)
+		const int    nphase       = 2 * nstep + 4;  //< 2 phases per step + (two D at the beginning) + (two D at the end)
 		const real_t vmax         = 0.9*(1.0 + (2.0*mf)/mt);    //< walking distance
 		const real_t Tacc         = nstep_acc   *(Ts + Td);
 		const real_t Tcruise      = nstep_cruise*(Ts + Td);
@@ -61,7 +61,7 @@ public:
 		
 		biped = new DiMP::BipedLIP(graph, "biped");
 		biped->param.gravity      = 9.8;
-		biped->param.comHeight    = 0.75;//1.05;
+		biped->param.comHeight    = 0.65;//1.05;
 		biped->param.torsoMass    = mt;
 		biped->param.footMass     = mf;
 		biped->param.durationMin[DiMP::BipedLIP::Phase::R ] = 0.50;
@@ -113,6 +113,7 @@ public:
 		biped->phase.resize(nphase);
 
 		int idx = 0;
+		biped->phase[idx++] = DiMP::BipedLIP::Phase::D;
 		biped->phase[idx++] = DiMP::BipedLIP::Phase::D;
 		int side = 0;
 		for(int i = 0; i < nstep; i++){

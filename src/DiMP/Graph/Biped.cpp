@@ -1093,7 +1093,15 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 		if( !InContact(ph, side) ){
 			cv0  = keym1->foot[side].var_cop_vel->val;
 			cv1  = key1 ->foot[side].var_cop_vel->val;
-
+			
+			Interpolate(
+				t , cp_local.x, cv_local.x, ca_local.x,
+				t0, c0.x - p0.x, cv0.x, 0.0,
+				t1, c1.x - p1.x, cv1.x, 0.0,
+				param.swingInterpolation
+			);
+			
+			/*
 			FootRotation(
 				c0.x - p0.x, cv0.x, 0.0, 
 				f_tp_roll0, f_tv_roll0, f_ta_roll0,
@@ -1115,19 +1123,22 @@ void BipedLIP::FootPose(real_t t, int side, pose_t& pose, vec3_t& vel, vec3_t& a
 			FootRotationInv(
 				f_rp_roll.y, f_rv_roll.y, f_ra_roll.y,
 				cp_local.x, cv_local.x, ca_local.x);
-
+			*/
 		}
 		else{
 			cv0  = key0->foot[side].var_cop_vel->val;
 			cv1  = key1->foot[side].var_cop_vel->val;
 
 			// zmp
-			Interpolate(
-				t , cp, cv , ca,
-				t0, c0, cv0, vec3_t(0.0, 0.0, 0.0),
-				t1, c1, cv1, vec3_t(0.0, 0.0, 0.0),
-				param.swingInterpolation
-			);
+			//Interpolate(
+			//	t , cp, cv , ca,
+			//	t0, c0, cv0, vec3_t(0.0, 0.0, 0.0),
+			//	t1, c1, cv1, vec3_t(0.0, 0.0, 0.0),
+			//	param.swingInterpolation
+			//);
+			cp = (1-s)*c0 + s*c1;
+			cv = cv0;
+			ca.clear();
 
 			// zmp in foot local (approximate assuming yaw rotation is slow enough)
 			quat_t q = FromRollPitchYaw(f_rp);
@@ -1184,6 +1195,9 @@ void BipedLIP::FootCopState(real_t t, int side, vec3_t& pos, vec3_t& vel, real_t
 
 real_t BipedLIP::TValue(real_t t){
 	BipedLIPKey* key = (BipedLIPKey*)traj.GetSegment(t).first;
+
+	if(!key->next)
+		key = (BipedLIPKey*)key->prev;
 
 	return key->var_T->val;
 }

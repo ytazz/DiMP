@@ -83,12 +83,12 @@ add_library(dimp
 	${DIMP_HEADERS_RENDER}
 	)
 
-target_link_libraries(dimp ${Boost_LIBRARIES})
-target_link_libraries(dimp Springhead::Springhead)
-target_link_libraries(dimp Scenebuilder)
-target_link_libraries(dimp OpenGL::GL)
+target_link_libraries(dimp PUBLIC ${Boost_LIBRARIES})
+target_link_libraries(dimp PUBLIC Springhead::Springhead)
+target_link_libraries(dimp PUBLIC Scenebuilder)
+target_link_libraries(dimp PUBLIC OpenGL::GL)
 if(USE_OPENMP)
-	target_link_libraries(dimp OpenMP::OpenMP_CXX)
+	target_link_libraries(dimp PRIVATE OpenMP::OpenMP_CXX)
 endif()
 
 install(TARGETS dimp
