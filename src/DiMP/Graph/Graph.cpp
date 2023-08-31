@@ -160,7 +160,8 @@ const char* ConNames[] = {
 	"wholebody_contact_vel_r",
 	"wholebody_normal_force",
 	"wholebody_friction_force",
-	"wholebody_moment"
+	"wholebody_moment",
+	"wholebody_momentum"
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -490,24 +491,26 @@ void Graph::Step(){
 	static Timer timer;
 	timer.CountUS();
 	Prepare();
-	uint TPrepare = timer.CountUS();
+	TPrepare = timer.CountUS();
 	
 	timer.CountUS();
 	PrepareStep();
-	uint TPrepareStep = timer.CountUS();
+	TPrepareStep = timer.CountUS();
 	
 	timer.CountUS();
 	solver->Step();
-	uint TStep = timer.CountUS();
+	TStep = timer.CountUS();
 
 	timer.CountUS();
 	Finish();
-	uint TFinish = timer.CountUS();
+	TFinish = timer.CountUS();
 
-	DSTR << " tpre1: " << TPrepare;
-	DSTR << " tpre2: " << TPrepareStep;
-	DSTR << " tstp: " << TStep;
-	DSTR << " tfin: " << TFinish << endl;
+	if(solver->param.verbose){
+		DSTR << " tpre1: " << TPrepare;
+		DSTR << " tpre2: " << TPrepareStep;
+		DSTR << " tstp: "  << TStep;
+		DSTR << " tfin: "  << TFinish << endl;
+	}
 
 }
 

@@ -13,7 +13,7 @@ using namespace PTM;
 
 namespace DiMP {;
 
-const real_t pi      = M_PI;
+const real_t _pi     = M_PI;
 const real_t inf     = numeric_limits<real_t>::max();
 const real_t damping = 0.1;
 const vec3_t one(1.0, 1.0, 1.0);
@@ -69,11 +69,14 @@ void WholebodyData::Init(Wholebody* wb){
 	qd_weight .resize(njoint, 1.0);
 	qdd_weight.resize(njoint, 1.0);
 
+	q_min.resize(njoint, -inf);
+	q_max.resize(njoint,  inf);
+
 	Jq.resize(nchain);
 	Je.resize(nchain);
 	for(int i = 0; i < nchain; i++){
-		Jq[i].resize(wb->chains[i].ilink .size(), 6);
-		Je[i].resize(wb->chains[i].ilimit.size(), 6);
+		Jq[i].resize(wb->chains[i].ilink .size(), 6, 0.0);
+		Je[i].resize(wb->chains[i].ilimit.size(), 6, 0.0);
 	}
 }
 
@@ -83,26 +86,21 @@ void WholebodyData::InitJacobian(Wholebody* wb){
 	int nlimit = (int)wb->limits.size();
 	int njoint = (int)wb->joints.size();
 		
-	Jik_e_v0.resize(nlimit, 6);
-	Jik_e_v0.clear();
+	Jik_e_v0.resize(nlimit, 6, 0.0);
 	Jik_e_ve.resize(nend);
 	for(int i = 0; i < nend; i++){
-		Jik_e_ve[i].resize(nlimit, 6);
-		Jik_e_ve[i].clear();
+		Jik_e_ve[i].resize(nlimit, 6, 0.0);
 	}
-	Jik_q_v0.resize(njoint, 6);
-	Jik_q_v0.clear();
+	Jik_q_v0.resize(njoint, 6, 0.0);
 	Jik_q_ve.resize(nend);
 	for(int i = 0; i < nend; i++){
-		Jik_q_ve[i].resize(njoint, 6);
-		Jik_q_ve[i].clear();
+		Jik_q_ve[i].resize(njoint, 6, 0.0);
 	}
 	Jfk_vi_v0.resize(nlink);
 	Jfk_vi_q .resize(nlink);
 	for(int i = 0; i < nlink; i++){
 		Jfk_vi_v0[i].clear();
-		Jfk_vi_q [i].resize(6, njoint);
-		Jfk_vi_q [i].clear();
+		Jfk_vi_q [i].resize(6, njoint, 0.0);
 	}
 	
 	Jfkik_vi_v0.resize(nlink);
@@ -329,6 +327,9 @@ void WholebodyKey::AddCon(Solver* solver) {
 				joints[i].con_des_qd = new FixConS(solver, ID(ConTag::WholebodyJointVel, node, tick, ss.str() + "_des_qd"), joints[i].var_qd, wb->svr);
 				solver->AddCostCon(joints[i].con_des_q , tick->idx);
 				solver->AddCostCon(joints[i].con_des_qd, tick->idx);
+
+				joints[i].con_range_q = new RangeConS(solver, ID(ConTag::WholebodyJointPos, node, tick, ss.str() + "_range_q"), joints[i].var_q, wb->spr);
+				solver->AddCostCon(joints[i].con_range_q, tick->idx);
 			}
 		}
 	}
@@ -479,10 +480,10 @@ void WholebodyKey::Prepare() {
 		rec.resize(nend);
 		
 		if(wb->param.parametrization == Wholebody::Parametrization::Joint){
-			J_L_q   .resize(3, njoint);
-			J_L_qd  .resize(3, njoint);
-			J_Ld_q  .resize(3, njoint);
-			J_Ld_qdd.resize(3, njoint);
+			J_L_q   .resize(3, njoint, 0.0);
+			J_L_qd  .resize(3, njoint, 0.0);
+			J_Ld_q  .resize(3, njoint, 0.0);
+			J_Ld_qdd.resize(3, njoint, 0.0);
 		}
 		else{
 			J_L_pe.resize(nend);
@@ -642,6 +643,7 @@ void WholebodyKey::Draw(Render::Canvas* canvas, Render::Config* conf) {
 Wholebody::Param::Param() {
 	gravity = 9.8;
 	analyticalJacobian = false;
+	useLd = true;
 	comIkNumIter = 10;
 	comIkRatio   = 1.0;
 	parametrization = Wholebody::Parametrization::End;
@@ -922,6 +924,9 @@ void Wholebody::Setup(){
 					jnt.con_des_qd->desired = d.qd[i];
 					jnt.con_des_q ->weight[0] = d.q_weight [i];
 					jnt.con_des_qd->weight[0] = d.qd_weight[i];
+
+					jnt.con_range_q->_min = d.q_min[i];
+					jnt.con_range_q->_max = d.q_max[i];
 
 					if(key->next){
 						jnt.con_des_qdd->desired = d.qdd[i];
@@ -1565,8 +1570,8 @@ void Wholebody::CalcJacobianNumerical(WholebodyData& data, vector<WholebodyData>
 
 			quat_t qdiff = d.links[i].pos_r*data.links[i].pos_r.Conjugated();
 			real_t theta = qdiff.Theta();
-			if(theta > pi)
-				theta -= 2*pi;
+			if(theta > _pi)
+				theta -= 2*_pi;
 			
 			dv.sub_vector(TSubVectorDim<3,3>()) = qdiff.Axis()*(theta*epsinv);
 			data.Jfkik_vi_v0[i].col(j) = dv;
@@ -1599,8 +1604,8 @@ void Wholebody::CalcJacobianNumerical(WholebodyData& data, vector<WholebodyData>
 
 				quat_t qdiff = d.links[i].pos_r*data.links[i].pos_r.Conjugated();
 				real_t theta = qdiff.Theta();
-				if(theta > pi)
-					theta -= 2*pi;
+				if(theta > _pi)
+					theta -= 2*_pi;
 				dv.sub_vector(TSubVectorDim<3,3>()) = qdiff.Axis()*(theta*epsinv);
 				
 				data.Jfkik_vi_ve[i][iend].col(j) = dv;
@@ -1640,8 +1645,8 @@ void Wholebody::CalcJacobianNumerical2(WholebodyData& data, vector<WholebodyData
 
 				quat_t qdiff = d.links[i].pos_r*data.links[i].pos_r.Conjugated();
 				real_t theta = qdiff.Theta();
-				if(theta > pi)
-					theta -= 2*pi;
+				if(theta > _pi)
+					theta -= 2*_pi;
 				dv.sub_vector(TSubVectorDim<3,3>()) = qdiff.Axis()*(theta*epsinv);
 				
 				data.Jfkik_vi_ve[i][iend].col(j) = dv;
@@ -2285,19 +2290,20 @@ WholebodyCentroidPosConR::WholebodyCentroidPosConR(Solver* solver, string _name,
 	
 	int nend   = (int)obj[0]->ends  .size();
 	int njoint = (int)obj[0]->joints.size();
-
-	if(obj[0]->wb->param.parametrization == Wholebody::Parametrization::Joint){
-		for(int i = 0; i < njoint; i++)
-			AddC3Link(obj[0]->joints[i].var_q);
-		for(int i = 0; i < njoint; i++)
-			AddC3Link(obj[0]->joints[i].var_qdd);
-	}
-	else{
-		for(int i = 0; i < nend; i++){
-			AddM3Link(obj[0]->ends[i].var_pos_t);
-			AddM3Link(obj[0]->ends[i].var_pos_r);
-			AddM3Link(obj[0]->ends[i].var_acc_t);
-			AddM3Link(obj[0]->ends[i].var_acc_r);
+	if(obj[0]->wb->param.useLd){
+		if(obj[0]->wb->param.parametrization == Wholebody::Parametrization::Joint){
+			for(int i = 0; i < njoint; i++)
+				AddC3Link(obj[0]->joints[i].var_q);
+			for(int i = 0; i < njoint; i++)
+				AddC3Link(obj[0]->joints[i].var_qdd);
+		}
+		else{
+			for(int i = 0; i < nend; i++){
+				AddM3Link(obj[0]->ends[i].var_pos_t);
+				AddM3Link(obj[0]->ends[i].var_pos_r);
+				AddM3Link(obj[0]->ends[i].var_acc_t);
+				AddM3Link(obj[0]->ends[i].var_acc_r);
+			}
 		}
 	}
 	for(int i = 0; i < nend; i++){
@@ -2317,19 +2323,20 @@ WholebodyCentroidVelConR::WholebodyCentroidVelConR(Solver* solver, string _name,
 
 	int nend   = (int)obj[0]->ends  .size();
 	int njoint = (int)obj[0]->joints.size();
-
-	if(obj[0]->wb->param.parametrization == Wholebody::Parametrization::Joint){
-		for(int i = 0; i < njoint; i++)
-			AddC3Link(obj[0]->joints[i].var_q);
-		for(int i = 0; i < njoint; i++)
-			AddC3Link(obj[0]->joints[i].var_qdd);
-	}
-	else{
-		for(int i = 0; i < nend; i++){
-			AddM3Link(obj[0]->ends[i].var_pos_t);
-			AddM3Link(obj[0]->ends[i].var_pos_r);
-			AddM3Link(obj[0]->ends[i].var_acc_t);
-			AddM3Link(obj[0]->ends[i].var_acc_r);
+	if(obj[0]->wb->param.useLd){
+		if(obj[0]->wb->param.parametrization == Wholebody::Parametrization::Joint){
+			for(int i = 0; i < njoint; i++)
+				AddC3Link(obj[0]->joints[i].var_q);
+			for(int i = 0; i < njoint; i++)
+				AddC3Link(obj[0]->joints[i].var_qdd);
+		}
+		else{
+			for(int i = 0; i < nend; i++){
+				AddM3Link(obj[0]->ends[i].var_pos_t);
+				AddM3Link(obj[0]->ends[i].var_pos_r);
+				AddM3Link(obj[0]->ends[i].var_acc_t);
+				AddM3Link(obj[0]->ends[i].var_acc_r);
+			}
 		}
 	}
 	for(int i = 0; i < nend; i++){
@@ -2446,7 +2453,7 @@ WholebodyLimitCon::WholebodyLimitCon(Solver* solver, string _name, WholebodyKey*
 }*/
 
 WholebodyLCon::WholebodyLCon(Solver* solver, string _name, WholebodyKey* _obj, real_t _scale):
-	Constraint(solver, 3, ID(ConTag::WholebodyMoment, _obj->node, _obj->tick, _name), Constraint::Type::Equality, _scale){
+	Constraint(solver, 3, ID(ConTag::WholebodyMomentum, _obj->node, _obj->tick, _name), Constraint::Type::Equality, _scale){
 	obj = _obj;
 	
 	AddM3Link(obj->base.var_pos_r);
@@ -2629,9 +2636,10 @@ void WholebodyVelConR::Prepare(){
 }
 
 void WholebodyJointPosCon::Prepare(){
-	q0     = obj[0]->joints[ijoint].var_q ->val;
-	qd0    = obj[0]->joints[ijoint].var_qd->val;
-	q1     = obj[1]->joints[ijoint].var_q ->val;
+	q0     = obj[0]->joints[ijoint].var_q  ->val;
+	qd0    = obj[0]->joints[ijoint].var_qd ->val;
+	qdd0   = obj[0]->joints[ijoint].var_qdd->val;
+	q1     = obj[1]->joints[ijoint].var_q  ->val;
 	h      = obj[0]->hnext;
 	h2     = h*h;
 	
@@ -2678,7 +2686,9 @@ void WholebodyCentroidPosConR::Prepare(){
 	h2   = h*h;
 	Ld   = obj[0]->data.centroid.Ld;
 	Iinv = obj[0]->data.centroid.Iinv;
-	u0   = Iinv*(obj[0]->msum - obj[0]->q0*Ld);
+	if(obj[0]->wb->param.useLd)
+		 u0 = Iinv*(obj[0]->msum - obj[0]->q0*Ld);
+	else u0 = Iinv*(obj[0]->msum);
 	
 	q_rhs = obj[0]->q0*quat_t::Rot(obj[0]->q0.Conjugated()*(h*w0 + (0.5*h2)*u0));
 }
@@ -2690,7 +2700,9 @@ void WholebodyCentroidVelConR::Prepare(){
 	Ld   = obj[0]->data.centroid.Ld;
 	Iinv = obj[0]->data.centroid.Iinv;
 	h    = obj[0]->hnext;
-	u0   = Iinv*(obj[0]->msum - obj[0]->q0*Ld);
+	if(obj[0]->wb->param.useLd)
+		 u0 = Iinv*(obj[0]->msum - obj[0]->q0*Ld);
+	else u0 = Iinv*(obj[0]->msum);
 	
 	w_rhs = w0 + h*u0;
 }
@@ -2722,6 +2734,7 @@ void WholebodyDesVelConT::Prepare(){
 	w0 = obj->centroid.var_vel_r->val;
 	q0 = obj->centroid.var_pos_r->val;
 	q0.ToMatrix(R0);
+	pi = dend.pos_t;
 	vi = dend.vel_t;
 }
 
@@ -2779,6 +2792,7 @@ void WholebodyContactVelConT::Prepare(){
 	
 	qo = dend_des.pos_rc;
 	qo.ToMatrix(Ro);
+	r  = dend_des.pos_te;
 	vc = obj->centroid.var_vel_t->val;
 	q0 = obj->centroid.var_pos_r->val;
 	q0.ToMatrix(R0);
@@ -2933,25 +2947,25 @@ void WholebodyCentroidPosConR::CalcCoef(){
 	((M3Link*)links[idx++])->SetCoef( tmpR0*obj[0]->J_Ld_ub);
 	
 	int nend = (int)obj[0]->ends.size();
-
-	if(obj[0]->wb->param.parametrization == Wholebody::Parametrization::Joint){
-		int njoint = (int)obj[0]->joints.size();
-		for(int i = 0; i < njoint; i++){
-			((C3Link*)links[idx++])->SetCoef( /*vec3_t()*/tmpR0*obj[0]->J_Ld_q  .col(i));
+	if(obj[0]->wb->param.useLd){
+		if(obj[0]->wb->param.parametrization == Wholebody::Parametrization::Joint){
+			int njoint = (int)obj[0]->joints.size();
+			for(int i = 0; i < njoint; i++){
+				((C3Link*)links[idx++])->SetCoef(tmpR0*obj[0]->J_Ld_q  .col(i));
+			}
+			for(int i = 0; i < njoint; i++){
+				((C3Link*)links[idx++])->SetCoef(tmpR0*obj[0]->J_Ld_qdd.col(i));
+			}
 		}
-		for(int i = 0; i < njoint; i++){
-			((C3Link*)links[idx++])->SetCoef( /*vec3_t()*/tmpR0*obj[0]->J_Ld_qdd.col(i));
+		else{
+			for(int i = 0; i < nend; i++){
+				((M3Link*)links[idx++])->SetCoef( tmpR0*obj[0]->J_Ld_pe[i] + tmp*mat3_t::Cross(obj[0]->fe[i])*obj[0]->R0);
+				((M3Link*)links[idx++])->SetCoef( tmpR0*obj[0]->J_Ld_qe[i]);
+				((M3Link*)links[idx++])->SetCoef( tmpR0*obj[0]->J_Ld_ae[i]);
+				((M3Link*)links[idx++])->SetCoef( tmpR0*obj[0]->J_Ld_ue[i]);
+			}
 		}
 	}
-	else{
-		for(int i = 0; i < nend; i++){
-			((M3Link*)links[idx++])->SetCoef( tmpR0*obj[0]->J_Ld_pe[i] + tmp*mat3_t::Cross(obj[0]->fe[i])*obj[0]->R0);
-			((M3Link*)links[idx++])->SetCoef( tmpR0*obj[0]->J_Ld_qe[i]);
-			((M3Link*)links[idx++])->SetCoef( tmpR0*obj[0]->J_Ld_ae[i]);
-			((M3Link*)links[idx++])->SetCoef( tmpR0*obj[0]->J_Ld_ue[i]);
-		}
-	}
-
 	// (R0*re) x fe = -fe^x*R0*re
 	for(int i = 0; i < nend; i++){
 		//((M3Link*)links[idx++])->SetCoef(-tmp*obj[0]->J_mc_fe[i]);
@@ -2975,22 +2989,23 @@ void WholebodyCentroidVelConR::CalcCoef(){
 	((M3Link*)links[idx++])->SetCoef( tmpR0*obj[0]->J_Ld_ub);
 
 	int nend = (int)obj[0]->ends.size();
-
-	if(obj[0]->wb->param.parametrization == Wholebody::Parametrization::Joint){
-		int njoint = (int)obj[0]->joints.size();
-		for(int i = 0; i < njoint; i++){
-			((C3Link*)links[idx++])->SetCoef( /*vec3_t()*/tmpR0*obj[0]->J_Ld_q  .col(i));
+	if(obj[0]->wb->param.useLd){
+		if(obj[0]->wb->param.parametrization == Wholebody::Parametrization::Joint){
+			int njoint = (int)obj[0]->joints.size();
+			for(int i = 0; i < njoint; i++){
+				((C3Link*)links[idx++])->SetCoef(tmpR0*obj[0]->J_Ld_q  .col(i));
+			}
+			for(int i = 0; i < njoint; i++){
+				((C3Link*)links[idx++])->SetCoef(tmpR0*obj[0]->J_Ld_qdd.col(i));
+			}
 		}
-		for(int i = 0; i < njoint; i++){
-			((C3Link*)links[idx++])->SetCoef( /*vec3_t()*/tmpR0*obj[0]->J_Ld_qdd.col(i));
-		}
-	}
-	else{
-		for(int i = 0; i < nend; i++){
-			((M3Link*)links[idx++])->SetCoef( tmpR0*obj[0]->J_Ld_pe[i] + tmp*mat3_t::Cross(obj[0]->fe[i])*obj[0]->R0);
-			((M3Link*)links[idx++])->SetCoef( tmpR0*obj[0]->J_Ld_qe[i]);
-			((M3Link*)links[idx++])->SetCoef( tmpR0*obj[0]->J_Ld_ae[i]);
-			((M3Link*)links[idx++])->SetCoef( tmpR0*obj[0]->J_Ld_ue[i]);
+		else{
+			for(int i = 0; i < nend; i++){
+				((M3Link*)links[idx++])->SetCoef( tmpR0*obj[0]->J_Ld_pe[i] + tmp*mat3_t::Cross(obj[0]->fe[i])*obj[0]->R0);
+				((M3Link*)links[idx++])->SetCoef( tmpR0*obj[0]->J_Ld_qe[i]);
+				((M3Link*)links[idx++])->SetCoef( tmpR0*obj[0]->J_Ld_ae[i]);
+				((M3Link*)links[idx++])->SetCoef( tmpR0*obj[0]->J_Ld_ue[i]);
+			}
 		}
 	}
 	for(int i = 0; i < nend; i++){
@@ -3303,8 +3318,8 @@ void WholebodyPosConR::CalcDeviation(){
 	quat_t qerror = q_rhs.Conjugated()*q1;
 	vec3_t axis   = qerror.Axis ();
 	real_t theta  = qerror.Theta();
-	if(theta > pi)
-		theta -= 2*pi;
+	if(theta > _pi)
+		theta -= 2*_pi;
 	y = q_rhs*(theta*axis);
 }
 
@@ -3336,8 +3351,8 @@ void WholebodyCentroidPosConR::CalcDeviation(){
 	quat_t qerror = q_rhs.Conjugated()*q1;
 	vec3_t axis   = qerror.Axis ();
 	real_t theta  = qerror.Theta();
-	if(theta > pi)
-		theta -= 2*pi;
+	if(theta > _pi)
+		theta -= 2*_pi;
 	y = q_rhs*(theta*axis);
 }
 
@@ -3353,8 +3368,8 @@ void WholebodyDesPosConR::CalcDeviation(){
 	quat_t qerror = desired.Conjugated()*(q0*qi);
 	vec3_t axis   = qerror.Axis ();
 	real_t theta  = qerror.Theta();
-	if(theta > pi)
-		theta -= 2*pi;
+	if(theta > _pi)
+		theta -= 2*_pi;
 	y = desired*(theta*axis);
 }
 
@@ -3402,8 +3417,8 @@ void WholebodyContactPosConR::CalcDeviation(){
 	quat_t qerror = qo.Conjugated()*(q0*qi);
 	vec3_t axis   = qerror.Axis ();
 	real_t theta  = qerror.Theta();
-	if(theta > pi)
-		theta -= 2*pi;
+	if(theta > _pi)
+		theta -= 2*_pi;
 	y = theta*axis;
 }
 

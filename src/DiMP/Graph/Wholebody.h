@@ -113,6 +113,7 @@ struct WholebodyData{
 	
 	vvec_t q, qd, qdd, tau;
 	vvec_t q_weight, qd_weight, qdd_weight;
+	vvec_t q_min, q_max;
 	vvec_t e;
 	vector<vmat_t>   Jq;
 	vector<vmat_t>   Je;
@@ -214,6 +215,8 @@ public:
 		FixConS*  con_des_q;
 		FixConS*  con_des_qd;
 		FixConS*  con_des_qdd;
+
+		RangeConS* con_range_q;
 	};
 
 	vector<WholebodyLimitCon*>  con_limit;
@@ -273,6 +276,7 @@ public:
 		real_t  totalMass;  ///< total mass of wholebody
 		real_t  gravity;
 		bool    analyticalJacobian;
+		bool    useLd;
 		int     comIkNumIter;
 		real_t  comIkRatio;
 		int     parametrization;

@@ -104,6 +104,11 @@ public:
 	Param		 param;
 	Scale		 scale;
 
+	int TPrepare;
+	int TPrepareStep;
+	int TStep;
+	int TFinish;
+
 	/// variables used for broad phase collision detection
 	struct GPTableEntry{
 		GeometryInfo* info[2];

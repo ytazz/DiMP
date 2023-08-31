@@ -163,6 +163,7 @@ struct ConTag{
 		WholebodyNormalForce,
 		WholebodyFrictionForce,
 		WholebodyMoment,
+		WholebodyMomentum,
 		NumTypes,
 	};
 };
