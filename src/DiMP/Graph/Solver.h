@@ -15,41 +15,39 @@ class Graph;
 
 class DDPState : public UTRefCount{
 public:
+    int                id;
     CustomSolver*      solver;
-    DDPStage*          stage;
-    set<DDPState*>     next;
-    set<DDPState*>     prev;
-    DDPState*          nextOpt;
-
-    real_t  L;
-    Vector  Lx;
-    Vector  Lu;
-    Matrix  Lxx;
-    Matrix  Luu;
-    Matrix  Lux;
-    real_t  Jopt;
+    vector<DDPState*>  next;
+    vector<DDPState*>  prev;
+    vector<DDPState*>  nextOpt;
+    vector<real_t>     Jopt;
+    
+    vector<real_t>     L;
+    vector<Vector>     Lx;
+    vector<Vector>     Lu;
+    vector<Matrix>     Lxx;
+    vector<Matrix>     Luu;
+    vector<Matrix>     Lux;
 
     virtual bool IsIdentical(const DDPState* st) = 0;
     virtual bool IsTerminal () = 0;
     virtual void Init       ();
-    virtual void CalcCost   ();
-    virtual void Finish     ();
     virtual void Print      ();
+    virtual void CalcCost   (int k);
+    virtual void Finish     (int k);
 
              DDPState(CustomSolver* _solver);
     virtual ~DDPState();
 };
 
-class DDPStage : public UTRefCount{
+class DDPAutomaton : public UTRefCount{
 public:
     CustomSolver*  solver;
-    DDPStage*      next;
+
     vector< UTRef<DDPState> >  states;
     
-    int k;
-    
-             DDPStage(CustomSolver* _solver);
-    virtual ~DDPStage();
+             DDPAutomaton(CustomSolver* _solver);
+    virtual ~DDPAutomaton();    
 };
 
 class DDPThread;
@@ -107,20 +105,22 @@ public:
     Vector    Lx_plus_Ux_plus_Lxx_plus_Uxx_fcor_rev;
     Matrix    Lxx_plus_Uxx_fx_rev;
     Matrix    Lxx_plus_Uxx_fu_rev;
-    Matrix    Lux_fx_rev;
+    Matrix    Lux_fx_rev, Lux_fu_rev;
 
     real_t    U_plus_V;
     Vector    Ux_plus_Vx;
     Matrix    Uxx_plus_Vxx;
     Matrix    Uxx_plus_Vxx_inv;
     Vector    Uxx_plus_Vxx_inv_Ux_plus_Vx;
+
+    real_t    Ud, Vd;  ///< value of discrete state transition
     
 public:
     void  Init             ();
     void  Prepare          ();
     void  CalcValueForward ();
     void  CalcValueBackward();
-    void  CalcStateForward ();
+    void  CalcStateForward (real_t alpha);
     void  CalcCost         ();
     void  Apply            ();
 
@@ -131,20 +131,13 @@ class DDPThread : public UTRefCount{
 public:
     CustomSolver*  solver;
         
-    vector<Matrix>    fx;
-	vector<Matrix>    fu;
-	vector<Vector>    fcor;
-    vector<Matrix>    fx_rev;
-	vector<Matrix>    fu_rev;
-	vector<Vector>    fcor_rev;
-
     vector< UTRef<DDPStep> >  steps;
 
     void   Init             ();
     void   Prepare          ();
-    void   CalcValueForward ();
-    void   CalcValueBackward();
-    void   CalcStateForward ();
+    bool   CalcValueForward ();
+    bool   CalcValueBackward();
+    void   CalcStateForward (real_t alpha);
         
              DDPThread(CustomSolver* _solver);
     virtual ~DDPThread();
@@ -153,8 +146,9 @@ public:
 class DDPCallback{
 public:
     virtual DDPState* CreateInitialState() = 0;
-	virtual void      CreateNextStates  (DDPState* _state, vector<DDPState*>& _next) = 0;
+	virtual void      CreateNextStates  (DDPState* _state, vector< UTRef<DDPState> >& _next) = 0;
     virtual void      OnThreadUpdate    (DDPThread* _thread) = 0;
+    virtual real_t    CalcTransitionCost(DDPState* _st0, DDPState* _st1, int k) = 0;
 };
 
 class CustomSolver : public Solver{
@@ -167,10 +161,12 @@ public:
 
     Graph*  graph;
 
-    vector< UTRef<DDPStage > > stages;
+    UTRef<DDPAutomaton>        automaton;
+    DDPState*                  stIni;
     UTRef<DDPThread>           thread;
     vector< UTRef<DDPStep> >   samples;
     int                        numSample;
+    real_t                     reg_u, reg_x;
 
     DDPCallback*               callback;
 
@@ -182,6 +178,8 @@ public:
     virtual void    Init();
 	virtual void    CalcDirection();
     virtual real_t  CalcObjective();
+    virtual void    ModifyVariables     (real_t alpha);
+
 
 };
 

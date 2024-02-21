@@ -116,6 +116,7 @@ public:
 class Hull : public Geometry{
 public:
     vector<vec3_t>  vertices;
+	real_t          radius;
 
     virtual void   Draw       (Render::Canvas* canvas, Render::Config* conf);
 	virtual void   CalcBSphere();
