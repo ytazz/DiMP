@@ -1124,12 +1124,12 @@ void Wholebody::CalcIK(WholebodyData& d, int ichain, bool calc_jacobian){
 	quat_t qr = d.links[iroot].pos_r;
 	vec3_t pe = d.ends [ichain].pos_t;
 	quat_t qe = d.ends [ichain].pos_r;
-	vec3_t or = links[ifront].trn;
+	vec3_t tr = links[ifront].trn;
 	vec3_t oe = ends [ichain].offset;
 
-	//  pr + qr*(or + pe_local) + qe*oe = pe
+	//  pr + qr*(tr + pe_local) + qe*oe = pe
 	//  qr*qe_local = qe
-	pe_local = qr.Conjugated()*(pe - pr - qe*oe) - or;
+	pe_local = qr.Conjugated()*(pe - pr - qe*oe) - tr;
 	qe_local = qr.Conjugated()*qe;
 
 	callback->CalcIK(ichain, pe_local, qe_local, joint, error, d.Jq[ichain], d.Je[ichain], calc_jacobian/* && !jacobian_by_diff*/);
