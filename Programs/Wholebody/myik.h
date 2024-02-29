@@ -82,10 +82,5 @@ public:
 	real_t lowerLegLength;
 
 public:
-	void CalcTorsoIK(const vec3_t& pos, const quat_t& ori, vvec_t& joint, vvec_t& error, vmat_t& Jq, vmat_t& Je, bool calc_jacobian);
-	void CalcArmIK  (const vec3_t& pos, const quat_t& ori, vvec_t& joint, vvec_t& error, vmat_t& Jq, vmat_t& Je, bool calc_jacobian, int side);
-	void CalcLegIK  (const vec3_t& pos, const quat_t& ori, vvec_t& joint, vvec_t& error, vmat_t& Jq, vmat_t& Je, bool calc_jacobian, int side);
-	void CalcLegIK2 (const vec3_t& pos, const quat_t& ori, vvec_t& joint, vvec_t& error, vmat_t& Jq, vmat_t& Je, bool calc_jacobian, int side);
-
 	MyIK();
 };

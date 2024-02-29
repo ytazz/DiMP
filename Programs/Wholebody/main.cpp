@@ -35,16 +35,12 @@ public:
 
 		graph->scale.Set(1.0, 1.0, 1.0);
 		wb   = new DiMP::Wholebody(graph, "wb");
-		wb->param.analyticalJacobian = true;
-		wb->param.parametrization = DiMP::Wholebody::Parametrization::Joint;
-		//wb->param.parametrization = DiMP::Wholebody::Parametrization::End;
 		myik = new MyIK();
 		
 		wb->links .resize(MyIK::Link ::Num);
 		wb->joints.resize(MyIK::Link ::Num - 1);
 		wb->ends  .resize(MyIK::End  ::Num);
 		wb->chains.resize(MyIK::Chain::Num);
-		wb->limits.resize(MyIK::Limit::Num);
 
 		vec3_t e0;
 		vec3_t ex(1.0, 0.0, 0.0);
@@ -94,27 +90,13 @@ public:
 		wb->ends[3] = Wholebody::End(MyIK::Link::FootRR, myik->ankleToFoot[0]);
 		wb->ends[4] = Wholebody::End(MyIK::Link::FootLR, myik->ankleToFoot[1]);
 
-		wb->limits[ 0] = Wholebody::Limit(MyIK::Chain::Torso, Constraint::Type::Equality         , wb->spt);
-		wb->limits[ 1] = Wholebody::Limit(MyIK::Chain::Torso, Constraint::Type::Equality         , wb->spt);
-		wb->limits[ 2] = Wholebody::Limit(MyIK::Chain::Torso, Constraint::Type::Equality         , wb->spt);
-		wb->limits[ 3] = Wholebody::Limit(MyIK::Chain::Torso, Constraint::Type::Equality         , wb->spr);
-		wb->limits[ 4] = Wholebody::Limit(MyIK::Chain::ArmR , Constraint::Type::InequalityPenalty, 1.0    );
-		wb->limits[ 5] = Wholebody::Limit(MyIK::Chain::ArmR , Constraint::Type::InequalityPenalty, 1.0    );
-		wb->limits[ 6] = Wholebody::Limit(MyIK::Chain::ArmL , Constraint::Type::InequalityPenalty, 1.0    );
-		wb->limits[ 7] = Wholebody::Limit(MyIK::Chain::ArmL , Constraint::Type::InequalityPenalty, 1.0    );
-		wb->limits[ 8] = Wholebody::Limit(MyIK::Chain::LegR , Constraint::Type::InequalityPenalty, 1.0    );
-		wb->limits[ 9] = Wholebody::Limit(MyIK::Chain::LegR , Constraint::Type::InequalityPenalty, 1.0    );
-		wb->limits[10] = Wholebody::Limit(MyIK::Chain::LegL , Constraint::Type::InequalityPenalty, 1.0    );
-		wb->limits[11] = Wholebody::Limit(MyIK::Chain::LegL , Constraint::Type::InequalityPenalty, 1.0    );
-		
-		wb->chains[0] = Wholebody::Chain({ 1,  2,  3,  4}            , {0, 1, 2, 3});
-		wb->chains[1] = Wholebody::Chain({ 5,  6,  7,  8,  9, 10, 11}, {4, 5}      );
-		wb->chains[2] = Wholebody::Chain({12, 13, 14, 15, 16, 17, 18}, {6, 7}      );
-		wb->chains[3] = Wholebody::Chain({19, 20, 21, 22, 23, 24}    , {8, 9}      );
-		wb->chains[4] = Wholebody::Chain({25, 26, 27, 28, 29, 30}    , {10, 11}    );
+		wb->chains[0] = Wholebody::Chain({ 1,  2,  3,  4}            );
+		wb->chains[1] = Wholebody::Chain({ 5,  6,  7,  8,  9, 10, 11});
+		wb->chains[2] = Wholebody::Chain({12, 13, 14, 15, 16, 17, 18});
+		wb->chains[3] = Wholebody::Chain({19, 20, 21, 22, 23, 24}    );
+		wb->chains[4] = Wholebody::Chain({25, 26, 27, 28, 29, 30}    );
 		
 		mpc->wb   = wb;
-		mpc->myik = myik;
 		wb->callback = mpc;
 		mpc->Init();		
 		

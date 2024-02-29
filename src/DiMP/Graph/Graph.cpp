@@ -6,6 +6,7 @@
 #include <DiMP/Render/Canvas.h>
 
 #include <sbtimer.h>
+static Timer timer;	
 
 #include <omp.h>
 
@@ -57,7 +58,9 @@ const char* VarNames[] = {
 	"centroid_duration" ,
 	"centroid_end_pos"  ,
 	"centroid_end_vel"  ,
+	"centroid_end_acc"  ,
 	"centroid_end_stiff",
+	"centroid_end_cmp",
 	"centroid_end_moment",
 	"wholebody_pos_t",
 	"wholebody_pos_r",
@@ -130,18 +133,32 @@ const char* ConNames[] = {
 	"biped_capt_land_range_r",
 	"biped_capt_cop_range"   ,
 	"biped_capt_icp_range"   ,	
-	"centroid_pos_t"      ,
-	"centroid_pos_r"      ,
-	"centroid_vel_t"      ,
-	"centroid_vel_r"      ,
-	"centroid_time"       ,
-	"centroid_effort"     ,
-	"centroid_end_pos"    ,
-	"centroid_end_vel"    ,
-	"centroid_end_stiff"  ,
-	"centroid_end_moment" ,
-	"centroid_end_range"  ,
-	"centroid_end_contact",
+	"centroid_pos_t"           ,
+	"centroid_pos_r"           ,
+	"centroid_vel_t"           ,
+	"centroid_vel_r"           ,
+	"centroid_time"            ,
+	"centroid_end_pos_t"       ,
+	"centroid_end_pos_r"       ,
+	"centroid_des_pos_t"       ,
+	"centroid_des_pos_r"       ,
+	"centroid_des_vel_t"       ,
+	"centroid_des_vel_r"       ,
+	"centroid_des_time"        ,
+	"centroid_des_duration"    ,
+	"centroid_des_end_pos_t"   ,
+	"centroid_des_end_vel_t"   ,
+	"centroid_des_end_pos_r"   ,
+	"centroid_des_end_vel_r"   ,
+	"centroid_des_end_stiff"   ,
+	"centroid_des_end_cmp"     ,
+	"centroid_des_end_moment"  ,
+	"centroid_duration_range"  ,
+	"centroid_end_pos_range"   ,
+	"centroid_end_stiff_range" ,
+	"centroid_end_contact"     ,
+	"centroid_end_friction"    ,
+	"centroid_end_moment_range",
 	"wholebody_pos_t",
 	"wholebody_pos_r",
 	"wholebody_vel_t",
@@ -488,7 +505,6 @@ void Graph::Step(){
 	if(!ready)
 		Init();
 
-	static Timer timer;
 	timer.CountUS();
 	Prepare();
 	TPrepare = timer.CountUS();

@@ -249,7 +249,7 @@ void BipedCapt::Init() {
 }
 
 void BipedCapt::Reset(){
-	int N = graph->ticks.size()-1;
+	int N = (int)graph->ticks.size()-1;
 	for (int k = 0; k <= N; k++) {
 		BipedCaptKey* key = (BipedCaptKey*)traj.GetKeypoint(graph->ticks[k]);
 

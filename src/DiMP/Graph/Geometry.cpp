@@ -217,7 +217,7 @@ void Point::Draw(Render::Canvas* canvas, Render::Config* conf){
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 Hull::Hull(Graph* g, const string& n):Geometry(g, n){
-
+	radius = 0.0;
 }
 
 void Hull::Draw(Render::Canvas* canvas, Render::Config* conf){
@@ -226,7 +226,7 @@ void Hull::Draw(Render::Canvas* canvas, Render::Config* conf){
 
 void Hull::CalcBSphere(){
     bsphereCenter.clear();
-    bsphereRadius = 0.0;
+    bsphereRadius = radius;
 
     if(!vertices.empty()){
         for(vec3_t& v : vertices)
@@ -235,7 +235,7 @@ void Hull::CalcBSphere(){
         bsphereCenter *= (1.0/vertices.size());
 
         for(vec3_t& v : vertices)
-            bsphereRadius = std::max(bsphereRadius, (v - bsphereCenter).norm());
+            bsphereRadius = std::max(bsphereRadius, (v - bsphereCenter).norm() + radius);
 
     }
 }
@@ -250,6 +250,9 @@ vec3_t Hull::CalcSupport(const vec3_t& dir){
             dmax = d;
         }
     }
+
+	sup += (radius/dir.norm())*dir;
+
     return sup;
 }
 
@@ -611,18 +614,25 @@ public:
 				// note: simplex containing the origin may not be full-dimensional (i.e. degenerated)
 				//  calculate peneration depth by calculating minimum distance to subsimplices
 				//  there might be a better way...
-				dmin2 = inf;
-				for(int ic = 0; ic < s.dim+1; ic++){
-					Project(s.Sub(ic), p2);
-					d2 = p2.d().norm();
-					if(d2 < dmin2){
-						pmin2 = p2;
-						dmin2 = d2;
-					}
-				}
-				pmin =  p2;
-				dmin = -dmin2;
 
+				// if simplex is degenerate (2d or lower) and the space is 3d, this means penetration depth is 0
+				if(s.dim < 3){
+					pmin = p;
+					dmin = 0.0;
+				}
+				else{
+					dmin2 = inf;
+					for(int ic = 0; ic < s.dim+1; ic++){
+						Project(s.Sub(ic), p2);
+						d2 = p2.d().norm();
+						if(d2 < dmin2){
+							pmin2 = p2;
+							dmin2 = d2;
+						}
+					}
+					pmin =  p2;
+					dmin = -dmin2;
+				}
                 //}
                 //// otherwise
                 //else{
