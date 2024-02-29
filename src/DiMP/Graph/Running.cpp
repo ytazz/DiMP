@@ -1537,7 +1537,7 @@ namespace DiMP {;
 			ComState(t0, pcom, vcom, acom);
 			Interpolate(t, f_tp.x, f_tv.x, f_ta.x, t0, p0.x, vcom.x, acom.x, t1, p1.x, 0.0, 0.0, param.swingInterpolation);
 			Interpolate(t, f_tp.y, f_tv.y, f_ta.y, t0, p0.y, vcom.y, acom.y, t1, p1.y, 0.0, 0.0, param.swingInterpolation);
-			Interpolate(t, f_tp.z, f_tv.z, f_ta.z, t0, p0.z, max(vcom.z, 0.0), acom.z, t1, p1.z, 0.0, 0.0, param.swingInterpolation);
+			Interpolate(t, f_tp.z, f_tv.z, f_ta.z, t0, p0.z, std::max(vcom.z, 0.0), acom.z, t1, p1.z, 0.0, 0.0, param.swingInterpolation);
 			Interpolate2(t, dpos_z, dvel_z, dacc_z, t0, t1, param.swingHeight, param.swingInterpolation);
 			f_tp.z += dpos_z;
 			f_tv.z += dvel_z;
@@ -1569,7 +1569,7 @@ namespace DiMP {;
 				f_rp_roll.y, f_rv_roll.y, f_ra_roll.y,
 				cp_local.x, cv_local.x, ca_local.x);
 
-			contact = ContactState::Float; // TODO: –³ˆÓ–¡
+			contact = ContactState::Float; // TODO: \96\B3\88Ó–\A1
 		}
 
 		// relative transform from footprint to foot
