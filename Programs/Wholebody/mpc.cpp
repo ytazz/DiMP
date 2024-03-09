@@ -238,8 +238,6 @@ void Mpc::GetInitialState(DiMP::WholebodyData& d){
         dend.vel_t   = dend_cur.vel_t;
         dend.vel_r   = dend_cur.vel_r;
 
-        dend.acc_t       = dend_cur.acc_t;
-        dend.acc_r       = dend_cur.acc_r;
         if(dend_ref_des.state == DiMP::Wholebody::ContactState::Free){
             dend.force_t.clear();
             dend.force_r.clear();
@@ -371,7 +369,5 @@ void Mpc::GetDesiredState(int k, real_t t, DiMP::WholebodyData& d){
         dend.vel_r_weight   = one*(k == N ? 10.0 : 1.0)*(dend.state == DiMP::Wholebody::ContactState::Free ? 0.1 : 1.0);
         dend.force_t_weight = one*(k == N ? 10.0 : 1.0);
         dend.force_r_weight = one*(k == N ? 10.0 : 1.0);
-        dend.acc_t_weight   = 1*one;
-        dend.acc_r_weight   = 1*one;
     }
 }	

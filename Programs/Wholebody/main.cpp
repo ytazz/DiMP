@@ -40,47 +40,46 @@ public:
 		wb->links .resize(MyIK::Link ::Num);
 		wb->joints.resize(MyIK::Link ::Num - 1);
 		wb->ends  .resize(MyIK::End  ::Num);
-		wb->chains.resize(MyIK::Chain::Num);
-
+		
 		vec3_t e0;
 		vec3_t ex(1.0, 0.0, 0.0);
 		vec3_t ey(0.0, 1.0, 0.0);
 		vec3_t ez(0.0, 0.0, 1.0);
-		wb->links[ 0] = Wholebody::Link(10.0, vec3_t(0.0001, 0.0001, 0.0001), -1, -1, -1, e0                  , e0);
-		wb->links[ 1] = Wholebody::Link( 5.0, vec3_t(0.0001, 0.0001, 0.0001), -1,  0,  0, myik->torsoLength*ez, ez);
-		wb->links[ 2] = Wholebody::Link( 5.0, vec3_t(0.0001, 0.0001, 0.0001),  0,  1,  1, e0                  , ey);
-		wb->links[ 3] = Wholebody::Link( 2.0, vec3_t(0.0001, 0.0001, 0.0001), -1,  2,  2, e0                  , ez);
-		wb->links[ 4] = Wholebody::Link( 2.0, vec3_t(0.0001, 0.0001, 0.0001), -1,  3,  3, e0                  , ey);
+		wb->links[ 0] = Wholebody::Link(10.0, vec3_t(0.0001, 0.0001, 0.0001), e0, -1, -1, -1, e0                  , e0);
+		wb->links[ 1] = Wholebody::Link( 5.0, vec3_t(0.0001, 0.0001, 0.0001), e0, -1,  0,  0, myik->torsoLength*ez, ez);
+		wb->links[ 2] = Wholebody::Link( 5.0, vec3_t(0.0001, 0.0001, 0.0001), e0,  0,  1,  1, e0                  , ey);
+		wb->links[ 3] = Wholebody::Link( 2.0, vec3_t(0.0001, 0.0001, 0.0001), e0, -1,  2,  2, e0                  , ez);
+		wb->links[ 4] = Wholebody::Link( 2.0, vec3_t(0.0001, 0.0001, 0.0001), e0, -1,  3,  3, e0                  , ey);
 		
-		wb->links[ 5] = Wholebody::Link( 0.5, vec3_t(0.0001, 0.0001, 0.0001), -1,  2,  4, myik->armBase[0]        , ey);
-		wb->links[ 6] = Wholebody::Link( 0.5, vec3_t(0.0001, 0.0001, 0.0001), -1,  5,  5, e0                      , ex);
-		wb->links[ 7] = Wholebody::Link( 1.0, vec3_t(0.0001, 0.0001, 0.0001), -1,  6,  6, e0                      , ez);
-		wb->links[ 8] = Wholebody::Link( 0.5, vec3_t(0.0001, 0.0001, 0.0001), -1,  7,  7, -myik->upperArmLength*ez, ey);
-		wb->links[ 9] = Wholebody::Link( 1.0, vec3_t(0.0001, 0.0001, 0.0001), -1,  8,  8, -myik->lowerArmLength*ez, ez);
-		wb->links[10] = Wholebody::Link( 0.5, vec3_t(0.0001, 0.0001, 0.0001), -1,  9,  9, e0                      , ey);
-		wb->links[11] = Wholebody::Link( 0.5, vec3_t(0.0001, 0.0001, 0.0001),  1, 10, 10, e0                      , ex);
+		wb->links[ 5] = Wholebody::Link( 0.5, vec3_t(0.0001, 0.0001, 0.0001), e0, -1,  2,  4, myik->armBase[0]        , ey);
+		wb->links[ 6] = Wholebody::Link( 0.5, vec3_t(0.0001, 0.0001, 0.0001), e0, -1,  5,  5, e0                      , ex);
+		wb->links[ 7] = Wholebody::Link( 1.0, vec3_t(0.0001, 0.0001, 0.0001), e0, -1,  6,  6, e0                      , ez);
+		wb->links[ 8] = Wholebody::Link( 0.5, vec3_t(0.0001, 0.0001, 0.0001), e0, -1,  7,  7, -myik->upperArmLength*ez, ey);
+		wb->links[ 9] = Wholebody::Link( 1.0, vec3_t(0.0001, 0.0001, 0.0001), e0, -1,  8,  8, -myik->lowerArmLength*ez, ez);
+		wb->links[10] = Wholebody::Link( 0.5, vec3_t(0.0001, 0.0001, 0.0001), e0, -1,  9,  9, e0                      , ey);
+		wb->links[11] = Wholebody::Link( 0.5, vec3_t(0.0001, 0.0001, 0.0001), e0,  1, 10, 10, e0                      , ex);
 		
-		wb->links[12] = Wholebody::Link( 0.5, vec3_t(0.0001, 0.0001, 0.0001), -1,  2, 11, myik->armBase[1]        , ey);
-		wb->links[13] = Wholebody::Link( 0.5, vec3_t(0.0001, 0.0001, 0.0001), -1, 12, 12, e0                      , ex);
-		wb->links[14] = Wholebody::Link( 1.0, vec3_t(0.0001, 0.0001, 0.0001), -1, 13, 13, e0                      , ez);
-		wb->links[15] = Wholebody::Link( 0.5, vec3_t(0.0001, 0.0001, 0.0001), -1, 14, 14, -myik->upperArmLength*ez, ey);
-		wb->links[16] = Wholebody::Link( 1.0, vec3_t(0.0001, 0.0001, 0.0001), -1, 15, 15, -myik->lowerArmLength*ez, ez);
-		wb->links[17] = Wholebody::Link( 0.5, vec3_t(0.0001, 0.0001, 0.0001), -1, 16, 16, e0                      , ey);
-		wb->links[18] = Wholebody::Link( 0.5, vec3_t(0.0001, 0.0001, 0.0001),  2, 17, 17, e0                      , ex);
+		wb->links[12] = Wholebody::Link( 0.5, vec3_t(0.0001, 0.0001, 0.0001), e0, -1,  2, 11, myik->armBase[1]        , ey);
+		wb->links[13] = Wholebody::Link( 0.5, vec3_t(0.0001, 0.0001, 0.0001), e0, -1, 12, 12, e0                      , ex);
+		wb->links[14] = Wholebody::Link( 1.0, vec3_t(0.0001, 0.0001, 0.0001), e0, -1, 13, 13, e0                      , ez);
+		wb->links[15] = Wholebody::Link( 0.5, vec3_t(0.0001, 0.0001, 0.0001), e0, -1, 14, 14, -myik->upperArmLength*ez, ey);
+		wb->links[16] = Wholebody::Link( 1.0, vec3_t(0.0001, 0.0001, 0.0001), e0, -1, 15, 15, -myik->lowerArmLength*ez, ez);
+		wb->links[17] = Wholebody::Link( 0.5, vec3_t(0.0001, 0.0001, 0.0001), e0, -1, 16, 16, e0                      , ey);
+		wb->links[18] = Wholebody::Link( 0.5, vec3_t(0.0001, 0.0001, 0.0001), e0,  2, 17, 17, e0                      , ex);
 
-		wb->links[19] = Wholebody::Link( 0.5, vec3_t(0.0001, 0.0001, 0.0001), -1,  0, 18, myik->legBase[0]        , ez);
-		wb->links[20] = Wholebody::Link( 0.5, vec3_t(0.0001, 0.0001, 0.0001), -1, 19, 19, e0                      , ex);
-		wb->links[21] = Wholebody::Link( 1.5, vec3_t(0.0001, 0.0001, 0.0001), -1, 20, 20, e0                      , ey);
-		wb->links[22] = Wholebody::Link( 1.5, vec3_t(0.0001, 0.0001, 0.0001), -1, 21, 21, -myik->upperLegLength*ez, ey);
-		wb->links[23] = Wholebody::Link( 0.5, vec3_t(0.0001, 0.0001, 0.0001), -1, 22, 22, -myik->lowerLegLength*ez, ey);
-		wb->links[24] = Wholebody::Link( 0.5, vec3_t(0.0001, 0.0001, 0.0001),  3, 23, 23, e0                      , ex);
+		wb->links[19] = Wholebody::Link( 0.5, vec3_t(0.0001, 0.0001, 0.0001), e0, -1,  0, 18, myik->legBase[0]        , ez);
+		wb->links[20] = Wholebody::Link( 0.5, vec3_t(0.0001, 0.0001, 0.0001), e0, -1, 19, 19, e0                      , ex);
+		wb->links[21] = Wholebody::Link( 1.5, vec3_t(0.0001, 0.0001, 0.0001), e0, -1, 20, 20, e0                      , ey);
+		wb->links[22] = Wholebody::Link( 1.5, vec3_t(0.0001, 0.0001, 0.0001), e0, -1, 21, 21, -myik->upperLegLength*ez, ey);
+		wb->links[23] = Wholebody::Link( 0.5, vec3_t(0.0001, 0.0001, 0.0001), e0, -1, 22, 22, -myik->lowerLegLength*ez, ey);
+		wb->links[24] = Wholebody::Link( 0.5, vec3_t(0.0001, 0.0001, 0.0001), e0,  3, 23, 23, e0                      , ex);
 
-		wb->links[25] = Wholebody::Link( 0.5, vec3_t(0.0001, 0.0001, 0.0001), -1,  0, 24, myik->legBase[1]        , ez);
-		wb->links[26] = Wholebody::Link( 0.5, vec3_t(0.0001, 0.0001, 0.0001), -1, 25, 25, e0                      , ex);
-		wb->links[27] = Wholebody::Link( 1.5, vec3_t(0.0001, 0.0001, 0.0001), -1, 26, 26, e0                      , ey);
-		wb->links[28] = Wholebody::Link( 1.5, vec3_t(0.0001, 0.0001, 0.0001), -1, 27, 27, -myik->upperLegLength*ez, ey);
-		wb->links[29] = Wholebody::Link( 0.5, vec3_t(0.0001, 0.0001, 0.0001), -1, 28, 28, -myik->lowerLegLength*ez, ey);
-		wb->links[30] = Wholebody::Link( 0.5, vec3_t(0.0001, 0.0001, 0.0001),  4, 29, 29, e0                      , ex);
+		wb->links[25] = Wholebody::Link( 0.5, vec3_t(0.0001, 0.0001, 0.0001), e0, -1,  0, 24, myik->legBase[1]        , ez);
+		wb->links[26] = Wholebody::Link( 0.5, vec3_t(0.0001, 0.0001, 0.0001), e0, -1, 25, 25, e0                      , ex);
+		wb->links[27] = Wholebody::Link( 1.5, vec3_t(0.0001, 0.0001, 0.0001), e0, -1, 26, 26, e0                      , ey);
+		wb->links[28] = Wholebody::Link( 1.5, vec3_t(0.0001, 0.0001, 0.0001), e0, -1, 27, 27, -myik->upperLegLength*ez, ey);
+		wb->links[29] = Wholebody::Link( 0.5, vec3_t(0.0001, 0.0001, 0.0001), e0, -1, 28, 28, -myik->lowerLegLength*ez, ey);
+		wb->links[30] = Wholebody::Link( 0.5, vec3_t(0.0001, 0.0001, 0.0001), e0,  4, 29, 29, e0                      , ex);
 
 		wb->SetScaling();
 
@@ -90,12 +89,6 @@ public:
 		wb->ends[3] = Wholebody::End(MyIK::Link::FootRR, myik->ankleToFoot[0]);
 		wb->ends[4] = Wholebody::End(MyIK::Link::FootLR, myik->ankleToFoot[1]);
 
-		wb->chains[0] = Wholebody::Chain({ 1,  2,  3,  4}            );
-		wb->chains[1] = Wholebody::Chain({ 5,  6,  7,  8,  9, 10, 11});
-		wb->chains[2] = Wholebody::Chain({12, 13, 14, 15, 16, 17, 18});
-		wb->chains[3] = Wholebody::Chain({19, 20, 21, 22, 23, 24}    );
-		wb->chains[4] = Wholebody::Chain({25, 26, 27, 28, 29, 30}    );
-		
 		mpc->wb   = wb;
 		wb->callback = mpc;
 		mpc->Init();		

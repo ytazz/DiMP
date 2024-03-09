@@ -59,7 +59,6 @@ struct WholebodyData{
 
 		vec3_t  pos_t_weight, pos_r_weight;
 		vec3_t  vel_t_weight, vel_r_weight;
-		vec3_t  acc_t_weight, acc_r_weight;
 		vec3_t  force_t_weight, force_r_weight;
 		
 		int     state;       ///< contact state
@@ -85,7 +84,7 @@ struct WholebodyData{
 		vec3_t acc_r_weight;
 		vec3_t L, Ld, Labs;                  ///< momentum (local) and its derivative
 		vec3_t L_weight;
-		mat3_t I, Iinv;                ///< inertia matrix around com and its inverse
+		mat3_t I_local, Id_local, I, Id, Iinv;                ///< inertia matrix around com and its inverse
 
 		Centroid();
 	};
@@ -121,8 +120,8 @@ public:
 		WholebodyDesPosConR*  con_des_pos_r  ;   ///< desired orientation
 		WholebodyDesVelConT*  con_des_vel_t  ;   ///< desired velocity
 		WholebodyDesVelConR*  con_des_vel_r  ;   ///< desired angular velocity
-		FixConV3*             con_des_acc_t  ;   ///< desired acceleration (local)
-		FixConV3*             con_des_acc_r  ;   ///< desired angular acceleration
+		//FixConV3*             con_des_acc_t  ;   ///< desired acceleration (local)
+		//FixConV3*             con_des_acc_r  ;   ///< desired angular acceleration
 		FixConV3*             con_des_force_t;   ///< desired force (contact frame)
 		FixConV3*             con_des_force_r;   ///< desired moment
 		
@@ -243,6 +242,7 @@ public:
 		real_t       mass;         ///< mass of link
 		real_t       mass_ratio;
 		mat3_t       inertia;
+		vec3_t       center;
 		int          iparent;      ///< parent link index
 		vector<int>  ichildren;    ///< child link indices
 		int          ijoint;       ///< joint index
@@ -250,7 +250,7 @@ public:
 		vec3_t       trn;          ///< translation from parent
 		vec3_t       axis;         ///< joint axis
 	
-		Link(real_t _mass = 0.0, vec3_t _inertia = vec3_t(), int _iend = -1, int _iparent = -1, int _ijoint = -1, vec3_t _trn = vec3_t(), vec3_t _axis = vec3_t());
+		Link(real_t _mass = 0.0, vec3_t _inertia = vec3_t(), vec3_t _center = vec3_t(), int _iend = -1, int _iparent = -1, int _ijoint = -1, vec3_t _trn = vec3_t(), vec3_t _axis = vec3_t());
 	};
 
 	struct End{
@@ -262,13 +262,6 @@ public:
 		bool   enableMoment;
 
 		End(int _ilink = 0.0, vec3_t _offset = vec3_t(), bool _enable_trn = true, bool _enable_rot = true, bool _enable_force = true, bool _enable_moment = true);
-	};
-
-	struct Chain{
-		vector<int>   ilink;
-		
-		Chain(){}
-		Chain(const vector<int>& _ilink);
 	};
 	
    	struct Snapshot{
@@ -296,7 +289,6 @@ public:
     vector<Link>        links;
 	vector<Joint>       joints;
 	vector<End>         ends;
-	vector<Chain>       chains;
 	WholebodyCallback*  callback;
 	
 	Snapshot            snapshot;
@@ -316,7 +308,7 @@ public:
 	void Reset();
 	void Shift();
 	void Setup();
-	void CalcFK                (WholebodyData& d, int ichain, bool calc_end);
+	void CalcFK                (WholebodyData& d);
 	void CalcPosition          (WholebodyData& d);
 	void CalcJacobian          (WholebodyData& d);
 	void CalcVelocity          (WholebodyData& d);
@@ -407,8 +399,8 @@ struct WholebodyCentroidVelConT : WholebodyCon{
 
 struct WholebodyCentroidPosConR : WholebodyCon{
 	quat_t q1, q_rhs, q_omega;
-	vec3_t w0, u0, Ld, omega;
-	mat3_t Iinv;
+	vec3_t w0, u0, L, Ld, omega;
+	mat3_t Id, Iinv;
 	real_t h, h2;
 	mat3_t R_omega, A_omega;
 	
@@ -421,8 +413,8 @@ struct WholebodyCentroidPosConR : WholebodyCon{
 };
 
 struct WholebodyCentroidVelConR : WholebodyCon{
-	vec3_t pc, w0, u0, w1, w_rhs, Ld;
-	mat3_t Iinv;
+	vec3_t pc, w0, u0, w1, w_rhs, L, Ld;
+	mat3_t Id, Iinv;
 	real_t h;
 	
 	void Prepare();
@@ -437,8 +429,8 @@ struct WholebodyDesPosConT : Constraint{
 	WholebodyKey*  obj;
 	int    iend;
 	vec3_t desired;
-	vec3_t pc, pi;
-	quat_t q0;
+	vec3_t pc, pe, oe, pi, ci;
+	quat_t q0, qi;
 	mat3_t R0;
 	
 	void Prepare();
@@ -453,7 +445,7 @@ struct WholebodyDesPosConR : Constraint{
 	WholebodyKey*  obj;
 	int    iend;
 	quat_t desired;
-	quat_t q0, qi;
+	quat_t q0, qe;
 	mat3_t R0;
 
 	void Prepare();
@@ -468,8 +460,8 @@ struct WholebodyDesVelConT : Constraint{
 	WholebodyKey*  obj;
 	int    iend;
 	vec3_t desired;
-	vec3_t vc, w0, pi, vi;
-	quat_t q0;
+	vec3_t vc, ve, oe, pi, ci;
+	quat_t q0, qi;
 	mat3_t R0;
 
 	void Prepare();
@@ -484,7 +476,7 @@ struct WholebodyDesVelConR : Constraint{
 	WholebodyKey*  obj;
 	int    iend;
 	vec3_t desired;
-	vec3_t w0, wi;
+	vec3_t w0, we;
 	quat_t q0;
 	mat3_t R0;
 	
