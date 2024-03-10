@@ -144,7 +144,7 @@ public:
 
 			// reset time and state and start next optimization
 			mpc->timeMpc = mpc->time;
-			wb->Shift();
+			wb->Shift(mpc->dt);
 			wb->Setup();
 			//wb->Reset();
 			graph->solver->InitDDP();

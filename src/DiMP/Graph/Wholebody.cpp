@@ -604,7 +604,7 @@ void Wholebody::Reset(){
 	trajReady = false;
 }
 
-void Wholebody::Shift(){
+void Wholebody::Shift(real_t offset){
 	int nend   = (int)ends  .size();
 	int njoint = (int)joints.size();
 	int N = (int)graph->ticks.size()-1;
@@ -612,25 +612,32 @@ void Wholebody::Shift(){
 	for (int k = 0; k < N; k++) {
 		WholebodyKey* key0 = (WholebodyKey*)traj.GetKeypoint(graph->ticks[k+0]);
 		WholebodyKey* key1 = (WholebodyKey*)traj.GetKeypoint(graph->ticks[k+1]);
-		
-		key0->centroid.var_pos_t->val = key1->centroid.var_pos_t->val;
-		key0->centroid.var_pos_r->val = key1->centroid.var_pos_r->val;
-		key0->centroid.var_vel_t->val = key1->centroid.var_vel_t->val;
-		key0->centroid.var_vel_r->val = key1->centroid.var_vel_r->val;
+	
+		real_t s = offset/(key1->tick->time - key0->tick->time);
+	
+		key0->centroid.var_pos_t->val = (1-s)*key0->centroid.var_pos_t->val + s*key1->centroid.var_pos_t->val;
+
+		quat_t qrel  = key0->centroid.var_pos_r->val.Conjugated()*key1->centroid.var_pos_r->val;
+		real_t theta = qrel.Theta();
+		vec3_t axis  = qrel.Axis ();
+		key0->centroid.var_pos_r->val = key0->centroid.var_pos_r->val*quat_t::Rot((s*theta)*axis);
+
+		key0->centroid.var_vel_t->val = (1-s)*key0->centroid.var_vel_t->val + s*key1->centroid.var_vel_t->val;
+		key0->centroid.var_vel_r->val = (1-s)*key0->centroid.var_vel_r->val + s*key1->centroid.var_vel_r->val;
 		if(key1->next){
-			key0->centroid.var_acc_t->val = key1->centroid.var_acc_t->val;
-			key0->centroid.var_acc_r->val = key1->centroid.var_acc_r->val;
+			key0->centroid.var_acc_t->val = (1-s)*key0->centroid.var_acc_t->val + s*key1->centroid.var_acc_t->val;
+			key0->centroid.var_acc_r->val = (1-s)*key0->centroid.var_acc_r->val + s*key1->centroid.var_acc_r->val;
 		}
 
 		for(int i = 0; i < njoint; i++){
 			WholebodyKey::Joint& jnt0 = key0->joints[i];
 			WholebodyKey::Joint& jnt1 = key1->joints[i];
 
-			jnt0.var_q ->val = jnt1.var_q ->val;
-			jnt0.var_qd->val = jnt1.var_qd->val;
+			jnt0.var_q ->val = (1-s)*jnt0.var_q ->val + s*jnt1.var_q ->val;
+			jnt0.var_qd->val = (1-s)*jnt0.var_qd->val + s*jnt1.var_qd->val;
 				
 			if(key1->next){
-				jnt0.var_qdd->val = jnt1.var_qdd->val;
+				jnt0.var_qdd->val = (1-s)*jnt0.var_qdd->val + s*jnt1.var_qdd->val;
 			}
 		}
 		
@@ -639,8 +646,8 @@ void Wholebody::Shift(){
 			WholebodyKey ::End&  end1 = key1->ends[i];
 			
 			if(key1->next){
-				end0.var_force_t->val = end1.var_force_t->val;
-				end0.var_force_r->val = end1.var_force_r->val;
+				end0.var_force_t->val = (1-s)*end0.var_force_t->val + s*end1.var_force_t->val;
+				end0.var_force_r->val = (1-s)*end0.var_force_r->val + s*end1.var_force_r->val;
 			}
 		}
 	}

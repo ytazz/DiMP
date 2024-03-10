@@ -306,7 +306,7 @@ public:
 
 	void SetScaling();
 	void Reset();
-	void Shift();
+	void Shift(real_t offset);
 	void Setup();
 	void CalcFK                (WholebodyData& d);
 	void CalcPosition          (WholebodyData& d);
