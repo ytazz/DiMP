@@ -214,6 +214,7 @@ public:
 		real_t  totalMass;  ///< total mass of wholebody
 		vec3_t  nominalInertia;
 		real_t  gravity;
+		bool    useLd;
 		
 		Param();
 	};

@@ -469,7 +469,8 @@ void WholebodyKey::Draw(Render::Canvas* canvas, Render::Config* conf) {
 // Wholebody
 
 Wholebody::Param::Param() {
-	gravity            = 9.8;
+	gravity = 9.8;
+	useLd   = true;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -1073,11 +1074,10 @@ void Wholebody::CalcBaseAcceleration(WholebodyData& d){
         WholebodyData::End& dend = d.ends[i];
         msum += dend.force_r + (dend.pos_t - d.centroid.pos_t) % dend.force_t;
     }
-    d.centroid.acc_r = d.centroid.Iinv*(
-		  msum
-		- d.centroid.Id*d.centroid.vel_r
-		- d.centroid.vel_r % (d.centroid.pos_r*d.centroid.L)
-		- d.centroid.pos_r*d.centroid.Ld);
+	if(param.useLd){
+		msum -= (d.centroid.Id*d.centroid.vel_r + d.centroid.vel_r % (d.centroid.pos_r*d.centroid.L) + d.centroid.pos_r*d.centroid.Ld);
+	}
+    d.centroid.acc_r = d.centroid.Iinv*msum;
 }
 
 void Wholebody::CalcJacobian(WholebodyData& d){
@@ -1534,13 +1534,14 @@ WholebodyCentroidPosConR::WholebodyCentroidPosConR(Solver* solver, string _name,
 	AddM3Link(obj[0]->centroid.var_vel_r);
 	AddM3Link(obj[0]->centroid.var_acc_r);
 
-	int nend   = (int)obj[0]->ends  .size();
-	int njoint = (int)obj[0]->joints.size();
-	for(int i = 0; i < njoint; i++)
-		AddC3Link(obj[0]->joints[i].var_q);
-	for(int i = 0; i < njoint; i++)
-		AddC3Link(obj[0]->joints[i].var_qdd);
-	
+	if(obj[0]->wb->param.useLd){
+		int njoint = (int)obj[0]->joints.size();
+		for(int i = 0; i < njoint; i++)
+			AddC3Link(obj[0]->joints[i].var_q);
+		for(int i = 0; i < njoint; i++)
+			AddC3Link(obj[0]->joints[i].var_qdd);
+	}
+	int nend = (int)obj[0]->ends.size();
 	for(int i = 0; i < nend; i++){
 		AddM3Link(obj[0]->ends[i].var_force_t);
 		AddM3Link(obj[0]->ends[i].var_force_r);
@@ -1554,14 +1555,14 @@ WholebodyCentroidVelConR::WholebodyCentroidVelConR(Solver* solver, string _name,
 	AddSLink(obj[0]->centroid.var_vel_r);
 	AddSLink(obj[0]->centroid.var_acc_r);
 
-	int nend   = (int)obj[0]->ends  .size();
-	int njoint = (int)obj[0]->joints.size();
-	
-	for(int i = 0; i < njoint; i++)
-		AddC3Link(obj[0]->joints[i].var_q);
-	for(int i = 0; i < njoint; i++)
-		AddC3Link(obj[0]->joints[i].var_qdd);
-
+	if(obj[0]->wb->param.useLd){
+		int njoint = (int)obj[0]->joints.size();
+		for(int i = 0; i < njoint; i++)
+			AddC3Link(obj[0]->joints[i].var_q);
+		for(int i = 0; i < njoint; i++)
+			AddC3Link(obj[0]->joints[i].var_qdd);
+	}
+	int nend = (int)obj[0]->ends.size();
 	for(int i = 0; i < nend; i++){
 		AddM3Link(obj[0]->ends[i].var_force_t);
 		AddM3Link(obj[0]->ends[i].var_force_r);
@@ -1763,11 +1764,6 @@ void WholebodyCentroidVelConT::Prepare(){
 }
 
 void WholebodyCentroidPosConR::Prepare(){
-	// L = I*w + q*Lhat
-	// L'= I'*w + I*w' + q*Lhat' + w % (q*Lhat) = msum
-	// 
-	// w' = Iinv*(msum - q*Lhat' - (I' - (q*Lhat)^x)*w)
-
 	w0    = obj[0]->centroid.var_vel_r->val;
 	q1    = obj[1]->centroid.var_pos_r->val;
 	h     = obj[0]->hnext;
@@ -1776,7 +1772,7 @@ void WholebodyCentroidPosConR::Prepare(){
 	Ld    = obj[0]->data.centroid.Ld;
 	Id    = obj[0]->data.centroid.Id;
 	Iinv  = obj[0]->data.centroid.Iinv;
-	u0    = obj[0]->centroid.var_acc_r->val + Iinv*(obj[0]->msum - Id*w0 - w0 % (obj[0]->q0*L) - obj[0]->q0*Ld);
+	u0    = obj[0]->centroid.var_acc_r->val + Iinv*(obj[0]->msum - (obj[0]->wb->param.useLd ? (Id*w0 + w0 % (obj[0]->q0*L) + obj[0]->q0*Ld) : vec3_t()));
 	omega = h*w0 + (0.5*h2)*u0;
 	q_omega = quat_t::Rot(omega);
 	q_omega.ToMatrix(R_omega);
@@ -1794,7 +1790,7 @@ void WholebodyCentroidVelConR::Prepare(){
 	Id   = obj[0]->data.centroid.Id;
 	Iinv = obj[0]->data.centroid.Iinv;
 	h    = obj[0]->hnext;
-	u0   = obj[0]->centroid.var_acc_r->val + Iinv*(obj[0]->msum - Id*w0 - w0 % (obj[0]->q0*L) - obj[0]->q0*Ld);
+	u0   = obj[0]->centroid.var_acc_r->val + Iinv*(obj[0]->msum - (obj[0]->wb->param.useLd ? (Id*w0 + w0 % (obj[0]->q0*L) + obj[0]->q0*Ld) : vec3_t()));
 	
 	w_rhs = w0 + h*u0;
 }
@@ -2004,15 +2000,17 @@ void WholebodyCentroidPosConR::CalcCoef(){
 	dynamic_cast<M3Link*>(links[idx++])->SetCoef(-R_omega);
 	dynamic_cast<M3Link*>(links[idx++])->SetCoef(-h*A_omega);
 	dynamic_cast<M3Link*>(links[idx++])->SetCoef(-(0.5*h2)*A_omega);
-	
+
+	if(obj[0]->wb->param.useLd){
+		int njoint = (int)obj[0]->joints.size();
+		for(int i = 0; i < njoint; i++){
+			dynamic_cast<C3Link*>(links[idx++])->SetCoef(tmpR0*obj[0]->J_Ld_q  .col(i));
+		}
+		for(int i = 0; i < njoint; i++){
+			dynamic_cast<C3Link*>(links[idx++])->SetCoef(tmpR0*obj[0]->J_Ld_qdd.col(i));
+		}
+	}
 	int nend = (int)obj[0]->ends.size();
-	int njoint = (int)obj[0]->joints.size();
-	for(int i = 0; i < njoint; i++){
-		dynamic_cast<C3Link*>(links[idx++])->SetCoef(tmpR0*obj[0]->J_Ld_q  .col(i));
-	}
-	for(int i = 0; i < njoint; i++){
-		dynamic_cast<C3Link*>(links[idx++])->SetCoef(tmpR0*obj[0]->J_Ld_qdd.col(i));
-	}
 	for(int i = 0; i < nend; i++){
 		dynamic_cast<M3Link*>(links[idx++])->SetCoef(-tmp*obj[0]->rec[i]);
 		dynamic_cast<M3Link*>(links[idx++])->SetCoef(-tmp);
@@ -2030,14 +2028,16 @@ void WholebodyCentroidVelConR::CalcCoef(){
 	dynamic_cast<SLink*>(links[idx++])->SetCoef(-1.0);
 	dynamic_cast<SLink*>(links[idx++])->SetCoef(-h);
 
+	if(obj[0]->wb->param.useLd){
+		int njoint = (int)obj[0]->joints.size();
+		for(int i = 0; i < njoint; i++){
+			dynamic_cast<C3Link*>(links[idx++])->SetCoef(tmpR0*obj[0]->J_Ld_q  .col(i));
+		}
+		for(int i = 0; i < njoint; i++){
+			dynamic_cast<C3Link*>(links[idx++])->SetCoef(tmpR0*obj[0]->J_Ld_qdd.col(i));
+		}
+	}
 	int nend = (int)obj[0]->ends.size();
-	int njoint = (int)obj[0]->joints.size();
-	for(int i = 0; i < njoint; i++){
-		dynamic_cast<C3Link*>(links[idx++])->SetCoef(tmpR0*obj[0]->J_Ld_q  .col(i));
-	}
-	for(int i = 0; i < njoint; i++){
-		dynamic_cast<C3Link*>(links[idx++])->SetCoef(tmpR0*obj[0]->J_Ld_qdd.col(i));
-	}
 	for(int i = 0; i < nend; i++){
 		dynamic_cast<M3Link*>(links[idx++])->SetCoef(-tmp*obj[0]->rec[i]);
 		dynamic_cast<M3Link*>(links[idx++])->SetCoef(-tmp);
