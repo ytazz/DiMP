@@ -12,6 +12,8 @@
 
 #include <set>
 
+#include <sbtimer.h>
+
 namespace DiMP{;
 
 class Geometry ;
@@ -103,6 +105,8 @@ public:
 
 	Param		 param;
 	Scale		 scale;
+
+	Timer timer;	
 
 	int TPrepare;
 	int TPrepareStep;

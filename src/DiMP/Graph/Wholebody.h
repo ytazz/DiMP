@@ -6,6 +6,8 @@
 
 #include <array>
 
+#include <sbtimer.h>
+
 namespace DiMP {;
 
 class  Wholebody;
@@ -52,8 +54,8 @@ struct WholebodyData{
 		quat_t  pos_r, pos_rc;
 		vec3_t  vel_t;
 		vec3_t  vel_r;
-		vec3_t  acc_t;
-		vec3_t  acc_r;
+		//vec3_t  acc_t;
+		//vec3_t  acc_r;
 		vec3_t  force_t;
 		vec3_t  force_r;
 
@@ -97,8 +99,8 @@ struct WholebodyData{
 	vvec_t q_weight, qd_weight, qdd_weight;
 	vvec_t q_min, q_max;
 
-	vmat_t          Jcom;
-	vector<vmat_t>  Jfk;
+	Matrix          Jcom;
+	vector<Matrix>  Jfk;
 	
 	void Init        (Wholebody* wb);
 	void InitJacobian(Wholebody* wb);
@@ -185,9 +187,10 @@ public:
 	vector<vec3_t>  re, fe, me;
 	vector<mat3_t>  rec;
 	vec3_t          fsum, msum;
-	vmat_t          J_L_q, J_L_qd;
-	vmat_t          J_Ld_q, J_Ld_qdd;
-	
+	Matrix          J_L_q, J_L_qd;
+	Matrix          J_Ld_q, J_Ld_qdd;
+	Matrix          mj_pjc, mj_vjc, mj_ajc, Ij;
+			
 public:	
     virtual void AddVar(Solver* solver);
 	virtual void AddCon(Solver* solver);
@@ -295,6 +298,9 @@ public:
 	Snapshot            snapshot;
 	vector<Snapshot>    trajectory;
 	bool                trajReady;
+
+	Timer timer;
+	Timer timer2;
 
 	virtual Keypoint*	CreateKeypoint() { return new WholebodyKey(); }
 	virtual void		Init   ();
@@ -461,7 +467,7 @@ struct WholebodyDesVelConT : Constraint{
 	WholebodyKey*  obj;
 	int    iend;
 	vec3_t desired;
-	vec3_t vc, ve, oe, pi, ci;
+	vec3_t vc, w0, ve, oe, pi, ci;
 	quat_t q0, qi;
 	mat3_t R0;
 

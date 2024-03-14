@@ -5,10 +5,6 @@
 
 #include <omp.h>
 
-#include <sbtimer.h>
-static Timer timer;
-static Timer timer2;
-
 using namespace PTM;
 
 namespace DiMP {;
@@ -36,6 +32,12 @@ inline mat3_t RotJacobian(vec3_t omega){
 	mat3_t A = (sin(theta)/theta)*mat3_t() + (1.0 - (sin(theta)/theta))*vvtrmat(eta, eta) + ((cos(theta) - 1.0)/theta)*mat3_t::Cross(eta);
 	
 	return A;
+}
+
+inline void cross_mat(vec3_t r, real_t k, Matrix& m){
+	m(0,0) =  0.0  ; m(0,1) = -k*r.z; m(0,2) =  k*r.y;
+	m(1,0) =  k*r.z; m(1,1) =  0.0  ; m(1,2) = -k*r.x;
+	m(2,0) = -k*r.y; m(2,1) =  k*r.x; m(2,2) =  0.0  ;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -87,10 +89,10 @@ void WholebodyData::InitJacobian(Wholebody* wb){
 	int nlink  = (int)wb->links .size();
 	int njoint = (int)wb->joints.size();
 		
-	Jcom.resize(3, njoint, 0.0);
+	Jcom.Allocate(3, njoint);
 	Jfk.resize(nlink);
 	for(int i = 0; i < nlink; i++){
-		Jfk[i].resize(6, njoint, 0.0);
+		Jfk[i].Allocate(6, njoint);
 	}
 }
 
@@ -385,8 +387,8 @@ void WholebodyKey::Prepare() {
 	wb->CalcMomentumDerivative(data);
 	wb->CalcComAcceleration   (data);
 	wb->CalcBaseAcceleration  (data);
-	wb->CalcAcceleration      (data);
-	wb->CalcForce             (data);
+	//wb->CalcAcceleration      (data);
+	//wb->CalcForce             (data);
 
 	// working variables
 	if(next){
@@ -398,10 +400,14 @@ void WholebodyKey::Prepare() {
 		re .resize(nend);
 		rec.resize(nend);
 		
-		J_L_q   .resize(3, njoint, 0.0);
-		J_L_qd  .resize(3, njoint, 0.0);
-		J_Ld_q  .resize(3, njoint, 0.0);
-		J_Ld_qdd.resize(3, njoint, 0.0);
+		J_L_q   .Allocate(3, njoint);
+		J_L_qd  .Allocate(3, njoint);
+		J_Ld_q  .Allocate(3, njoint);
+		J_Ld_qdd.Allocate(3, njoint);
+		mj_pjc.Allocate(3,3);
+		mj_vjc.Allocate(3,3);
+		mj_ajc.Allocate(3,3);
+		Ij    .Allocate(3,3);
 		
 		fsum.clear();
 		msum.clear();
@@ -418,10 +424,40 @@ void WholebodyKey::Prepare() {
 			msum += me[i] + re[i] % fe[i];
 		}
 
-		J_L_q   .clear();
-		J_L_qd  .clear();
-		J_Ld_q  .clear();
-		J_Ld_qdd.clear();
+		mat_clear(J_L_q   );
+		mat_clear(J_L_qd  );
+		mat_clear(J_Ld_q  );
+		mat_clear(J_Ld_qdd);
+		//J_L_q   .clear();
+		//J_L_qd  .clear();
+		//J_Ld_q  .clear();
+		//J_Ld_qdd.clear();
+		for(int j = 0; j < nlink; j++){
+			WholebodyData::Link& dlnk = data.links[j];
+
+			real_t mj = wb->links[j].mass;
+			cross_mat(dlnk.pos_t, mj, mj_pjc);
+			cross_mat(dlnk.vel_t, mj, mj_vjc);
+			cross_mat(dlnk.acc_t, mj, mj_ajc);
+			mat_copy (dlnk.I, Ij);
+			//mat3_t mj_pjc = mj*mat3_t::Cross(dlnk.pos_t);
+			//mat3_t mj_vjc = mj*mat3_t::Cross(dlnk.vel_t);
+			//mat3_t mj_ajc = mj*mat3_t::Cross(dlnk.acc_t);
+			//mat3_t Ij     = dlnk.I;
+			//vec3_t Jv = data.Jfk[j].col(i).sub_vector(TSubVectorDim<0,3>());
+			//vec3_t Jw = data.Jfk[j].col(i).sub_vector(TSubVectorDim<3,3>());
+			mat_mat_mul(mj_vjc, data.Jfk[j].SubMatrix(0,0,3,njoint), J_L_q   , -1.0, 1.0);
+			mat_mat_mul(mj_pjc, data.Jfk[j].SubMatrix(0,0,3,njoint), J_L_qd  ,  1.0, 1.0);
+			mat_mat_mul(Ij    , data.Jfk[j].SubMatrix(3,0,3,njoint), J_L_qd  ,  1.0, 1.0);
+			mat_mat_mul(mj_ajc, data.Jfk[j].SubMatrix(0,0,3,njoint), J_Ld_q  , -1.0, 1.0);
+			mat_mat_mul(mj_pjc, data.Jfk[j].SubMatrix(0,0,3,njoint), J_Ld_qdd,  1.0, 1.0);
+			mat_mat_mul(Ij    , data.Jfk[j].SubMatrix(3,0,3,njoint), J_Ld_qdd,  1.0, 1.0);
+			//J_L_q   .col(i) -= mj_vjc*Jv;
+			//J_L_qd  .col(i) += mj_pjc*Jv + Ij*Jw;
+			//J_Ld_q  .col(i) -= mj_ajc*Jv;
+			//J_Ld_qdd.col(i) += mj_pjc*Jv + Ij*Jw;
+		}
+		/*
 		for(int i = 0; i < njoint; i++){
 			for(int j = 0; j < nlink; j++){
 				WholebodyData::Link& dlnk = data.links[j];
@@ -439,6 +475,7 @@ void WholebodyKey::Prepare() {
 				J_Ld_qdd.col(i) += mj_pjc*Jv + Ij*Jw;
 			}
 		}
+		*/
 	}
 }
 
@@ -900,25 +937,19 @@ void Wholebody::CalcPosition(WholebodyData& d){
 	}
 	
 	// for checking
-	pc.clear();
-	for(int i = 0; i < nlink; i++){
-		pc += links[i].mass_ratio*d.links[i].pos_t;
-	}
+	//pc.clear();
+	//for(int i = 0; i < nlink; i++){
+	//	pc += links[i].mass_ratio*d.links[i].pos_t;
+	//}
 
 	// calc end pose
-	pc = d.centroid.pos_t;
-	quat_t q0 = d.centroid.pos_r;
 	for(int iend = 0; iend < nend; iend++){
 		int i = ends[iend].ilink;
 		WholebodyData::Link& dlnk = d.links[i];
 		WholebodyData::End&  dend = d.ends[iend];
 	
-		vec3_t pi = dlnk.pos_t;
-		quat_t qi = dlnk.pos_r;
-		vec3_t r  = qi*(ends[iend].offset - links[i].center);
-
-		dend.pos_t = pc + q0*(pi + r);
-		dend.pos_r = q0*qi;
+		dend.pos_t = dlnk.pos_t + dlnk.pos_r*(ends[iend].offset - links[i].center);
+		dend.pos_r = dlnk.pos_r;
 	}
 
 	int T = timer2.CountUS();
@@ -931,14 +962,6 @@ void Wholebody::CalcVelocity(WholebodyData& d){
 	
 	vec3_t vc;
 	
-	/*
-	for(int i = 0; i < nlink; i++){
-		WholebodyData::Link& dlnk  = d.links[i];
-		
-		dlnk.vel_t = d.Jfk[i].vsub_matrix(0,0,3,njoint)*d.qd;
-		dlnk.vel_r = d.Jfk[i].vsub_matrix(3,0,3,njoint)*d.qd;
-	}
-	*/
 	d.links[0].vel_t.clear();
 	d.links[0].vel_r.clear();
 	
@@ -967,28 +990,19 @@ void Wholebody::CalcVelocity(WholebodyData& d){
 	}
 	
 	// for checking
-	vc.clear();
-	for(int i = 0; i < nlink; i++){
-		vc += links[i].mass_ratio*d.links[i].vel_t;
-	}
+	//vc.clear();
+	//for(int i = 0; i < nlink; i++){
+	//	vc += links[i].mass_ratio*d.links[i].vel_t;
+	//}
 
 	// calc end vel
-	vc = d.centroid.vel_t;
-	quat_t q0 = d.centroid.pos_r;
-	vec3_t w0 = d.centroid.vel_r;
 	for(int iend = 0; iend < nend; iend++){
 		int i = ends[iend].ilink;
 		WholebodyData::Link& dlnk = d.links[i];
 		WholebodyData::End&  dend = d.ends[iend];
 
-		vec3_t pi = dlnk.pos_t;
-		quat_t qi = dlnk.pos_r;
-		vec3_t vi = dlnk.vel_t;
-		vec3_t wi = dlnk.vel_r;
-		vec3_t r  = qi*(ends[iend].offset - links[i].center);
-
-		dend.vel_t = vc + w0 % (q0*(pi + r)) + q0*(vi + wi % r);
-		dend.vel_r = w0 + q0*wi;
+		dend.vel_t = dlnk.vel_t + dlnk.vel_r % (dlnk.pos_r*(ends[iend].offset - links[i].center));
+		dend.vel_r = dlnk.vel_r;
 	}
 }
 
@@ -1027,11 +1041,11 @@ void Wholebody::CalcAcceleration(WholebodyData& d){
 	}
 	
 	// for checking
-	ac.clear();
-	for(int i = 0; i < nlink; i++){
-		ac += links[i].mass_ratio*d.links[i].acc_t;
-	}
-
+	//ac.clear();
+	//for(int i = 0; i < nlink; i++){
+	//	ac += links[i].mass_ratio*d.links[i].acc_t;
+	//}
+	/*
 	// calc end acc
 	ac = d.centroid.acc_t;
 	quat_t q0 = d.centroid.pos_r;
@@ -1053,6 +1067,7 @@ void Wholebody::CalcAcceleration(WholebodyData& d){
 		dend.acc_t = ac + u0 % (q0*(pi + r)) + w0 % (w0 % (q0*(pi + r))) + 2*w0 % (q0*(vi + wi % r)) + q0*(ai + ui % r + wi % (wi % r));
 		dend.acc_r = u0 + q0*ui + w0 % (q0*wi);
 	}
+	*/
 }
 
 void Wholebody::CalcComAcceleration (WholebodyData& d){
@@ -1087,7 +1102,8 @@ void Wholebody::CalcJacobian(WholebodyData& d){
 	
 	// clear
 	for(int i = 0; i < nlink; i++){
-		d.Jfk[i].clear();
+		//d.Jfk[i].clear();
+		mat_clear(d.Jfk[i]);
 	}
 	
 	CalcFK(d);
@@ -1113,23 +1129,33 @@ void Wholebody::CalcJacobian(WholebodyData& d){
 		vec3_t ci  = qi*links[i ].center;
 		vec3_t eta = qp*links[i].axis;
 		vec3_t r   = ti - cp + ci;
-		mat3_t rc  = mat3_t::Cross(r);
+		//mat3_t rc  = mat3_t::Cross(r);
+		Matrix rc;
+		rc.Allocate(3,3);
+		cross_mat(r, 1.0, rc);
 
-		d.Jfk[i].vsub_matrix(0,0,3,njoint)  = d.Jfk[ip].vsub_matrix(0,0,3,njoint);
-		d.Jfk[i].vsub_matrix(0,0,3,njoint) += rc.trans()*d.Jfk[ip].vsub_matrix(3,0,3,njoint);
+		mat_copy(d.Jfk[ip].SubMatrix(0,0,3,njoint), d.Jfk[i].SubMatrix(0,0,3,njoint));
+		mattr_mat_mul(rc, d.Jfk[ip].SubMatrix(3,0,3,njoint), d.Jfk[i].SubMatrix(0,0,3,njoint), 1.0, 1.0);
+		//d.Jfk[i].vsub_matrix(0,0,3,njoint)  = d.Jfk[ip].vsub_matrix(0,0,3,njoint);
+		//d.Jfk[i].vsub_matrix(0,0,3,njoint) += rc.trans()*d.Jfk[ip].vsub_matrix(3,0,3,njoint);
 
-		d.Jfk[i].vsub_matrix(3,0,3,njoint) = d.Jfk[ip].vsub_matrix(3,0,3,njoint);
+		mat_copy(d.Jfk[ip].SubMatrix(3,0,3,njoint), d.Jfk[i].SubMatrix(3,0,3,njoint));
+		//d.Jfk[i].vsub_matrix(3,0,3,njoint) = d.Jfk[ip].vsub_matrix(3,0,3,njoint);
 
-		d.Jfk[i].col(iq).v_range(0,3) = eta % ci;
-		d.Jfk[i].col(iq).v_range(3,3) = eta;
+		vec_copy(eta % ci, d.Jfk[i].Col(iq).SubVector(0,3));
+		vec_copy(eta     , d.Jfk[i].Col(iq).SubVector(3,3));
+		//d.Jfk[i].col(iq).v_range(0,3) = eta % ci;
+		//d.Jfk[i].col(iq).v_range(3,3) = eta;
 	}
 
-	d.Jcom.clear();
+	mat_clear(d.Jcom);
 	for(int i = 1; i < nlink; i++){
-		d.Jcom += links[i].mass_ratio*d.Jfk[i].vsub_matrix(0,0,3,njoint);
+		mat_add(d.Jfk[i].SubMatrix(0,0,3,njoint), d.Jcom, links[i].mass_ratio);
+		//d.Jcom += links[i].mass_ratio*d.Jfk[i].vsub_matrix(0,0,3,njoint);
 	}
 	for(int i = 0; i < nlink; i++){
-		d.Jfk[i].vsub_matrix(0,0,3,njoint) -= d.Jcom;
+		mat_add(d.Jcom, d.Jfk[i].SubMatrix(0,0,3,njoint), -1.0);
+		//d.Jfk[i].vsub_matrix(0,0,3,njoint) -= d.Jcom;
 	}
 }
 
@@ -1242,10 +1268,10 @@ void Wholebody::CalcForce(WholebodyData & d){
 		// pcj = pj + qj*cj
 		// vcj = vj + wj % (qj*cj)
 		// acj = aj + uj % (qj*cj) + wj % (wj % (qj*cj))
-		vec3_t pos_t_abs   = pc + q0*dlnk.pos_t;
-		quat_t pos_r_abs   = q0*dlnk.pos_r;
+		//vec3_t pos_t_abs   = pc + q0*dlnk.pos_t;
+		//quat_t pos_r_abs   = q0*dlnk.pos_r;
 
-		vec3_t vel_t_abs   = vc + w0 % (q0*dlnk.pos_t) + q0*dlnk.vel_t;
+		//vec3_t vel_t_abs   = vc + w0 % (q0*dlnk.pos_t) + q0*dlnk.vel_t;
 		vec3_t vel_r_abs   = w0 + q0*dlnk.vel_r;
 		
 		vec3_t acc_t_abs   = ac + u0 % (q0*dlnk.pos_t) + w0 % (w0 % (q0*dlnk.pos_t)) + 2.0*(w0 % (q0*dlnk.vel_t)) + q0*dlnk.acc_t;
@@ -1810,7 +1836,7 @@ void WholebodyDesPosConT::Prepare(){
 	pc = obj->centroid.var_pos_t->val;
 	q0 = obj->centroid.var_pos_r->val;
 	q0.ToMatrix(R0);
-	pe = dend.pos_t;
+	pe = pc + q0*dend.pos_t;
 	oe = end.offset;
 	pi = dlnk.pos_t;
 	qi = dlnk.pos_r;
@@ -1822,7 +1848,7 @@ void WholebodyDesPosConR::Prepare(){
 
 	q0 = obj->centroid.var_pos_r->val;
 	q0.ToMatrix(R0);
-	qe = dend.pos_r;
+	qe = q0*dend.pos_r;
 }
 
 void WholebodyDesVelConT::Prepare(){
@@ -1833,7 +1859,8 @@ void WholebodyDesVelConT::Prepare(){
 	vc = obj->centroid.var_vel_t->val;
 	q0 = obj->centroid.var_pos_r->val;
 	q0.ToMatrix(R0);
-	ve = dend.vel_t;
+	w0 = obj->centroid.var_vel_r->val;
+	ve = vc + q0*dend.vel_t + w0 % (q0*dend.pos_t);
 	oe = end.offset;
 	pi = dlnk.pos_t;
 	qi = dlnk.pos_r;
@@ -1844,10 +1871,10 @@ void WholebodyDesVelConR::Prepare(){
 	WholebodyKey::End& end = obj->ends[iend];
 	WholebodyData::End& dend = obj->data.ends[iend];
 
-	w0 = obj->centroid.var_vel_r->val;
 	q0 = obj->centroid.var_pos_r->val;
 	q0.ToMatrix(R0);
-	we = dend.vel_r;
+	w0 = obj->centroid.var_vel_r->val;
+	we = w0 + q0*dend.vel_r;
 }
 
 void WholebodyLCon::Prepare(){
@@ -2004,10 +2031,11 @@ void WholebodyCentroidPosConR::CalcCoef(){
 	if(obj[0]->wb->param.useLd){
 		int njoint = (int)obj[0]->joints.size();
 		for(int i = 0; i < njoint; i++){
-			dynamic_cast<C3Link*>(links[idx++])->SetCoef(tmpR0*obj[0]->J_Ld_q  .col(i));
+
+			dynamic_cast<C3Link*>(links[idx++])->SetCoef(tmpR0*(*((vec3_t*)&(obj[0]->J_Ld_q.Col(i)(0)))));
 		}
 		for(int i = 0; i < njoint; i++){
-			dynamic_cast<C3Link*>(links[idx++])->SetCoef(tmpR0*obj[0]->J_Ld_qdd.col(i));
+			dynamic_cast<C3Link*>(links[idx++])->SetCoef(tmpR0*(*((vec3_t*)&(obj[0]->J_Ld_qdd.Col(i)(0)))));
 		}
 	}
 	int nend = (int)obj[0]->ends.size();
@@ -2031,10 +2059,10 @@ void WholebodyCentroidVelConR::CalcCoef(){
 	if(obj[0]->wb->param.useLd){
 		int njoint = (int)obj[0]->joints.size();
 		for(int i = 0; i < njoint; i++){
-			dynamic_cast<C3Link*>(links[idx++])->SetCoef(tmpR0*obj[0]->J_Ld_q  .col(i));
+			dynamic_cast<C3Link*>(links[idx++])->SetCoef(tmpR0*(*((vec3_t*)&(obj[0]->J_Ld_q.Col(i)(0)))));
 		}
 		for(int i = 0; i < njoint; i++){
-			dynamic_cast<C3Link*>(links[idx++])->SetCoef(tmpR0*obj[0]->J_Ld_qdd.col(i));
+			dynamic_cast<C3Link*>(links[idx++])->SetCoef(tmpR0*(*((vec3_t*)&(obj[0]->J_Ld_qdd.Col(i)(0)))));
 		}
 	}
 	int nend = (int)obj[0]->ends.size();
@@ -2057,8 +2085,8 @@ void WholebodyDesPosConT::CalcCoef(){
 	int njoint = (int)obj->joints.size();
 
 	for(int j = 0; j < njoint; j++){
-		vec3_t Jv = obj->data.Jfk[i].col(j).v_range(0,3);
-		vec3_t Jw = obj->data.Jfk[i].col(j).v_range(3,3);
+		vec3_t& Jv = *((vec3_t*)&(obj->data.Jfk[i].Col(j).SubVector(0,3)(0)));
+		vec3_t& Jw = *((vec3_t*)&(obj->data.Jfk[i].Col(j).SubVector(3,3)(0)));
 		dynamic_cast<C3Link*>(links[idx++])->SetCoef(R0*(Jv + Jw % (qi*(oe - ci))));
 	}
 }
@@ -2075,7 +2103,7 @@ void WholebodyDesPosConR::CalcCoef(){
 	int i = obj->wb->ends[iend].ilink;
 
 	for(int j = 0; j < njoint; j++){
-		vec3_t Jw = obj->data.Jfk[i].col(j).v_range(3,3);
+		vec3_t& Jw = *((vec3_t*)&(obj->data.Jfk[i].Col(j).SubVector(3,3)(0)));
 		dynamic_cast<C3Link*>(links[idx++])->SetCoef(R0*Jw);
 	}
 }
@@ -2093,8 +2121,8 @@ void WholebodyDesVelConT::CalcCoef(){
 	int i = obj->wb->ends[iend].ilink;
 
 	for(int j = 0; j < njoint; j++){
-		vec3_t Jv = obj->data.Jfk[i].col(j).v_range(0,3);
-		vec3_t Jw = obj->data.Jfk[i].col(j).v_range(3,3);
+		vec3_t& Jv = *((vec3_t*)&(obj->data.Jfk[i].Col(j).SubVector(0,3)(0)));
+		vec3_t& Jw = *((vec3_t*)&(obj->data.Jfk[i].Col(j).SubVector(3,3)(0)));
 		dynamic_cast<C3Link*>(links[idx++])->SetCoef(R0*(Jv + Jw % (qi*(oe - ci))));
 	}
 }
@@ -2111,7 +2139,7 @@ void WholebodyDesVelConR::CalcCoef(){
 	int i = obj->wb->ends[iend].ilink;
 
 	for(int j = 0; j < njoint; j++){
-		vec3_t Jw = obj->data.Jfk[i].col(j).v_range(3,3);
+		vec3_t& Jw = *((vec3_t*)&(obj->data.Jfk[i].Col(j).SubVector(3,3)(0)));
 		dynamic_cast<C3Link*>(links[idx++])->SetCoef(R0*Jw);
 	}
 }
@@ -2127,9 +2155,9 @@ void WholebodyLCon::CalcCoef(){
 
 	int njoint = (int)obj->joints.size();
 	for(int j = 0; j < njoint; j++)
-		dynamic_cast<C3Link*>(links[idx++])->SetCoef(Rf*obj->J_L_q .col(j));
+		dynamic_cast<C3Link*>(links[idx++])->SetCoef(Rf*(*(vec3_t*)&(obj->J_L_q.Col(j)(0))));
 	for(int j = 0; j < njoint; j++)
-		dynamic_cast<C3Link*>(links[idx++])->SetCoef(Rf*obj->J_L_qd.col(j));
+		dynamic_cast<C3Link*>(links[idx++])->SetCoef(Rf*(*(vec3_t*)&(obj->J_L_qd.Col(j)(0))));
 }
 
 void WholebodyContactPosConT::CalcCoef(){
@@ -2147,8 +2175,8 @@ void WholebodyContactPosConT::CalcCoef(){
 	int njoint = (int)obj->joints.size();
 	int i = obj->wb->ends[iend].ilink;
 	for(int j = 0; j < njoint; j++){
-		vec3_t Jv = obj->data.Jfk[i].col(j).sub_vector(TSubVectorDim<0,3>());
-		vec3_t Jw = obj->data.Jfk[i].col(j).sub_vector(TSubVectorDim<3,3>());
+		vec3_t& Jv = *((vec3_t*)&(obj->data.Jfk[i].Col(j).SubVector(0,3)(0)));
+		vec3_t& Jw = *((vec3_t*)&(obj->data.Jfk[i].Col(j).SubVector(3,3)(0)));
 		dynamic_cast<C3Link*>(links[idx++])->SetCoef(Ro.trans()*R0*(Jv + Jw % (qi*r)));
 	}
 }
@@ -2162,7 +2190,7 @@ void WholebodyContactPosConR::CalcCoef(){
 	int njoint = (int)obj->joints.size();
 	int i = obj->wb->ends[iend].ilink;
 	for(int j = 0; j < njoint; j++){
-		vec3_t Jw = obj->data.Jfk[i].col(j).sub_vector(TSubVectorDim<3,3>());
+		vec3_t& Jw = *((vec3_t*)&(obj->data.Jfk[i].Col(j).SubVector(3,3)(0)));
 		dynamic_cast<C3Link*>(links[idx++])->SetCoef(Ro.trans()*R0*Jw);
 	}
 }
@@ -2181,8 +2209,8 @@ void WholebodyContactVelConT::CalcCoef(){
 	int njoint = (int)obj->joints.size();
 	int i = obj->wb->ends[iend].ilink;
 	for(int j = 0; j < njoint; j++){
-		vec3_t Jv = obj->data.Jfk[i].col(j).sub_vector(TSubVectorDim<0,3>());
-		vec3_t Jw = obj->data.Jfk[i].col(j).sub_vector(TSubVectorDim<3,3>());
+		vec3_t& Jv = *((vec3_t*)&(obj->data.Jfk[i].Col(j).SubVector(0,3)(0)));
+		vec3_t& Jw = *((vec3_t*)&(obj->data.Jfk[i].Col(j).SubVector(3,3)(0)));
 		dynamic_cast<C3Link*>(links[idx++])->SetCoef(Ro.trans()*R0*(Jv + Jw % (qi*r)));
 	}
 }
@@ -2196,7 +2224,7 @@ void WholebodyContactVelConR::CalcCoef(){
 	int njoint = (int)obj->joints.size();
 	int i = obj->wb->ends[iend].ilink;
 	for(int j = 0; j < njoint; j++){
-		vec3_t Jw = obj->data.Jfk[i].col(j).sub_vector(TSubVectorDim<3,3>());
+		vec3_t& Jw = *((vec3_t*)&(obj->data.Jfk[i].Col(j).SubVector(3,3)(0)));
 		dynamic_cast<C3Link*>(links[idx++])->SetCoef(Ro.trans()*R0*Jw);
 	}
 }

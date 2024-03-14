@@ -5,9 +5,6 @@
 #include <DiMP/Render/Config.h>
 #include <DiMP/Render/Canvas.h>
 
-#include <sbtimer.h>
-static Timer timer;	
-
 #include <omp.h>
 
 namespace DiMP{;
