@@ -40,9 +40,6 @@ inline void cross_mat(vec3_t r, real_t k, Matrix& m){
 	m(2,0) = -k*r.y; m(2,1) =  k*r.x; m(2,2) =  0.0  ;
 }
 
-//-------------------------------------------------------------------------------------------------
-// IKData
-
 WholebodyData::End::End(){
 	pos_t_weight       = one;
 	pos_r_weight       = one;
@@ -390,11 +387,22 @@ void WholebodyKey::Prepare() {
 	//wb->CalcAcceleration      (data);
 	//wb->CalcForce             (data);
 
+	q0 = centroid.var_pos_r->val;
+	q0.ToMatrix(R0);
+
+	Matrix tmp;
+	tmp.Allocate(3,3);
+	mat_copy(R0, tmp);
+	R0_Jfk.resize(nlink);
+	for(int iend = 0; iend < nend; iend++){
+		int i = wb->ends[iend].ilink;
+		R0_Jfk[i].Allocate(6, njoint);
+		mat_mat_mul(tmp, data.Jfk[i].SubMatrix(0,0,3,njoint), R0_Jfk[i].SubMatrix(0,0,3,njoint), 1.0, 0.0);
+		mat_mat_mul(tmp, data.Jfk[i].SubMatrix(3,0,3,njoint), R0_Jfk[i].SubMatrix(3,0,3,njoint), 1.0, 0.0);
+	}
+
 	// working variables
 	if(next){
-		q0 = centroid.var_pos_r->val;
-		q0.ToMatrix(R0);
-
 		fe .resize(nend);
 		me .resize(nend);
 		re .resize(nend);
@@ -507,6 +515,7 @@ void WholebodyKey::Draw(Render::Canvas* canvas, Render::Config* conf) {
 
 Wholebody::Param::Param() {
 	gravity = 9.8;
+	dt      = 0.01;
 	useLd   = true;
 }
 
@@ -574,8 +583,9 @@ void Wholebody::SetScaling(){
 
 	//scale.l    = 1.0;  //< unit length
 	scale.l    = sqrt(param.nominalInertia[0]/(0.4*param.totalMass));
+	scale.t    = param.dt;
 	//scale.t    = sqrt(scale.l/param.g);
-	scale.t    = graph->ticks[1]->time - graph->ticks[0]->time;
+	//scale.t    = graph->ticks[1]->time - graph->ticks[0]->time;
 	scale.tinv = 1.0/scale.t;
 	scale.at   = param.gravity;
 	scale.vt   = scale.at*scale.t;
@@ -1250,6 +1260,7 @@ void Wholebody::CalcForce(WholebodyData & d){
 
 		for(int ic : links[i].ichildren){
 			WholebodyData::Link& dlnkc = d.links[ic];
+			int iqc = links[ic].ijoint;
 		
 			vec3_t r = q0*(dlnkc.pos_t - dlnk.pos_t);
 			dlnk.force_t_child -=  dlnkc.force_t_par;
@@ -1282,14 +1293,17 @@ void Wholebody::CalcForce(WholebodyData & d){
 		vec3_t vel_r_local = qj.Conjugated()*vel_r_abs;
 					
 		dlnk.force_t_par = links[i].mass*(acc_t_abs + vec3_t(0.0, 0.0, param.gravity)) - dlnk.force_t - dlnk.force_t_child;
-		dlnk.force_r_par = qj*(links[i].inertia*acc_r_local - vel_r_local % (links[i].inertia*vel_r_local))	- dlnk.force_r - dlnk.force_r_child;
+		dlnk.force_r_par = qj*(links[i].inertia*acc_r_local - vel_r_local % (links[i].inertia*vel_r_local))
+			             - dlnk.force_r - dlnk.force_r_child;
 				
 		// calc joint torque
 		int iq = links[i].ijoint;
 		if(iq != -1){
+			dlnk.force_r_par += (qj*links[i].axis)*(joints[iq].rotor_inertia*d.qdd[iq]);
+
 			// moment acting on joint pivot
 			vec3_t mj = dlnk.force_r_par + (qj*links[i].center) % dlnk.force_t_par;
-			d.tau[iq] = (qj*links[i].axis)*mj + joints[iq].rotor_inertia*d.qdd[iq];
+			d.tau[iq] = (qj*links[i].axis)*mj;
 		}
 		if(i == 0){
 			// parent force of base link must be zero
@@ -1841,6 +1855,7 @@ void WholebodyDesPosConT::Prepare(){
 	pi = dlnk.pos_t;
 	qi = dlnk.pos_r;
 	ci = obj->wb->links[end.ilink].center;
+	r  = qi*(oe - ci);
 }
 
 void WholebodyDesPosConR::Prepare(){
@@ -1865,6 +1880,7 @@ void WholebodyDesVelConT::Prepare(){
 	pi = dlnk.pos_t;
 	qi = dlnk.pos_r;
 	ci = obj->wb->links[end.ilink].center;
+	r  = (qi*(oe - ci));
 }
 
 void WholebodyDesVelConR::Prepare(){
@@ -2079,15 +2095,15 @@ void WholebodyDesPosConT::CalcCoef(){
 
 	int idx = 0;
 	dynamic_cast<SLink *>(links[idx++])->SetCoef(1.0);
-	dynamic_cast<X3Link*>(links[idx++])->SetCoef(-(q0*(pi + qi*(oe - ci))));
+	dynamic_cast<X3Link*>(links[idx++])->SetCoef(-(q0*(pi + r)));
 
 	int i = obj->wb->ends[iend].ilink;
 	int njoint = (int)obj->joints.size();
 
 	for(int j = 0; j < njoint; j++){
-		vec3_t& Jv = *((vec3_t*)&(obj->data.Jfk[i].Col(j).SubVector(0,3)(0)));
-		vec3_t& Jw = *((vec3_t*)&(obj->data.Jfk[i].Col(j).SubVector(3,3)(0)));
-		dynamic_cast<C3Link*>(links[idx++])->SetCoef(R0*(Jv + Jw % (qi*(oe - ci))));
+		vec3_t& Jv = *((vec3_t*)&(obj->R0_Jfk[i].Col(j).SubVector(0,3)(0)));
+		vec3_t& Jw = *((vec3_t*)&(obj->R0_Jfk[i].Col(j).SubVector(3,3)(0)));
+		dynamic_cast<C3Link*>(links[idx++])->SetCoef(Jv + Jw % r);
 	}
 }
 
@@ -2103,8 +2119,8 @@ void WholebodyDesPosConR::CalcCoef(){
 	int i = obj->wb->ends[iend].ilink;
 
 	for(int j = 0; j < njoint; j++){
-		vec3_t& Jw = *((vec3_t*)&(obj->data.Jfk[i].Col(j).SubVector(3,3)(0)));
-		dynamic_cast<C3Link*>(links[idx++])->SetCoef(R0*Jw);
+		vec3_t& Jw = *((vec3_t*)&(obj->R0_Jfk[i].Col(j).SubVector(3,3)(0)));
+		dynamic_cast<C3Link*>(links[idx++])->SetCoef(Jw);
 	}
 }
 
@@ -2115,15 +2131,15 @@ void WholebodyDesVelConT::CalcCoef(){
 
 	int idx = 0;
 	dynamic_cast<SLink *>(links[idx++])->SetCoef(1.0);
-	dynamic_cast<X3Link*>(links[idx++])->SetCoef(-(q0*(pi + qi*(oe - ci))));
+	dynamic_cast<X3Link*>(links[idx++])->SetCoef(-(q0*(pi + r)));
 	
 	int njoint = (int)obj->joints.size();
 	int i = obj->wb->ends[iend].ilink;
 
 	for(int j = 0; j < njoint; j++){
-		vec3_t& Jv = *((vec3_t*)&(obj->data.Jfk[i].Col(j).SubVector(0,3)(0)));
-		vec3_t& Jw = *((vec3_t*)&(obj->data.Jfk[i].Col(j).SubVector(3,3)(0)));
-		dynamic_cast<C3Link*>(links[idx++])->SetCoef(R0*(Jv + Jw % (qi*(oe - ci))));
+		vec3_t& Jv = *((vec3_t*)&(obj->R0_Jfk[i].Col(j).SubVector(0,3)(0)));
+		vec3_t& Jw = *((vec3_t*)&(obj->R0_Jfk[i].Col(j).SubVector(3,3)(0)));
+		dynamic_cast<C3Link*>(links[idx++])->SetCoef(Jv + Jw % r);
 	}
 }
 
@@ -2139,8 +2155,8 @@ void WholebodyDesVelConR::CalcCoef(){
 	int i = obj->wb->ends[iend].ilink;
 
 	for(int j = 0; j < njoint; j++){
-		vec3_t& Jw = *((vec3_t*)&(obj->data.Jfk[i].Col(j).SubVector(3,3)(0)));
-		dynamic_cast<C3Link*>(links[idx++])->SetCoef(R0*Jw);
+		vec3_t& Jw = *((vec3_t*)&(obj->R0_Jfk[i].Col(j).SubVector(3,3)(0)));
+		dynamic_cast<C3Link*>(links[idx++])->SetCoef(Jw);
 	}
 }
 

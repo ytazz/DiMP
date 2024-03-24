@@ -72,9 +72,9 @@ struct WholebodyData{
 	};
 
 	struct Centroid{
-		vec3_t pos_t;   ///< com position (local), desired com position (global)
+		vec3_t pos_t;   ///< com position
 		quat_t pos_r;
-		vec3_t vel_t;   ///< com velocity (local), desired com velocity (global)
+		vec3_t vel_t;   ///< com velocity
 		vec3_t vel_r;
 		vec3_t acc_t;
 		vec3_t acc_r;
@@ -190,7 +190,8 @@ public:
 	Matrix          J_L_q, J_L_qd;
 	Matrix          J_Ld_q, J_Ld_qdd;
 	Matrix          mj_pjc, mj_vjc, mj_ajc, Ij;
-			
+	vector<Matrix>  R0_Jfk;
+
 public:	
     virtual void AddVar(Solver* solver);
 	virtual void AddCon(Solver* solver);
@@ -217,6 +218,7 @@ public:
 		real_t  totalMass;  ///< total mass of wholebody
 		vec3_t  nominalInertia;
 		real_t  gravity;
+		real_t  dt;      ///< time resolution. used for scaling only
 		bool    useLd;
 		
 		Param();
@@ -436,7 +438,7 @@ struct WholebodyDesPosConT : Constraint{
 	WholebodyKey*  obj;
 	int    iend;
 	vec3_t desired;
-	vec3_t pc, pe, oe, pi, ci;
+	vec3_t pc, pe, oe, pi, ci, r;
 	quat_t q0, qi;
 	mat3_t R0;
 	
@@ -467,7 +469,7 @@ struct WholebodyDesVelConT : Constraint{
 	WholebodyKey*  obj;
 	int    iend;
 	vec3_t desired;
-	vec3_t vc, w0, ve, oe, pi, ci;
+	vec3_t vc, w0, ve, oe, pi, ci, r;
 	quat_t q0, qi;
 	mat3_t R0;
 
