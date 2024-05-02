@@ -99,25 +99,36 @@ public:
 		AddAction(MENU_MAIN, ID_DEC, "decrease")->AddHotKey('m');
 		AddAction(MENU_MAIN, ID_SAVE, "save")->AddHotKey('s');
 
-        robotSelect = Robot::Biped;
+        //robotSelect = Robot::Biped;
         //robotSelect = Robot::Humanoid;
-        //robotSelect = Robot::Quadruped;
+        robotSelect = Robot::Quadruped;
         sceneSelect = Scene::Flat;
         //sceneSelect = Scene::Gap;
         //sceneSelect = Scene::Stairs;
         //sceneSelect = Scene::Steps;
-        taskSelect = Task::Travel;
+        //taskSelect = Task::Travel;
         //taskSelect = Task::LongJump;
         //taskSelect = Task::Backflip;
         //taskSelect = Task::Turn;
-        gaitSelect = Gait::WalkWithDoubleSupport;
+        //gaitSelect = Gait::WalkWithDoubleSupport;
         //gaitSelect = Gait::Run;
         //gaitSelect = Gait::TrotWithQuadSupport;
         //gaitSelect = Gait::TrotWithoutQuadSupport;
-        //gaitSelect = Gait::Pace;
+        gaitSelect = Gait::Pace;
         //gaitSelect = Gait::Gallop;
 	}
 	virtual ~MyApp() {}
+
+    virtual void Init(int argc, char* argv[]){
+        App::Init(argc, argv);
+
+       	HITrackballIf* tb = GetCurrentWin()->GetTrackball();
+	    tb->SetDistance(10.0f);
+	    tb->SetAngle((float)Rad(30.0), (float)Rad(30.0));
+
+        timerPlan->SetInterval(300);
+    }
+	
 
 	virtual void BuildScene() {
         if(robotSelect == Robot::Biped){
@@ -183,23 +194,23 @@ public:
             endConf[1].stiffMax  = 50.0;
             endConf[2].stiffMax  = 50.0;
             endConf[3].stiffMax  = 50.0;
-		    endConf[0].cmpOffset = vec2_t(-0.0*endConf[0].basePos.x, -0.0*endConf[0].basePos.y);
-            endConf[1].cmpOffset = vec2_t(-0.0*endConf[1].basePos.x, -0.0*endConf[1].basePos.y);
-            endConf[2].cmpOffset = vec2_t(-0.0*endConf[2].basePos.x, -0.0*endConf[2].basePos.y);
-            endConf[3].cmpOffset = vec2_t(-0.0*endConf[3].basePos.x, -0.0*endConf[3].basePos.y);
+		    endConf[0].cmpOffset = vec2_t(-0.5*endConf[0].basePos.x, -0.0*endConf[0].basePos.y);
+            endConf[1].cmpOffset = vec2_t(-0.5*endConf[1].basePos.x, -0.0*endConf[1].basePos.y);
+            endConf[2].cmpOffset = vec2_t(-0.5*endConf[2].basePos.x, -0.0*endConf[2].basePos.y);
+            endConf[3].cmpOffset = vec2_t(-0.5*endConf[3].basePos.x, -0.0*endConf[3].basePos.y);
         }
         centroid = new DiMP::Centroid(graph, "centroid");
         
 		centroid->param.g = 9.8;
 		centroid->param.m = 44.0;
-        centroid->param.I[0][0] = 2.0;
-        centroid->param.I[1][1] = 2.0;
-        centroid->param.I[2][2] = 2.0;
+        centroid->param.I[0][0] =   2.0;
+        centroid->param.I[1][1] =   2.0;
+        centroid->param.I[2][2] =   2.0;
         centroid->param.swingHeight = 0.15;
         centroid->param.mu = 1.0;
 
-        centroid->param.durationMin = 0.10;
-        centroid->param.durationMax = 0.55;
+        centroid->param.durationMin = 0.20;
+        centroid->param.durationMax = 0.50;
 
         centroid->param.contactMargin = 0.0;
 
@@ -208,7 +219,7 @@ public:
         centroid->param.lockRpy[0]       = false;
         centroid->param.lockRpy[1]       = false;
         centroid->param.lockRpy[2]       = false;
-        centroid->param.rotationResolution = 10;
+        centroid->param.rotationResolution = 1;
         
         // create geometry
         centroid->point = new DiMP::Point(graph);
@@ -223,10 +234,10 @@ public:
             real_t r = 0.0;
             face.hull = new DiMP::Hull(graph);
             face.hull->radius = r - centroid->param.contactMargin;
-            face.hull->vertices.push_back(vec3_t(-1.0, -5.0,  -r));
-            face.hull->vertices.push_back(vec3_t(-1.0,  5.0,  -r));
-            face.hull->vertices.push_back(vec3_t(15.0,  5.0,  -r));
-            face.hull->vertices.push_back(vec3_t(15.0, -5.0,  -r));
+            face.hull->vertices.push_back(vec3_t(-15.0, -5.0,  -r));
+            face.hull->vertices.push_back(vec3_t(-15.0,  5.0,  -r));
+            face.hull->vertices.push_back(vec3_t( 15.0,  5.0,  -r));
+            face.hull->vertices.push_back(vec3_t( 15.0, -5.0,  -r));
             face.normal = vec3_t(0.0, 0.0, 1.0);
             face.numSwitchMax = 100;
             centroid->faces.push_back(face);
@@ -410,8 +421,9 @@ public:
                 startPos = vec3_t(0.0, 0.0, comHeight);
 		        startOri = vec3_t();
                 if(robotSelect == Robot::Biped){
-		            goalPos  = vec3_t(2.0, 0.0, comHeight);
-		            goalOri  = vec3_t(0.0, 0.0, Rad(180.0));
+		            goalPos  = vec3_t(3.0, 0.0, comHeight);
+                    goalOri  = vec3_t(0.0, 0.0, Rad(0.0));
+		            //goalOri  = vec3_t(0.0, 0.0, Rad(180.0));
                 }
                 if(robotSelect == Robot::Humanoid){
 		            goalPos  = vec3_t(3.0, 3.0, comHeight);
@@ -563,9 +575,6 @@ public:
                     if(gaitSelect == Gait::Pace)
                         centroid->param.contactPattern = 
                             "0 0 0 0 "
-                            "0 - 0 - "
-                            "0 0 0 0 "
-                            "- 0 - 0 "
                             "0 0 0 0 "
                             "0 - 0 - "
                             "0 0 0 0 "
@@ -586,6 +595,9 @@ public:
                             "0 - 0 - "
                             "0 0 0 0 "
                             "- 0 - 0 "
+                            "0 0 0 0 "
+                            "0 - 0 - "
+                            "0 0 0 0 "
                             "0 0 0 0";
                     if(gaitSelect == Gait::Gallop)
                         centroid->param.contactPattern = 
@@ -650,7 +662,7 @@ public:
                 wp.ends.resize(nend);
                 for(int iend = 0; iend < nend; iend++){
 		            wp.ends[iend].value  = DiMP::Centroid::Waypoint::End::Value (startPos + endConf[iend].basePos + endConf[iend].posOrigin, vec3_t(), vec3_t(), vec3_t(), infi);
-                    wp.ends[iend].weight = DiMP::Centroid::Waypoint::End::Weight(100.0*one, 100.0*one, 100.0*one, 100.0*one, 1.0, 10.0*one2, 10*one);
+                    wp.ends[iend].weight = DiMP::Centroid::Waypoint::End::Weight(100.0*one, 100.0*one, 100.0*one, 100.0*one, 1.0, vec2_t(10.0, 10.0), 100*one);
                 }
             }
             {
@@ -690,7 +702,7 @@ public:
                 wp.ends.resize(nend);
                 for(int iend = 0; iend < nend; iend++){
 		            wp.ends[iend].value  = DiMP::Centroid::Waypoint::End::Value (goalPos + FromRollPitchYaw(goalOri)*(endConf[iend].basePos + endConf[iend].posOrigin), goalOri, vec3_t(), vec3_t(), infi);
-                    wp.ends[iend].weight = DiMP::Centroid::Waypoint::End::Weight(100.0*one, 100.0*one, 100.0*one, 100.0*one, 1.0, 10.0*one2, 10.0*one);
+                    wp.ends[iend].weight = DiMP::Centroid::Waypoint::End::Weight(100.0*one, 100.0*one, 100.0*one, 100.0*one, 1.0, vec2_t(10.0, 10.0), 100.0*one);
                 }
             }
         }
@@ -784,8 +796,6 @@ public:
                 }
             }
             
-            vec3_t jumpPos(0.5, 0.0, comHeight + 0.2);
-            vec3_t jumpOri(0.0, Rad(180.0), 0.0);
             centroid->waypoints.resize(N+1);
             {
                 DiMP::Centroid::Waypoint& wp = centroid->waypoints[0];
@@ -820,7 +830,7 @@ public:
             {
                 DiMP::Centroid::Waypoint& wp = centroid->waypoints[3];
                 wp.value  = DiMP::Centroid::Waypoint::Value (inf, inf, startPos, startOri - vec3_t(0.0, Rad(45.0), 0.0), vec3_t(0.0, 0.0, 0.0), vec3_t(0.0, -10.0, 0.0));
-                wp.weight = DiMP::Centroid::Waypoint::Weight(inf, inf, 1.0*one, vec3_t(100.0, 1.0, 100.0), 1.0*one, vec3_t(100.0, 1.0, 100.0));
+                wp.weight = DiMP::Centroid::Waypoint::Weight(inf, inf, 1.0*one, vec3_t(100.0, 0.1, 100.0), 1.0*one, vec3_t(100.0, 0.1, 100.0));
                 wp.ends.resize(nend);
                 for(int iend = 0; iend < nend; iend++){
 		            wp.ends[iend].value  = DiMP::Centroid::Waypoint::End::Value (startPos + endConf[iend].basePos + endConf[iend].posOrigin, vec3_t(), vec3_t(), vec3_t(), infi);
@@ -830,7 +840,7 @@ public:
             {
                 DiMP::Centroid::Waypoint& wp = centroid->waypoints[4];
                 wp.value  = DiMP::Centroid::Waypoint::Value (inf, inf, goalPos, goalOri + vec3_t(0.0, Rad(45.0), 0.0), vec3_t(0.0, 0.0, 0.0), vec3_t(0.0, -10.0, 0.0));
-                wp.weight = DiMP::Centroid::Waypoint::Weight(inf, inf, 1.0*one, vec3_t(100.0, 1.0, 100.0), 1.0*one, vec3_t(100.0, 1.0, 100.0));
+                wp.weight = DiMP::Centroid::Waypoint::Weight(inf, inf, 1.0*one, vec3_t(100.0, 0.1, 100.0), 1.0*one, vec3_t(100.0, 0.1, 100.0));
                 wp.ends.resize(nend);
                 for(int iend = 0; iend < nend; iend++){
 		            wp.ends[iend].value  = DiMP::Centroid::Waypoint::End::Value (goalPos + endConf[iend].basePos + endConf[iend].posOrigin, vec3_t(), vec3_t(), vec3_t(), infi);
@@ -942,7 +952,7 @@ public:
             centroid->ends[iend].cmpOffset  = endConf[iend].cmpOffset;
             centroid->ends[iend].lockOri    = false;
             centroid->ends[iend].lockCmp    = false;
-            centroid->ends[iend].lockMoment = true;
+            centroid->ends[iend].lockMoment = false;
 		}
                 
 		for(int k = 0; k <= N; k++)
@@ -968,8 +978,8 @@ public:
         graph->solver->SetCorrection(ID(), 0.1);
 		graph->solver->param.regularization = 10;
 		graph->solver->param.hastyStepSize  = false;
-		graph->solver->param.cutoffStepSize = 0.1;
-		graph->solver->param.minStepSize    = 0.1;
+		graph->solver->param.cutoffStepSize = 0.001;
+		graph->solver->param.minStepSize    = 0.001;
 		graph->solver->param.maxStepSize    = 1.0;
         graph->solver->param.methodMajor    = Solver::Method::Major::DDP;
         //graph->solver->param.methodMajor    = DiMP::CustomSolver::CustomMethod::SearchDDP;

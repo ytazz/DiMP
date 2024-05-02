@@ -1544,6 +1544,7 @@ void Centroid::Draw(Render::Canvas* canvas, Render::Config* conf) {
 		for(int i = 0; i < ends.size(); i++){
 			ss.str("");
 			ss << i;
+            canvas->SetLineColor(i % 2 ? "blue" : "magenta");
 			canvas->BeginLayer("centroid_end" + ss.str(), true);
 			canvas->BeginPath();
 			canvas->MoveTo(trajectory[0].ends[i].pos);
@@ -1600,7 +1601,8 @@ void Centroid::DrawSnapshot(Render::Canvas* canvas, Render::Config* conf) {
 
 		for(int i = 0; i < ends.size(); i++){
 			canvas->BeginLayer("centroid_end_snapshot", true);
-			canvas->SetLineColor(i % 2 == 0 ? "magenta" : "blue");
+			canvas->SetLineColor("black");
+            canvas->SetLineWidth(1.0f);
 
 			// line connecting com and end
 		    canvas->BeginPath();
@@ -1610,7 +1612,8 @@ void Centroid::DrawSnapshot(Render::Canvas* canvas, Render::Config* conf) {
 			canvas->EndPath();
 
             // line indicating force
-            canvas->SetLineColor("green");
+            canvas->SetLineColor("red");
+            canvas->SetLineWidth(1.0f);
 			canvas->BeginPath();
 			canvas->MoveTo(snapshot.ends[i].pos);
 			canvas->LineTo(snapshot.ends[i].pos + 0.001*snapshot.ends[i].force);
@@ -1625,6 +1628,7 @@ void Centroid::DrawSnapshot(Render::Canvas* canvas, Render::Config* conf) {
             vtx[1] = vec3_t(ends[i].copMin.x, ends[i].copMax.y, 0.0);
             vtx[2] = vec3_t(ends[i].copMax.x, ends[i].copMax.y, 0.0);
             vtx[3] = vec3_t(ends[i].copMax.x, ends[i].copMin.y, 0.0);
+            canvas->SetLineColor("green");
             canvas->SetLineWidth(/*snapshot.ends[i].contact ? 2.0f : */1.0f);
 			canvas->BeginPath();
 			canvas->MoveTo(snapshot.ends[i].pos + snapshot.ends[i].ori*vtx[0]);
