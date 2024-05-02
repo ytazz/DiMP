@@ -9,7 +9,7 @@ namespace DiMP {;
 
 const real_t   pi     = M_PI;
 const real_t _2pi     = 2.0*pi;
-const real_t  damping = 0.1;
+const real_t  damping = 0.0;
 const vec3_t  one(1.0, 1.0, 1.0);
 	
 //-------------------------------------------------------------------------------------------------
@@ -177,6 +177,8 @@ void BipedLIPKey::AddCon(Solver* solver) {
 			
 			foot[i].con_vel_zero_t       ->desired = vec3_t();
 			foot[i].con_vel_zero_r       ->desired = 0.0;
+			//foot[i].con_vel_zero_t       ->weight  = vec3_t(10.0, 10.0, 10.0);
+			//foot[i].con_vel_zero_r       ->weight[0] = 10.0;
 			foot[i].con_cop_vel_diff_zero->desired = vec3_t();
 			foot[i].con_cop_vel_diff_zero->weight  = 0.1*one;
 			
@@ -483,14 +485,14 @@ void BipedLIP::Init() {
 
 		if (key->next) {
 			// foot velocity must be zero while in contact
-			key->foot[0].con_vel_zero_t->active = (phase[k] != BipedLIP::Phase::L);
-			key->foot[0].con_vel_zero_r->active = (phase[k] != BipedLIP::Phase::L);
-			key->foot[1].con_vel_zero_t->active = (phase[k] != BipedLIP::Phase::R);
-			key->foot[1].con_vel_zero_r->active = (phase[k] != BipedLIP::Phase::R);
+			key->foot[0].con_vel_zero_t->weight    = (phase[k] != BipedLIP::Phase::L ? 10.0 : 0.0)*one;
+			key->foot[0].con_vel_zero_r->weight[0] = (phase[k] != BipedLIP::Phase::L ? 10.0 : 0.0);
+			key->foot[1].con_vel_zero_t->weight    = (phase[k] != BipedLIP::Phase::R ? 10.0 : 0.0)*one;
+			key->foot[1].con_vel_zero_r->weight[0] = (phase[k] != BipedLIP::Phase::R ? 10.0 : 0.0);
 
 			// cop velocity must be constant (i.e., acceleration must be zero) while in contact
-			key->foot[0].con_cop_vel_diff_zero->active = (phase[k] == BipedLIP::Phase::LR || phase[k] == BipedLIP::Phase::R);
-			key->foot[1].con_cop_vel_diff_zero->active = (phase[k] == BipedLIP::Phase::RL || phase[k] == BipedLIP::Phase::L);
+			key->foot[0].con_cop_vel_diff_zero->weight = (phase[k] == BipedLIP::Phase::LR || phase[k] == BipedLIP::Phase::R ? 10.0 : 0.0)*one;
+			key->foot[1].con_cop_vel_diff_zero->weight = (phase[k] == BipedLIP::Phase::RL || phase[k] == BipedLIP::Phase::L ? 10.0 : 0.0)*one;
 		}
 		
 		// range limit of foot position
@@ -1457,7 +1459,7 @@ BipedLipVelCon::BipedLipVelCon(Solver* solver, string _name, BipedLIPKey* _obj, 
 }
 
 BipedComConP::BipedComConP(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale) :
-	Constraint(solver, 2, ID(ConTag::BipedComPos, _obj->node, _obj->tick, _name), Constraint::Type::Equality, _scale) {
+	Constraint(solver, 3, ID(ConTag::BipedComPos, _obj->node, _obj->tick, _name), Constraint::Type::Equality, _scale) {
 
 	obj = _obj;
 
@@ -1470,7 +1472,7 @@ BipedComConP::BipedComConP(Solver* solver, string _name, BipedLIPKey* _obj, real
 }
 
 BipedComConV::BipedComConV(Solver* solver, string _name, BipedLIPKey* _obj, real_t _scale) :
-	Constraint(solver, 2, ID(ConTag::BipedComVel, _obj->node, _obj->tick, _name), Constraint::Type::Equality, _scale) {
+	Constraint(solver, 3, ID(ConTag::BipedComVel, _obj->node, _obj->tick, _name), Constraint::Type::Equality, _scale) {
 
 	obj = _obj;
 
@@ -1776,15 +1778,15 @@ void BipedLipPosCon::CalcCoef() {
 	Prepare();
 
 	int idx = 0;
-	((SLink *)links[idx++])->SetCoef( 1.0);
-	((SLink *)links[idx++])->SetCoef(-k_p_p);
-	((SLink *)links[idx++])->SetCoef(-k_p_v);
-	((C3Link*)links[idx++])->SetCoef(-k_p_tau);
-	((C3Link*)links[idx++])->SetCoef(-k_p_T);
+	dynamic_cast<SLink *>(links[idx++])->SetCoef( 1.0);
+	dynamic_cast<SLink *>(links[idx++])->SetCoef(-k_p_p);
+	dynamic_cast<SLink *>(links[idx++])->SetCoef(-k_p_v);
+	dynamic_cast<C3Link*>(links[idx++])->SetCoef(-k_p_tau);
+	dynamic_cast<C3Link*>(links[idx++])->SetCoef(-k_p_T);
 
 	for(int i = 0; i < 2; i++){
-		((SLink*)links[idx++])->SetCoef(-(k_p_c *k_c_c  [i] + k_p_cv*k_cv_c [i]));
-		((SLink*)links[idx++])->SetCoef(-(k_p_cv*k_cv_cv[i] + k_p_ca*k_ca_cv[i]));
+		dynamic_cast<SLink*>(links[idx++])->SetCoef(-(k_p_c *k_c_c  [i] + k_p_cv*k_cv_c [i]));
+		dynamic_cast<SLink*>(links[idx++])->SetCoef(-(k_p_cv*k_cv_cv[i] + k_p_ca*k_ca_cv[i]));
 	}
 }
 
@@ -1792,51 +1794,51 @@ void BipedLipVelCon::CalcCoef() {
 	Prepare();
 
 	int idx = 0;
-	((SLink *)links[idx++])->SetCoef( 1.0);
-	((SLink *)links[idx++])->SetCoef(-k_v_p);
-	((SLink *)links[idx++])->SetCoef(-k_v_v);
-	((C3Link*)links[idx++])->SetCoef(-k_v_tau);
-	((C3Link*)links[idx++])->SetCoef(-k_v_T);
+	dynamic_cast<SLink *>(links[idx++])->SetCoef( 1.0);
+	dynamic_cast<SLink *>(links[idx++])->SetCoef(-k_v_p);
+	dynamic_cast<SLink *>(links[idx++])->SetCoef(-k_v_v);
+	dynamic_cast<C3Link*>(links[idx++])->SetCoef(-k_v_tau);
+	dynamic_cast<C3Link*>(links[idx++])->SetCoef(-k_v_T);
 
 	for(int i = 0; i < 2; i++){
-		((SLink*)links[idx++])->SetCoef(-(k_v_c *k_c_c  [i] + k_v_cv*k_cv_c [i]));
-		((SLink*)links[idx++])->SetCoef(-(k_v_cv*k_cv_cv[i] + k_v_ca*k_ca_cv[i]));
+		dynamic_cast<SLink*>(links[idx++])->SetCoef(-(k_v_c *k_c_c  [i] + k_v_cv*k_cv_c [i]));
+		dynamic_cast<SLink*>(links[idx++])->SetCoef(-(k_v_cv*k_cv_cv[i] + k_v_ca*k_ca_cv[i]));
 	}
 }
 
 void BipedFootPosConT::CalcCoef() {
 	Prepare();
 
-	((SLink *)links[0])->SetCoef( 1.0);
-	((SLink *)links[1])->SetCoef(-1.0);
-	((SLink *)links[2])->SetCoef(-tau);
-	((C3Link*)links[3])->SetCoef(-v0 );
+	dynamic_cast<SLink *>(links[0])->SetCoef( 1.0);
+	dynamic_cast<SLink *>(links[1])->SetCoef(-1.0);
+	dynamic_cast<SLink *>(links[2])->SetCoef(-tau);
+	dynamic_cast<C3Link*>(links[3])->SetCoef(-v0 );
 }
 
 void BipedFootPosConR::CalcCoef() {
 	Prepare();
 
-	((SLink*)links[0])->SetCoef( 1.0   );
-	((SLink*)links[1])->SetCoef(-1.0   );
-	((SLink*)links[2])->SetCoef(-tau   );
-	((SLink*)links[3])->SetCoef(-omega0);
+	dynamic_cast<SLink*>(links[0])->SetCoef( 1.0   );
+	dynamic_cast<SLink*>(links[1])->SetCoef(-1.0   );
+	dynamic_cast<SLink*>(links[2])->SetCoef(-tau   );
+	dynamic_cast<SLink*>(links[3])->SetCoef(-omega0);
 }
 
 void BipedFootCopPosCon::CalcCoef() {
 	Prepare();
 
-	((SLink *)links[0])->SetCoef( 1.0);
-	((SLink *)links[1])->SetCoef(-1.0);
-	((SLink *)links[2])->SetCoef(-tau);
-	((C3Link*)links[3])->SetCoef(-cv0);
+	dynamic_cast<SLink *>(links[0])->SetCoef( 1.0);
+	dynamic_cast<SLink *>(links[1])->SetCoef(-1.0);
+	dynamic_cast<SLink *>(links[2])->SetCoef(-tau);
+	dynamic_cast<C3Link*>(links[3])->SetCoef(-cv0);
 }
 
 void BipedFootCopVelCon::CalcCoef() {
 	Prepare();
 
-	((SLink *)links[0])->SetCoef( 1.0);
-	((SLink *)links[1])->SetCoef(-1.0);
-	((SLink *)links[2])->SetCoef(-1.0);
+	dynamic_cast<SLink *>(links[0])->SetCoef( 1.0);
+	dynamic_cast<SLink *>(links[1])->SetCoef(-1.0);
+	dynamic_cast<SLink *>(links[2])->SetCoef(-1.0);
 }
 
 void BipedComConP::CalcCoef() {
@@ -1846,10 +1848,10 @@ void BipedComConP::CalcCoef() {
 	real_t mf   = param.footMass;
 	real_t msum = mt + 2.0*mf;
 
-	((SLink*)links[0])->SetCoef(1.0);
-	((SLink*)links[1])->SetCoef(-mt/msum);
-	((SLink*)links[2])->SetCoef(-mf/msum);
-	((SLink*)links[3])->SetCoef(-mf/msum);
+	dynamic_cast<SLink*>(links[0])->SetCoef(1.0);
+	dynamic_cast<SLink*>(links[1])->SetCoef(-mt/msum);
+	dynamic_cast<SLink*>(links[2])->SetCoef(-mf/msum);
+	dynamic_cast<SLink*>(links[3])->SetCoef(-mf/msum);
 }
 
 void BipedComConV::CalcCoef() {
@@ -1859,47 +1861,47 @@ void BipedComConV::CalcCoef() {
 	real_t mf   = param.footMass;
 	real_t msum = mt + 2.0*mf;
 
-	((SLink*)links[0])->SetCoef(1.0);
-	((SLink*)links[1])->SetCoef(-mt/msum);
-	((SLink*)links[2])->SetCoef(-mf/msum);
-	((SLink*)links[3])->SetCoef(-mf/msum);
+	dynamic_cast<SLink*>(links[0])->SetCoef(1.0);
+	dynamic_cast<SLink*>(links[1])->SetCoef(-mt/msum);
+	dynamic_cast<SLink*>(links[2])->SetCoef(-mf/msum);
+	dynamic_cast<SLink*>(links[3])->SetCoef(-mf/msum);
 }
 
 void BipedFootPosRangeConT::CalcCoef() {
 	Prepare();
 
-	((R3Link*)links[0])->SetCoef( dir_abs);
-	((R3Link*)links[1])->SetCoef(-dir_abs);
+	dynamic_cast<R3Link*>(links[0])->SetCoef( dir_abs);
+	dynamic_cast<R3Link*>(links[1])->SetCoef(-dir_abs);
 	//((SLink* )links[2])->SetCoef( (ez % dir_abs)*r);
-	((SLink* )links[2])->SetCoef( (dir_abs % r)*ez);
+	dynamic_cast<SLink* >(links[2])->SetCoef( (dir_abs % r)*ez);
 }
 
 void BipedFootPosRangeConR::CalcCoef() {
 	Prepare();
 
-	((SLink*)links[0])->SetCoef( dir);
-	((SLink*)links[1])->SetCoef(-dir);
+	dynamic_cast<SLink*>(links[0])->SetCoef( dir);
+	dynamic_cast<SLink*>(links[1])->SetCoef(-dir);
 }
 
 void BipedFootContactCon::CalcCoef() {
 	Prepare();
 
-	((R3Link*)links[0])->SetCoef(vec3_t(0.0, 0.0, 1.0));
+	dynamic_cast<R3Link*>(links[0])->SetCoef(vec3_t(0.0, 0.0, 1.0));
 }
 
 void BipedFootCopRangeCon::CalcCoef() {
 	Prepare();
 	
-	((R3Link*)links[0])->SetCoef( dir_abs);
-	((R3Link*)links[1])->SetCoef(-dir_abs);
+	dynamic_cast<R3Link*>(links[0])->SetCoef( dir_abs);
+	dynamic_cast<R3Link*>(links[1])->SetCoef(-dir_abs);
 	//((SLink* )links[2])->SetCoef( (ez % dir_abs)*r);
-	((SLink* )links[2])->SetCoef( (dir_abs % r)*ez);
+	dynamic_cast<SLink* >(links[2])->SetCoef( (dir_abs % r)*ez);
 }
 
 void BipedTimeCon::CalcCoef() {
-	((SLink*)links[0])->SetCoef(1.0);
-	((SLink*)links[1])->SetCoef(-1.0);
-	((SLink*)links[2])->SetCoef(-1.0);
+	dynamic_cast<SLink*>(links[0])->SetCoef(1.0);
+	dynamic_cast<SLink*>(links[1])->SetCoef(-1.0);
+	dynamic_cast<SLink*>(links[2])->SetCoef(-1.0);
 }
 
 //-------------------------------------------------------------------------------------------------

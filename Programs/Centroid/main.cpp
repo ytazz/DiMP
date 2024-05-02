@@ -204,10 +204,6 @@ public:
         centroid->param.contactMargin = 0.0;
 
         centroid->param.enableRotation   = true;
-        centroid->param.enableQuaternion = true;
-        centroid->param.lockRpy[0]       = false;
-        centroid->param.lockRpy[1]       = false;
-        centroid->param.lockRpy[2]       = false;
         centroid->param.rotationResolution = 10;
         
         // create geometry
@@ -411,7 +407,8 @@ public:
 		        startOri = vec3_t();
                 if(robotSelect == Robot::Biped){
 		            goalPos  = vec3_t(2.0, 0.0, comHeight);
-		            goalOri  = vec3_t(0.0, 0.0, Rad(180.0));
+                    goalOri  = vec3_t(0.0, 0.0, Rad(0.0));
+		            //goalOri  = vec3_t(0.0, 0.0, Rad(180.0));
                 }
                 if(robotSelect == Robot::Humanoid){
 		            goalPos  = vec3_t(3.0, 3.0, comHeight);
@@ -659,7 +656,8 @@ public:
                 wp.weight.pos_t = vec3_t(1.0, 1.0, 10.0);
                 wp.weight.pos_r =  10*one;
                 wp.weight.vel_t = 10*one;
-                wp.weight.vel_r = 10*one;
+                //wp.weight.vel_r = 10*one;
+                wp.weight.L     = 10*one;
                 wp.ends.resize(nend);
                 for(int iend = 0; iend < nend; iend++){
                     wp.ends[iend].weight.pos_t  = vec3_t(0.1, 10.0, 10.0);
@@ -675,7 +673,8 @@ public:
                 wp.weight.pos_t = vec3_t(1.0, 1.0, 10.0);
                 wp.weight.pos_r =  10*one;
                 wp.weight.vel_t = 10*one;
-                wp.weight.vel_r = 10*one;
+                //wp.weight.vel_r = 10*one;
+                wp.weight.L     = 10*one;
                 for(int iend = 0; iend < nend; iend++){
                     wp.ends[iend].weight.pos_t  = vec3_t(0.1, 10.0, 10.0);
                     wp.ends[iend].weight.pos_r  = vec3_t(10.0, 10.0, 0.1);
@@ -731,7 +730,8 @@ public:
                 wp.weight.pos_t =  1*one;
                 wp.weight.pos_r =  1*one;
                 wp.weight.vel_t = 10*one;
-                wp.weight.vel_r = 10*one;
+                //wp.weight.vel_r = 10*one;
+                wp.weight.L     = 10*one;
                 wp.ends.resize(nend);
                 for(int iend = 0; iend < nend; iend++){
                     wp.ends[iend].weight.pos_t  = 0.1*one;
@@ -745,7 +745,8 @@ public:
                 wp.weight.pos_t =  1*one;
                 wp.weight.pos_r =  1*one;
                 wp.weight.vel_t = 10*one;
-                wp.weight.vel_r = 10*one;
+                //wp.weight.vel_r = 10*one;
+                wp.weight.L     = 10*one;
                 for(int iend = 0; iend < nend; iend++){
                     wp.ends[iend].weight.pos_t  = 0.1*one;
                     wp.ends[iend].weight.vel_t  = 0.1*one;
@@ -951,6 +952,9 @@ public:
         centroid->SetScaling();
 		graph->scale.Set(1.0, 1.0, 1.0);
 		graph->Init();
+
+        centroid->Setup();
+        centroid->Reset(true, true, true);
         
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidPosT      ), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidPosR      ), false);
@@ -965,18 +969,20 @@ public:
         graph->solver->Enable(ID(DiMP::ConTag::CentroidEndFriction), false);
 		graph->solver->Enable(ID(DiMP::ConTag::CentroidEndMomentRange), false);
         
-        graph->solver->SetCorrection(ID(), 0.1);
-		graph->solver->param.regularization = 10;
+        graph->solver->SetCorrection(ID(), 0.5);
+		graph->solver->param.regularization = 1;
 		graph->solver->param.hastyStepSize  = false;
 		graph->solver->param.cutoffStepSize = 0.1;
-		graph->solver->param.minStepSize    = 0.1;
+		graph->solver->param.minStepSize    = 1;
 		graph->solver->param.maxStepSize    = 1.0;
+        graph->solver->param.methodMajor    = Solver::Method::Major::GaussNewton;
         graph->solver->param.methodMajor    = Solver::Method::Major::DDP;
         //graph->solver->param.methodMajor    = DiMP::CustomSolver::CustomMethod::SearchDDP;
 		graph->solver->param.methodMinor    = Solver::Method::Minor::Direct;
         graph->solver->param.useHessian     = false;
 		graph->solver->param.verbose        = true;
         graph->solver->param.parallelize    = false;
+        graph->solver->param.fixInitialState = true;
     
         fileDuration = fopen("duration.csv", "w");
         fileCost     = fopen("cost.csv", "w");
@@ -1095,7 +1101,8 @@ public:
                     "%f, %f, %f, "
                     "%f, %f, %f, ",
                     key->var_pos_r->val.x, key->var_pos_r->val.y, key->var_pos_r->val.z, 
-                    key->var_vel_r->val.x, key->var_vel_r->val.y, key->var_vel_r->val.z
+                    //key->var_vel_r->val.x, key->var_vel_r->val.y, key->var_vel_r->val.z
+                    key->var_L->val.x, key->var_L->val.y, key->var_L->val.z
                 );
             }
             else{
@@ -1152,10 +1159,9 @@ public:
                 }
             }
             for(int i = 0; i < key->ends.size(); i++){
-                DiMP::CentroidKey::End& end = key->ends[i];
                 fprintf(file,
                     "%d, ",
-                    end.iface
+                    key->data_des.ends[i].iface
                 );    
             }
             fprintf(file, "\n");
@@ -1200,17 +1206,10 @@ public:
         auto key = (DiMP::CentroidKey*)centroid->traj.GetKeypoint(graph->ticks.back());
         real_t tf = key->var_time->val;
         const real_t dt = 0.01;
-        vec3_t pc, vc, ac, wf;
-        quat_t qf;
-        vec3_t pe, ve, we, me;
-        vec2_t re;
-        real_t le;
-        bool   ce;
-        quat_t qe;
+        DiMP::CentroidData d;
 
         for(real_t t = 0.0; t <= tf; t += dt){
-            centroid->ComState(t, pc, vc, ac);
-            centroid->TorsoState(t, qf, wf, Interpolate::SlerpDiff);
+            centroid->CalcState(t, d);
 
             fprintf(file,
                 "%f, "
@@ -1219,20 +1218,14 @@ public:
                 "%f, %f, %f, "
                 "%f, %f, %f, ",
                 t, 
-                pc.x, pc.y, pc.z, 
-                qf.w, qf.x, qf.y, qf.z,
-                vc.x, vc.y, vc.z, 
-                wf.x, wf.y, wf.z
+                d.pos_t.x, d.pos_t.y, d.pos_t.z, 
+                d.pos_r.w, d.pos_r.x, d.pos_r.y, d.pos_r.z,
+                d.vel_t.x, d.vel_t.y, d.vel_t.z, 
+                d.vel_r.x, d.vel_r.y, d.vel_r.z
             );
             vec3_t mom;
             for(int i = 0; i < key->ends.size(); i++){
-                centroid->EndState(t, i, pe, qe, ve, we);
-                centroid->EndForce(t, i, le, re, me, ce);
-
-                vec3_t f   = (centroid->param.m*le*le)*(pc - pe - vec3_t(re.x, re.y, 0.0));
-                vec3_t eta = (centroid->param.m*le*le)*me;
-
-                mom += (pe - pc) % f + eta;
+                mom += (d.ends[i].pos_t - d.pos_t) % d.ends[i].force_t + d.ends[i].force_r;
             
                 fprintf(file,
                     "%f, %f, %f, "
@@ -1241,12 +1234,12 @@ public:
                     "%f, %f, %f, "
                     "%f, %f, %f, "
                     "%f, %f, %f, ",
-                    pe.x, pe.y, pe.z, 
-                    qe.w, qe.x, qe.y, qe.z,
-                    ve.x, ve.y, ve.z, 
-                    we.x, we.y, we.z,
-                    f.x, f.y, f.z,
-                    eta.x, eta.y, eta.z
+                    d.ends[i].pos_t.x, d.ends[i].pos_t.y, d.ends[i].pos_t.z, 
+                    d.ends[i].pos_r.w, d.ends[i].pos_r.x, d.ends[i].pos_r.y, d.ends[i].pos_r.z,
+                    d.ends[i].vel_t.x, d.ends[i].vel_t.y, d.ends[i].vel_t.z, 
+                    d.ends[i].vel_r.x, d.ends[i].vel_r.y, d.ends[i].vel_r.z,
+                    d.ends[i].force_t.x, d.ends[i].force_t.y, d.ends[i].force_t.z,
+                    d.ends[i].force_r.x, d.ends[i].force_r.y, d.ends[i].force_r.z
                 );    
             }
             fprintf(file, "%f, %f, %f, ", mom.x, mom.y, mom.z);

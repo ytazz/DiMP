@@ -89,8 +89,8 @@ public:
 		biped->param.footCopMin[1] = vec3_t(-0.07, -0.02, -0.0);
 		biped->param.footCopMax[1] = vec3_t( 0.10,  0.02,  0.0);
 		biped->param.swingHeight   = 0.100;
-		//biped->param.swingProfile = DiMP::BipedLIP::SwingProfile::Cycloid;
-		biped->param.swingProfile       = DiMP::BipedLIP::SwingProfile::HeelToe;
+		biped->param.swingProfile = DiMP::BipedLIP::SwingProfile::Cycloid;
+		//biped->param.swingProfile       = DiMP::BipedLIP::SwingProfile::HeelToe;
 		//biped->param.swingInterpolation = DiMP::BipedLIP::SwingInterpolation::Cubic;
 		biped->param.swingInterpolation = DiMP::BipedLIP::SwingInterpolation::Quintic;
 		//biped->param.footCurveType = DiMP::BipedLIP::FootCurveType::Arc;
@@ -213,15 +213,20 @@ public:
 		graph->Init();
 
 		graph->solver->SetCorrection(ID(), 0.1);
+		graph->solver->param.regularization = 0.01;
+		graph->solver->param.hastyStepSize  = false;
 		graph->solver->param.numIter[0] = 20;
-		graph->solver->param.cutoffStepSize = 0.01;
-		graph->solver->param.minStepSize = 0.01;
+		graph->solver->param.cutoffStepSize = 0.1;
+		graph->solver->param.minStepSize = 1.0;
 		graph->solver->param.maxStepSize = 1.0;
 		//graph->solver->param.methodMajor = Solver::Method::Major::Prioritized;
 		//graph->solver->param.methodMajor = Solver::Method::Major::GaussNewton;
 		graph->solver->param.methodMajor = Solver::Method::Major::DDP;
 		graph->solver->param.methodMinor = Solver::Method::Minor::Direct;
-		graph->solver->param.verbose = true;
+		//graph->solver->param.useHessian     = false;
+		graph->solver->param.verbose        = true;
+        graph->solver->param.parallelize    = false;
+		graph->solver->param.fixInitialState = true;
 
 		targetPos = vec3_t(0.0, 0.6, -0.2);
 		

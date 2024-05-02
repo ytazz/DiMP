@@ -13,6 +13,7 @@ namespace DiMP {;
 class  Wholebody;
 struct WholebodyJointPosCon;
 struct WholebodyJointVelCon;
+struct WholebodyJointAccCon;
 struct WholebodyCentroidPosConT;
 struct WholebodyCentroidVelConT;
 struct WholebodyCentroidPosConR;
@@ -50,12 +51,12 @@ struct WholebodyData{
 	};
 
 	struct End{
-		vec3_t  pos_t, pos_tc, pos_te;
-		quat_t  pos_r, pos_rc;
-		vec3_t  vel_t;
-		vec3_t  vel_r;
-		//vec3_t  acc_t;
-		//vec3_t  acc_r;
+		vec3_t  pos_t, pos_t_abs, pos_tc, pos_te;
+		quat_t  pos_r, pos_r_abs, pos_rc;
+		vec3_t  vel_t, vel_t_abs;
+		vec3_t  vel_r, vel_r_abs;
+		vec3_t  acc_t;
+		vec3_t  acc_r;
 		vec3_t  force_t;
 		vec3_t  force_r;
 
@@ -95,12 +96,14 @@ struct WholebodyData{
 	vector<End>   ends;
 	vector<Link>  links;
 	
-	vvec_t q, qd, qdd, tau;
-	vvec_t q_weight, qd_weight, qdd_weight;
+	vvec_t q, qd, qdd, qddd, tau;
+	vvec_t q_weight, qd_weight, qdd_weight, qddd_weight;
 	vvec_t q_min, q_max;
+	vvec_t qd_min, qd_max;
+	vvec_t qdd_min, qdd_max;
 
-	Matrix          Jcom;
-	vector<Matrix>  Jfk;
+	Matrix          Jcom, Hcom;
+	vector<Matrix>  Jfk, Hfk;
 	
 	void Init        (Wholebody* wb);
 	void InitJacobian(Wholebody* wb);
@@ -163,15 +166,20 @@ public:
 		SVar*  var_q;
 		SVar*  var_qd;
 		SVar*  var_qdd;
-
+		SVar*  var_qddd;
+		
 		WholebodyJointPosCon*  con_q;
 		WholebodyJointVelCon*  con_qd;
+		WholebodyJointAccCon*  con_qdd;
 
 		FixConS*  con_des_q;
 		FixConS*  con_des_qd;
 		FixConS*  con_des_qdd;
+		FixConS*  con_des_qddd;
 
 		RangeConS* con_range_q;
+		RangeConS* con_range_qd;
+		RangeConS* con_range_qdd;
 	};
 
 	WholebodyData          data;
@@ -190,7 +198,7 @@ public:
 	Matrix          J_L_q, J_L_qd;
 	Matrix          J_Ld_q, J_Ld_qdd;
 	Matrix          mj_pjc, mj_vjc, mj_ajc, Ij;
-	vector<Matrix>  R0_Jfk;
+	vector<Matrix>  R0_Jfk, R0_Hfk;
 
 public:	
     virtual void AddVar(Solver* solver);
@@ -214,12 +222,21 @@ public:
 		};
 	};
 
+	struct JointOrder{
+		enum{
+			First  = 1,
+			Second = 2,
+			Third  = 3,
+		};
+	};
+
 	struct Param {
 		real_t  totalMass;  ///< total mass of wholebody
 		vec3_t  nominalInertia;
 		real_t  gravity;
-		real_t  dt;      ///< time resolution. used for scaling only
+		real_t  dt;         ///< time resolution. used for scaling only
 		bool    useLd;
+		bool    useJerk;
 		
 		Param();
 	};
@@ -233,6 +250,8 @@ public:
 		real_t  vr;  //< angular velocity scaling
 		real_t  at;
 		real_t  ar;
+		real_t  jt;
+		real_t  jr;
 		real_t  ft;  //< force scaling
 		real_t  fr;  //< moment scaling
 		real_t  L;   //< momentum scaling
@@ -314,7 +333,7 @@ public:
 	virtual void        Draw          (Render::Canvas* canvas, Render::Config* conf);
 
 	void SetScaling();
-	void Reset();
+	void Reset(bool reset_all);
 	void Shift(real_t offset);
 	void Setup();
 	void CalcFK                (WholebodyData& d);
@@ -356,8 +375,8 @@ struct WholebodyCon : Constraint {
 
 struct WholebodyJointPosCon : WholebodyCon{
 	int    ijoint;
-	real_t q0, qd0, qdd0, q1, q_rhs;
-	real_t h, h2;
+	real_t q0, qd0, qdd0, qddd0, q1, q_rhs;
+	real_t h, h2, h3;
 	
 	void Prepare();
 
@@ -369,8 +388,8 @@ struct WholebodyJointPosCon : WholebodyCon{
 
 struct WholebodyJointVelCon : WholebodyCon{
 	int    ijoint;
-	real_t qd0, qdd0, qd1, qd_rhs;
-	real_t h;
+	real_t qd0, qdd0, qddd0, qd1, qd_rhs;
+	real_t h, h2;
 	
 	void Prepare();
 
@@ -378,6 +397,19 @@ struct WholebodyJointVelCon : WholebodyCon{
 	virtual void  CalcDeviation();
 		
 	WholebodyJointVelCon(Solver* solver, string _name, WholebodyKey* _obj, int _ijoint, real_t _scale);
+};
+
+struct WholebodyJointAccCon : WholebodyCon{
+	int    ijoint;
+	real_t qdd0, qddd0, qdd1, qdd_rhs;
+	real_t h;
+	
+	void Prepare();
+
+	virtual void  CalcCoef();
+	virtual void  CalcDeviation();
+		
+	WholebodyJointAccCon(Solver* solver, string _name, WholebodyKey* _obj, int _ijoint, real_t _scale);
 };
 
 struct WholebodyCentroidPosConT : WholebodyCon{
