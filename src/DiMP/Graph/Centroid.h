@@ -9,9 +9,8 @@ namespace DiMP {;
 class  Centroid;
 struct CentroidPosConT;
 struct CentroidPosConR;
-struct CentroidPosConRPY;
 struct CentroidVelConT;
-struct CentroidVelConR;
+struct CentroidLCon;
 struct CentroidTimeCon;
 struct CentroidEndPosConT;
 struct CentroidEndPosConR;
@@ -21,6 +20,76 @@ struct CentroidEndContactCon;
 struct CentroidEndFrictionCon;
 struct CentroidEndMomentCon;
 
+class CentroidCallback;
+
+struct CentroidData{
+	struct End{
+		vec3_t  pos_t;
+		quat_t  pos_r;
+		vec3_t  vel_t;
+		vec3_t  vel_r;
+		vec3_t  force_t;
+		vec3_t  force_r;
+		real_t  stiff;
+		vec2_t  cmp;
+		vec3_t  moment;
+		int     iface;         //< -1: no contact, otherwise index to contact face
+
+		real_t  t_lift, t_land;
+		vec3_t  pos_t_lift, pos_t_land;
+		quat_t  pos_r_lift, pos_r_land;
+		vec3_t  pos_t_lift_local, pos_t_land_local;
+		quat_t  pos_r_lift_local, pos_r_land_local;
+		
+		vec3_t  pos_t_weight, pos_r_weight;
+		vec3_t  vel_t_weight, vel_r_weight;
+		real_t  stiff_weight;
+		vec2_t  cmp_weight;
+		vec3_t  moment_weight;
+		
+		End();
+	};
+
+	vec3_t pos_t;
+	quat_t pos_r;
+	vec3_t vel_t;
+	vec3_t vel_r;
+	vec3_t L;
+	vec3_t acc_t;
+	vec3_t acc_r;
+	real_t time;
+	real_t duration;
+	
+	vec3_t pos_t_weight;
+	vec3_t pos_r_weight;
+	vec3_t vel_t_weight;
+	//vec3_t vel_r_weight;
+	vec3_t L_weight;
+	real_t time_weight;
+	real_t duration_weight;
+
+	// inertia
+	vector<mat3_t> I, Iinv;
+	vector<vec3_t> Llocal;
+
+	// auxiliary data
+	real_t lbar;
+	vec3_t pbar, rbar, etabar;
+	
+	vec3_t         p_rhs;
+	vector<vec3_t> v_rhs;	
+	vector<vec3_t> w_rhs;
+	vector<vec3_t> L_rhs;
+	vector<quat_t> q_rhs;
+	
+	vector<End>   ends;
+		
+	void Init(Centroid* cen);
+	void CopyVars(CentroidData& d);
+
+	CentroidData();
+};
+
 /**
 	centroidal dynamics model
 */
@@ -29,33 +98,34 @@ public:
 	Centroid*     cen;
 	CentroidKey*  endNext;
 
+	CentroidData  data, data_des;
+
 	V3Var*  var_pos_t;    ///< position        
 	QVar*   var_pos_r;    ///< orientation
-	V3Var*  var_pos_rpy;
 	V3Var*  var_vel_t;    ///< velocity        
-	V3Var*  var_vel_r;    ///< angular velocity
+	//V3Var*  var_vel_r;    ///< angular velocity
+	V3Var*  var_L;
 	SVar*   var_time;
 	SVar*   var_duration;  //< duration of this contact phase
 	
 	CentroidPosConT*           con_pos_t;
 	CentroidPosConR*           con_pos_r;
-	CentroidPosConRPY*         con_pos_rpy;
 	CentroidVelConT*           con_vel_t;
-	CentroidVelConR*           con_vel_r;
+	//CentroidVelConR*           con_vel_r;
+	CentroidLCon*              con_L;
 	CentroidTimeCon*           con_time ;
 	CentroidDurationRangeCon*  con_duration_range[2];
     FixConV3*                  con_des_pos_t;
     FixConQ*                   con_des_pos_r;
-    FixConV3*                   con_des_pos_rpy;
     FixConV3*                  con_des_vel_t;
-	FixConV3*                  con_des_vel_r;
+	//FixConV3*                  con_des_vel_r;
+	FixConV3*                  con_des_L;
 	FixConS*                   con_des_time;
 	FixConS*                   con_des_duration;
 
 	struct End{
 		CentroidKey*  key;
 		
-		int    iface;         //< -1: no contact, otherwise index to contact face
 		V3Var* var_pos_t;     //< end effector position (in global coordinate)
 		QVar*  var_pos_r;
 		V3Var* var_vel_t;     //< end effector velocity (in global coordinate)
@@ -84,78 +154,76 @@ public:
 		vector<CentroidEndContactCon*>  con_contact;
 	};
 
-	vec3_t msum;
-	real_t lbar, l2sum;
-	vec3_t pbar, rbar, etabar;
-	mat3_t pbar_cross, rbar_cross;
+	vector<End>    ends;
+
+	mat3_t  Iinv_m;
+	vec3_t  g;
+	real_t  dtau;
+	vector<real_t> t, C, S;
+	vector<real_t> C_tau, S_tau, C_lbar, S_lbar;
 	vector<real_t> li, li2;
 	vector<vec3_t> pi, ri, etai;
 	vector<mat3_t> pi_cross, ri_cross;
-
-	real_t  tau, dtau;
-	vector<real_t> t, C, S;
-	vector<real_t> C_tau, S_tau, C_lbar, S_lbar;
-	mat3_t  Iinv_m;
-	vec3_t  g, psum, rsum;
-
-	struct Coef{
-		vec3_t p, p_lhs, p_rhs;
-		vec3_t v, v_lhs;
-		quat_t q, q_lhs;
-		vec3_t rpy, rpy_lhs, rpy_rhs;
-		vec3_t w, w_lhs;
-
-		vector<vec3_t> v_rhs, w_rhs;
-		vector<quat_t> q_rhs;
-
-		vector<mat3_t> R_omega;
-		
-		vector<real_t> lbar_li;
-		vec3_t         pbar_lbar;
-		vector<vec3_t> pbar_li;
-		vector<real_t> pbar_pi, pbar_vi;
-		vec3_t         rbar_lbar;
-		vector<vec3_t> rbar_li;
-		vector<real_t> rbar_ri;		
-		vec3_t         etabar_lbar;
-		mat3_t         etabar_pbar, etabar_rbar;
-		vector<vec3_t> etabar_li;
-		vector<mat3_t> etabar_pi, etabar_vi, etabar_ri;
-		vector<real_t> etabar_etai;
-		
-		vec3_t p_C, p_S;
-		real_t p_p, p_v, p_pbar, p_rbar;
-		vec3_t p_lbar, p_tau;
-		vector<vec3_t> p_li;              //< nend
-		vector<real_t> p_pi, p_vi, p_ri;  //< nend
-
-		vec3_t v_C, v_S;
-		vector<real_t> v_p, v_v, v_pbar, v_rbar;     //< ndiv array
-		vector<vec3_t> v_lbar, v_tau;                //< ndiv array
-		vector< vector<vec3_t> >  v_li;              //< nend x ndiv array
-		vector< vector<real_t> >  v_pi, v_vi, v_ri;  //< nend x ndiv array
-
-		real_t w_w;
-		mat3_t w_v1;
-		vector<mat3_t> w_p, w_v;                             //< ndiv
-		vector<vec3_t> w_tau;                                //< ndiv
-		vector<mat3_t> w_rbar, w_etabar;                     //< ndiv
-		vector< vector<mat3_t> >  w_pi, w_vi, w_ri, w_etai;  //< nend x ndiv
-		vector< vector<vec3_t> >  w_li;                      //< nend x ndiv
-
-		mat3_t q_q, q_w;
-		mat3_t q_p, q_v;
-		vec3_t q_tau;
-		vector<mat3_t> q_w1;                       //< ndiv
-		vector<mat3_t> q_pi, q_vi, q_ri, q_etai;   //< nend
-		vector<vec3_t> q_li;                       //< nend
-	};
-
-	Coef  coef;
 	
-	vector<End>    ends;
+	vec3_t psum, rsum, msum;
+	real_t l2sum;
+	mat3_t pbar_cross, rbar_cross;
+	
+	vector<real_t> lbar_li;
+	vec3_t         pbar_lbar;
+	vector<vec3_t> pbar_li;
+	vector<real_t> pbar_pi, pbar_vi;
+	vec3_t         rbar_lbar;
+	vector<vec3_t> rbar_li;
+	vector<real_t> rbar_ri;		
+	vec3_t         etabar_lbar;
+	mat3_t         etabar_pbar, etabar_rbar;
+	vector<vec3_t> etabar_li;
+	vector<mat3_t> etabar_pi, etabar_vi, etabar_ri;
+	vector<real_t> etabar_etai;
+	vector<mat3_t> R_omega;
+	
+	vec3_t p_C, p_S;
+	real_t p_p, p_v, p_pbar, p_rbar;
+	vec3_t p_lbar, p_tau;
+	vector<vec3_t> p_li;              //< nend
+	vector<real_t> p_pi, p_vi, p_ri;  //< nend
+
+	vec3_t v_C, v_S;
+	vector<real_t> v_p, v_v, v_pbar, v_rbar;     //< ndiv array
+	vector<vec3_t> v_lbar, v_tau;                //< ndiv array
+	vector< vector<vec3_t> >  v_li;              //< nend x ndiv array
+	vector< vector<real_t> >  v_pi, v_vi, v_ri;  //< nend x ndiv array
+
+	//real_t w_w;
+	//mat3_t w_v1;
+	//vector<mat3_t> w_p, w_v;                             //< ndiv
+	//vector<vec3_t> w_tau;                                //< ndiv
+	//vector<mat3_t> w_rbar, w_etabar;                     //< ndiv
+	//vector< vector<mat3_t> >  w_pi, w_vi, w_ri, w_etai;  //< nend x ndiv
+	//vector< vector<vec3_t> >  w_li;                      //< nend x ndiv
+	real_t L_L;
+	mat3_t L_v1;
+	vector<mat3_t> L_p, L_v;                             //< ndiv
+	vector<vec3_t> L_tau;                                //< ndiv
+	vector<mat3_t> L_rbar;                               //< ndiv
+	vector<real_t> L_etabar;                             //< ndiv
+	vector< vector<mat3_t> >  L_pi, L_vi, L_ri;          //< nend x ndiv
+	vector< vector<real_t> >  L_etai;
+	vector< vector<vec3_t> >  L_li;                      //< nend x ndiv
+
+	//mat3_t q_q, q_w;
+	mat3_t q_q, q_L;
+	mat3_t q_p, q_v;
+	vec3_t q_tau;
+	//vector<mat3_t> q_w1;                       //< ndiv
+	vector<mat3_t> q_L1;                       //< ndiv
+	vector<mat3_t> q_pi, q_vi, q_ri, q_etai;   //< nend
+	vector<vec3_t> q_li;                       //< nend
 	
 public:
+	void Prepare2();
+
     virtual void AddVar(Solver* solver);
 	virtual void AddCon(Solver* solver);
 	virtual void Prepare();
@@ -168,6 +236,12 @@ public:
 
 class Centroid : public TrajectoryNode{
 public:
+	struct EndInterpolation{
+		enum{
+			Local,
+			Global,
+		};
+	};
 	struct Param {
 		real_t	m;  //< mass
 		mat3_t  I;  //< inertia
@@ -185,10 +259,11 @@ public:
         real_t  swingSlope;
         real_t  swingHeight;
 
-		bool  enableRotation;    ///< enable rotational dynamics
-		bool  enableQuaternion;
-		bool  lockRpy[3];
-		int   rotationResolution;
+		bool    enableRotation;    ///< enable rotational dynamics
+		int     rotationResolution;
+		int     endInterpolation;
+
+		real_t  complWeight;
 
 		real_t  contactMargin;
 		real_t  contactSwitchCost;
@@ -279,10 +354,11 @@ public:
 			vec3_t  pos_t;
 			vec3_t  pos_r;
 			vec3_t  vel_t;
-			vec3_t  vel_r;
+			//vec3_t  vel_r;
+			vec3_t  L;
 
 			Weight();
-			Weight(real_t _t, real_t _tau, vec3_t _p, vec3_t _q, vec3_t _v, vec3_t _w);
+			Weight(real_t _t, real_t _tau, vec3_t _p, vec3_t _q, vec3_t _v, vec3_t _L);//_w);
 		};
 
 		Value   value;
@@ -293,35 +369,11 @@ public:
 		Waypoint();
 	};
 	
-	struct Snapshot{
-		struct End{
-			vec3_t  pos;
-			quat_t  ori;
-			vec3_t  vel;
-            vec3_t  angvel;
-            real_t  stiffness;
-			vec2_t  cmp;
-            vec3_t  force;
-            vec3_t  moment;
-            bool    contact;
-		};
-	
-		real_t       t;
-		vec3_t       pos;
-		vec3_t       vel;
-        vec3_t       acc;
-        quat_t       ori;
-        vec3_t       angvel;
-		
-		vector<End>  ends;
-		
-		Snapshot();
-	};
-
     struct Face{
-        vec3_t normal;
-        Hull*  hull;
-        int    numSwitchMax;
+        vec3_t          normal;
+		vector<vec3_t>  vertices;
+        Hull*           hull;
+        int             numSwitchMax;
 
         Face();
     };
@@ -332,13 +384,23 @@ public:
     vector<Face>        faces;
 	vector<Waypoint>    waypoints;
     
-	Snapshot            snapshot;
-	vector<Snapshot>    trajectory;
-	bool                trajReady;
+	CentroidData         snapshot;
+	vector<CentroidData> trajectory;
+	bool                 trajReady;
 
     Point*              point;  //< geometries used for internal computation
     Hull*               hull;
 
+	CentroidCallback*   callback;
+
+	void Reset(bool reset_first, bool reset_middle, bool reset_last);
+	void Shift();
+	void Setup();
+	void CalcComAcceleration (CentroidData& d);
+	void CalcBaseAcceleration(CentroidData& d);
+	void CalcWrench          (CentroidData& d);
+	void CalcStiffness       (CentroidData& d);
+	
 	virtual Keypoint*	CreateKeypoint() { return new CentroidKey(); }
 	virtual void		Init   ();
 	virtual void		Prepare();
@@ -349,17 +411,20 @@ public:
 	virtual void        Draw          (Render::Canvas* canvas, Render::Config* conf);
 
     void SetScaling     ();
-	void ComState       (real_t t, vec3_t& pos, vec3_t& vel, vec3_t& acom);
-	void TorsoState     (real_t t, quat_t& ori, vec3_t& angvel, int type = Interpolate::SlerpDiff);
-	void EndState       (real_t t, int index, vec3_t& pos, quat_t& ori, vec3_t& vel, vec3_t& angvel);
-    void EndForce       (real_t t, int index, real_t& stiff, vec2_t& cmp, vec3_t& moment, bool& contact);
-	void EndSwitchTiming(real_t t, int index, real_t& tprev, real_t& tnext);
-	void CreateSnapshot (real_t t, Snapshot& s);
+	void CalcState      (real_t t, CentroidData& d);
+	void CalcState      (real_t t, const vector<CentroidData>& d_array, CentroidData& d);
+	void CalcState      (real_t t, const CentroidData& d0, const CentroidData& d1, CentroidData& d);
 	void CalcTrajectory ();
 	
 public:
 	         Centroid(Graph* g, string n);
 	virtual ~Centroid();
+};
+
+class CentroidCallback{
+public:
+	virtual void   GetInitialState(CentroidData& d) = 0;
+	virtual void   GetDesiredState(int k, real_t t, CentroidData& d) = 0;
 };
 
 struct CentroidCon : Constraint {
@@ -402,16 +467,7 @@ struct CentroidPosConR : CentroidCon{
 		
 	CentroidPosConR(Solver* solver, string _name, CentroidKey* _obj, real_t _scale);
 };
-
-struct CentroidPosConRPY : CentroidCon{
-	void Prepare();
-
-	virtual void  CalcCoef();
-	virtual void  CalcDeviation();
-		
-	CentroidPosConRPY(Solver* solver, string _name, CentroidKey* _obj, real_t _scale);
-};
-
+/*
 struct CentroidVelConR : CentroidCon{
 	void Prepare();
 
@@ -419,6 +475,15 @@ struct CentroidVelConR : CentroidCon{
 	virtual void  CalcDeviation();
 		
 	CentroidVelConR(Solver* solver, string _name, CentroidKey* _obj, real_t _scale);
+};
+*/
+struct CentroidLCon : CentroidCon{
+	void Prepare();
+
+	virtual void  CalcCoef();
+	virtual void  CalcDeviation();
+		
+	CentroidLCon(Solver* solver, string _name, CentroidKey* _obj, real_t _scale);
 };
 
 struct CentroidTimeCon : CentroidCon{
