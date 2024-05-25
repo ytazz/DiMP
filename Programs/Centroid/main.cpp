@@ -106,12 +106,12 @@ public:
         //sceneSelect = Scene::Gap;
         //sceneSelect = Scene::Stairs;
         //sceneSelect = Scene::Steps;
-        taskSelect = Task::Travel;
+        //taskSelect = Task::Travel;
         //taskSelect = Task::LongJump;
         //taskSelect = Task::Backflip;
         //taskSelect = Task::Turn;
-        gaitSelect = Gait::WalkWithDoubleSupport;
-        //gaitSelect = Gait::Run;
+        //gaitSelect = Gait::WalkWithDoubleSupport;
+        gaitSelect = Gait::Run;
         //gaitSelect = Gait::TrotWithQuadSupport;
         //gaitSelect = Gait::TrotWithoutQuadSupport;
         //gaitSelect = Gait::Pace;
@@ -125,12 +125,12 @@ public:
             endConf.resize(2);
             endConf[0].basePos   = vec3_t( 0.0, -0.15/2.0,  0.0);
             endConf[1].basePos   = vec3_t( 0.0,  0.15/2.0,  0.0);
-            endConf[0].posOrigin = vec3_t( 0.0,  0.0, -0.7);
-            endConf[1].posOrigin = vec3_t( 0.0,  0.0, -0.7);
-            endConf[0].posMin    = vec3_t(-0.30, -0.0, -comHeight-0.0);
-            endConf[1].posMin    = vec3_t(-0.30, -0.0, -comHeight-0.0);
-            endConf[0].posMax    = vec3_t( 0.30,  0.0, -comHeight+0.0);
-            endConf[1].posMax    = vec3_t( 0.30,  0.0, -comHeight+0.0);
+            endConf[0].posOrigin = vec3_t( 0.0,  0.0, -comHeight);
+            endConf[1].posOrigin = vec3_t( 0.0,  0.0, -comHeight);
+            endConf[0].posMin    = vec3_t(-0.3, -0.0, -comHeight-0.1);
+            endConf[1].posMin    = vec3_t(-0.3, -0.0, -comHeight-0.1);
+            endConf[0].posMax    = vec3_t( 0.3,  0.0, -comHeight+0.3);
+            endConf[1].posMax    = vec3_t( 0.3,  0.0, -comHeight+0.3);
             endConf[0].stiffMax  = 50.0;
             endConf[1].stiffMax  = 50.0;
             endConf[0].cmpOffset = -0.0*vec2_t(endConf[0].basePos.x, endConf[0].basePos.y);
@@ -183,28 +183,33 @@ public:
             endConf[1].stiffMax  = 50.0;
             endConf[2].stiffMax  = 50.0;
             endConf[3].stiffMax  = 50.0;
-		    endConf[0].cmpOffset = vec2_t(-0.0*endConf[0].basePos.x, -0.0*endConf[0].basePos.y);
-            endConf[1].cmpOffset = vec2_t(-0.0*endConf[1].basePos.x, -0.0*endConf[1].basePos.y);
-            endConf[2].cmpOffset = vec2_t(-0.0*endConf[2].basePos.x, -0.0*endConf[2].basePos.y);
-            endConf[3].cmpOffset = vec2_t(-0.0*endConf[3].basePos.x, -0.0*endConf[3].basePos.y);
+		    endConf[0].cmpOffset = vec2_t(-1.0*endConf[0].basePos.x, -1.0*endConf[0].basePos.y);
+            endConf[1].cmpOffset = vec2_t(-1.0*endConf[1].basePos.x, -1.0*endConf[1].basePos.y);
+            endConf[2].cmpOffset = vec2_t(-1.0*endConf[2].basePos.x, -1.0*endConf[2].basePos.y);
+            endConf[3].cmpOffset = vec2_t(-1.0*endConf[3].basePos.x, -1.0*endConf[3].basePos.y);
         }
         centroid = new DiMP::Centroid(graph, "centroid");
         
 		centroid->param.g = 9.8;
 		centroid->param.m = 44.0;
-        centroid->param.I[0][0] = 2.0;
-        centroid->param.I[1][1] = 2.0;
-        centroid->param.I[2][2] = 2.0;
+        centroid->param.I[0][0] = 5.0;
+        centroid->param.I[1][1] = 5.0;
+        centroid->param.I[2][2] = 5.0;
         centroid->param.swingHeight = 0.15;
         centroid->param.mu = 1.0;
 
-        centroid->param.durationMin = 0.10;
-        centroid->param.durationMax = 0.55;
+        centroid->param.durationMin = 0.3;
+        centroid->param.durationMax = 0.7;
 
         centroid->param.contactMargin = 0.0;
+        centroid->param.complWeight   = 1000.0;
 
         centroid->param.enableRotation   = true;
         centroid->param.rotationResolution = 10;
+        //centroid->param.endInterpolation = DiMP::Centroid::EndInterpolation::Local;
+        centroid->param.endInterpolation = DiMP::Centroid::EndInterpolation::Global;
+        centroid->param.endWrenchParametrization = DiMP::Centroid::EndWrenchParametrization::Stiffness;
+        //centroid->param.endWrenchParametrization = DiMP::Centroid::EndWrenchParametrization::Direct;
         
         // create geometry
         centroid->point = new DiMP::Point(graph);
@@ -398,15 +403,14 @@ public:
         int nend = endConf.size();
 		
         if(taskSelect == Task::Travel){
-            N    = 24;
-            goalTime = 0.3 * N;
-            dt = goalTime/((real_t)N);
-		    
+            goalTime = 8.0;
+            
             if(sceneSelect == Scene::Flat){
                 startPos = vec3_t(0.0, 0.0, comHeight);
 		        startOri = vec3_t();
                 if(robotSelect == Robot::Biped){
-		            goalPos  = vec3_t(2.0, 0.0, comHeight);
+		            //goalPos  = vec3_t(3.0, 0.0, comHeight);
+                    goalPos  = vec3_t(5.0, 0.0, comHeight);
                     goalOri  = vec3_t(0.0, 0.0, Rad(0.0));
 		            //goalOri  = vec3_t(0.0, 0.0, Rad(180.0));
                 }
@@ -420,197 +424,218 @@ public:
                 }
 
                 if(robotSelect == Robot::Biped){
-                    if(gaitSelect == Gait::WalkWithDoubleSupport)
-                        centroid->param.contactPattern = 
-                            "0 0 " 
-                            "0 - " 
-                            "0 0 " 
-                            "- 0 " 
-                            "0 0 " 
-                            "0 - " 
-                            "0 0 " 
-                            "- 0 " 
-                            "0 0 " 
-                            "0 - " 
-                            "0 0 " 
-                            "- 0 " 
-                            "0 0 " 
-                            "0 - " 
-                            "0 0 " 
-                            "- 0 " 
-                            "0 0 " 
-                            "0 - " 
-                            "0 0 " 
-                            "- 0 " 
-                            "0 0 " 
-                            "0 - " 
-                            "0 0 " 
-                            "- 0 " 
-                            "0 0 ";
-                    if(gaitSelect == Gait::WalkWithoutDoubleSupport)
-                        centroid->param.contactPattern = 
-                            "0 0 "
-                            "0 - "
-                            "- 0 "
-                            "0 - "
-                            "- 0 "
-                            "0 - "
-                            "- 0 "
-                            "0 - "
-                            "- 0 "
-                            "0 - "
-                            "- 0 "
-                            "0 - "
-                            "- 0 "
-                            "0 - "
-                            "- 0 "
-                            "0 - "
-                            "- 0 "
-                            "0 - "
-                            "- 0 "
-                            "0 - "
-                            "- 0 "
-                            "0 - "
-                            "- 0 "
-                            "0 - "
-                            "0 0";
-                    if(gaitSelect == Gait::Run)
-                        centroid->param.contactPattern =
-                            "0 0 "
-                            "0 - "
-                            "- - "
-                            "- 0 "
-                            "- - "
-                            "0 - "
-                            "- - "
-                            "- 0 "
-                            "- - "
-                            "0 - "
-                            "- - "
-                            "- 0 "
-                            "- - "
-                            "0 - "
-                            "- - "
-                            "- 0 "
-                            "- - "
-                            "0 - "
-                            "- - "
-                            "- 0 "
-                            "- - "
-                            "0 - "
-                            "- - "
-                            "- 0 "
-                            "0 0 ";
+                    int ndiv_ssp = 1;
+                    int ndiv_dsp = 1;
+                    int ndiv_fp  = 1;
+                    if(gaitSelect == Gait::WalkWithDoubleSupport){
+                        centroid->phases = {
+                            {{ 0, 0}, ndiv_dsp},
+                            {{ 0,-1}, ndiv_ssp},
+                            {{ 0, 0}, ndiv_dsp},
+                            {{-1, 0}, ndiv_ssp},
+                            {{ 0, 0}, ndiv_dsp},
+                            {{ 0,-1}, ndiv_ssp},
+                            {{ 0, 0}, ndiv_dsp},
+                            {{-1, 0}, ndiv_ssp},
+                            {{ 0, 0}, ndiv_dsp},
+                            {{ 0,-1}, ndiv_ssp},
+                            {{ 0, 0}, ndiv_dsp},
+                            {{-1, 0}, ndiv_ssp},
+                            {{ 0, 0}, ndiv_dsp},
+                            {{ 0,-1}, ndiv_ssp},
+                            {{ 0, 0}, ndiv_dsp},
+                            {{-1, 0}, ndiv_ssp},
+                            {{ 0, 0}, ndiv_dsp},
+                            {{ 0,-1}, ndiv_ssp},
+                            {{ 0, 0}, ndiv_dsp},
+                            {{-1, 0}, ndiv_ssp},
+                            {{ 0, 0}, ndiv_dsp},
+                            {{ 0,-1}, ndiv_ssp},
+                            {{ 0, 0}, ndiv_dsp},
+                            {{-1, 0}, ndiv_ssp},
+                            {{ 0, 0}, 1}
+                        };
+                    }
+                    if(gaitSelect == Gait::WalkWithoutDoubleSupport){
+                        centroid->phases = {
+                            {{ 0,  0}, ndiv_dsp},
+                            {{ 0, -1}, ndiv_ssp},
+                            {{-1,  0}, ndiv_ssp},
+                            {{ 0, -1}, ndiv_ssp},
+                            {{-1,  0}, ndiv_ssp},
+                            {{ 0, -1}, ndiv_ssp},
+                            {{-1,  0}, ndiv_ssp},
+                            {{ 0, -1}, ndiv_ssp},
+                            {{-1,  0}, ndiv_ssp},
+                            {{ 0, -1}, ndiv_ssp},
+                            {{-1,  0}, ndiv_ssp},
+                            {{ 0, -1}, ndiv_ssp},
+                            {{-1,  0}, ndiv_ssp},
+                            {{ 0, -1}, ndiv_ssp},
+                            {{-1,  0}, ndiv_ssp},
+                            {{ 0, -1}, ndiv_ssp},
+                            {{-1,  0}, ndiv_ssp},
+                            {{ 0, -1}, ndiv_ssp},
+                            {{-1,  0}, ndiv_ssp},
+                            {{ 0, -1}, ndiv_ssp},
+                            {{-1,  0}, ndiv_ssp},
+                            {{ 0, -1}, ndiv_ssp},
+                            {{-1,  0}, ndiv_ssp},
+                            {{ 0, -1}, ndiv_ssp},
+                            {{ 0,  0}, ndiv_dsp}
+                        };
+                    }
+                    if(gaitSelect == Gait::Run){
+                        centroid->phases = {
+                            {{ 0,  0}, ndiv_dsp},
+                            {{ 0, -1}, ndiv_ssp},
+                            {{-1, -1}, ndiv_fp},
+                            {{-1,  0}, ndiv_ssp},
+                            {{-1, -1}, ndiv_fp},
+                            {{ 0, -1}, ndiv_ssp},
+                            {{-1, -1}, ndiv_fp},
+                            {{-1,  0}, ndiv_ssp},
+                            {{-1, -1}, ndiv_fp},
+                            {{ 0, -1}, ndiv_ssp},
+                            {{-1, -1}, ndiv_fp},
+                            {{-1,  0}, ndiv_ssp},
+                            {{-1, -1}, ndiv_fp},
+                            {{ 0, -1}, ndiv_ssp},
+                            {{-1, -1}, ndiv_fp},
+                            {{-1,  0}, ndiv_ssp},
+                            {{-1, -1}, ndiv_fp},
+                            {{ 0, -1}, ndiv_ssp},
+                            {{-1, -1}, ndiv_fp},
+                            {{-1,  0}, ndiv_ssp},
+                            {{-1, -1}, ndiv_fp},
+                            {{ 0, -1}, ndiv_ssp},
+                            {{-1, -1}, ndiv_fp},
+                            {{-1,  0}, ndiv_ssp},
+                            {{ 0,  0}, ndiv_dsp}
+                        };
+                    }
                 }
                 if(robotSelect == Robot::Quadruped){
-                    if(gaitSelect == Gait::TrotWithQuadSupport)
-                        centroid->param.contactPattern = 
-                            "0 0 0 0 "
-                            "0 - - 0 "
-                            "0 0 0 0 "
-                            "- 0 0 - "
-                            "0 0 0 0 "
-                            "0 - - 0 "
-                            "0 0 0 0 "
-                            "- 0 0 - "
-                            "0 0 0 0 "
-                            "0 - - 0 "
-                            "0 0 0 0 "
-                            "- 0 0 - "
-                            "0 0 0 0 "
-                            "0 - - 0 "
-                            "0 0 0 0 "
-                            "- 0 0 - "
-                            "0 0 0 0 "
-                            "0 - - 0 "
-                            "0 0 0 0 "
-                            "- 0 0 - "
-                            "0 0 0 0 "
-                            "0 - - 0 "
-                            "0 0 0 0 "
-                            "- 0 0 - "
-                            "0 0 0 0";
-                    if(gaitSelect == Gait::TrotWithoutQuadSupport)
-                        centroid->param.contactPattern = 
-                            "0 0 0 0 "
-                            "0 - - 0 "
-                            "- 0 0 - "
-                            "0 - - 0 "
-                            "- 0 0 - "
-                            "0 - - 0 "
-                            "- 0 0 - "
-                            "0 - - 0 "
-                            "- 0 0 - "
-                            "0 - - 0 "
-                            "- 0 0 - "
-                            "0 - - 0 "
-                            "- 0 0 - "
-                            "0 - - 0 "
-                            "- 0 0 - "
-                            "0 - - 0 "
-                            "- 0 0 - "
-                            "0 - - 0 "
-                            "- 0 0 - "
-                            "0 - - 0 "
-                            "- 0 0 - "
-                            "0 - - 0 "
-                            "- 0 0 - "
-                            "0 0 0 0 "
-                            "0 0 0 0";
-                    if(gaitSelect == Gait::Pace)
-                        centroid->param.contactPattern = 
-                            "0 0 0 0 "
-                            "0 - 0 - "
-                            "0 0 0 0 "
-                            "- 0 - 0 "
-                            "0 0 0 0 "
-                            "0 - 0 - "
-                            "0 0 0 0 "
-                            "- 0 - 0 "
-                            "0 0 0 0 "
-                            "0 - 0 - "
-                            "0 0 0 0 "
-                            "- 0 - 0 "
-                            "0 0 0 0 "
-                            "0 - 0 - "
-                            "0 0 0 0 "
-                            "- 0 - 0 "
-                            "0 0 0 0 "
-                            "0 - 0 - "
-                            "0 0 0 0 "
-                            "- 0 - 0 "
-                            "0 0 0 0 "
-                            "0 - 0 - "
-                            "0 0 0 0 "
-                            "- 0 - 0 "
-                            "0 0 0 0";
-                    if(gaitSelect == Gait::Gallop)
-                        centroid->param.contactPattern = 
-                            "0 0 0 0 "
-                            "- - 0 0 "
-                            "- - - 0 "
-                            "- - - - "
-                            "0 - - - "
-                            "- 0 - - "
-                            "- - 0 - "
-                            "- - - 0 "
-                            "- - - - "
-                            "0 - - - "
-                            "- 0 - - "
-                            "- - 0 - "
-                            "- - - 0 "
-                            "- - - - "
-                            "0 - - - "
-                            "- 0 - - "
-                            "- - 0 - "
-                            "- - - 0 "
-                            "- - - - "
-                            "0 - - - "
-                            "- 0 - - "
-                            "- - 0 - "
-                            "- - - 0 "
-                            "0 - - 0 "
-                            "0 0 0 0";
+                    int ndiv_qsp = 1;
+                    int ndiv_dsp = 3;
+                    int ndiv_ssp = 1;
+                    int ndiv_fp  = 1;
+                    if(gaitSelect == Gait::TrotWithQuadSupport){
+                        centroid->phases = {
+                            {{ 0,  0,  0,  0}, ndiv_qsp},
+                            {{ 0, -1, -1,  0}, ndiv_dsp},
+                            {{ 0,  0,  0,  0}, ndiv_qsp},
+                            {{-1,  0,  0, -1}, ndiv_dsp},
+                            {{ 0,  0,  0,  0}, ndiv_qsp},
+                            {{ 0, -1, -1,  0}, ndiv_dsp},
+                            {{ 0,  0,  0,  0}, ndiv_qsp},
+                            {{-1,  0,  0, -1}, ndiv_dsp},
+                            {{ 0,  0,  0,  0}, ndiv_qsp},
+                            {{ 0, -1, -1,  0}, ndiv_dsp},
+                            {{ 0,  0,  0,  0}, ndiv_qsp},
+                            {{-1,  0,  0, -1}, ndiv_dsp},
+                            {{ 0,  0,  0,  0}, ndiv_qsp},
+                            {{ 0, -1, -1,  0}, ndiv_dsp},
+                            {{ 0,  0,  0,  0}, ndiv_qsp},
+                            {{-1,  0,  0, -1}, ndiv_dsp},
+                            {{ 0,  0,  0,  0}, ndiv_qsp},
+                            {{ 0, -1, -1,  0}, ndiv_dsp},
+                            {{ 0,  0,  0,  0}, ndiv_qsp},
+                            {{-1,  0,  0, -1}, ndiv_dsp},
+                            {{ 0,  0,  0,  0}, ndiv_qsp},
+                            {{ 0, -1, -1,  0}, ndiv_dsp},
+                            {{ 0,  0,  0,  0}, ndiv_qsp},
+                            {{-1,  0,  0, -1}, ndiv_dsp},
+                            {{ 0,  0,  0,  0}, ndiv_qsp}
+                        };
+                    }
+                    if(gaitSelect == Gait::TrotWithoutQuadSupport){
+                        centroid->phases = {
+                            {{ 0,  0,  0,  0}, ndiv_qsp},
+                            {{ 0, -1, -1,  0}, ndiv_dsp},
+                            {{-1,  0,  0, -1}, ndiv_dsp},
+                            {{ 0, -1, -1,  0}, ndiv_dsp},
+                            {{-1,  0,  0, -1}, ndiv_dsp},
+                            {{ 0, -1, -1,  0}, ndiv_dsp},
+                            {{-1,  0,  0, -1}, ndiv_dsp},
+                            {{ 0, -1, -1,  0}, ndiv_dsp},
+                            {{-1,  0,  0, -1}, ndiv_dsp},
+                            {{ 0, -1, -1,  0}, ndiv_dsp},
+                            {{-1,  0,  0, -1}, ndiv_dsp},
+                            {{ 0, -1, -1,  0}, ndiv_dsp},
+                            {{-1,  0,  0, -1}, ndiv_dsp},
+                            {{ 0, -1, -1,  0}, ndiv_dsp},
+                            {{-1,  0,  0, -1}, ndiv_dsp},
+                            {{ 0, -1, -1,  0}, ndiv_dsp},
+                            {{-1,  0,  0, -1}, ndiv_dsp},
+                            {{ 0, -1, -1,  0}, ndiv_dsp},
+                            {{-1,  0,  0, -1}, ndiv_dsp},
+                            {{ 0, -1, -1,  0}, ndiv_dsp},
+                            {{-1,  0,  0, -1}, ndiv_dsp},
+                            {{ 0, -1, -1,  0}, ndiv_dsp},
+                            {{-1,  0,  0, -1}, ndiv_dsp},
+                            {{ 0,  0,  0,  0}, ndiv_qsp},
+                            {{ 0,  0,  0,  0}, ndiv_qsp}
+                        };  
+                    }
+                    if(gaitSelect == Gait::Pace){
+                        centroid->phases = {
+                            {{ 0,  0,  0,  0}, ndiv_qsp},
+                            {{ 0, -1,  0, -1}, ndiv_dsp},
+                            {{ 0,  0,  0,  0}, ndiv_qsp},
+                            {{-1,  0, -1,  0}, ndiv_dsp},
+                            {{ 0,  0,  0,  0}, ndiv_qsp},
+                            {{ 0, -1,  0, -1}, ndiv_dsp},
+                            {{ 0,  0,  0,  0}, ndiv_qsp},
+                            {{-1,  0, -1,  0}, ndiv_dsp},
+                            {{ 0,  0,  0,  0}, ndiv_qsp},
+                            {{ 0, -1,  0, -1}, ndiv_dsp},
+                            {{ 0,  0,  0,  0}, ndiv_qsp},
+                            {{-1,  0, -1,  0}, ndiv_dsp},
+                            {{ 0,  0,  0,  0}, ndiv_qsp},
+                            {{ 0, -1,  0, -1}, ndiv_dsp},
+                            {{ 0,  0,  0,  0}, ndiv_qsp},
+                            {{-1,  0, -1,  0}, ndiv_dsp},
+                            {{ 0,  0,  0,  0}, ndiv_qsp},
+                            {{ 0, -1,  0, -1}, ndiv_dsp},
+                            {{ 0,  0,  0,  0}, ndiv_qsp},
+                            {{-1,  0, -1,  0}, ndiv_dsp},
+                            {{ 0,  0,  0,  0}, ndiv_qsp},
+                            {{ 0, -1,  0, -1}, ndiv_dsp},
+                            {{ 0,  0,  0,  0}, ndiv_qsp},
+                            {{-1,  0, -1,  0}, ndiv_dsp},
+                            {{ 0,  0,  0,  0}, ndiv_qsp}
+                        };
+                    }
+                    if(gaitSelect == Gait::Gallop){
+                        centroid->phases = {
+                            {{ 0,  0,  0,  0}, ndiv_qsp},
+                            {{-1, -1,  0,  0}, ndiv_dsp},
+                            {{-1, -1, -1,  0}, ndiv_ssp},
+                            {{-1, -1, -1, -1}, ndiv_fp },
+                            {{ 0, -1, -1, -1}, ndiv_ssp},
+                            {{-1,  0, -1, -1}, ndiv_ssp},
+                            {{-1, -1,  0, -1}, ndiv_ssp},
+                            {{-1, -1, -1,  0}, ndiv_ssp},
+                            {{-1, -1, -1, -1}, ndiv_fp },
+                            {{ 0, -1, -1, -1}, ndiv_ssp},
+                            {{-1,  0, -1, -1}, ndiv_ssp},
+                            {{-1, -1,  0, -1}, ndiv_ssp},
+                            {{-1, -1, -1,  0}, ndiv_ssp},
+                            {{-1, -1, -1, -1}, ndiv_fp },
+                            {{ 0, -1, -1, -1}, ndiv_ssp},
+                            {{-1,  0, -1, -1}, ndiv_ssp},
+                            {{-1, -1,  0, -1}, ndiv_ssp},
+                            {{-1, -1, -1,  0}, ndiv_ssp},
+                            {{-1, -1, -1, -1}, ndiv_fp },
+                            {{ 0, -1, -1, -1}, ndiv_ssp},
+                            {{-1,  0, -1, -1}, ndiv_ssp},
+                            {{-1, -1,  0, -1}, ndiv_ssp},
+                            {{-1, -1, -1,  0}, ndiv_ssp},
+                            {{ 0, -1, -1,  0}, ndiv_dsp},
+                            {{ 0,  0,  0,  0}, ndiv_qsp}
+                        };
+                    }
                 }
             }
             if( sceneSelect == Scene::Gap ||
@@ -639,223 +664,224 @@ public:
                 goalOri  = vec3_t();
             }
 
+            int N = centroid->phases.size()-1;
+            real_t dt = goalTime/N;
             centroid->waypoints.resize(N+1);
             {
                 DiMP::Centroid::Waypoint& wp = centroid->waypoints[0];
                 wp.value  = DiMP::Centroid::Waypoint::Value (0.0, dt, startPos, startOri, vec3_t(), vec3_t());
-                wp.weight = DiMP::Centroid::Waypoint::Weight(100.0, 0.1, 100.0*one, 100.0*one, 100.0*one, 100.0*one);
+                wp.weight = DiMP::Centroid::Waypoint::Weight(10.0, 1.0, 10.0*one, 10.0*one, 10.0*one, 10.0*one);
                 wp.ends.resize(nend);
                 for(int iend = 0; iend < nend; iend++){
 		            wp.ends[iend].value  = DiMP::Centroid::Waypoint::End::Value (startPos + endConf[iend].basePos + endConf[iend].posOrigin, vec3_t(), vec3_t(), vec3_t(), infi);
-                    wp.ends[iend].weight = DiMP::Centroid::Waypoint::End::Weight(100.0*one, 100.0*one, 100.0*one, 100.0*one, 1.0, 10.0*one2, 10*one);
+                    wp.ends[iend].weight = DiMP::Centroid::Waypoint::End::Weight(10.0*one, 10.0*one, 10.0*one, 10.0*one, 1.0, 1.0*one2, 1*one);
                 }
             }
             {
                 DiMP::Centroid::Waypoint& wp = centroid->waypoints[1];
-                wp.weight.time  = 0.1;
-                wp.weight.pos_t = vec3_t(1.0, 1.0, 10.0);
-                wp.weight.pos_r =  10*one;
+                wp.weight.time  = 1.0;
+                wp.weight.pos_t = 1*one;
+                wp.weight.pos_r = 1*one;
                 wp.weight.vel_t = 10*one;
-                //wp.weight.vel_r = 10*one;
                 wp.weight.L     = 10*one;
                 wp.ends.resize(nend);
                 for(int iend = 0; iend < nend; iend++){
-                    wp.ends[iend].weight.pos_t  = vec3_t(0.1, 10.0, 10.0);
-                    wp.ends[iend].weight.pos_r  = vec3_t(10.0, 10.0, 0.1);
-                    wp.ends[iend].weight.vel_t  = 0.1*one;
-                    wp.ends[iend].weight.vel_r  = 0.1*one;
+                    wp.ends[iend].weight.pos_t  = 1*one;
+                    wp.ends[iend].weight.pos_r  = 1*one;
+                    wp.ends[iend].weight.vel_t  = 1.0*one;
+                    wp.ends[iend].weight.vel_r  = 1.0*one;
                 }
             }
             {
                 DiMP::Centroid::Waypoint& wp = centroid->waypoints[N-1];
                 wp.ends.resize(nend);
-                wp.weight.time  = 0.1;
-                wp.weight.pos_t = vec3_t(1.0, 1.0, 10.0);
-                wp.weight.pos_r =  10*one;
+                wp.weight.time  = 1.0;
+                wp.weight.pos_t = 1*one;
+                wp.weight.pos_r = 1*one;
                 wp.weight.vel_t = 10*one;
-                //wp.weight.vel_r = 10*one;
                 wp.weight.L     = 10*one;
                 for(int iend = 0; iend < nend; iend++){
-                    wp.ends[iend].weight.pos_t  = vec3_t(0.1, 10.0, 10.0);
-                    wp.ends[iend].weight.pos_r  = vec3_t(10.0, 10.0, 0.1);
-                    wp.ends[iend].weight.vel_t  = 0.1*one;
-                    wp.ends[iend].weight.vel_r  = 0.1*one;
+                    wp.ends[iend].weight.pos_t  = 1*one;
+                    wp.ends[iend].weight.pos_r  = 1*one;
+                    wp.ends[iend].weight.vel_t  = 1*one;
+                    wp.ends[iend].weight.vel_r  = 1*one;
                 }
             }
             {
                 DiMP::Centroid::Waypoint& wp = centroid->waypoints[N];
                 wp.value  = DiMP::Centroid::Waypoint::Value (dt*N, dt, goalPos, goalOri, vec3_t(), vec3_t());
-                wp.weight = DiMP::Centroid::Waypoint::Weight(0.1, 0.1, 100.0*one, 100.0*one, 100.0*one, 100.0*one);
+                wp.weight = DiMP::Centroid::Waypoint::Weight(1.0, 1.0, 10.0*one, 10.0*one, 10.0*one, 10.0*one);
                 wp.ends.resize(nend);
                 for(int iend = 0; iend < nend; iend++){
 		            wp.ends[iend].value  = DiMP::Centroid::Waypoint::End::Value (goalPos + FromRollPitchYaw(goalOri)*(endConf[iend].basePos + endConf[iend].posOrigin), goalOri, vec3_t(), vec3_t(), infi);
-                    wp.ends[iend].weight = DiMP::Centroid::Waypoint::End::Weight(100.0*one, 100.0*one, 100.0*one, 100.0*one, 1.0, 10.0*one2, 10.0*one);
+                    wp.ends[iend].weight = DiMP::Centroid::Waypoint::End::Weight(10.0*one, 10.0*one, 10.0*one, 10.0*one, 1.0, 1.0*one2, 1.0*one);
                 }
             }
         }
         if(taskSelect == Task::LongJump){
-            N    = 5;
-            goalTime = 0.3 * N;
-            dt = goalTime/((real_t)N);
-		    if(sceneSelect == Scene::Flat){
+            goalTime = 1.5;
+            if(sceneSelect == Scene::Flat){
                 startPos = vec3_t(0.0, 0.0, comHeight);
 		        startOri = vec3_t();
                 if(robotSelect == Robot::Biped){
 		            goalPos  = vec3_t(1.0, 0.0, comHeight);
 		            goalOri  = vec3_t(0.0, 0.0, Rad(0.0));
-            
-                    centroid->param.contactPattern = 
-                        "0 0 "
-                        "0 0 "
-                        "- - "
-                        "0 0 "
-                        "0 0 "
-                        "0 0 ";
+                    int ndiv_dsp = 1;
+                    centroid->phases = {
+                        {{ 0,  0}, ndiv_dsp},
+                        {{ 0,  0}, ndiv_dsp},
+                        {{-1, -1}, 1},
+                        {{ 0,  0}, ndiv_dsp},
+                        {{ 0,  0}, ndiv_dsp},
+                        {{ 0,  0}, 1}
+                    };
                 }
             }
-            centroid->waypoints.resize(N+1);
+            int N = centroid->phases.size()-1;
+            dt = goalTime/((real_t)N);
+		    centroid->waypoints.resize(N+1);
             {
                 DiMP::Centroid::Waypoint& wp = centroid->waypoints[0];
                 wp.value  = DiMP::Centroid::Waypoint::Value (0.0, dt, startPos, startOri, vec3_t(), vec3_t());
-                wp.weight = DiMP::Centroid::Waypoint::Weight(100.0, 0.1, 100.0*one, 100.0*one, 100.0*one, 100.0*one);
+                wp.weight = DiMP::Centroid::Waypoint::Weight(10.0, 1, 10.0*one, 10.0*one, 10.0*one, 10.0*one);
                 wp.ends.resize(nend);
                 for(int iend = 0; iend < nend; iend++){
 		            wp.ends[iend].value  = DiMP::Centroid::Waypoint::End::Value (startPos + endConf[iend].basePos + endConf[iend].posOrigin, vec3_t(), vec3_t(), vec3_t(), infi);
-                    wp.ends[iend].weight = DiMP::Centroid::Waypoint::End::Weight(100.0*one, 100.0*one, 100.0*one, 100.0*one, 1.0, 1.0*one2, 1.0*one);
+                    wp.ends[iend].weight = DiMP::Centroid::Waypoint::End::Weight(10.0*one, 10.0*one, 10.0*one, 10.0*one, 1.0, 1.0*one2, 1.0*one);
                 }
             }
             {
                 DiMP::Centroid::Waypoint& wp = centroid->waypoints[1];
-                wp.weight.time  = 0.1;
-                wp.weight.pos_t =  1*one;
-                wp.weight.pos_r =  1*one;
-                wp.weight.vel_t = 10*one;
-                //wp.weight.vel_r = 10*one;
-                wp.weight.L     = 10*one;
+                wp.weight.time  = 1;
+                wp.weight.pos_t = 1*one;
+                wp.weight.pos_r = 1*one;
+                wp.weight.vel_t = 1*one;
+                wp.weight.L     = 1*one;
                 wp.ends.resize(nend);
                 for(int iend = 0; iend < nend; iend++){
-                    wp.ends[iend].weight.pos_t  = 0.1*one;
-                    wp.ends[iend].weight.vel_t  = 0.1*one;
+                    wp.ends[iend].weight.pos_t  = 1*one;
+                    wp.ends[iend].weight.vel_t  = 1*one;
                 }
             }
             {
                 DiMP::Centroid::Waypoint& wp = centroid->waypoints[N-1];
                 wp.ends.resize(nend);
-                wp.weight.time  = 0.1;
-                wp.weight.pos_t =  1*one;
-                wp.weight.pos_r =  1*one;
-                wp.weight.vel_t = 10*one;
-                //wp.weight.vel_r = 10*one;
-                wp.weight.L     = 10*one;
+                wp.weight.time  = 1;
+                wp.weight.pos_t = 1*one;
+                wp.weight.pos_r = 1*one;
+                wp.weight.vel_t = 1*one;
+                wp.weight.L     = 1*one;
                 for(int iend = 0; iend < nend; iend++){
-                    wp.ends[iend].weight.pos_t  = 0.1*one;
-                    wp.ends[iend].weight.vel_t  = 0.1*one;
+                    wp.ends[iend].weight.pos_t  = 1*one;
+                    wp.ends[iend].weight.vel_t  = 1*one;
                 }
             }
             {
                 DiMP::Centroid::Waypoint& wp = centroid->waypoints[N];
                 wp.value  = DiMP::Centroid::Waypoint::Value (dt*N, dt, goalPos, goalOri, vec3_t(), vec3_t());
-                wp.weight = DiMP::Centroid::Waypoint::Weight(100.0, 0.1, 100.0*one, 100.0*one, 100.0*one, 100.0*one);
+                wp.weight = DiMP::Centroid::Waypoint::Weight(1, 1, 10.0*one, 10.0*one, 10.0*one, 10.0*one);
                 wp.ends.resize(nend);
                 for(int iend = 0; iend < nend; iend++){
 		            wp.ends[iend].value  = DiMP::Centroid::Waypoint::End::Value (goalPos + endConf[iend].basePos + endConf[iend].posOrigin, vec3_t(), vec3_t(), vec3_t(), infi);
-                    wp.ends[iend].weight = DiMP::Centroid::Waypoint::End::Weight(100.0*one, 100.0*one, 100.0*one, 100.0*one, 1.0, 1.0*one2, 1.0*one);
+                    wp.ends[iend].weight = DiMP::Centroid::Waypoint::End::Weight(10.0*one, 10.0*one, 10.0*one, 10.0*one, 1.0, 1.0*one2, 1.0*one);
                 }
             }
         }
         if(taskSelect == Task::Backflip){
-            N    = 6;
-            goalTime = 0.3 * N;
-            dt = goalTime/((real_t)N);
-
 		    if(sceneSelect == Scene::Steps){
                 startPos = vec3_t( 0.25, 0.0, comHeight + 0.3);
                 startOri = vec3_t();
                 goalPos  = vec3_t(-0.25, 0.0, comHeight);
                 goalOri  = vec3_t(0.0, Rad(-360.0), 0.0);
                 if(robotSelect == Robot::Biped){
-                    centroid->param.contactPattern = 
-                        "0 0 "
-                        "0 0 "
-                        "0 0 "
-                        "- - "
-                        "1 1 "
-                        "1 1 "
-                        "1 1 ";
+                    int ndiv_dsp = 1;
+                    centroid->phases = {
+                        {{ 0,  0}, ndiv_dsp},
+                        {{ 0,  0}, ndiv_dsp},
+                        {{ 0,  0}, ndiv_dsp},
+                        {{-1, -1}, 1},
+                        {{ 1,  1}, ndiv_dsp},
+                        {{ 1,  1}, ndiv_dsp},
+                        {{ 1,  1}, ndiv_dsp},
+                        {{ 1,  1}, 1}
+                    };
                 }
             }
             
+            goalTime = 1.8;
             vec3_t jumpPos(0.5, 0.0, comHeight + 0.2);
             vec3_t jumpOri(0.0, Rad(180.0), 0.0);
+            int N = centroid->phases.size()-1;
+            dt = goalTime/((real_t)N);
             centroid->waypoints.resize(N+1);
             {
                 DiMP::Centroid::Waypoint& wp = centroid->waypoints[0];
                 wp.value  = DiMP::Centroid::Waypoint::Value (0.0, dt, startPos, startOri, vec3_t(), vec3_t());
-                wp.weight = DiMP::Centroid::Waypoint::Weight(100.0, 0.01, 100.0*one, 100.0*one, 100.0*one, 100.0*one);
+                wp.weight = DiMP::Centroid::Waypoint::Weight(1.0, 1, 10.0*one, 10.0*one, 10.0*one, 10.0*one);
                 wp.ends.resize(nend);
                 for(int iend = 0; iend < nend; iend++){
 		            wp.ends[iend].value  = DiMP::Centroid::Waypoint::End::Value (startPos + endConf[iend].basePos + endConf[iend].posOrigin, vec3_t(), vec3_t(), vec3_t(), infi);
-                    wp.ends[iend].weight = DiMP::Centroid::Waypoint::End::Weight(100.0*one, 100.0*one, 100.0*one, 100.0*one, 1.0, 1.0*one2, 1.0*one);
+                    wp.ends[iend].weight = DiMP::Centroid::Waypoint::End::Weight(10.0*one, 10.0*one, 10.0*one, 10.0*one, 1.0, 1.0*one2, 1.0*one);
                 }
             }
             {
                 DiMP::Centroid::Waypoint& wp = centroid->waypoints[1];
                 wp.value  = DiMP::Centroid::Waypoint::Value (inf, inf, startPos, startOri, vec3_t(inf, inf, inf), vec3_t());
-                wp.weight = DiMP::Centroid::Waypoint::Weight(0.01, 0.01, 1.0*one, vec3_t(100.0, 0.1, 100.0), 1.0*one, vec3_t(100.0, 1.0, 100.0));
+                wp.weight = DiMP::Centroid::Waypoint::Weight(1, 1, 1.0*one, vec3_t(1, 1, 1), 1.0*one, vec3_t(1, 1, 1));
                 wp.ends.resize(nend);
                 for(int iend = 0; iend < nend; iend++){
 		            wp.ends[iend].value  = DiMP::Centroid::Waypoint::End::Value (startPos + endConf[iend].basePos + endConf[iend].posOrigin, vec3_t(), vec3_t(), vec3_t(), infi);
-                    wp.ends[iend].weight = DiMP::Centroid::Waypoint::End::Weight(1*one,1*one,1*one,1*one, 0.1, 0.1*one2, 1*one);
+                    wp.ends[iend].weight = DiMP::Centroid::Waypoint::End::Weight(1*one,1*one,1*one,1*one, 1.0, 1*one2, 1*one);
                 }
             }
             {
                 DiMP::Centroid::Waypoint& wp = centroid->waypoints[2];
                 wp.value  = DiMP::Centroid::Waypoint::Value (inf, inf, startPos, startOri, vec3_t(inf, inf, inf), vec3_t());
-                wp.weight = DiMP::Centroid::Waypoint::Weight(inf, inf, 1.0*one, vec3_t(100.0, 0.1, 100.0), 1.0*one, vec3_t(100.0, 1.0, 100.0));
+                wp.weight = DiMP::Centroid::Waypoint::Weight(inf, inf, 1.0*one, vec3_t(1, 1, 1), 1.0*one, vec3_t(1, 1, 1));
                 wp.ends.resize(nend);
                 for(int iend = 0; iend < nend; iend++){
 		            wp.ends[iend].value  = DiMP::Centroid::Waypoint::End::Value (startPos + endConf[iend].basePos + endConf[iend].posOrigin, vec3_t(), vec3_t(), vec3_t(), infi);
-                    wp.ends[iend].weight = DiMP::Centroid::Waypoint::End::Weight(1*one,1*one,1*one,1*one, 0.1, 0.1*one2, 1*one);
+                    wp.ends[iend].weight = DiMP::Centroid::Waypoint::End::Weight(1*one,1*one,1*one,1*one, 1.0, 1*one2, 1*one);
                 }
             }
             {
                 DiMP::Centroid::Waypoint& wp = centroid->waypoints[3];
                 wp.value  = DiMP::Centroid::Waypoint::Value (inf, inf, startPos, startOri - vec3_t(0.0, Rad(45.0), 0.0), vec3_t(0.0, 0.0, 0.0), vec3_t(0.0, -10.0, 0.0));
-                wp.weight = DiMP::Centroid::Waypoint::Weight(inf, inf, 1.0*one, vec3_t(100.0, 1.0, 100.0), 1.0*one, vec3_t(100.0, 1.0, 100.0));
+                wp.weight = DiMP::Centroid::Waypoint::Weight(inf, inf, 1.0*one, vec3_t(1, 1, 1), 1.0*one, vec3_t(1, 1, 1));
                 wp.ends.resize(nend);
                 for(int iend = 0; iend < nend; iend++){
 		            wp.ends[iend].value  = DiMP::Centroid::Waypoint::End::Value (startPos + endConf[iend].basePos + endConf[iend].posOrigin, vec3_t(), vec3_t(), vec3_t(), infi);
-                    wp.ends[iend].weight = DiMP::Centroid::Waypoint::End::Weight(1*one,1*one,1*one,1*one, 0.1, 0.1*one2, 1*one);
+                    wp.ends[iend].weight = DiMP::Centroid::Waypoint::End::Weight(1*one,1*one,1*one,1*one, 1.0, 0.1*one2, 1*one);
                 }
             }
             {
                 DiMP::Centroid::Waypoint& wp = centroid->waypoints[4];
                 wp.value  = DiMP::Centroid::Waypoint::Value (inf, inf, goalPos, goalOri + vec3_t(0.0, Rad(45.0), 0.0), vec3_t(0.0, 0.0, 0.0), vec3_t(0.0, -10.0, 0.0));
-                wp.weight = DiMP::Centroid::Waypoint::Weight(inf, inf, 1.0*one, vec3_t(100.0, 1.0, 100.0), 1.0*one, vec3_t(100.0, 1.0, 100.0));
+                wp.weight = DiMP::Centroid::Waypoint::Weight(inf, inf, 1.0*one, vec3_t(1, 1, 1), 1.0*one, vec3_t(1, 1, 1));
                 wp.ends.resize(nend);
                 for(int iend = 0; iend < nend; iend++){
 		            wp.ends[iend].value  = DiMP::Centroid::Waypoint::End::Value (goalPos + endConf[iend].basePos + endConf[iend].posOrigin, vec3_t(), vec3_t(), vec3_t(), infi);
-                    wp.ends[iend].weight = DiMP::Centroid::Waypoint::End::Weight(1*one,1*one,1*one,1*one, 0.1, 0.1*one2, 1*one);
+                    wp.ends[iend].weight = DiMP::Centroid::Waypoint::End::Weight(1*one,1*one,1*one,1*one, 1.0, 1*one2, 1*one);
                 }
             }
             {
                 DiMP::Centroid::Waypoint& wp = centroid->waypoints[5];
                 wp.ends.resize(nend);
                 wp.value  = DiMP::Centroid::Waypoint::Value (inf, inf, goalPos, goalOri, vec3_t(inf, inf, inf), vec3_t());
-                wp.weight = DiMP::Centroid::Waypoint::Weight(inf, inf, 1.0*one, vec3_t(100.0, 0.1, 100.0), 1.0*one, vec3_t(100.0, 1.0, 100.0));
+                wp.weight = DiMP::Centroid::Waypoint::Weight(inf, inf, 1.0*one, vec3_t(1, 1, 1), 1.0*one, vec3_t(1, 1, 1));
                 for(int iend = 0; iend < nend; iend++){
 		            wp.ends[iend].value  = DiMP::Centroid::Waypoint::End::Value (goalPos + endConf[iend].basePos + endConf[iend].posOrigin, vec3_t(), vec3_t(), vec3_t(), infi);
-                    wp.ends[iend].weight = DiMP::Centroid::Waypoint::End::Weight(1*one,1*one,1*one,1*one, 0.1, 0.1*one2, 1*one);
+                    wp.ends[iend].weight = DiMP::Centroid::Waypoint::End::Weight(1*one,1*one,1*one,1*one, 1.0, 1*one2, 1*one);
                 }
             }
             {
                 DiMP::Centroid::Waypoint& wp = centroid->waypoints[6];
                 wp.value  = DiMP::Centroid::Waypoint::Value (dt*N, dt, goalPos, goalOri, vec3_t(), vec3_t());
-                wp.weight = DiMP::Centroid::Waypoint::Weight(0.01, 0.01, 100.0*one, 100.0*one, 100.0*one, 100.0*one);
+                wp.weight = DiMP::Centroid::Waypoint::Weight(1, 1, 10.0*one, 10.0*one, 10.0*one, 10.0*one);
                 wp.ends.resize(nend);
                 for(int iend = 0; iend < nend; iend++){
 		            wp.ends[iend].value  = DiMP::Centroid::Waypoint::End::Value (goalPos + endConf[iend].basePos + endConf[iend].posOrigin, vec3_t(), vec3_t(), vec3_t(), infi);
-                    wp.ends[iend].weight = DiMP::Centroid::Waypoint::End::Weight(100.0*one, 100.0*one, 100.0*one, 100.0*one, 1.0, 1.0*one2, 1.0*one);
+                    wp.ends[iend].weight = DiMP::Centroid::Waypoint::End::Weight(10.0*one, 10.0*one, 10.0*one, 10.0*one, 1.0, 1.0*one2, 1.0*one);
                 }
             }
         }
@@ -943,9 +969,10 @@ public:
             centroid->ends[iend].cmpOffset  = endConf[iend].cmpOffset;
             centroid->ends[iend].lockOri    = false;
             centroid->ends[iend].lockCmp    = false;
-            centroid->ends[iend].lockMoment = true;
+            centroid->ends[iend].lockMoment = false;
 		}
                 
+        int N = centroid->NumSteps();
 		for(int k = 0; k <= N; k++)
 			new DiMP::Tick(graph, k*dt, "");
 		
@@ -955,6 +982,7 @@ public:
 
         centroid->Setup();
         centroid->Reset(true, true, true);
+        centroid->Prepare();
         
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidPosT      ), false);
 		//graph->solver->Enable(ID(DiMP::ConTag::CentroidPosR      ), false);
@@ -970,10 +998,11 @@ public:
 		graph->solver->Enable(ID(DiMP::ConTag::CentroidEndMomentRange), false);
         
         graph->solver->SetCorrection(ID(), 0.5);
-		graph->solver->param.regularization = 1;
-		graph->solver->param.hastyStepSize  = false;
+		graph->solver->param.regularization = 10;
+		graph->solver->param.stateRegularization = 10;
+        graph->solver->param.hastyStepSize  = false;
 		graph->solver->param.cutoffStepSize = 0.1;
-		graph->solver->param.minStepSize    = 1;
+		graph->solver->param.minStepSize    = 1.0;
 		graph->solver->param.maxStepSize    = 1.0;
         graph->solver->param.methodMajor    = Solver::Method::Major::GaussNewton;
         graph->solver->param.methodMajor    = Solver::Method::Major::DDP;
@@ -1063,14 +1092,12 @@ public:
                 "end%d_vel_t_x, end%d_vel_t_y, end%d_vel_t_z, "
                 "end%d_pos_r_x, end%d_pos_r_y, end%d_pos_r_z, "
                 "end%d_vel_r_x, end%d_vel_r_y, end%d_vel_r_z, "
-                "end%d_stiff, "
-                "end%d_cmp_x, end%d_cmp_y, end%d_cmp_z, "
-                "end%d_mom_x, end%d_mom_y, end%d_mom_z, ",
+                "end%d_force_t_x, end%d_force_t_y, end%d_force_t_z, "
+                "end%d_force_r_x, end%d_force_r_y, end%d_force_r_z, ",
                 i, i, i,
                 i, i, i,
                 i, i, i,
                 i, i, i,
-                i,
                 i, i, i,
                 i, i, i
                 );
@@ -1084,7 +1111,8 @@ public:
         fprintf(file, "\n");
 
         for(int k = 0; k < graph->ticks.size(); k++){
-            auto key = (DiMP::CentroidKey*)centroid->traj.GetKeypoint(graph->ticks[k]);
+            auto  key = (DiMP::CentroidKey*)centroid->traj.GetKeypoint(graph->ticks[k]);
+            auto& d   = key->data;
         
             fprintf(file,
                 "%d, "
@@ -1092,71 +1120,37 @@ public:
                 "%f, %f, %f, "
                 "%f, %f, %f, ",
                 k, 
-                key->var_time->val, (key->next ? key->var_duration->val : 0.0),
-                key->var_pos_t->val.x, key->var_pos_t->val.y, key->var_pos_t->val.z, 
-                key->var_vel_t->val.x, key->var_vel_t->val.y, key->var_vel_t->val.z
+                d.time, d.duration,
+                d.pos_t.x, d.pos_t.y, d.pos_t.z, 
+                d.vel_t.x, d.vel_t.y, d.vel_t.z
             );
-            if(centroid->param.enableRotation){
-                fprintf(file,
-                    "%f, %f, %f, "
-                    "%f, %f, %f, ",
-                    key->var_pos_r->val.x, key->var_pos_r->val.y, key->var_pos_r->val.z, 
-                    //key->var_vel_r->val.x, key->var_vel_r->val.y, key->var_vel_r->val.z
-                    key->var_L->val.x, key->var_L->val.y, key->var_L->val.z
-                );
-            }
-            else{
-                fprintf(file,
-                    "%f, %f, %f, "
-                    "%f, %f, %f, ",
-                    0.0, 0.0, 0.0,
-                    0.0, 0.0, 0.0
-                );
-            }
+            fprintf(file,
+                "%f, %f, %f, "
+                "%f, %f, %f, ",
+                d.pos_r.x, d.pos_r.y, d.pos_r.z, 
+                d.L.x, d.L.y, d.L.z
+            );
             for(int i = 0; i < key->ends.size(); i++){
-                DiMP::CentroidKey::End& end = key->ends[i];
+                auto& dend = d.ends[i];
+
                 fprintf(file,
                     "%f, %f, %f, "
                     "%f, %f, %f, ",
-                    end.var_pos_t->val.x, end.var_pos_t->val.y, end.var_pos_t->val.z, 
-                    end.var_vel_t->val.x, end.var_vel_t->val.y, end.var_vel_t->val.z
+                    dend.pos_t.x, dend.pos_t.y, dend.pos_t.z, 
+                    dend.vel_t.x, dend.vel_t.y, dend.vel_t.z
                 );
-                if(centroid->param.enableRotation){
-                    fprintf(file,
-                        "%f, %f, %f, "
-                        "%f, %f, %f, ",
-                        end.var_pos_r->val.x, end.var_pos_r->val.y, end.var_pos_r->val.z, 
-                        end.var_vel_r->val.x, end.var_vel_r->val.y, end.var_vel_r->val.z
-                    );
-                }
-                else{
-                    fprintf(file,
-                        "%f, %f, %f, "
-                        "%f, %f, %f, ",
-                        0.0, 0.0, 0.0,
-                        0.0, 0.0, 0.0
-                    );
-                }
                 fprintf(file,
-                    "%f, ",
-                    end.var_stiff->val);
-
-                if(centroid->param.enableRotation){
-                    fprintf(file,
-                        "%f, %f, %f, "
-                        "%f, %f, %f, ",
-                        end.var_cmp[0]->val, end.var_cmp[1]->val, 0.0, 
-                        end.var_moment->val.x, end.var_moment->val.y, end.var_moment->val.z
-                    );
-                }
-                else{
-                    fprintf(file,
-                        "%f, %f, %f, "
-                        "%f, %f, %f, ",
-                        0.0, 0.0, 0.0,
-                        0.0, 0.0, 0.0
-                    );
-                }
+                    "%f, %f, %f, "
+                    "%f, %f, %f, ",
+                    dend.pos_r.x, dend.pos_r.y, dend.pos_r.z, 
+                    dend.vel_r.x, dend.vel_r.y, dend.vel_r.z
+                );
+                fprintf(file,
+                    "%f, %f, %f, "
+                    "%f, %f, %f, ",
+                    dend.force_t.x, dend.force_t.y, dend.force_t.z, 
+                    dend.force_r.x, dend.force_r.y, dend.force_r.z
+                );
             }
             for(int i = 0; i < key->ends.size(); i++){
                 fprintf(file,
@@ -1180,7 +1174,8 @@ public:
             "cen_pos_t_x, cen_pos_t_y, cen_pos_t_z, "
             "cen_pos_r_w, cen_pos_r_x, cen_pos_r_y, cen_pos_r_z, "
             "cen_vel_t_x, cen_vel_t_y, cen_vel_t_z, "
-            "cen_vel_r_x, cen_vel_r_y, cen_vel_r_z, "
+            //"cen_vel_r_x, cen_vel_r_y, cen_vel_r_z, "
+            "cen_L_x, cen_L_y, cen_L_z, "
         );
         for(int i = 0; i < centroid->ends.size(); i++){
             fprintf(file,
@@ -1198,8 +1193,6 @@ public:
                 i, i, i
                 );
         }
-        // additional info
-        fprintf(file, "cen_mom_x, cen_mom_y, cen_mom_z, ");
         fprintf(file, "\n");
 
 
@@ -1216,16 +1209,18 @@ public:
                 "%f, %f, %f, "
                 "%f, %f, %f, %f, "
                 "%f, %f, %f, "
+                //"%f, %f, %f, "
                 "%f, %f, %f, ",
                 t, 
                 d.pos_t.x, d.pos_t.y, d.pos_t.z, 
                 d.pos_r.w, d.pos_r.x, d.pos_r.y, d.pos_r.z,
                 d.vel_t.x, d.vel_t.y, d.vel_t.z, 
-                d.vel_r.x, d.vel_r.y, d.vel_r.z
+                //d.vel_r.x, d.vel_r.y, d.vel_r.z,
+                d.L.x, d.L.y, d.L.z
             );
-            vec3_t mom;
+            //vec3_t mom;
             for(int i = 0; i < key->ends.size(); i++){
-                mom += (d.ends[i].pos_t - d.pos_t) % d.ends[i].force_t + d.ends[i].force_r;
+                //mom += (d.ends[i].pos_t - d.pos_t) % d.ends[i].force_t + d.ends[i].force_r;
             
                 fprintf(file,
                     "%f, %f, %f, "
@@ -1242,7 +1237,7 @@ public:
                     d.ends[i].force_r.x, d.ends[i].force_r.y, d.ends[i].force_r.z
                 );    
             }
-            fprintf(file, "%f, %f, %f, ", mom.x, mom.y, mom.z);
+            //fprintf(file, "%f, %f, %f, ", mom.x, mom.y, mom.z);
             fprintf(file, "\n");
         }
 

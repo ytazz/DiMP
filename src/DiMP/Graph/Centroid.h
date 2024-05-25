@@ -32,6 +32,7 @@ struct CentroidData{
 		vec3_t  force_r;
 		real_t  stiff;
 		vec2_t  cmp;
+		vec3_t  force;
 		vec3_t  moment;
 		int     iface;         //< -1: no contact, otherwise index to contact face
 
@@ -46,6 +47,7 @@ struct CentroidData{
 		real_t  stiff_weight;
 		vec2_t  cmp_weight;
 		vec3_t  moment_weight;
+		vec3_t  force_weight;
 		
 		End();
 	};
@@ -63,7 +65,6 @@ struct CentroidData{
 	vec3_t pos_t_weight;
 	vec3_t pos_r_weight;
 	vec3_t vel_t_weight;
-	//vec3_t vel_r_weight;
 	vec3_t L_weight;
 	real_t time_weight;
 	real_t duration_weight;
@@ -75,7 +76,8 @@ struct CentroidData{
 	// auxiliary data
 	real_t lbar;
 	vec3_t pbar, rbar, etabar;
-	
+	vec3_t fsum, etasum;
+
 	vec3_t         p_rhs;
 	vector<vec3_t> v_rhs;	
 	vector<vec3_t> w_rhs;
@@ -100,10 +102,12 @@ public:
 
 	CentroidData  data, data_des;
 
+	int   iphase;   //< phase index
+	int   idiv;     //< subdivision index
+
 	V3Var*  var_pos_t;    ///< position        
 	QVar*   var_pos_r;    ///< orientation
 	V3Var*  var_vel_t;    ///< velocity        
-	//V3Var*  var_vel_r;    ///< angular velocity
 	V3Var*  var_L;
 	SVar*   var_time;
 	SVar*   var_duration;  //< duration of this contact phase
@@ -111,14 +115,12 @@ public:
 	CentroidPosConT*           con_pos_t;
 	CentroidPosConR*           con_pos_r;
 	CentroidVelConT*           con_vel_t;
-	//CentroidVelConR*           con_vel_r;
 	CentroidLCon*              con_L;
 	CentroidTimeCon*           con_time ;
 	CentroidDurationRangeCon*  con_duration_range[2];
     FixConV3*                  con_des_pos_t;
     FixConQ*                   con_des_pos_r;
     FixConV3*                  con_des_vel_t;
-	//FixConV3*                  con_des_vel_r;
 	FixConV3*                  con_des_L;
 	FixConS*                   con_des_time;
 	FixConS*                   con_des_duration;
@@ -131,8 +133,9 @@ public:
 		V3Var* var_vel_t;     //< end effector velocity (in global coordinate)
 		V3Var* var_vel_r;
 		SVar*  var_stiff;     //< contact stiffness
-		SVar*  var_cmp[2];
-		V3Var* var_moment;
+		SVar*  var_cmp[2];    //< contact cmp
+		V3Var* var_moment;    //< contact moment
+		V3Var* var_force;     //< contact force
 
 		CentroidEndPosConT*             con_pos_t;
 		CentroidEndPosConR*             con_pos_r;
@@ -146,6 +149,7 @@ public:
 		FixConV3*                       con_des_acc_r;
 		FixConS*                        con_des_stiff;
 		FixConS*                        con_des_cmp[2];
+		FixConV3*                       con_des_force;
 		FixConV3*                       con_des_moment;
 
 		CentroidEndFrictionCon*         con_friction;
@@ -156,16 +160,16 @@ public:
 
 	vector<End>    ends;
 
-	mat3_t  Iinv_m;
 	vec3_t  g;
+	real_t  m;
 	real_t  dtau;
-	vector<real_t> t, C, S;
+	vector<real_t> t, t2, t3, C, S;
 	vector<real_t> C_tau, S_tau, C_lbar, S_lbar;
 	vector<real_t> li, li2;
-	vector<vec3_t> pi, ri, etai;
+	vector<vec3_t> pi, ri, fi, etai;
 	vector<mat3_t> pi_cross, ri_cross;
 	
-	vec3_t psum, rsum, msum;
+	vec3_t psum, rsum;
 	real_t l2sum;
 	mat3_t pbar_cross, rbar_cross;
 	
@@ -187,39 +191,30 @@ public:
 	real_t p_p, p_v, p_pbar, p_rbar;
 	vec3_t p_lbar, p_tau;
 	vector<vec3_t> p_li;              //< nend
-	vector<real_t> p_pi, p_vi, p_ri;  //< nend
+	vector<real_t> p_pi, p_vi, p_ri, p_fi;  //< nend
 
 	vec3_t v_C, v_S;
 	vector<real_t> v_p, v_v, v_pbar, v_rbar;     //< ndiv array
 	vector<vec3_t> v_lbar, v_tau;                //< ndiv array
 	vector< vector<vec3_t> >  v_li;              //< nend x ndiv array
-	vector< vector<real_t> >  v_pi, v_vi, v_ri;  //< nend x ndiv array
+	vector< vector<real_t> >  v_pi, v_vi, v_ri, v_fi;  //< nend x ndiv array
 
-	//real_t w_w;
-	//mat3_t w_v1;
-	//vector<mat3_t> w_p, w_v;                             //< ndiv
-	//vector<vec3_t> w_tau;                                //< ndiv
-	//vector<mat3_t> w_rbar, w_etabar;                     //< ndiv
-	//vector< vector<mat3_t> >  w_pi, w_vi, w_ri, w_etai;  //< nend x ndiv
-	//vector< vector<vec3_t> >  w_li;                      //< nend x ndiv
 	real_t L_L;
 	mat3_t L_v1;
 	vector<mat3_t> L_p, L_v;                             //< ndiv
 	vector<vec3_t> L_tau;                                //< ndiv
 	vector<mat3_t> L_rbar;                               //< ndiv
 	vector<real_t> L_etabar;                             //< ndiv
-	vector< vector<mat3_t> >  L_pi, L_vi, L_ri;          //< nend x ndiv
+	vector< vector<mat3_t> >  L_pi, L_vi, L_ri, L_fi;    //< nend x ndiv
 	vector< vector<real_t> >  L_etai;
 	vector< vector<vec3_t> >  L_li;                      //< nend x ndiv
 
-	//mat3_t q_q, q_w;
 	mat3_t q_q, q_L;
 	mat3_t q_p, q_v;
 	vec3_t q_tau;
-	//vector<mat3_t> q_w1;                       //< ndiv
-	vector<mat3_t> q_L1;                       //< ndiv
-	vector<mat3_t> q_pi, q_vi, q_ri, q_etai;   //< nend
-	vector<vec3_t> q_li;                       //< nend
+	vector<mat3_t> q_L1;                             //< ndiv
+	vector<mat3_t> q_pi, q_vi, q_ri, q_etai, q_fi;   //< nend
+	vector<vec3_t> q_li;                             //< nend
 	
 public:
 	void Prepare2();
@@ -242,6 +237,12 @@ public:
 			Global,
 		};
 	};
+	struct EndWrenchParametrization{
+		enum{
+			Direct,
+			Stiffness,
+		};
+	};
 	struct Param {
 		real_t	m;  //< mass
 		mat3_t  I;  //< inertia
@@ -262,6 +263,7 @@ public:
 		bool    enableRotation;    ///< enable rotational dynamics
 		int     rotationResolution;
 		int     endInterpolation;
+		int     endWrenchParametrization;
 
 		real_t  complWeight;
 
@@ -270,7 +272,8 @@ public:
 		real_t  contactFaceSwitchCost;
 		vector<real_t>  numOfContactsCost;
 
-		string  contactPattern;
+		//string  contactPattern;
+		//string  subdividePattern;
 		
 		Param();
 	};
@@ -304,6 +307,11 @@ public:
         Point*  point;
 
         End();
+	};
+
+	struct Phase{
+		vector<int>  iface;   ///< contact face index of each end
+		int  ndiv;            ///< number of subdivisions
 	};
 
 	struct Waypoint {
@@ -382,6 +390,7 @@ public:
 	Scale               scale;
     vector<End>         ends;
     vector<Face>        faces;
+	vector<Phase>       phases;
 	vector<Waypoint>    waypoints;
     
 	CentroidData         snapshot;
@@ -393,6 +402,7 @@ public:
 
 	CentroidCallback*   callback;
 
+	int  NumSteps();
 	void Reset(bool reset_first, bool reset_middle, bool reset_last);
 	void Shift();
 	void Setup();
@@ -587,8 +597,9 @@ struct CentroidEndFrictionCon : Constraint{
 struct CentroidEndMomentCon : Constraint{
 	CentroidKey*  obj;
 	int           iend;
-    int           idx;
-	real_t        dir;
+    //int           idx;
+	//real_t        dir;
+	vec3_t        dir;
 	vec3_t        bound;
 	vec3_t        f, eta;
 	mat3_t        Rc;
@@ -598,7 +609,7 @@ struct CentroidEndMomentCon : Constraint{
 	virtual void  CalcCoef();
 	virtual void  CalcDeviation();
 
-	CentroidEndMomentCon(Solver* solver, string _name, CentroidKey* _obj, int _iend, int _idx, int _dir, real_t _scale);
+	CentroidEndMomentCon(Solver* solver, string _name, CentroidKey* _obj, int _iend, vec3_t _dir, real_t _scale);
 };
 
 }
