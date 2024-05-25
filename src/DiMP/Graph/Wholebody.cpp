@@ -1987,7 +1987,7 @@ void WholebodyCentroidPosConR::Prepare(){
 	Ld    = obj[0]->data.centroid.Ld;
 	Id    = obj[0]->data.centroid.Id;
 	Iinv  = obj[0]->data.centroid.Iinv;
-	u0    = obj[0]->centroid.var_acc_r->val + Iinv*(obj[0]->msum - (obj[0]->wb->param.useLd ? (Id*w0 + w0 % (obj[0]->q0*L) + obj[0]->q0*Ld) : vec3_t()));
+	u0    = obj[0]->centroid.var_acc_r->val + Iinv*(obj[0]->msum - (obj[0]->wb->param.useLd ? vec3_t(Id*w0 + w0 % (obj[0]->q0*L) + obj[0]->q0*Ld) : vec3_t()));
 	omega = h*w0 + (0.5*h2)*u0;
 	q_omega = quat_t::Rot(omega);
 	q_omega.ToMatrix(R_omega);
@@ -2005,7 +2005,7 @@ void WholebodyCentroidVelConR::Prepare(){
 	Id   = obj[0]->data.centroid.Id;
 	Iinv = obj[0]->data.centroid.Iinv;
 	h    = obj[0]->hnext;
-	u0   = obj[0]->centroid.var_acc_r->val + Iinv*(obj[0]->msum - (obj[0]->wb->param.useLd ? (Id*w0 + w0 % (obj[0]->q0*L) + obj[0]->q0*Ld) : vec3_t()));
+	u0   = obj[0]->centroid.var_acc_r->val + Iinv*(obj[0]->msum - (obj[0]->wb->param.useLd ? vec3_t(Id*w0 + w0 % (obj[0]->q0*L) + obj[0]->q0*Ld) : vec3_t()));
 	
 	w_rhs = w0 + h*u0;
 }

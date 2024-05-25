@@ -44,7 +44,7 @@ else()
 endif()
 
 if(UNIX)
-	target_link_libraries(Centroid
+	target_link_libraries(Centroid2
 	    PRIVATE
 	    ${CMAKE_DL_LIBS}
 	    -lpng
