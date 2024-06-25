@@ -559,8 +559,21 @@ void WholebodyKey::Finish(){
 	for(int i = 0; i < nend; i++){
 		End& end = ends[i];
 		WholebodyData::End& dend_des = data_des.ends[i];
+		WholebodyData::End& dend     = data    .ends[i];
 
 		// enforce contact force constraint
+		vec3_t flocal = dend.pos_r.Conjugated()*end.var_force_t->val;
+        vec3_t mlocal = dend.pos_r.Conjugated()*end.var_force_r->val;
+		real_t fz = flocal.z;
+        flocal.z = std::max(0.0, flocal.z);
+        flocal.x = std::min(std::max(-dend_des.mu*fz, flocal.x),  dend_des.mu*fz);
+        flocal.y = std::min(std::max(-dend_des.mu*fz, flocal.y),  dend_des.mu*fz);
+        mlocal.x = std::min(std::max( dend_des.cop_min.y*fz, mlocal.x),  dend_des.cop_max.y*fz);
+        mlocal.y = std::min(std::max(-dend_des.cop_max.x*fz, mlocal.y), -dend_des.cop_min.x*fz);
+        mlocal.z = std::min(std::max( dend_des.cop_min.z*fz, mlocal.z),  dend_des.cop_max.z*fz);
+        end.var_force_t->val = dend.pos_r*flocal;
+        end.var_force_r->val = dend.pos_r*mlocal;
+
         /*
 		end.var_force_t->val.z = std::max(0.0, end.var_force_t->val.z);
         end.var_force_t->val.x = std::min(std::max(-dend_des.mu*end.var_force_t->val.z, end.var_force_t->val.x), dend_des.mu*end.var_force_t->val.z);

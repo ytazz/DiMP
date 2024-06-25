@@ -803,10 +803,10 @@ void CentroidKey::Finish(){
 		End& end = ends[i];
 		if(cen->param.endWrenchParametrization == Centroid::EndWrenchParametrization::Stiffness){
 			end.var_stiff->val = std::min(std::max(0.0, end.var_stiff->val), 100.0);
-			DSTR << "iface: " << data.ends[i].iface << " stiff: " << end.var_stiff->val << " cmp: " << end.var_cmp[0]->val << " " << end.var_cmp[1]->val << endl;
+			//DSTR << "iface: " << data.ends[i].iface << " stiff: " << end.var_stiff->val << " cmp: " << end.var_cmp[0]->val << " " << end.var_cmp[1]->val << endl;
 		}
 		else{
-			DSTR << "iface: " << data.ends[i].iface << " force: " << end.var_force->val << " moment: " << end.var_moment->val << endl;
+			//DSTR << "iface: " << data.ends[i].iface << " force: " << end.var_force->val << " moment: " << end.var_moment->val << endl;
 		}
 	}
 	
@@ -1478,8 +1478,9 @@ void Centroid::Setup(){
 			}
 
 			// copy inertia info
-			key->data.I    = key->data_des.I;
-			key->data.Iinv = key->data_des.Iinv;
+			key->data.I      = key->data_des.I;
+			key->data.Iinv   = key->data_des.Iinv;
+			key->data.Llocal = key->data_des.Llocal;
 		}
 	}
 
@@ -1746,8 +1747,12 @@ void Centroid::CalcState(real_t t, const CentroidData& d0, const CentroidData& d
 			t0 + (idiv+1)*dtau, d0.q_rhs[idiv+1], d0.w_rhs[idiv+1],
 			Interpolate::SlerpDiff);
 		
-		d.vel_r = d0.Iinv[idiv]*(d.L - d0.Llocal[idiv]);
+		d.vel_r  = d0.Iinv[idiv]*(d.L - d0.Llocal[idiv]);
 
+		if(d.Llocal.empty())
+			d.Llocal.push_back(vec3_t());
+		d.Llocal[0] = d0.Llocal[idiv];
+		
 		for(int i = 0; i < nend; i++){
 			if(d0.ends[i].iface == -1){			
 				const real_t _2pi = 2.0*m_pi;
