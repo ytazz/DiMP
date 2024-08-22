@@ -34,13 +34,16 @@ struct CentroidData{
 		vec2_t  cmp;
 		vec3_t  force;
 		vec3_t  moment;
+		vec3_t  pos_tc;        //< contact point (end-local)
 		int     iface;         //< -1: no contact, otherwise index to contact face
+		int     state;         //< contact state
 
 		real_t  t_lift, t_land;
 		vec3_t  pos_t_lift, pos_t_land;
 		quat_t  pos_r_lift, pos_r_land;
 		vec3_t  pos_t_lift_local, pos_t_land_local;
 		quat_t  pos_r_lift_local, pos_r_land_local;
+		vec3_t  vel_t_ave, vel_r_ave;
 		
 		vec3_t  pos_t_weight, pos_r_weight;
 		vec3_t  vel_t_weight, vel_r_weight;
@@ -152,10 +155,9 @@ public:
 		FixConV3*                       con_des_force;
 		FixConV3*                       con_des_moment;
 
-		CentroidEndFrictionCon*         con_friction;
-		CentroidEndMomentCon*           con_moment[3][2];
-		
-		vector<CentroidEndContactCon*>  con_contact;
+		CentroidEndFrictionCon*         con_friction[2][2];
+		CentroidEndMomentCon*           con_moment[3][2];		
+		CentroidEndContactCon*          con_contact;
 	};
 
 	vector<End>    ends;
@@ -231,10 +233,19 @@ public:
 
 class Centroid : public TrajectoryNode{
 public:
+	struct ContactState{
+		enum{
+			Free,
+			Surface,
+			Line,
+			Point,
+		};
+	};
 	struct EndInterpolation{
 		enum{
-			Local,
-			Global,
+			Polynomial,
+			CycloidLocal,
+			CycloidGlobal,
 		};
 	};
 	struct EndWrenchParametrization{
@@ -259,6 +270,9 @@ public:
         
         real_t  swingSlope;
         real_t  swingHeight;
+		real_t  swingLiftMargin;
+		real_t  swingLandMargin;
+		real_t  swingTurnMargin;
 
 		bool    enableRotation;    ///< enable rotational dynamics
 		int     rotationResolution;
@@ -296,8 +310,8 @@ public:
 		vec3_t  basePos;
 		vec3_t  posMin;
 		vec3_t  posMax;
-		vec2_t  copMin;
-        vec2_t  copMax;
+		vec3_t  copMin;
+        vec3_t  copMax;
         real_t  stiffnessMax;
         bool    lockOri;
 		bool    lockCmp;
@@ -567,49 +581,50 @@ struct CentroidEndContactCon : Constraint{
     int              iface;
     Point*           point;
     Centroid::Face*  face;
-	vec3_t           pe;
-    vec3_t           pf;
-    vec3_t           nf;
+	vec3_t           pi, pc, pc_abs, pf, nf;
+	quat_t           qi;
     
 	void Prepare();
 
 	virtual void  CalcCoef();
 	virtual void  CalcDeviation();
 
-	CentroidEndContactCon(Solver* solver, string _name, CentroidKey* _obj, int _iend, int _iface, real_t _scale);
+	CentroidEndContactCon(Solver* solver, string _name, CentroidKey* _obj, int _iend, real_t _scale);
 };
 
 struct CentroidEndFrictionCon : Constraint{
 	CentroidKey*  obj;
 	int           iend;
-    vec3_t        f, d;
-	vec2_t        ft, ftn;
-	real_t        ftnorm, mu;
-    
+	int           dir;   //< x or y
+	int           side;  //< upper or lower bound
+    quat_t        qi;
+	vec3_t        nx, ny, nz, f, df;
+	real_t        fz, ft, mu;
+	
 	void Prepare();
 
 	virtual void  CalcCoef();
 	virtual void  CalcDeviation();
 
-	CentroidEndFrictionCon(Solver* solver, string _name, CentroidKey* _obj, int _iend, real_t _scale);
+	CentroidEndFrictionCon(Solver* solver, string _name, CentroidKey* _obj, int _iend, int _dir, int _side, real_t _scale);
 };
 
 struct CentroidEndMomentCon : Constraint{
 	CentroidKey*  obj;
 	int           iend;
-    //int           idx;
-	//real_t        dir;
-	vec3_t        dir;
-	vec3_t        bound;
-	vec3_t        f, eta;
-	mat3_t        Rc;
-    
+    int           dir;   //< x or y
+	int           side;  //< upper or lower bound
+	quat_t        qi;
+	vec3_t        nx, ny, nz, f, eta, df, deta;
+	real_t        fz, etax, etay, etaz;
+	vec3_t        cmin, cmax;
+
 	void Prepare();
 
 	virtual void  CalcCoef();
 	virtual void  CalcDeviation();
 
-	CentroidEndMomentCon(Solver* solver, string _name, CentroidKey* _obj, int _iend, vec3_t _dir, real_t _scale);
+	CentroidEndMomentCon(Solver* solver, string _name, CentroidKey* _obj, int _iend, int _dir, int _side, real_t _scale);
 };
 
 }

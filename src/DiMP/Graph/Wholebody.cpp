@@ -14,6 +14,9 @@ const real_t inf     = numeric_limits<real_t>::max();
 const real_t damping = 0.0;
 const vec3_t one(1.0, 1.0, 1.0);
 const real_t eps     = 1.0e-10;
+const vec3_t ex  (1.0, 0.0, 0.0);
+const vec3_t ey  (0.0, 1.0, 0.0);
+const vec3_t ez  (0.0, 0.0, 1.0);
 
 inline mat3_t vvtrmat(vec3_t c, vec3_t r){
 	mat3_t m;
@@ -2145,7 +2148,10 @@ void WholebodyNormalForceCon::Prepare(){
 	WholebodyKey ::End& end  = obj->ends[iend];
 	WholebodyData::End& dend = obj->data.ends[iend];
 
-	fn = end.var_force_t->val.z;
+	qi = dend.pos_r;
+	nz = qi*ez;
+	f  = end.var_force_t->val;
+	fz = nz*f;
 }
 
 void WholebodyFrictionForceCon::Prepare(){
@@ -2154,9 +2160,14 @@ void WholebodyFrictionForceCon::Prepare(){
 	WholebodyData::End& dend_des = obj->data_des.ends[iend];
 
 	mu = dend_des.mu;
-	vec3_t f = end.var_force_t->val;
-	ft = (dir == 0 ? f.x : f.y);
-	fn = f.z;
+	qi = dend.pos_r;
+	nx = qi*ex;
+	ny = qi*ey;
+	nz = qi*ez;
+	f  = end.var_force_t->val;
+	ft = (dir == 0 ? nx : ny)*f;
+	fz = nz*f;
+	df = (side == 0 ? -1.0 : 1.0)*(dir == 0 ? nx : ny) + mu*nz;
 }
 
 void WholebodyMomentCon::Prepare(){
@@ -2164,10 +2175,31 @@ void WholebodyMomentCon::Prepare(){
 	WholebodyData::End& dend = obj->data.ends[iend];
 	WholebodyData::End& dend_des = obj->data_des.ends[iend];
 
-	fn   = std::max(end.var_force_t->val.z, 0.0);
-	m    = end.var_force_r->val;
+	qi   = dend.pos_r;
+	nx   = qi*ex;
+	ny   = qi*ey;
+	nz   = qi*ez;
+	f    = end.var_force_t->val;
+	eta  = end.var_force_r->val;
+	etax = nx*eta;
+	etay = ny*eta;
+	etaz = nz*eta;
+	fz   = std::max(nz*f, 0.0);
 	cmin = dend_des.cop_min;
 	cmax = dend_des.cop_max;
+
+	if(dir == 0){
+		df   = (side == 0 ? -cmin.x : cmax.x)*nz;
+		deta = (side == 0 ? -1.0 :  1.0)*ny;
+	}
+	if(dir == 1){
+		df   = (side == 0 ? -cmin.y : cmax.y)*nz;
+		deta = (side == 0 ?  1.0 : -1.0)*nx;
+	}
+	if(dir == 2){
+		df   = (side == 0 ? -cmin.z : cmax.z)*nz;
+		deta = (side == 0 ?  1.0 : -1.0)*nz;
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2455,7 +2487,7 @@ void WholebodyContactVelConR::CalcCoef(){
 void WholebodyNormalForceCon::CalcCoef(){
 	Prepare();
 
-	dynamic_cast<R3Link*>(links[0])->SetCoef(vec3_t(0.0, 0.0, 1.0));
+	dynamic_cast<R3Link*>(links[0])->SetCoef(nz);
 }
 
 void WholebodyFrictionForceCon::CalcCoef(){
@@ -2464,12 +2496,14 @@ void WholebodyFrictionForceCon::CalcCoef(){
 	// -mu*fn <= ft <= mu*fn
 	// -ft + mu*fn >= 0
 	//  ft + mu*fn >= 0
-
+	dynamic_cast<R3Link*>(links[0])->SetCoef(df);
+	/*
 	dynamic_cast<R3Link*>(links[0])->SetCoef(
 		vec3_t(
 			(dir == 0 ? (side == 0 ? -1.0 : 1.0) : 0.0),
 			(dir == 1 ? (side == 0 ? -1.0 : 1.0) : 0.0),
 			mu));
+	*/
 }
 
 void WholebodyMomentCon::CalcCoef(){
@@ -2487,7 +2521,10 @@ void WholebodyMomentCon::CalcCoef(){
 	// -mx + (cop_max.y)*fz >= 0
 	//  mz - (cop_min.z)*fz >= 0
 	// -mz + (cop_max.z)*fz >= 0
+	dynamic_cast<R3Link*>(links[0])->SetCoef(df  );
+	dynamic_cast<R3Link*>(links[1])->SetCoef(deta);
 
+	/*
 	if(dir == 0){
 		dynamic_cast<R3Link*>(links[0])->SetCoef(vec3_t(0.0, 0.0, (side == 0 ? -cmin.x : cmax.x)));
 		dynamic_cast<R3Link*>(links[1])->SetCoef(vec3_t(0.0, (side == 0 ? -1.0 : +1.0), 0.0));
@@ -2500,6 +2537,7 @@ void WholebodyMomentCon::CalcCoef(){
 		dynamic_cast<R3Link*>(links[0])->SetCoef(vec3_t(0.0, 0.0, (side == 0 ? -cmin.z : cmax.z)));
 		dynamic_cast<R3Link*>(links[1])->SetCoef(vec3_t(0.0, 0.0, (side == 0 ? +1.0 : -1.0)));
 	}
+	*/
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2592,20 +2630,20 @@ void WholebodyContactVelConR::CalcDeviation(){
 }
 
 void WholebodyNormalForceCon::CalcDeviation(){
-	y[0] = fn;
+	y[0] = fz;
 	//DSTR << "fn: " << fn << endl;
-	if(fn > 0.0){
+	if(fz > 0.0){
 		y[0] = 0.0;
 		active = false;
 	}
 	else{
-		y[0] = fn;
+		y[0] = fz;
 		active = true;
 	}
 }
 
 void WholebodyFrictionForceCon::CalcDeviation(){
-	y[0] = (side == 0 ? mu*fn - ft : ft + mu*fn);
+	y[0] = df*f;
 	active = y[0] < 0.0;
 	/*real_t e = (side == 0 ? mu*fn - ft : ft + mu*fn);
 	if(e > 0.0){
@@ -2625,15 +2663,7 @@ void WholebodyMomentCon::CalcDeviation(){
 	// -tx*m + (cop_max.y)*fn >= 0
 	//  tz*m - (cop_min.z)*fn >= 0
 	// -tz*m + (cop_max.z)*fn >= 0
-	if(dir == 0){
-		y[0] = (side == 0 ? (-m.y - cmin.x*fn) : ( m.y + cmax.x*fn));
-	}
-	if(dir == 1){
-		y[0] = (side == 0 ? ( m.x - cmin.y*fn) : (-m.x + cmax.y*fn));
-	}
-	if(dir == 2){
-		y[0] = (side == 0 ? ( m.z - cmin.z*fn) : (-m.z + cmax.z*fn));
-	}
+	y[0] = df*f + deta*eta;
 	if(y[0] < 0.0){
 		active = true;
 	}

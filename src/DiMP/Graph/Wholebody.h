@@ -604,8 +604,9 @@ struct WholebodyContactVelConR : Constraint{
 struct WholebodyNormalForceCon : Constraint{
 	WholebodyKey*  obj;
 	int    iend;
-	vec3_t n, f;
-	real_t fn;
+	quat_t qi;
+	vec3_t nz, f;
+	real_t fz;
 
 	void Prepare();
 
@@ -620,7 +621,9 @@ struct WholebodyFrictionForceCon : Constraint{
 	int    iend;
 	int    dir;   //< x or y
 	int    side;  //< upper or lower bound
-	real_t fn, ft, mu;
+	quat_t qi;
+	vec3_t nx, ny, nz, f, df;
+	real_t fz, ft, mu;
 	
 	void Prepare();
 
@@ -635,8 +638,9 @@ struct WholebodyMomentCon : Constraint{
 	int    iend;
 	int    dir;   //< x or y
 	int    side;  //< upper or lower bound
-	real_t fn;
-	vec3_t m;
+	quat_t qi;
+	vec3_t nx, ny, nz, f, eta, df, deta;
+	real_t fz, etax, etay, etaz;
 	vec3_t cmin, cmax;
 
 	void Prepare();

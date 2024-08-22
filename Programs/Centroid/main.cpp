@@ -106,7 +106,7 @@ public:
         //sceneSelect = Scene::Gap;
         //sceneSelect = Scene::Stairs;
         //sceneSelect = Scene::Steps;
-        //taskSelect = Task::Travel;
+        taskSelect = Task::Travel;
         //taskSelect = Task::LongJump;
         //taskSelect = Task::Backflip;
         //taskSelect = Task::Turn;
@@ -207,7 +207,7 @@ public:
         centroid->param.enableRotation   = true;
         centroid->param.rotationResolution = 10;
         //centroid->param.endInterpolation = DiMP::Centroid::EndInterpolation::Local;
-        centroid->param.endInterpolation = DiMP::Centroid::EndInterpolation::Global;
+        centroid->param.endInterpolation = DiMP::Centroid::EndInterpolation::CycloidGlobal;
         centroid->param.endWrenchParametrization = DiMP::Centroid::EndWrenchParametrization::Stiffness;
         //centroid->param.endWrenchParametrization = DiMP::Centroid::EndWrenchParametrization::Direct;
         
@@ -680,7 +680,7 @@ public:
             {
                 DiMP::Centroid::Waypoint& wp = centroid->waypoints[1];
                 wp.weight.time  = 1.0;
-                wp.weight.pos_t = 1*one;
+                wp.weight.pos_t = 10*one;
                 wp.weight.pos_r = 1*one;
                 wp.weight.vel_t = 10*one;
                 wp.weight.L     = 10*one;
@@ -696,7 +696,7 @@ public:
                 DiMP::Centroid::Waypoint& wp = centroid->waypoints[N-1];
                 wp.ends.resize(nend);
                 wp.weight.time  = 1.0;
-                wp.weight.pos_t = 1*one;
+                wp.weight.pos_t = 10*one;
                 wp.weight.pos_r = 1*one;
                 wp.weight.vel_t = 10*one;
                 wp.weight.L     = 10*one;
@@ -962,8 +962,8 @@ public:
             centroid->ends[iend].basePos = endConf[iend].basePos;
             centroid->ends[iend].posMin  = endConf[iend].posMin;
             centroid->ends[iend].posMax  = endConf[iend].posMax; 
-			centroid->ends[iend].copMin  = vec2_t(-0.05, -0.01);
-			centroid->ends[iend].copMax  = vec2_t( 0.05,  0.01);
+			centroid->ends[iend].copMin  = vec3_t(-0.05, -0.01, -0.05);
+			centroid->ends[iend].copMax  = vec3_t( 0.05,  0.01,  0.05);
 
             centroid->ends[iend].stiffnessMax = endConf[iend].stiffMax;
             centroid->ends[iend].cmpOffset  = endConf[iend].cmpOffset;
