@@ -100,6 +100,8 @@ void JointKey::AddCon(Solver* solver){
         // desired value
         con_des_p[i] = new FixConS(solver, ID(ConTag::JointDesP, node, tick, name + "_des_p" + ss.str()), pos[i], sp);
         con_des_v[i] = new FixConS(solver, ID(ConTag::JointDesV, node, tick, name + "_des_v" + ss.str()), vel[i], sv);
+        solver->AddCostCon(con_des_p[i], tick->idx);
+		solver->AddCostCon(con_des_v[i], tick->idx);
         // disabled by default
         con_des_p[i]->enabled = false;
         con_des_v[i]->enabled = false;
