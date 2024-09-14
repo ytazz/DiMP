@@ -211,11 +211,6 @@ void JointKey::Prepare(){
 				}
 			}
 		}
-		
-		con_range_p[i]->active = in && inprev;
-		con_range_v[i]->active = in && inprev;
-		con_des_p  [i]->active = in && inprev;
-		con_des_v  [i]->active = in && inprev;
 	}
 }
 
@@ -336,11 +331,12 @@ void Joint::Init(){
 			key->vel[i]->val = param.ini_v[i];
 		
 			// lock position and velocity of initial time
+			/*
 			if(!key->prev){
 				key->pos[i]->Lock();
 				key->vel[i]->Lock();
 			}
-
+			*/
 			// add movable range constraint
 			key->con_range_p[i]->_min = param.rmin_p[i];
 			key->con_range_p[i]->_max = param.rmax_p[i];
