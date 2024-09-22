@@ -202,8 +202,7 @@ public:
 	vector< vector<real_t> >  v_pi, v_vi, v_ri, v_fi;  //< nend x ndiv array
 
 	real_t L_L;
-	mat3_t L_v1;
-	vector<mat3_t> L_p, L_v;                             //< ndiv
+	vector<mat3_t> L_v1, L_p, L_v;                       //< ndiv
 	vector<vec3_t> L_tau;                                //< ndiv
 	vector<mat3_t> L_rbar;                               //< ndiv
 	vector<real_t> L_etabar;                             //< ndiv

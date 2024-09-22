@@ -36,8 +36,8 @@ void Mpc::Init(){
     wb->CalcJacobian    (data_cur);
     wb->CalcVelocity    (data_cur);
     wb->CalcAcceleration(data_cur);
-    wb->CalcMomentum    (data_cur);
-    wb->CalcMomentumDerivative(data_cur);
+    wb->CalcLocalMomentum    (data_cur);
+    wb->CalcLocalMomentumDerivative(data_cur);
     wb->CalcForce       (data_cur);
 
     int nx = 12 + 2*njoint;    //< centroid (pos_t pos_r vel_t vel_r)  njoint*(q, qd)
@@ -62,7 +62,7 @@ void Mpc::UpdateState(){
     
     // calc force and acceleration of base link
     wb->CalcComAcceleration(data_cur);
-    wb->CalcBaseAcceleration(data_cur);
+    wb->CalcBaseAngularAcceleration(data_cur);
     
     data_cur.centroid.pos_t += data_cur.centroid.vel_t*dt_ctrl + data_cur.centroid.acc_t*(0.5*dt_ctrl2);
     data_cur.centroid.vel_t += data_cur.centroid.acc_t*dt_ctrl;
@@ -75,13 +75,15 @@ void Mpc::UpdateState(){
         data_cur.qd[i] += data_cur.qdd[i]*dt_ctrl;
     }
 
-    wb->CalcPosition    (data_cur);
-    wb->CalcJacobian    (data_cur);
-    wb->CalcVelocity    (data_cur);
-    wb->CalcAcceleration(data_cur);
-    wb->CalcMomentum    (data_cur);
-    wb->CalcMomentumDerivative(data_cur);
-    wb->CalcForce       (data_cur);
+    wb->CalcPosition      (data_cur);
+    wb->CalcJacobian      (data_cur);
+    wb->CalcVelocity      (data_cur);
+    wb->CalcAcceleration  (data_cur);
+    wb->CalcInertia  (data_cur);
+    wb->CalcInertiaDerivative(data_cur);
+    wb->CalcLocalMomentum (data_cur);
+    wb->CalcLocalMomentumDerivative(data_cur);
+    wb->CalcForce         (data_cur);
 
 }
 
@@ -262,7 +264,8 @@ void Mpc::GetDesiredState(int k, real_t t, DiMP::WholebodyData& d){
     d.centroid.pos_t_weight = (k == N ? 10.0 : 1.0)*one;
     d.centroid.vel_t_weight = (k == N ? 10.0 : 1.0)*one;
     d.centroid.pos_r_weight = (k == N ? 10.0 : 1.0)*one;
-    d.centroid.vel_r_weight = (k == N ? 10.0 : 1.0)*one;
+    d.centroid.L_weight     = (k == N ? 10.0 : 1.0)*one;
+    //d.centroid.vel_r_weight = (k == N ? 10.0 : 1.0)*one;
     
     int nend   = (int)d.ends.size();
     int njoint = (int)d.q.size();

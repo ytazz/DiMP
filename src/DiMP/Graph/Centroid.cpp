@@ -20,6 +20,7 @@ const vec3_t one3(1.0, 1.0, 1.0);
 const vec3_t ex  (1.0, 0.0, 0.0);
 const vec3_t ey  (0.0, 1.0, 0.0);
 const vec3_t ez  (0.0, 0.0, 1.0);
+const mat3_t zero3 = 0.0*mat3_t();
 
 // validify of waypoint values
 inline bool is_valid(int i){
@@ -106,14 +107,7 @@ void CentroidKey::AddVar(Solver* solver) {
 	var_L = new V3Var(solver, ID(VarTag::CentroidMomentum, node, tick, name + "_L"), cen->scale.L);
 	var_L->weight = damping*one3;
 	solver->AddStateVar(var_L, tick->idx);
-	
-	var_time     = new SVar (solver, ID(VarTag::CentroidTime    , node, tick, name + "_time"    ), cen->scale.t );
-	var_duration = new SVar (solver, ID(VarTag::CentroidDuration, node, tick, name + "_duration"), cen->scale.t );
-	var_time    ->weight[0] = damping;
-	var_duration->weight[0] = damping;
-	solver->AddStateVar(var_time , tick->idx);
-    solver->AddInputVar(var_duration, tick->idx);
-	
+		
 	ends.resize(nend);
 	stringstream ss, ss2;
 	for(int i = 0; i < nend; i++){
@@ -164,6 +158,13 @@ void CentroidKey::AddVar(Solver* solver) {
 		}
 	}
 
+	var_time     = new SVar (solver, ID(VarTag::CentroidTime    , node, tick, name + "_time"    ), cen->scale.t );
+	var_duration = new SVar (solver, ID(VarTag::CentroidDuration, node, tick, name + "_duration"), cen->scale.t );
+	var_time    ->weight[0] = damping;
+	var_duration->weight[0] = damping;
+	solver->AddStateVar(var_time , tick->idx);
+    solver->AddInputVar(var_duration, tick->idx);
+
 	li  .resize(nend);
 	li2 .resize(nend);
 	pi  .resize(nend);
@@ -199,6 +200,7 @@ void CentroidKey::AddVar(Solver* solver) {
 	v_lbar  .resize(ndiv+1);
 	v_tau   .resize(ndiv+1);
 
+	L_v1    .resize(ndiv+1);
 	L_p     .resize(ndiv+1);
 	L_v     .resize(ndiv+1);
 	L_tau   .resize(ndiv+1);
@@ -404,6 +406,8 @@ inline mat3_t vvtrmat(vec3_t c, vec3_t r){
 }
 
 inline mat3_t RotJacobian(vec3_t omega){
+	//return mat3_t();
+
 	real_t theta = omega.norm();
 	if(theta < eps)
 		return mat3_t();
@@ -659,10 +663,10 @@ void CentroidKey::PrepareStep(){
 		}
 		
 		L_L    =  1;
-		L_v1   = -m*rbar_cross;
 		for(int k = 0; k <= ndiv; k++){
+			L_v1    [k] = (k == 0 ? zero3 : -m*rbar_cross);
 			L_p     [k].clear();
-			L_v     [k] = m*rbar_cross;
+			L_v     [k] = (k == 0 ? zero3 :  m*rbar_cross);
 			L_rbar  [k] = m*(mat3_t::Cross(data.v_rhs[k] - data.vel_t));
 			L_etabar[k] = m*t[k];
 			L_tau   [k] = m*((real_t)k/(real_t)ndiv)*data.etabar;
@@ -674,7 +678,7 @@ void CentroidKey::PrepareStep(){
 		p_tau = p_C*C_tau[ndiv] + p_S*S_tau[ndiv];
 		for(int i = 0; i < nend; i++){
 			p_li[i] = 
-				(p_C*C_lbar[ndiv] + p_S*S_lbar[ndiv])*lbar_li[i] +
+				(p_C*C_lbar[ndiv] + p_S*S_lbar[ndiv] + p_lbar)*lbar_li[i] +
 				 p_pbar*(pbar_lbar*lbar_li[i] + pbar_li[i]) +
 				 p_rbar*(rbar_lbar*lbar_li[i] + rbar_li[i]);
 			p_pi[i] = p_pbar*pbar_pi[i];
@@ -688,7 +692,7 @@ void CentroidKey::PrepareStep(){
 		for(int i = 0; i < nend; i++){
 			for(int k = 0; k <= ndiv; k++){
 				v_li[i][k] = 
-					(v_C*C_lbar[k] + v_S*S_lbar[k])*lbar_li[i] +
+					(v_C*C_lbar[k] + v_S*S_lbar[k] + v_lbar[k])*lbar_li[i] +
 					 v_pbar[k]*(pbar_lbar*lbar_li[i] + pbar_li[i]) +
 					 v_rbar[k]*(rbar_lbar*lbar_li[i] + rbar_li[i]);
 				v_pi[i][k] = v_pbar[k]*pbar_pi[i];
@@ -698,29 +702,29 @@ void CentroidKey::PrepareStep(){
 		}
 		// L' coef
 		for(int k = 0; k <= ndiv; k++){
-			L_p  [k] += L_v1*v_p  [k];
-			L_v  [k] += L_v1*v_v  [k];
-			L_tau[k] += L_v1*v_tau[k];
+			L_p  [k] += L_v1[k]*v_p  [k];
+			L_v  [k] += L_v1[k]*v_v  [k];
+			L_tau[k] += L_v1[k]*v_tau[k];
 		}
 		for(int i = 0; i < nend; i++){
 			for(int k = 0; k <= ndiv; k++){
 				L_li[i][k] = 
-					L_v1*v_li[i][k] +
+					L_v1[k]*v_li[i][k] +
 					L_rbar  [k]*(rbar_li[i] + rbar_lbar*lbar_li[i]);
 					L_etabar[k]*(
 						etabar_li[i] + 
-						(etabar_lbar + etabar_pbar*pbar_lbar + etabar_rbar*rbar_lbar)*lbar_li[i] +
-						etabar_pbar*pbar_li[i] +
-						etabar_rbar*rbar_li[i]
+						etabar_lbar*lbar_li[i] +
+						etabar_pbar*(pbar_lbar*lbar_li[i] + pbar_li[i]) +
+						etabar_rbar*(rbar_lbar*lbar_li[i] + rbar_li[i])
 						);
 				L_pi[i][k] = 
-					L_v1*v_pi[i][k] +
+					L_v1[k]*v_pi[i][k] +
 					L_etabar[k]*(etabar_pi[i] + etabar_pbar*pbar_pi[i]);
 				L_vi[i][k] = 
-					L_v1*v_vi[i][k] +
+					L_v1[k]*v_vi[i][k] +
 					L_etabar[k]*(etabar_vi[i] + etabar_pbar*pbar_vi[i]);
 				L_ri[i][k] = 
-					L_v1*v_ri[i][k] +
+					L_v1[k]*v_ri[i][k] +
 					L_rbar  [k]*rbar_ri[i] +
 					L_etabar[k]*(etabar_ri[i] + etabar_rbar*rbar_ri[i]);
 				L_etai[i][k] = 
@@ -811,6 +815,7 @@ void CentroidKey::PrepareStep(){
 void CentroidKey::Finish(){
 	tick->time = var_time->val;
 	
+	//DSTR << "pos_r: " << var_pos_r->val << endl;
 	//int ndiv = (!cen->phases.empty() ? cen->phases[iphase].ndiv : 1);
 	//var_duration->val = std::min(std::max(cen->param.durationMin/ndiv, var_duration->val), cen->param.durationMax/ndiv);
 	var_duration->val = std::min(std::max(cen->param.durationMin, var_duration->val), cen->param.durationMax);
@@ -1006,6 +1011,7 @@ Centroid::~Centroid() {
 void Centroid::SetScaling(){
 	// moment of inertial of solid sphere = 0.4 m r^2
 	// r = sqrt(I/(0.4m))
+	//real_t dt = 0.02;
 	scale.l    = 1.0;//sqrt(10*param.I[0][0]/(0.4*param.m));//0.5;  //< unit length
 	scale.t    = sqrt(scale.l/param.g);//graph->ticks[1]->time - graph->ticks[0]->time;
 	scale.tinv = 1.0/scale.t;
@@ -1019,19 +1025,23 @@ void Centroid::SetScaling(){
 	scale.ar   = scale.at/scale.l;
 	scale.fr   = scale.ft*scale.l;
 	scale.L    = scale.fr*scale.t;
-
-	//scale.l    = 1.0;
-	//scale.t    = 1.0;
-	//scale.tinv = 1.0;
-	//scale.at   = 1.0;
-	//scale.vt   = 1.0;
-	//scale.ft   = 1.0;
-	//scale.pt   = 1.0;
-	//scale.pr   = 1.0;
-	//scale.vr   = 1.0;
-	//scale.ar   = 1.0;
-	//scale.fr   = 1.0;
-	//scale.L    = 1.0;
+	/*
+	*/
+	/*
+	scale.l    = 1.0;
+	scale.t    = 1.0;
+	scale.tinv = 1.0;
+	scale.at   = 1.0;
+	scale.vt   = 1.0;
+	scale.ft   = 1.0;
+	scale.pt   = 1.0;
+	scale.pt2  = 1.0;
+	scale.pr   = 1.0;
+	scale.vr   = 1.0;
+	scale.ar   = 1.0;
+	scale.fr   = 1.0;
+	scale.L    = 1.0;
+	*/
 }
 
 void Centroid::CalcComAcceleration(CentroidData& d){
@@ -1726,10 +1736,6 @@ inline quat_t InterpolateOri(real_t t, real_t t0, quat_t q0, real_t t1, quat_t q
 	quat_t qrel = q0.Conjugated() * q1;
 	vec3_t axis = qrel.Axis();
 	real_t angle = qrel.Theta();
-
-	if(std::abs(angle) > m_pi/2){
-		DSTR << "!!!!!!" << angle << "!!!!!" << endl;
-	}
 
 	return q0 * quat_t::Rot(s*angle, axis);
 }
@@ -2684,6 +2690,7 @@ void CentroidPosConR::CalcDeviation(){
 	if(theta > m_pi)
 		theta -= 2*m_pi;
 	y = (1.0/2.0)*(obj[0]->data.q_rhs.back()*(theta*axis) + obj[1]->data.pos_r*(theta*axis));
+	//y = obj[0]->data.q_rhs.back()*(theta*axis);
 	//y = obj[0]->coef[rev].q_rhs.back()*(theta*axis);
 	//y.clear();
 	//y = obj[0]->coef[rev].q_lhs - obj[0]->coef[rev].q_rhs;

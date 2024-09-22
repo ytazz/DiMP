@@ -67,6 +67,7 @@ struct VarTag{
 		WholebodyVelR,
 		WholebodyAccT,
 		WholebodyAccR,
+		WholebodyMomentum,
 		WholebodyJointPos,
 		WholebodyJointVel,
 		WholebodyJointAcc,
