@@ -263,7 +263,6 @@ public:
         vec3_t  bodyRangeMin;
         vec3_t  bodyRangeMax;
 
-
 		real_t  durationMin;
 		real_t  durationMax;
         
@@ -282,9 +281,7 @@ public:
 
 		real_t  contactMargin;
 		real_t  contactSwitchCost;
-		real_t  contactFaceSwitchCost;
-		vector<real_t>  numOfContactsCost;
-
+		
 		//string  contactPattern;
 		//string  subdividePattern;
 		

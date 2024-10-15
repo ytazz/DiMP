@@ -894,8 +894,6 @@ Centroid::Param::Param() {
 	swingTurnMargin = 0.0;
 
 	contactMargin = 0.0;
-	contactSwitchCost = 0.0;
-	contactFaceSwitchCost = 0.0;
 
 	complWeight = 100.0;
 
@@ -1561,7 +1559,7 @@ void Centroid::Setup(){
 				end.var_pos_t->val = dend.pos_t;
 				end.var_vel_t->val = (dend.state != ContactState::Free ? vec3_t() : dend.vel_t);
 				end.var_pos_r->val = dend.pos_r;
-				end.var_vel_r->val = (dend.iface != ContactState::Free ? vec3_t() : dend.vel_r);
+				end.var_vel_r->val = (dend.state != ContactState::Free ? vec3_t() : dend.vel_r);
 			}
 
 			for(int j = 0; j < 3; j++){
@@ -2565,33 +2563,33 @@ void CentroidLCon::CalcCoef(){
 void CentroidTimeCon::CalcCoef(){
 	Prepare();
 
-	((SLink*)links[0])->SetCoef( 1.0);
-	((SLink*)links[1])->SetCoef(-1.0);
-	((SLink*)links[2])->SetCoef(-1.0);
+	dynamic_cast<SLink*>(links[0])->SetCoef( 1.0);
+	dynamic_cast<SLink*>(links[1])->SetCoef(-1.0);
+	dynamic_cast<SLink*>(links[2])->SetCoef(-1.0);
 }
 
 void CentroidEndPosConT::CalcCoef(){
 	Prepare();
 
 	int i = 0;
-	((SLink *)links[i++])->SetCoef( 1.0);
-	((SLink *)links[i++])->SetCoef(-1.0);
-	((SLink *)links[i++])->SetCoef(-obj[0]->data.duration);
-	((C3Link*)links[i++])->SetCoef(-ve);
+	dynamic_cast<SLink *>(links[i++])->SetCoef( 1.0);
+	dynamic_cast<SLink *>(links[i++])->SetCoef(-1.0);
+	dynamic_cast<SLink *>(links[i++])->SetCoef(-obj[0]->data.duration);
+	dynamic_cast<C3Link*>(links[i++])->SetCoef(-ve);
 }
 
 void CentroidEndPosConR::CalcCoef(){
 	Prepare();
 
 	int i = 0;
-	((SLink *)links[i++])->SetCoef( 1.0);
-	((M3Link*)links[i++])->SetCoef(-R_omega);
-	((M3Link*)links[i++])->SetCoef(-A_omega*obj[0]->data.duration);
-	((C3Link*)links[i++])->SetCoef(-A_omega*we);
+	dynamic_cast<SLink *>(links[i++])->SetCoef( 1.0);
+	dynamic_cast<M3Link*>(links[i++])->SetCoef(-R_omega);
+	dynamic_cast<M3Link*>(links[i++])->SetCoef(-A_omega*obj[0]->data.duration);
+	dynamic_cast<C3Link*>(links[i++])->SetCoef(-A_omega*we);
 }
 
 void CentroidDurationRangeCon::CalcCoef(){
-	((SLink*)links[0])->SetCoef(dir);
+	dynamic_cast<SLink*>(links[0])->SetCoef(dir);
 }
 
 void CentroidEndPosRangeCon::CalcCoef(){
@@ -2607,9 +2605,9 @@ void CentroidEndPosRangeCon::CalcCoef(){
 	= (dir_abs % (pe - p))^T *Omega
 	*/
 
-	((R3Link*)links[0])->SetCoef(-eta_abs);
-	((R3Link*)links[1])->SetCoef( eta_abs % (pe - p));
-	((R3Link*)links[2])->SetCoef( eta_abs);
+	dynamic_cast<R3Link*>(links[0])->SetCoef(-eta_abs);
+	dynamic_cast<R3Link*>(links[1])->SetCoef( eta_abs % (pe - p));
+	dynamic_cast<R3Link*>(links[2])->SetCoef( eta_abs);
 }
 
 void CentroidEndContactCon::CalcCoef(){
@@ -2620,8 +2618,8 @@ void CentroidEndContactCon::CalcCoef(){
 
 	// y = nf*(pi + qi*pc - pf)
 	
-	((R3Link*)links[0])->SetCoef(nf);
-	((R3Link*)links[1])->SetCoef((qi*pc) % nf);
+	dynamic_cast<R3Link*>(links[0])->SetCoef(nf);
+	dynamic_cast<R3Link*>(links[1])->SetCoef((qi*pc) % nf);
 }
 
 void CentroidEndFrictionCon::CalcCoef(){

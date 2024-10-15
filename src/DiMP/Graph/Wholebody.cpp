@@ -182,6 +182,10 @@ void WholebodyKey::AddVar(Solver* solver) {
 
 	//solver->AddStateVar(var_time, tick->idx);
 
+    solver->AddInputVar(centroid.var_acc_t, tick->idx);
+	solver->AddInputVar(centroid.var_Ld   , tick->idx);
+	//solver->AddInputVar(centroid.var_acc_r, tick->idx);
+
 	for(int i = 0; i < njoint; i++){
 		solver->AddStateVar(joints[i].var_q  , tick->idx);
 	}
@@ -196,10 +200,6 @@ void WholebodyKey::AddVar(Solver* solver) {
 			solver->AddStateVar(joints[i].var_qdd, tick->idx);	
 		}
 	}
-
-	solver->AddInputVar(centroid.var_acc_t, tick->idx);
-	solver->AddInputVar(centroid.var_Ld   , tick->idx);
-	//solver->AddInputVar(centroid.var_acc_r, tick->idx);
 
 	if(wb->param.inputMode == Wholebody::InputMode::Velocity){
 		for(int i = 0; i < njoint; i++){
@@ -415,7 +415,6 @@ void WholebodyKey::AddCon(Solver* solver) {
 		joints[i].con_range_qd ->enabled = (next);
 		joints[i].con_range_qdd->enabled = (next && (wb->param.inputMode == Wholebody::InputMode::Jerk || wb->param.inputMode == Wholebody::InputMode::Acceleration));
 	}		
-
 
 	for(int i = 0; i < nend; i++){
 		ends[i].con_des_pos_t->enabled = (wb->ends[i].enableTranslation && (next || wb->ends[i].enableTerminalCost));
@@ -849,11 +848,11 @@ void Wholebody::Setup(){
 		key->centroid.con_des_pos_t->desired = d.centroid.pos_t;
 		key->centroid.con_des_pos_r->desired = d.centroid.pos_r;
 		key->centroid.con_des_vel_t->desired = d.centroid.vel_t;
+		key->centroid.con_des_L    ->desired = d.centroid.L_abs;
 		key->centroid.con_des_pos_t->weight  = d.centroid.pos_t_weight;
 		key->centroid.con_des_pos_r->weight  = d.centroid.pos_r_weight;
 		key->centroid.con_des_vel_t->weight  = d.centroid.vel_t_weight;
-		key->centroid.con_des_L->desired = d.centroid.L_abs;
-		key->centroid.con_des_L->weight  = d.centroid.L_weight;
+		key->centroid.con_des_L    ->weight  = d.centroid.L_weight;
 		
 		//if(key->next){
 		//	key->centroid.con_des_vel_r->desired = d.centroid.vel_r;

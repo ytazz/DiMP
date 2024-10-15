@@ -554,7 +554,7 @@ struct WholebodyDesVelConR : Constraint{
 		
 	WholebodyDesVelConR(Solver* solver, string _name, WholebodyKey* _obj, int _iend, real_t _scale);
 };
-
+/*
 struct WholebodyLCon : Constraint{
 	WholebodyKey*  obj;
 	vec3_t  desired;
@@ -567,7 +567,7 @@ struct WholebodyLCon : Constraint{
 	
 	WholebodyLCon(Solver* solver, string _name, WholebodyKey* _obj, real_t _scale);
 };
-
+*/
 struct WholebodyContactPosConT : Constraint{
 	WholebodyKey*  obj;
 	int    iend;
