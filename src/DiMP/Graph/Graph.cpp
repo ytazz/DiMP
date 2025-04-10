@@ -383,15 +383,45 @@ void Graph::ExtractGeometryPairs(){
 	timer2.CountUS();
 	// for each dimension: merge edgeinfos of all objects and ticks, and sort it
 	for(int dir = 0; dir < 3; dir++){
-		edgeInfos[dir].clear();
-		for(Object* obj : objects){
-			for(Tick* tick : ticks){
-				ObjectKey* key = (ObjectKey*)obj->traj.GetKeypoint(tick);
-				edgeInfos[dir].insert(edgeInfos[dir].end(), key->edgeInfos[dir].begin(), key->edgeInfos[dir].end());
-			}
-		}
-		sort(edgeInfos[dir].begin(), edgeInfos[dir].end());
+        // create edge list for the first time
+        if(edgeInfosStationary[dir].empty()){
+		    for(Object* obj : objects){
+                // for stationary objects, insert edges for the first tick only
+                if(obj->param.stationary){
+                    ObjectKey* key = (ObjectKey*)obj->traj.GetKeypoint(ticks[0]);
+                    edgeInfosStationary[dir].insert(edgeInfosStationary[dir].end(), key->edgeInfos[dir].begin(), key->edgeInfos[dir].end());
+                }
+            }
+            // sort it only once upon creation
+		    sort(edgeInfosStationary[dir].begin(), edgeInfosStationary[dir].end());
+        }
 	}
+	for(int dir = 0; dir < 3; dir++){
+        // create edge list for the first time
+        if(edgeInfosMoving[dir].empty()){
+		    for(Object* obj : objects){
+                // for moving objects, insert edges for all ticks
+                if(!obj->param.stationary){
+                    for(Tick* tick : ticks){
+				        ObjectKey* key = (ObjectKey*)obj->traj.GetKeypoint(tick);
+				        edgeInfosMoving[dir].insert(edgeInfosMoving[dir].end(), key->edgeInfos[dir].begin(), key->edgeInfos[dir].end());
+			        }
+                }
+            }
+        }
+        // sort it every time
+		sort(edgeInfosMoving[dir].begin(), edgeInfosMoving[dir].end());
+	}
+    // merge edge infos of moving and stationary objects into one
+    for(int dir = 0; dir < 3; dir++){
+        edgeInfos[dir].resize(edgeInfosStationary[dir].size() + edgeInfosMoving[dir].size());
+        std::merge(
+            edgeInfosStationary[dir].begin(), edgeInfosStationary[dir].end(),
+            edgeInfosMoving[dir].begin(), edgeInfosMoving[dir].end(),
+            edgeInfos[dir].begin()
+            );
+    }
+
 	int timeSort = timer2.CountUS();
 	
 	int szmax = 0;
@@ -425,8 +455,7 @@ void Graph::ExtractGeometryPairs(){
 						continue;
 
 					for(GeometryInfo* geo1 : queue[dir][i]){
-						// geos should be associated with the same tick
-						// or either object should be stationary
+						// if both objects are non-stationary, geos should be associated with the same tick
 						if( !obj0->param.stationary &&
 							!obj1->param.stationary &&
 							geo0->tick != geo1->tick )

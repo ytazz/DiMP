@@ -145,7 +145,9 @@ public:
 	class GPTable    : public Table<GPTableEntry>{};
 	class AvoidTable : public Table<AvoidTask*>{};
 
-	EdgeInfos                          edgeInfos[3];   ///< edge infos of all objects in x,y,z
+    EdgeInfos                          edgeInfosStationary[3]; ///< edge infos of stationary objects in x,y,z
+    EdgeInfos                          edgeInfosMoving[3];     ///< edge infos of moving objects in x,y,z
+	EdgeInfos                          edgeInfos[3];           ///< edge infos of all objects in x,y,z
 	AvoidTable                         avoidTable;
 	vector< std::set<GeometryInfo*> >  queue[3];
 	GPTable                            gpTable;
