@@ -52,8 +52,8 @@ void AvoidKey::AddCon(Solver* solver){
 	}
 }
 
-void AvoidKey::Prepare(){
-	TaskKey::Prepare();
+void AvoidKey::PrepareStep(){
+	TaskKey::PrepareStep();
 
 	AvoidTask* task = (AvoidTask*)node;
 
@@ -103,6 +103,11 @@ void AvoidKey::Prepare(){
 			real_t rsum = gp.info0->geo->bsphereRadius + gp.info1->geo->bsphereRadius;
 			gp.cullSphere = (d - rsum > task->param.dmin);
 			if(gp.cullSphere){
+			    //printf("culled by bsphere: d=%f rsum=%f dmin=%f c0:%f %f %f  c1:%f %f %f\n",
+			    // d, rsum, task->param.dmin,
+			    // gp.info0->bsphereCenterAbs.x, gp.info0->bsphereCenterAbs.y, gp.info0->bsphereCenterAbs.z, 
+			    // gp.info1->bsphereCenterAbs.x, gp.info1->bsphereCenterAbs.y, gp.info1->bsphereCenterAbs.z
+			    // );
 				nsphere++;
 				continue;
 			}
@@ -137,6 +142,14 @@ void AvoidKey::Prepare(){
 					gp.normal = diff/dnorm;
 					nactive++;
 					gpactive.push_back(&gp);
+					
+					printf("active gp: %s - %s  sup0: %f %f %f  sup1: %f %f %f\n",
+					  gp.info0->geo->name.c_str(),
+					  gp.info1->geo->name.c_str(),
+					  gp.sup0.x, gp.sup0.y, gp.sup0.z, 
+					  gp.sup1.x, gp.sup1.y, gp.sup1.z
+					);
+					
 					//if(dnorm > dmax){
 					//	gpmax = &gp;
 					//	dmax  = dnorm;
@@ -162,6 +175,9 @@ void AvoidKey::Prepare(){
 		//	DSTR << " dist: " << gpmax->dist << " normal: " << gpmax->normal << endl;
 		//}
 		//DSTR << "timeExtract: " << timeExtract << " timeEnum: " << timeEnum << endl;
+		
+		//if(!geoPairs.empty())
+		//    printf("bsphere:%d bbox:%d gjk:%d active:%d\n", nsphere, nbox, ngjk, nactive);
 	}
 	//else{
 	//	con_p->active = false;
@@ -214,18 +230,6 @@ AvoidTask::AvoidTask(Object* _obj0, Object* _obj1, TimeSlot* _time, const string
 
 AvoidTask::~AvoidTask(){
 	graph->avoids.Remove(this);
-}
-
-void AvoidTask::Prepare(){
-	// if either object is stationary, broad-phase collision detection is executed here
-	//ptimer.CountUS();
-	//ExtractGeometryPairs(
-	//	obj0->geoInfos, obj0->edgeInfos,
-	//	obj1->geoInfos, obj1->edgeInfos,
-	//	geoPairs);
-	//int timeExtract = ptimer.CountUS();
-
-	Task::Prepare();
 }
 
 //-------------------------------------------------------------------------------------------------

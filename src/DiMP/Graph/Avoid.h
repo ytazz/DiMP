@@ -29,7 +29,7 @@ public:
 
 public:
 	virtual void AddCon(Solver* solver);
-	virtual void Prepare();
+	virtual void PrepareStep();
 	virtual void Draw   (Render::Canvas* canvas, Render::Config* conf);	
 
 	AvoidKey();
@@ -48,7 +48,6 @@ public:
 	
 public:
 	virtual Keypoint*	CreateKeypoint(){ return new AvoidKey(); }
-	virtual void Prepare();
 	
 	 AvoidTask(Object* _obj0, Object* _obj1, TimeSlot* _time, const string& n);
 	~AvoidTask();

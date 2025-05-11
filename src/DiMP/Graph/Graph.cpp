@@ -303,10 +303,7 @@ void Graph::Prepare(){
 	joints     .Prepare();
 	geos       .Prepare();
 	timeslots  .Prepare();
-
-	ExtractGeometryPairs();
-
-	tasks    .Prepare();
+	tasks      .Prepare();
 
 	//nodes.Prepare();
 }
@@ -323,6 +320,10 @@ void Graph::PrepareStep(){
 	joints     .PrepareStep();
 	geos       .PrepareStep();
 	timeslots  .PrepareStep();
+
+  // call broad phase here
+	ExtractGeometryPairs();
+
 	tasks      .PrepareStep();
 }
 
@@ -388,8 +389,10 @@ void Graph::ExtractGeometryPairs(){
 		    for(Object* obj : objects){
                 // for stationary objects, insert edges for the first tick only
                 if(obj->param.stationary){
-                    ObjectKey* key = (ObjectKey*)obj->traj.GetKeypoint(ticks[0]);
+					ObjectKey* key = (ObjectKey*)obj->traj.GetKeypoint(ticks[0]);
                     edgeInfosStationary[dir].insert(edgeInfosStationary[dir].end(), key->edgeInfos[dir].begin(), key->edgeInfos[dir].end());
+					for(int i = 0; i < key->edgeInfos[dir].size(); i++)
+						printf("stationary edge: %d %d %f\n", dir, key->edgeInfos[dir][i].side, key->edgeInfos[dir][i].val);
                 }
             }
             // sort it only once upon creation
@@ -398,21 +401,20 @@ void Graph::ExtractGeometryPairs(){
 	}
 	for(int dir = 0; dir < 3; dir++){
         // create edge list for the first time
-        if(edgeInfosMoving[dir].empty()){
-		    for(Object* obj : objects){
-                // for moving objects, insert edges for all ticks
-                if(!obj->param.stationary){
-                    for(Tick* tick : ticks){
-				        ObjectKey* key = (ObjectKey*)obj->traj.GetKeypoint(tick);
-				        edgeInfosMoving[dir].insert(edgeInfosMoving[dir].end(), key->edgeInfos[dir].begin(), key->edgeInfos[dir].end());
-			        }
-                }
-            }
-        }
+		edgeInfosMoving[dir].clear();
+		for(Object* obj : objects){
+			// for moving objects, insert edges for all ticks
+			if(!obj->param.stationary){
+				for(Tick* tick : ticks){
+					ObjectKey* key = (ObjectKey*)obj->traj.GetKeypoint(tick);
+					edgeInfosMoving[dir].insert(edgeInfosMoving[dir].end(), key->edgeInfos[dir].begin(), key->edgeInfos[dir].end());
+				}
+			}
+		}
         // sort it every time
 		sort(edgeInfosMoving[dir].begin(), edgeInfosMoving[dir].end());
 	}
-    // merge edge infos of moving and stationary objects into one
+    
     for(int dir = 0; dir < 3; dir++){
         edgeInfos[dir].resize(edgeInfosStationary[dir].size() + edgeInfosMoving[dir].size());
         std::merge(
@@ -421,6 +423,11 @@ void Graph::ExtractGeometryPairs(){
             edgeInfos[dir].begin()
             );
     }
+
+	// merge edge infos of moving and stationary objects into one
+	printf("edges of moving objects: %d\n", edgeInfosMoving[0].size());
+	printf("edges of stationary objects: %d\n", edgeInfosStationary[0].size());
+	printf("edges of all objects: %d\n", edgeInfos[0].size());
 
 	int timeSort = timer2.CountUS();
 	
@@ -515,17 +522,23 @@ void Graph::ExtractGeometryPairs(){
 		geoPair.info0 = geo0;
 		geoPair.info1 = geo1;
 		key->geoPairs.push_back(geoPair);
+		
+		printf("%s %s %d - %s %s %d\n",
+		 geo0->con->obj->name.c_str(), geo0->geo->name.c_str(), geo0->tick->idx,
+		 geo1->con->obj->name.c_str(), geo1->geo->name.c_str(), geo1->tick->idx);
 
 		numIntAll++;
 	}
 	int timeInt = timer2.CountUS();
 
-	//DSTR << " tsort: "    << timeSort
-	//	 << " tenum: "    << timeEnum 
-	//	 << " tint: "     << timeInt
-	//	 << " queuemax: " << szmax
-	//	 << " numint: " << numInt[0] << " " << numInt[1] << " " << numInt[2] << " " << numIntAll
-	//	 << endl;
+	if(solver->param.verbose){
+		DSTR << " tsort: "    << timeSort
+			 << " tenum: "    << timeEnum 
+			 << " tint: "     << timeInt
+			 << " queuemax: " << szmax
+			 << " numint: " << numInt[0] << " " << numInt[1] << " " << numInt[2] << " " << numIntAll
+			 << endl;
+	}
 }
 
 void Graph::Finish(){
