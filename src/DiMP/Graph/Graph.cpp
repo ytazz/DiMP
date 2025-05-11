@@ -391,8 +391,8 @@ void Graph::ExtractGeometryPairs(){
                 if(obj->param.stationary){
 					ObjectKey* key = (ObjectKey*)obj->traj.GetKeypoint(ticks[0]);
                     edgeInfosStationary[dir].insert(edgeInfosStationary[dir].end(), key->edgeInfos[dir].begin(), key->edgeInfos[dir].end());
-					for(int i = 0; i < key->edgeInfos[dir].size(); i++)
-						printf("stationary edge: %d %d %f\n", dir, key->edgeInfos[dir][i].side, key->edgeInfos[dir][i].val);
+					//for(int i = 0; i < key->edgeInfos[dir].size(); i++)
+					//	printf("stationary edge: %d %d %f\n", dir, key->edgeInfos[dir][i].side, key->edgeInfos[dir][i].val);
                 }
             }
             // sort it only once upon creation
@@ -425,9 +425,9 @@ void Graph::ExtractGeometryPairs(){
     }
 
 	// merge edge infos of moving and stationary objects into one
-	printf("edges of moving objects: %d\n", edgeInfosMoving[0].size());
-	printf("edges of stationary objects: %d\n", edgeInfosStationary[0].size());
-	printf("edges of all objects: %d\n", edgeInfos[0].size());
+	//printf("edges of moving objects: %d\n", edgeInfosMoving[0].size());
+	//printf("edges of stationary objects: %d\n", edgeInfosStationary[0].size());
+	//printf("edges of all objects: %d\n", edgeInfos[0].size());
 
 	int timeSort = timer2.CountUS();
 	
@@ -523,9 +523,9 @@ void Graph::ExtractGeometryPairs(){
 		geoPair.info1 = geo1;
 		key->geoPairs.push_back(geoPair);
 		
-		printf("%s %s %d - %s %s %d\n",
-		 geo0->con->obj->name.c_str(), geo0->geo->name.c_str(), geo0->tick->idx,
-		 geo1->con->obj->name.c_str(), geo1->geo->name.c_str(), geo1->tick->idx);
+		//printf("%s %s %d - %s %s %d\n",
+		// geo0->con->obj->name.c_str(), geo0->geo->name.c_str(), geo0->tick->idx,
+		// geo1->con->obj->name.c_str(), geo1->geo->name.c_str(), geo1->tick->idx);
 
 		numIntAll++;
 	}

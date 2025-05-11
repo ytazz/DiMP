@@ -132,7 +132,7 @@ public:
 		int ncol;
 
 		void Resize(int _nrow, int _ncol, T _val = T()){
-			resize(_nrow*_ncol, _val);
+			this->resize(_nrow*_ncol, _val);
 			nrow = _nrow;
 			ncol = _ncol;
 		}
